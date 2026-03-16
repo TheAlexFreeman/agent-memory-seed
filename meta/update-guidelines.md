@@ -99,17 +99,17 @@ Categories:
 
 ## Periodic review
 
-During any session, if the agent notices it has been more than 30 days since the last `[system]` entry in CHANGELOG.md, it should suggest a brief system review:
+During any session, if the agent notices it has been more than 30 days since the last `[system]` entry in CHANGELOG.md, it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
 
-1. Are there any files consistently flagged as unhelpful in ACCESS.jsonl?
-2. Are there any `[CONFLICT]` tags unresolved in identity or knowledge files?
-3. Are there any entries in `meta/review-queue.md` awaiting approval?
-4. Does the overall folder structure still make sense given how the system is actually being used?
-5. Are there any security flags (type: `security`) in `meta/review-queue.md`?
-6. Are there files in `knowledge/_unverified/` older than 60 days awaiting review?
+1. **Security flags.** Are there any security flags (type: `security`) in `meta/review-queue.md`? Resolve or escalate before proceeding — a security issue can invalidate curation and governance decisions made without awareness of it.
+2. **Unverified content.** Are there files in `knowledge/_unverified/` awaiting promotion or retirement? Check against the active low-trust retirement threshold in `meta/quick-reference.md`.
+3. **Conflict resolution.** Are there any `[CONFLICT]` tags unresolved in identity or knowledge files?
+4. **Review queue.** Are there any non-security entries in `meta/review-queue.md` awaiting approval?
+5. **Unhelpful memory.** Are there files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with the knowledge amplification protocol in `meta/curation-policy.md` § "Knowledge amplification".
+6. **Maturity assessment.** Assess the system's developmental stage using the signals in `meta/system-maturity.md`. If the stage has changed since the last assessment, log the transition in this file's assessment log and in `CHANGELOG.md`, then **update `meta/quick-reference.md`** with the new stage and parameter values.
 7. **Governance evaluation.** Are the curation rules producing good outcomes? Check for: premature archival (re-retrieval of recently archived files), false positive rates on anomaly signals, and process friction that slows legitimate work without catching real problems. If issues are found, write a governance proposal to `meta/review-queue.md`. See `meta/curation-policy.md` § "Governance feedback" for the full protocol.
-8. **Maturity assessment.** Assess the system's developmental stage using the signals in `meta/system-maturity.md`. If the stage has changed since the last assessment, log the transition and adjust active thresholds accordingly.
-9. **Emergent categorization.** Are there cross-folder retrieval clusters that suggest the current taxonomy doesn't capture how the system is actually being used? See `meta/curation-policy.md` § "Emergent categorization."
+8. **Folder structure.** Does the overall folder structure still make sense given how the system is actually being used? Consider findings from the maturity assessment and governance evaluation above.
+9. **Emergent categorization.** Are there cross-folder retrieval clusters that suggest the current taxonomy doesn't capture how the system is actually being used? See `meta/curation-policy.md` § "Emergent categorization." (This is the most expensive step — do it last.)
 10. **Session reflection themes.** Review recent session reflection notes for recurring strengths, blind spots, or retrieval pattern issues. Address systematic findings through summary updates or review-queue proposals.
 
 This review should be lightweight — a quick summary and any recommendations, not a full audit. The user can engage as much or as little as they want.

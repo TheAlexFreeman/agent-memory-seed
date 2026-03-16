@@ -167,7 +167,7 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 2. Read `identity/SUMMARY.md` to understand the user.
 3. Read `meta/curation-policy.md` to understand memory governance, **including the trust-weighted retrieval rules, instruction containment policy, and anomaly detection signals.**
 4. Read `meta/update-guidelines.md` to understand the **provenance metadata schema** and change-control tiers.
-5. Read `meta/system-maturity.md` to understand the system's current developmental stage and active thresholds.
+5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
 6. Read `chats/SUMMARY.md` to get historical context.
 7. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
