@@ -21,6 +21,18 @@ Before using this skill, the agent should already have read `meta/quick-referenc
 
 ## Steps
 
+### 0. Check for a starter profile template
+
+If `identity/` contains a file with `source: template` in its YAML frontmatter (placed there by `setup.sh --profile`), the user chose a starter profile during setup. In this case:
+
+1. Read the template file.
+2. Present the pre-filled traits to the user: "I see you started with the [role] template. Let me walk through these to see what fits."
+3. For each trait marked `[template]`, ask whether it's accurate, needs adjustment, or should be removed.
+4. Fill in any blank fields through conversation.
+5. Skip to step 5 (open-ended capture) after confirming all template traits — steps 2–4 below are for blank-slate onboarding.
+
+If no template exists, proceed with step 1 as normal.
+
 ### 1. Introduce the memory system
 
 Briefly explain to the user:

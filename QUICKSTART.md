@@ -26,7 +26,16 @@ rm -rf .git && git init
 bash setup.sh
 ```
 
-This personalizes the template: sets the creation date in CHANGELOG.md and prints next steps. For automated/CI environments, use `bash setup.sh --non-interactive`.
+The script walks you through three choices:
+1. **Git remote** — where to push your memory repo (optional).
+2. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank. The agent will confirm and refine these during onboarding.
+3. **AI platform** — tells you exactly what to do next for Claude Code, Cursor, ChatGPT, or other tools.
+
+For automated/CI environments: `bash setup.sh --non-interactive`. You can also pass flags directly:
+
+```bash
+bash setup.sh --platform claude-code --profile software-developer --remote https://github.com/you/my-memory.git
+```
 
 ### 3. Connect your AI platform
 
