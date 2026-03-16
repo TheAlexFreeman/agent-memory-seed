@@ -59,7 +59,9 @@ This repository is a structured, version-controlled memory that persists across 
 
 ## Memory curation
 
-Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a file from that folder during a session, append a note in this format:
+Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a specific content file from that folder during a session, append a note in this format:
+
+**What counts as a retrieval:** Opening a specific content file (in `identity/`, `knowledge/`, `skills/`, or `chats/`) in response to a user query. SUMMARY.md files and `meta/` governance files are navigation tools — do not log reads of those. Log every retrieved content file, **whether or not it was ultimately used in the response**. Misses are signal too.
 
 ```json
 {
@@ -71,11 +73,15 @@ Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Eac
 }
 ```
 
-- `helpfulness` is a float from 0.0 (not useful, wrong file) to 1.0 (exactly what was needed).
-- `note` should be one sentence explaining relevance or lack thereof.
-- Be honest. A 0.2 with a clear note is more valuable than a polite 0.8.
+`helpfulness` uses a three-state model:
 
-**Do not fabricate access notes.** Only log files you actually retrieved and used.
+- **0.0 – 0.1 (wrong context):** File was clearly irrelevant — retrieved in error or drawn by a false-positive attractor in SUMMARY.md. Note what attracted the retrieval so it can be corrected.
+- **0.2 – 0.4 (retrieved, not used):** File was in the right neighborhood but not incorporated in the response — a near-miss. May indicate the file needs better differentiation from similar files, or splitting.
+- **0.5 – 1.0 (used and helpful):** File materially influenced the response. Score higher when it was central to the answer, lower when it was peripheral context.
+
+`note` should be one sentence explaining relevance or lack thereof. Be honest — a 0.1 with a note like *"retrieved because of 'React' in title, query was actually about React Native"* is more valuable to the feedback loop than a polite 0.7.
+
+**Do not fabricate access notes.** Log every content file you actually opened, including misses.
 
 ### Aggregation
 

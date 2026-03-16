@@ -48,9 +48,11 @@ Memories that are stale, contradicted, or consistently unhelpful (low ACCESS.jso
 
 The ACCESS.jsonl feedback loop is the primary curation signal:
 
-- **High access + high helpfulness:** Core memory. Ensure it stays current and prominent in summaries.
-- **High access + low helpfulness:** Misleading memory. The file is being retrieved but isn't delivering value. Investigate — it may need updating, splitting, or better titling.
-- **Low access + high helpfulness:** Hidden gem. When it's found, it's useful, but it's not being discovered. Improve the folder SUMMARY.md to surface it better.
+- **High access + high helpfulness** (mean ≥ 0.5)**:** Core memory. Ensure it stays current and prominent in summaries.
+- **High access + low helpfulness:** The file is being retrieved but not delivering value. The score range distinguishes two different problems:
+  - *Mean 0.2 – 0.4 (near-miss):* Retrieved in the right context but rarely incorporated. The file is probably too broad, poorly differentiated from a similar file, or covering two topics that should be split.
+  - *Mean 0.0 – 0.1 (false-positive attractor):* Retrieved consistently in the wrong context. Something about the title, tags, or SUMMARY.md placement is drawing wrong-context queries. Retitle or retag rather than retire.
+- **Low access + high helpfulness** (mean ≥ 0.5 when found)**:** Hidden gem. When it's found, it's useful, but it's not being surfaced. Improve the folder SUMMARY.md to give it better placement and a more retrieval-friendly description.
 - **Low access + low helpfulness:** Retirement candidate. Flag for review, and retire if the user confirms it's no longer relevant.
 
 ## Summary refresh cadence
