@@ -254,13 +254,13 @@ This closes the loop: governance shapes curation, curation generates evidence, e
 
 ## Maturity-adaptive thresholds
 
-The hardcoded thresholds in this policy (90-day staleness trigger, 60-day low-trust retirement, 120-day medium-trust flagging, etc.) are **defaults for the Calibration stage**. The active thresholds are determined by the system's current maturity stage as assessed in `meta/system-maturity.md`.
+The hardcoded thresholds in this policy (90-day staleness trigger, 60-day low-trust retirement, 120-day medium-trust flagging, etc.) are **Calibration-stage reference values** shown here for illustrative purposes. The active thresholds are always determined by the system's current maturity stage as assessed in `meta/system-maturity.md`.
 
 When applying any threshold from this policy, the agent should:
 
 1. Check the current maturity stage in `meta/system-maturity.md`.
 2. Use the stage-appropriate parameter value from that file's tables.
-3. If no assessment has been made yet, use the defaults in this file (Calibration-stage values).
+3. If no assessment has been made yet, treat the system as **Exploration stage** and use those values from `meta/system-maturity.md`. A brand-new system is the youngest, most uncertain state possible — it should bias toward exploration, not Calibration strictness.
 
 ## Drift detection
 
