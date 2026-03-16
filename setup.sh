@@ -21,7 +21,12 @@ usage() {
 while [[ $# -gt 0 ]]; do
     case $1 in
         --non-interactive) INTERACTIVE=false; shift ;;
-        --remote) REMOTE="$2"; shift 2 ;;
+        --remote)
+            if [[ $# -lt 2 ]] || [[ -z "${2-}" ]]; then
+                echo "Error: --remote requires a URL argument."
+                usage; exit 1
+            fi
+            REMOTE="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1"; usage; exit 1 ;;
     esac
@@ -73,11 +78,22 @@ fi
 
 # 4. Make initial commit if no commits exist
 if ! git rev-parse HEAD >/dev/null 2>&1; then
-    git add -A
-    git commit -m "[system] Initialize agent memory system
+    # Check git author identity before committing
+    GIT_NAME=$(git config user.name 2>/dev/null || true)
+    GIT_EMAIL=$(git config user.email 2>/dev/null || true)
+    if [[ -z "$GIT_NAME" ]] || [[ -z "$GIT_EMAIL" ]]; then
+        echo "[warn] Git author identity not configured (user.name / user.email unset)."
+        echo "       Skipping initial commit. Run these commands to configure, then commit manually:"
+        echo "         git config user.name  \"Your Name\""
+        echo "         git config user.email \"you@example.com\""
+        echo "         git add -A && git commit -m '[system] Initialize agent memory system'"
+    else
+        git add -A
+        git commit -m "[system] Initialize agent memory system
 
 Created from agent-memory-seed template on $TODAY."
-    echo "[ok] Created initial commit"
+        echo "[ok] Created initial commit"
+    fi
 else
     echo "[skip] Repository already has commits"
 fi
