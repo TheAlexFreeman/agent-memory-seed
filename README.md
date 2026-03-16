@@ -2,6 +2,8 @@
 
 You are reading a persistent memory system stored as a git repository. This file is your entry point. Read it fully before doing anything else.
 
+**If you are a human setting up this system for the first time**, see [QUICKSTART.md](QUICKSTART.md) for a step-by-step guide.
+
 ## Purpose
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.

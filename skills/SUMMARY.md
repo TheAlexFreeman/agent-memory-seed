@@ -4,7 +4,7 @@ This folder contains procedural knowledge — instructions for how the agent sho
 
 ## Current skills
 
-_No skills yet._ Skills will be created when the user and agent discover recurring workflows that benefit from codified procedures.
+- **[onboarding.md](onboarding.md)** — First-session user onboarding. Guides the agent through an interactive discovery of the user's role, preferences, and working style. **One-time use:** self-archives after successful completion.
 
 ## What belongs here
 

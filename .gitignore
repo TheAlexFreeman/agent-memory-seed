@@ -7,5 +7,8 @@ Thumbs.db
 *.swo
 *~
 
+# Claude Code working files (worktrees, plans, session state)
+.claude/
+
 # Do not ignore ACCESS.jsonl files — they are part of the system
 # Do not ignore any .md files — they are the system
