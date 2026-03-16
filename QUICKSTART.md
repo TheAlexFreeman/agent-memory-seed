@@ -118,6 +118,23 @@ Key rules:
 
 **Model requirements:** The model should be capable of reading files, following multi-step instructions, and ideally writing to the repository. Models without tool use can still benefit from the memory system in read-only mode — see `meta/update-guidelines.md` § "Read-only operation" for how this degrades gracefully.
 
+### Read-only platforms (ChatGPT, Claude Projects, etc.)
+
+If your AI platform can't write files directly, the onboarding still works — you just import the results manually afterward:
+
+1. Share the repo files with your AI and start a conversation. The agent runs onboarding as usual.
+2. At the end of the session, the agent outputs a structured **onboarding export** — a single markdown document with your profile and session record.
+3. Save that output to a file (e.g., `my-onboarding.md`).
+4. Run the import script:
+
+```bash
+bash scripts/onboard-export.sh my-onboarding.md
+```
+
+This writes your profile to `identity/`, creates the first chat record in `chats/`, and commits everything. From the next session onward, the agent will recognize you.
+
+Use `--dry-run` to preview what would be written without making changes.
+
 ### Switching models
 
 The memory system is model-agnostic. To switch:

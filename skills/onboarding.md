@@ -90,7 +90,7 @@ Based on the conversation:
 4. If the user requests edits, revise the proposal and ask for confirmation again.
 5. Only after explicit in-chat confirmation may you create the `identity/` files and update `identity/SUMMARY.md`.
 6. That explicit confirmation counts as the required approval for the first identity-file creation during onboarding.
-7. If write access is unavailable, do not attempt the write. Instead, produce deferred actions for the proposed `identity/` updates following `meta/update-guidelines.md` § "Read-only operation".
+7. If write access is unavailable, do not attempt the write. Instead, produce the confirmed profile using the **onboarding export format** (see `scripts/onboard-export-template.md`): output a single markdown document with `## Identity Profile`, `## Session Summary`, and `## Session Reflection` sections. Tell the user to save this output to a file and run `bash scripts/onboard-export.sh <file>` to import it into the repo. This replaces the generic deferred-action format for onboarding specifically, since the export script handles frontmatter, chat folder creation, and committing.
 8. If the session ends without confirmation, do not write to `identity/`.
 
 ### 7. Record the session
