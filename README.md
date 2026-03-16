@@ -1,0 +1,136 @@
+# Agent Memory System
+
+You are reading a persistent memory system stored as a git repository. This file is your entry point. Read it fully before doing anything else.
+
+## Purpose
+
+This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
+
+## How to orient yourself
+
+1. **Read this file** to understand the system architecture.
+2. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
+3. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
+4. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
+5. **Log your access** using the access-note format described below.
+
+## Repository structure
+
+```
+/
+├── README.md              ← You are here. System architecture and protocols.
+├── CHANGELOG.md           ← Record of how this system has evolved and why.
+│
+├── identity/              ← Who the user is. Personality, preferences, values.
+│   ├── SUMMARY.md         ← Start here. High-level portrait of the user.
+│   ├── ACCESS.jsonl       ← Access-tracking log (see "Memory curation" below).
+│   └── (files added over time as traits and preferences emerge)
+│
+├── knowledge/             ← What the user knows or cares about. Organized by topic.
+│   ├── SUMMARY.md         ← Index of knowledge areas and their relevance.
+│   ├── ACCESS.jsonl       ← Access-tracking log.
+│   └── (topic folders/files added as knowledge accumulates)
+│
+├── skills/                ← How the agent should perform specific tasks.
+│   ├── SUMMARY.md         ← Index of available skills and when to use them.
+│   ├── ACCESS.jsonl       ← Access-tracking log.
+│   └── (skill definitions added as workflows are refined)
+│
+├── chats/                 ← Episodic memory. Record of past interactions.
+│   ├── SUMMARY.md         ← High-level summary of the entire chat history.
+│   ├── ACCESS.jsonl       ← Access-tracking log.
+│   └── YYYY/MM/DD/        ← Date-organized chat archives.
+│       ├── SUMMARY.md     ← Summary at each level of the hierarchy.
+│       └── chat-NNN/      ← Individual chat sessions.
+│           ├── transcript.md
+│           ├── SUMMARY.md
+│           └── artifacts/  ← Any files created or uploaded during the chat.
+│
+└── meta/                  ← Governance. How this system updates itself.
+    ├── curation-policy.md ← Rules for memory hygiene, decay, and promotion.
+    ├── update-guidelines.md ← Protocols for proposing and merging changes.
+    └── review-queue.md    ← Pending suggestions for system modifications.
+```
+
+## Memory curation
+
+Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a file from that folder during a session, append a note in this format:
+
+```json
+{"file": "relative/path.md", "date": "YYYY-MM-DD", "task": "brief description of what the user asked", "helpfulness": 0.0, "note": "why this file was or wasn't useful"}
+```
+
+- `helpfulness` is a float from 0.0 (not useful, wrong file) to 1.0 (exactly what was needed).
+- `note` should be one sentence explaining relevance or lack thereof.
+- Be honest. A 0.2 with a clear note is more valuable than a polite 0.8.
+
+**Do not fabricate access notes.** Only log files you actually retrieved and used.
+
+### Aggregation
+
+When an `ACCESS.jsonl` file accumulates 20 or more entries, the next agent session should:
+
+1. Analyze the access patterns (which files are retrieved often, which are never touched, what tasks drive retrieval).
+2. Update the folder's `SUMMARY.md` with a "Usage patterns" section describing how and why the agent typically uses this folder.
+3. Identify files that are frequently retrieved together and note these clusters.
+4. Flag files with consistently low helpfulness scores for review.
+5. Archive the processed entries to `ACCESS.archive.jsonl` and start a fresh `ACCESS.jsonl`.
+
+This creates a feedback loop: access notes → aggregated usage patterns → better summaries → smarter retrieval → better access notes.
+
+## Principles for updating memory
+
+### What to store
+
+- **Durable preferences**, not one-time requests. "I prefer TypeScript" is memory. "Use JavaScript for this task" is not.
+- **Corrections and refinements.** If the user corrects you, that correction is high-value memory.
+- **Patterns you notice.** If the user consistently asks for something a certain way, note the pattern even if they never explicitly state it as a preference.
+- **Decisions and their reasoning.** Not just what was decided, but why.
+
+### What not to store
+
+- Sensitive credentials, API keys, passwords, or financial information. Ever.
+- Verbatim copies of large external documents. Summarize and link instead.
+- Temporary context that won't matter next session.
+- Anything the user explicitly asks you to forget.
+
+### How to propose changes
+
+All modifications to files in `identity/`, `skills/`, or `meta/` should be proposed rather than applied silently. The process:
+
+1. Describe the proposed change and your reasoning to the user.
+2. If approved, make the change and log it in `CHANGELOG.md`.
+3. If the user is unavailable or the change is minor (e.g., updating a summary), add it to `meta/review-queue.md` for later review.
+
+Files in `knowledge/` and `chats/` may be updated without explicit approval, since they represent accumulated information rather than governing rules. Still log significant structural changes in `CHANGELOG.md`.
+
+### Conflict resolution
+
+When new information contradicts existing memory:
+
+1. Check the date and source of both pieces of information.
+2. Prefer explicit user statements over inferred patterns.
+3. Prefer recent information over old information.
+4. When genuinely uncertain, keep both and flag the conflict in the relevant `SUMMARY.md` for user resolution.
+
+## Summaries: the compression hierarchy
+
+Summaries exist at every level of the folder hierarchy and serve as the primary retrieval mechanism. They follow a principle of **progressive compression**:
+
+- **Leaf-level summaries** (e.g., individual chat SUMMARY.md): Moderately detailed. Key topics, decisions made, action items, notable context.
+- **Mid-level summaries** (e.g., monthly): Compressed. Major themes, recurring topics, significant decisions or changes. Individual conversations are mentioned only if they were pivotal.
+- **Top-level summaries** (e.g., yearly, or folder-level): Abstract. Broad patterns, evolution of interests, high-level characterization. Details only where they represent important turning points.
+
+When writing summaries, ask: "If an agent six months from now reads only this summary, what do they need to know to serve this user well?"
+
+## Bootstrap sequence
+
+If this is a fresh instantiation (the repo has just been cloned or linked for the first time with a new model), follow this sequence:
+
+1. Read this README.md fully. ✓
+2. Read `identity/SUMMARY.md` to understand the user.
+3. Read `meta/curation-policy.md` to understand memory governance.
+4. Read `chats/SUMMARY.md` to get historical context.
+5. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+
+Welcome. You have memory now. Use it well.

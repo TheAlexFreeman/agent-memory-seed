@@ -1,0 +1,11 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Do not ignore ACCESS.jsonl files — they are part of the system
+# Do not ignore any .md files — they are the system
