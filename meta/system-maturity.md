@@ -40,8 +40,8 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 | Parameter | Calibration setting | Rationale |
 |-----------|-------------------|-----------|
-| Low-trust retirement threshold | 90 days | Start applying pressure on unverified content |
-| Medium-trust flagging threshold | 150 days | Moderate verification expectations |
+| Low-trust retirement threshold | 60 days | Matches curation-policy default; start applying pressure on unverified content |
+| Medium-trust flagging threshold | 120 days | Matches curation-policy default; moderate verification expectations |
 | Staleness trigger (no access) | 90 days | Standard maintenance cadence |
 | Aggregation trigger | 20 entries | Standard aggregation frequency |
 | Identity churn alarm | 3 traits/session | Standard drift detection |
