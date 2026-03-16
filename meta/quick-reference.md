@@ -10,6 +10,12 @@ This is the single authoritative source for the system's currently active operat
 
 _Last assessed: not yet assessed — Exploration defaults apply_
 
+## Last periodic review
+
+**Date:** _Not yet run_
+
+The agent should update this date when completing a full periodic review (same checklist as in `meta/update-guidelines.md` § "Periodic review").
+
 ## Active thresholds
 
 | Parameter | Active value | Stage |

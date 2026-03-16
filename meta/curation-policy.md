@@ -32,7 +32,7 @@ Through repeated access, user validation, or explicit approval, provisional memo
 
 Confirmed memories are periodically reviewed for staleness. Triggers for review:
 
-- A file has not been accessed in 90+ days (check ACCESS.jsonl).
+- A file has not been accessed within the active staleness trigger window (see `meta/quick-reference.md`; check ACCESS.jsonl or ACCESS.archive.jsonl for last access).
 - The user contradicts information in the file.
 - A related file has been significantly updated, potentially creating inconsistency.
 
@@ -40,7 +40,7 @@ Confirmed memories are periodically reviewed for staleness. Triggers for review:
 
 Memories that are stale, contradicted, or consistently unhelpful (low ACCESS.jsonl scores) are:
 
-- **Demoted** — moved to an `_archive/` subfolder within their category, removed from the active SUMMARY.md, but retained in git history.
+- **Demoted** — moved to an `_archive/` subfolder within their category, removed from the active SUMMARY.md, but retained in git history. Each content area has its own archive: `knowledge/_archive/`, `identity/_archive/`, `skills/_archive/`. Retired files are moved to the archive of the folder they came from (e.g. low-trust unverified content is retired to `knowledge/_archive/`).
 - **Merged** — consolidated into a broader file if the information is still partially relevant but too granular to justify its own file.
 - **Deleted** — removed entirely if the information is wrong or the user requests it. Git history preserves the record.
 

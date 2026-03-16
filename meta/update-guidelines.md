@@ -59,6 +59,7 @@ Files that predate this schema should have frontmatter added during the next per
 ### Proposed changes (require user awareness)
 
 - Adding new knowledge files to `knowledge/` (i.e., outside `_unverified/`).
+- Creating **meta-knowledge files** (emergent abstractions from cross-domain patterns in knowledge) — propose to the user, do not create silently; see README § "Emergent abstractions".
 - Adding, modifying, or removing files in `identity/`.
 - Promoting files from `knowledge/_unverified/` to `knowledge/`.
 - Restructuring folders (renaming, splitting, merging).
@@ -160,7 +161,7 @@ The agent should still run periodic reviews when the 30-day threshold is reached
 
 ## Periodic review
 
-During any session, if the agent notices it has been more than 30 days since the last `[system]` entry in CHANGELOG.md, it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
+During any session, if the agent notices it has been more than 30 days since the date in `meta/quick-reference.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` CHANGELOG entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
 
 1. **Security flags.** Are there any security flags (type: `security`) in `meta/review-queue.md`? Resolve or escalate before proceeding — a security issue can invalidate curation and governance decisions made without awareness of it.
 2. **Unverified content.** Are there files in `knowledge/_unverified/` awaiting promotion or retirement? Check against the active low-trust retirement threshold in `meta/quick-reference.md`.
@@ -172,6 +173,7 @@ During any session, if the agent notices it has been more than 30 days since the
 8. **Folder structure.** Does the overall folder structure still make sense given how the system is actually being used? Consider findings from the maturity assessment and governance evaluation above.
 9. **Emergent categorization.** Are there cross-folder retrieval clusters that suggest the current taxonomy doesn't capture how the system is actually being used? See `meta/curation-policy.md` § "Emergent categorization." (This is the most expensive step — do it last.)
 10. **Session reflection themes.** Review recent session reflection notes for recurring strengths, blind spots, or retrieval pattern issues. Address systematic findings through summary updates or review-queue proposals.
+11. **Update last review date.** After completing the review, update the "Last periodic review" date in `meta/quick-reference.md`.
 
 This review should be lightweight — a quick summary and any recommendations, not a full audit. The user can engage as much or as little as they want.
 

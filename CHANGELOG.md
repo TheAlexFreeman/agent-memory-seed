@@ -16,6 +16,40 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Documentation and operational clarity from framework review
+
+**Changed:**
+
+- **Threshold consistency.** In `meta/curation-policy.md` § "Maintenance", replaced hardcoded "90+ days" staleness trigger with a reference to the active staleness trigger in `meta/quick-reference.md` (and ACCESS.jsonl/ACCESS.archive.jsonl for last access).
+
+- **Archive and meta-file documentation.** In `meta/curation-policy.md` § "Retirement", documented that each content area has its own archive (`knowledge/_archive/`, `identity/_archive/`, `skills/_archive/`) and that retired files are moved to the archive of their source folder. In README repository structure, added optional `task-groups.md` (Calibration) and `task-categories.md` (Consolidation).
+
+- **Aggregation, reflection, and session semantics.** In README: defined **session** (one chat folder under chats/YYYY/MM/DD); clarified first-aggregation semantics (count all entries when no ACCESS.archive.jsonl exists); changed reflection note wording from "appended to" to "written to the chat folder as reflection.md".
+
+- **Bootstrap and onboarding.** In README § "Bootstrap sequence", added step 4: if identity has no portrait and no chat folders, run the onboarding skill instead of steps 5–10; otherwise continue. Softened step 8 (chats/SUMMARY.md) to "skip if no chat folders exist". Renumbered steps 5–10.
+
+- **Last periodic review date.** In `meta/quick-reference.md`, added "Last periodic review" section with Date placeholder ("Not yet run") and instruction to update it when completing a full periodic review. In `meta/update-guidelines.md`, changed the periodic-review trigger to use that date (with fallback to repo creation or last [system] CHANGELOG entry) and added checklist step 11: update the date in quick-reference after the review.
+
+- **Emergent abstractions in change control.** In `meta/update-guidelines.md` § "Proposed changes", added an explicit bullet for creating meta-knowledge files (propose to user, do not create silently; see README § "Emergent abstractions").
+
+- **Review-queue lifecycle.** In `meta/review-queue.md`, added "Lifecycle" subsection: resolved/rejected/superseded/false-positive items may be moved to an Archived section or deleted after the next periodic review; goal is to avoid unbounded growth while preserving recent history for governance evaluation.
+
+- **Glossary.** Created `meta/glossary.md` with definitions for session, retrieval, aggregation, trust level, maturity stage, protected vs proposed change, quarantine, provenance, belief diff (with pointers to canonical docs).
+
+- **Session checklists.** Created `meta/session-checklists.md` with Session start and Session end runbooks; linked from README after the bootstrap sequence.
+
+- **Optional session_id in ACCESS.jsonl.** In README ACCESS format, added optional `session_id` field and a one-line note that it supports joining with reflection and session-scoped analysis.
+
+- **Integrity checklist.** Created `meta/integrity-checklist.md` with an advisory checklist: provenance/frontmatter, instruction containment (boundary-violation test), optional commit-signature check. Stated that the repo does not enforce these automatically.
+
+- **Single source of truth for platform rules.** Shortened `.cursorrules`, `CLAUDE.md`, and `AGENTS.md` to a single directive plus pointer to README.md and meta/; removed duplicated bullet lists so future rule changes only touch README and meta.
+
+**Reasoning:** Implementation of the framework review recommendations to improve threshold consistency, archive and aggregation semantics, bootstrap/onboarding clarity, periodic-review trigger explicitness, change-control coverage for emergent abstractions, review-queue growth policy, discoverability (glossary, checklists), optional schema extension, integrity audit aid, and reduction of rule duplication across platform entry points.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-15] Self-organizing dynamics — from passive storage to emergent intelligence
 
 **Changed:**

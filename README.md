@@ -57,10 +57,14 @@ This repository is a structured, version-controlled memory that persists across 
     ├── update-guidelines.md ← Protocols for proposing and merging changes.
     ├── review-queue.md     ← Pending suggestions for system modifications.
     ├── belief-diff-log.md  ← Periodic audit log tracking content drift.
-    └── system-maturity.md  ← Developmental stage tracking and adaptive thresholds.
+    ├── system-maturity.md  ← Developmental stage tracking and adaptive thresholds.
+    ├── (task-groups.md     ← Created at Calibration stage; emergent task groups from ACCESS.)
+    └── (task-categories.md ← Created at Consolidation stage; controlled category vocabulary.)
 ```
 
 ## Memory curation
+
+A **session** is one chat folder under `chats/YYYY/MM/DD/` (e.g. `chat-001`); one conversation corresponds to one session.
 
 Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a specific content file from that folder during a session, append a note in this format:
 
@@ -73,9 +77,12 @@ Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Eac
   "task": "brief description of what the user asked",
   "category": "task-category",
   "helpfulness": 0.0,
-  "note": "why this file was or wasn't useful"
+  "note": "why this file was or wasn't useful",
+  "session_id": "chats/2026/03/16/chat-001"
 }
 ```
+
+`session_id` (optional): e.g. `chats/2026/03/16/chat-001` — set when the session path is known; supports joining with reflection and session-scoped analysis.
 
 The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/task-categories.md` (once it exists) for the active vocabulary, and `meta/curation-policy.md` § "Task similarity definition" for how it develops.
 
@@ -92,6 +99,8 @@ The `category` field is **added at Consolidation stage only** — omit it until 
 ### Aggregation
 
 When an `ACCESS.jsonl` file accumulates entries at or above the active aggregation trigger (see `meta/quick-reference.md` for the current threshold), the next agent session should:
+
+Entries are counted since the last aggregation; if no `ACCESS.archive.jsonl` exists in that folder yet (e.g. first run), count all current entries in `ACCESS.jsonl`.
 
 1. Analyze the access patterns (which files are retrieved often, which are never touched, what tasks drive retrieval).
 2. Update the folder's `SUMMARY.md` with a "Usage patterns" section describing how and why the agent typically uses this folder.
@@ -178,12 +187,15 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 1. Read this README.md fully. ✓
 2. Read `CHANGELOG.md` to understand the system's evolutionary trajectory — why rules exist and what problems they solve.
 3. Read `identity/SUMMARY.md` to understand the user.
-4. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
-5. Read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session.
-6. Read `knowledge/SUMMARY.md` and `skills/SUMMARY.md` to understand what knowledge and capabilities the system has accumulated. If these are empty (new system), skip ahead.
-7. Read `chats/SUMMARY.md` to get historical context.
-8. **Check write access.** Can you write to this repository? If not, read `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
-9. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+4. **If** `identity/SUMMARY.md` still contains "No portrait yet" and no date-organized chat folders exist under `chats/`, treat this as first run: run the onboarding skill (see `skills/SUMMARY.md` → onboarding) instead of steps 5–9; the onboarding skill will direct you to read what you need and then greet the user. **Otherwise** continue with steps 5–9.
+5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
+6. Read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session.
+7. Read `knowledge/SUMMARY.md` and `skills/SUMMARY.md` to understand what knowledge and capabilities the system has accumulated. If these are empty (new system), skip ahead.
+8. Read `chats/SUMMARY.md` to get historical context (skip if no chat folders exist).
+9. **Check write access.** Can you write to this repository? If not, read `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
+10. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+
+For a compact session start/end runbook, see `meta/session-checklists.md`.
 
 ## Session reflection
 
@@ -191,7 +203,7 @@ At the end of each session, the agent writes a chat summary (per the compression
 
 ### The reflection note
 
-In addition to the chat summary, each session should produce a brief **reflection note** appended to the chat folder (e.g., `chats/YYYY/MM/DD/chat-NNN/reflection.md`). Format:
+In addition to the chat summary, each session should produce a brief **reflection note** written to the chat folder as `reflection.md` (e.g. `chats/YYYY/MM/DD/chat-NNN/reflection.md`). Format:
 
 ```markdown
 ## Session reflection
