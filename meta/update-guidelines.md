@@ -53,6 +53,7 @@ Files that predate this schema should have frontmatter added during the next per
 - Writing chat transcripts and chat-level summaries to `chats/`.
 - Writing external-research results to `knowledge/_unverified/` (never directly to `knowledge/`).
 - Updating "Usage patterns" sections in SUMMARY.md files based on access aggregation.
+- Updating `meta/task-groups.md` during ACCESS.jsonl aggregation (Calibration stage and beyond).
 - Routine summary refreshes at any level.
 
 ### Proposed changes (require user awareness)

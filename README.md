@@ -68,10 +68,13 @@ Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Eac
   "file": "relative/path.md",
   "date": "YYYY-MM-DD",
   "task": "brief description of what the user asked",
+  "category": "task-category",
   "helpfulness": 0.0,
   "note": "why this file was or wasn't useful"
 }
 ```
+
+The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/task-categories.md` (once it exists) for the active vocabulary, and `meta/curation-policy.md` § "Task similarity definition" for how it develops.
 
 `helpfulness` uses a three-state model:
 

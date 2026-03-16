@@ -31,6 +31,8 @@ The system's developmental stage is assessed from quantitative signals, not cale
 | Aggregation trigger | 15 entries | Aggregate sooner to build retrieval patterns faster |
 | Identity churn alarm | 5 traits/session | Allow more identity exploration before flagging |
 | Knowledge flooding alarm | 5 files/day | Allow more aggressive knowledge capture |
+| Task similarity method | Session co-occurrence | Coarse proxy; insufficient data for finer-grained detection |
+| Cluster co-retrieval threshold | 3 sessions | Low bar appropriate for small dataset |
 
 ### Stage 2: Calibration (adolescent system)
 
@@ -46,6 +48,8 @@ The system's developmental stage is assessed from quantitative signals, not cale
 | Aggregation trigger | 20 entries | Standard aggregation frequency |
 | Identity churn alarm | 3 traits/session | Standard drift detection |
 | Knowledge flooding alarm | 3 files/day | Standard flooding detection |
+| Task similarity method | Task-string normalization | Finer-grained than session co-occurrence; retroactively normalizes Phase 1 data |
+| Cluster co-retrieval threshold | 3 sessions | Same threshold; task-group scoping reduces false positives |
 
 ### Stage 3: Consolidation (mature system)
 
@@ -61,6 +65,8 @@ The system's developmental stage is assessed from quantitative signals, not cale
 | Aggregation trigger | 25 entries | Larger batches for more statistically meaningful patterns |
 | Identity churn alarm | 2 traits/session | Mature identity should be stable — changes are more suspicious |
 | Knowledge flooding alarm | 2 files/day | The system should be past bulk knowledge acquisition |
+| Task similarity method | Controlled category vocabulary | Machine-readable, stable across sessions and model switches |
+| Cluster co-retrieval threshold | 4 sessions | Higher bar appropriate for cleaner category-based signal |
 
 ## Current stage assessment
 

@@ -20,6 +20,8 @@ _Last assessed: not yet assessed — Exploration defaults apply_
 | Aggregation trigger | 15 entries | Exploration |
 | Identity churn alarm | 5 traits/session | Exploration |
 | Knowledge flooding alarm | 5 files/day | Exploration |
+| Task similarity method | Session co-occurrence | Exploration |
+| Cluster co-retrieval threshold | 3 sessions | Exploration |
 
 ---
 
@@ -59,7 +61,7 @@ Aggregate when entries accumulated since last aggregation reach **15**. Aggregat
 1. Updates SUMMARY.md files with refreshed usage patterns.
 2. Identifies high-value files (5+ retrievals, mean helpfulness ≥ 0.7) → enrich per knowledge amplification protocol.
 3. Identifies low-value files (3+ retrievals, mean helpfulness ≤ 0.3) → investigate for retirement.
-4. Scans for cross-folder co-retrieval clusters → log candidates for emergent categorization.
+4. Scans for cross-folder co-retrieval clusters using the active task similarity method (currently: **session co-occurrence** — groups entries by date, identifies file sets co-occurring in 3+ date-groups, flags clusters of 3+ files from 2+ folders). See `meta/curation-policy.md` § "Task similarity definition" for the full algorithm.
 5. Archives raw ACCESS.jsonl entries older than 90 days to `ACCESS_archive.jsonl`.
 
 ---

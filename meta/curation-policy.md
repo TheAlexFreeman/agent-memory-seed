@@ -237,15 +237,90 @@ The folder structure (`identity/`, `knowledge/`, `skills/`, `chats/`) is a start
 
 During ACCESS.jsonl aggregation, the agent should look for **co-retrieval patterns across folders** — files from different folders that are consistently retrieved together for the same type of task.
 
-**Detection:** If 3+ files from 2+ different folders are co-retrieved in 3+ separate sessions for similar tasks, they constitute an emergent cluster.
+**Detection:** 3+ files from 2+ different folders, co-retrieved in 3+ instances (see threshold below) for similar tasks, constitute an emergent cluster. The definition of "similar tasks" evolves with the system's maturity stage — see the phase-specific algorithms below.
 
 **When a cluster is detected:**
 
-1. **Name the cluster.** Give it a descriptive label based on the task type it serves (e.g., "React performance optimization workflow" if it bundles a knowledge file about React rendering, a skill file for profiling, and an identity preference for performance-first coding).
-2. **Document the cluster** in the relevant folder SUMMARY.md files, noting which files form the cluster and what task context triggers it.
-3. **Evaluate taxonomy fit.** If multiple clusters suggest that the current folder structure doesn't capture how the system is actually used, propose a restructuring in `meta/review-queue.md`. This might mean creating a new top-level folder (e.g., `projects/`, `workflows/`), creating cross-cutting index files, or reorganizing existing folders.
+1. **Record the task context** that produced this cluster in `meta/task-groups.md` (Calibration stage and beyond) or inline in SUMMARY.md files (Exploration stage).
+2. **Name the cluster.** Give it a descriptive label based on the task type it serves (e.g., "React performance optimization workflow" if it bundles a knowledge file about React rendering, a skill file for profiling, and an identity preference for performance-first coding).
+3. **Document the cluster** in the relevant folder SUMMARY.md files, noting which files form the cluster and what task context triggers it.
+4. **Evaluate taxonomy fit.** If multiple clusters suggest that the current folder structure doesn't capture how the system is actually used, propose a restructuring in `meta/review-queue.md`. This might mean creating a new top-level folder (e.g., `projects/`, `workflows/`), creating cross-cutting index files, or reorganizing existing folders.
 
 The taxonomy should evolve to fit the data, not the other way around. Restructuring proposals are protected-tier changes requiring user approval.
+
+### Task similarity definition
+
+The definition of "similar tasks" progresses through three phases aligned with the system's maturity stages. Each phase replaces its predecessor's detection algorithm. The active phase is recorded in `meta/quick-reference.md`.
+
+#### Phase 1: Session co-occurrence (Exploration)
+
+"Similar tasks" = occurred in the same session. The session boundary is proxied by the `date` field in ACCESS.jsonl entries.
+
+**Algorithm during aggregation:**
+
+1. Group all ACCESS.jsonl entries by `date` (most days in Exploration have at most one session, so date is a sufficient proxy).
+2. Within each date-group, collect the set of distinct files retrieved.
+3. For each pair of files from different folders, count how many date-groups contain both.
+4. Flag groups of 3+ files from 2+ folders where every pair co-occurs in 3+ date-groups as cluster candidates.
+
+**Known weakness:** Long or multi-topic sessions create false co-occurrences. This is acceptable at Exploration stage because there is not enough data for finer-grained detection, and false clusters will be pruned when the system transitions to Phase 2.
+
+**The `task` field is not used for clustering in this phase** — but it is being accumulated as raw material for Phase 2's normalization. Write meaningful task descriptions even though Phase 1 doesn't consume them.
+
+#### Phase 2: Task-string normalization (Calibration)
+
+"Similar tasks" = entries whose `task` strings normalize to the same equivalence class. Eliminates Phase 1's false co-occurrence problem by splitting multi-topic sessions into distinct task groups.
+
+**Normalization procedure (executed during aggregation):**
+
+1. Collect all `task` values from unarchived ACCESS.jsonl entries.
+2. Normalize each string: lowercase → remove articles/prepositions/conjunctions → collapse whitespace → lemmatize to root forms (e.g., "debugging" → "debug") → sort remaining tokens alphabetically.
+3. Group entries whose normalized token sets are identical. Merge entries with Jaccard similarity ≥ 0.7 into the same group if neither already belongs to a different group.
+4. Name each group with a short descriptive label derived from the original task strings (e.g., "react-performance-debug").
+5. Detect clusters **within** each task group: 3+ files from 2+ folders, each appearing in 3+ entries with distinct dates within that group.
+
+**Persistent storage:** Task groups are recorded in `meta/task-groups.md` (created automatically during the first Calibration-stage aggregation). Each group entry includes: the group name, representative task strings, normalized tokens, first-seen date, session count, and commonly co-retrieved files. This history feeds Phase 3's vocabulary emergence.
+
+**Retroactive application:** At the Exploration → Calibration transition, the agent normalizes all historical `task` strings (including archived entries) to seed the initial task groups. No schema change is needed — Phase 2 operates entirely on the existing free-text `task` field.
+
+#### Phase 3: Controlled category vocabulary (Consolidation)
+
+"Similar tasks" = entries sharing the same `category` value from a controlled vocabulary. Machine-readable, stable across sessions and model switches.
+
+**Vocabulary emergence (executed once at Calibration → Consolidation transition):**
+
+1. Read `meta/task-groups.md`. Prune groups with fewer than 5 matched sessions (insufficient evidence).
+2. Merge near-duplicate groups (80%+ token overlap AND 60%+ overlap in co-retrieved files).
+3. Promote surviving groups to categories. Write the vocabulary to `meta/task-categories.md`.
+4. Propose the ACCESS.jsonl schema addition to the user — adding `category` is a protected-tier change.
+
+**Schema addition:** Once approved, ACCESS.jsonl entries gain a `category` field:
+
+```json
+{"file": "...", "date": "...", "task": "...", "category": "react-performance", "helpfulness": 0.0, "note": "..."}
+```
+
+The `task` field is retained — it remains human-readable context and raw input for vocabulary refinement. The `category` field is selected from `meta/task-categories.md` at write time. If no category fits (Jaccard similarity below 0.5), assign `uncategorized`.
+
+**Cluster detection simplifies:** 3+ files from 2+ folders, each appearing in 4+ entries (raised threshold — cleaner signal warrants a higher bar) sharing the same `category` value.
+
+**Vocabulary maintenance (during each Consolidation-stage aggregation):**
+
+- If 5+ `uncategorized` entries cluster around a new theme, propose a new category (protected-tier).
+- If a category has zero entries within the staleness trigger window, flag for retirement (proposed-tier).
+- If entries within a category have very low mutual co-retrieval, the category may be too broad — propose splitting.
+
+**Backward compatibility:** At the Calibration → Consolidation transition, the agent backfills `category` values on all historical entries (including archives) by matching task strings against the new vocabulary.
+
+### Cluster co-retrieval threshold
+
+The number of distinct sessions (or date-groups) required for a co-retrieval cluster is stage-dependent:
+
+| Stage | Threshold | Rationale |
+|-------|-----------|-----------|
+| Exploration | 3 sessions | Low bar appropriate for small dataset and coarse similarity signal |
+| Calibration | 3 sessions | Same threshold, but finer task-group scoping reduces false positives |
+| Consolidation | 4 sessions | Higher bar appropriate for cleaner category-based signal |
 
 ### Taxonomy health check
 
