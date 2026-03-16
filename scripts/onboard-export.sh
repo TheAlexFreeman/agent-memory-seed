@@ -84,7 +84,7 @@ extract_section() {
             found && $0 ~ boundary { found=0 }
             found { print }
         ' \
-        | sed '/^<!--$/,/^-->$/d' \
+        | sed '/^<!--/,/^-->$/d' \
         | sed 's/<!--.*-->//g'
 }
 
@@ -167,13 +167,25 @@ ${SESSION_REFLECTION}"
 fi
 
 # 4. Update chats/SUMMARY.md
+# Only write when the file is absent or still holds the default placeholder.
+# Real history is present when the file exists and does NOT contain the
+# "*No conversations yet.*" sentinel that ships with the template repo.
+chats_summary_has_history() {
+    local f="chats/SUMMARY.md"
+    [[ -f "$f" ]] && ! grep -q '\*No conversations yet\.' "$f"
+}
+
 CHATS_SUMMARY_CONTENT="# Chat History Summary
 
 ## ${TODAY}
 
 - **chat-001** — First session: onboarding. User profile created."
 
-echo "[plan] Update chat summary: chats/SUMMARY.md"
+if chats_summary_has_history; then
+    echo "[plan] SKIP chats/SUMMARY.md — existing history detected (would overwrite)"
+else
+    echo "[plan] Update chat summary: chats/SUMMARY.md"
+fi
 echo ""
 
 # --- Execute or dry-run ---
@@ -196,8 +208,14 @@ if [[ "$DRY_RUN" == true ]]; then
         fi
     fi
     echo ""
-    echo "--- chats/SUMMARY.md ---"
-    echo "$CHATS_SUMMARY_CONTENT"
+    if chats_summary_has_history; then
+        echo "--- chats/SUMMARY.md ---"
+        echo "[skip] Existing chat history detected — chats/SUMMARY.md will NOT be overwritten."
+        echo "       To update it, edit the file manually and add the new entry."
+    else
+        echo "--- chats/SUMMARY.md ---"
+        echo "$CHATS_SUMMARY_CONTENT"
+    fi
     echo ""
     echo "Run without --dry-run to write these files."
     exit 0
@@ -223,9 +241,16 @@ if [[ -n "$SESSION_SUMMARY" ]]; then
     fi
 fi
 
-# Update chats/SUMMARY.md
-echo "$CHATS_SUMMARY_CONTENT" > "chats/SUMMARY.md"
-echo "[ok] Updated chats/SUMMARY.md"
+# Update chats/SUMMARY.md — only when no real history exists yet
+if chats_summary_has_history; then
+    echo "[skip] chats/SUMMARY.md already contains session history — not overwritten."
+    echo "       Add the new entry manually:"
+    echo "         ## ${TODAY}"
+    echo "         - **chat-001** — First session: onboarding. User profile created."
+else
+    echo "$CHATS_SUMMARY_CONTENT" > "chats/SUMMARY.md"
+    echo "[ok] Updated chats/SUMMARY.md"
+fi
 
 # Stage and commit
 echo ""
