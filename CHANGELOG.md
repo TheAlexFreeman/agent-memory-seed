@@ -16,6 +16,28 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Governance hardening and validation pass
+
+**Changed:**
+
+- **First-run bootstrap hardening.** Updated `README.md` so fresh instantiations read `meta/quick-reference.md`, the relevant change-control/read-only sections of `meta/update-guidelines.md`, and check write access before onboarding can write memory. First-run now reads `skills/SUMMARY.md` and `skills/onboarding.md` explicitly, then runs onboarding with `knowledge/SUMMARY.md` and `chats/SUMMARY.md` skippable when empty.
+
+- **Onboarding proposal flow.** Updated `skills/onboarding.md` so initial profile creation is explicitly proposed-tier: draft the portrait, present it, revise if needed, require explicit in-chat confirmation before any `identity/` write, and emit deferred actions instead of writing when the repo is read-only.
+
+- **Single live runtime authority.** Reframed `meta/quick-reference.md` as the sole live runtime config for active thresholds and task-similarity grouping, added a dedicated section documenting `session_id`-first grouping with `date` fallback, and updated `README.md`, `meta/curation-policy.md`, and `meta/glossary.md` to treat `meta/system-maturity.md` as an assessment/template reference rather than a live threshold source.
+
+- **Schema alignment.** Expanded the documented frontmatter `source` enum to include `unknown` in `meta/update-guidelines.md`, `identity/SUMMARY.md`, `knowledge/SUMMARY.md`, and `skills/SUMMARY.md`; defined it as legacy/backfill-only unless the real origin is genuinely unrecoverable; and formalized ACCESS semantics so `file`, `date`, `task`, `helpfulness`, and `note` are required while `session_id` and `category` are optional.
+
+- **Session-aware clustering.** Updated `meta/curation-policy.md` and `meta/quick-reference.md` so Exploration-stage co-retrieval clustering groups by `session_id` when present and falls back to `date` for legacy ACCESS entries, without requiring historical backfill.
+
+- **Validation tooling and docs.** Added a dependency-free Python validator plus `unittest` coverage to check content frontmatter, ACCESS JSONL structure, quick-reference parameter coverage, and runtime-guidance consistency. Added an optional validator invocation note to `QUICKSTART.md` and updated `meta/session-checklists.md` to recommend writing `session_id` whenever the chat folder is known.
+
+**Reasoning:** This pass fixes the highest-risk contradictions surfaced by the framework review: first-run behavior could bypass governance and write-access checks, runtime threshold authority was split across documents, the provenance schema contradicted its own backfill rule, and Exploration-stage clustering still grouped by date despite the addition of `session_id`. The validator turns those protocol expectations into an executable check so future edits are less likely to drift back into contradiction.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-16] Documentation and operational clarity from framework review
 
 **Changed:**

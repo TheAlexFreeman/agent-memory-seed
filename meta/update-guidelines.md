@@ -10,7 +10,7 @@ Every content file in `identity/`, `knowledge/`, and `skills/` must include YAML
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery
+source: user-stated | agent-inferred | external-research | skill-discovery | unknown
 origin_session: chat-NNN | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD
@@ -25,6 +25,7 @@ trust: high | medium | low
   - `agent-inferred`: The agent synthesized this from patterns across interactions.
   - `external-research`: Content originated from web searches, uploaded documents, or any source outside direct user conversation.
   - `skill-discovery`: A procedural pattern the agent identified from user corrections or repeated workflows.
+  - `unknown`: Reserved for legacy backfill or genuinely unrecoverable origin. Do not use for newly authored content when a concrete source can be identified.
 - **origin_session** — The chat session that produced this file, or `manual` for hand-authored content, or `unknown` for files predating this schema.
 - **created** — Date the file was first written.
 - **last_verified** — Date a human last reviewed or confirmed the content. Updated when the user explicitly approves, corrects, or re-confirms the file.
@@ -38,12 +39,13 @@ trust: high | medium | low
 | `agent-inferred`    | `medium`      | → `high` when user explicitly confirms                              |
 | `skill-discovery`   | `medium`      | → `high` after user approval + successful use                       |
 | `external-research` | `low`         | → `medium` after user review; → `high` after user confirms accuracy |
+| `unknown`           | `medium`      | Replace with a concrete source if later recovered                   |
 
 Trust may also be demoted: if a `high`-trust file is found to contain inaccuracies or the user expresses doubt, downgrade to `medium` and update `last_verified`.
 
 ### Retroactive application
 
-Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, and `last_verified` set to the review date.
+Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, and `last_verified` set to the review date. `source: unknown` is the legacy/backfill path and should not become the default for new content unless the true origin genuinely cannot be recovered.
 
 ## Change categories
 
@@ -143,7 +145,7 @@ At the end of any session where write actions were deferred, the agent should pr
 
 ### ACCESS.jsonl entries
 [folder/ACCESS.jsonl]
-{"file": "...", "date": "...", "task": "...", "helpfulness": 0.7, "note": "..."}
+{"file": "...", "date": "...", "task": "...", "helpfulness": 0.7, "note": "...", "session_id": "chats/YYYY/MM/DD/chat-NNN"}
 
 ### Review-queue entries
 [meta/review-queue.md]

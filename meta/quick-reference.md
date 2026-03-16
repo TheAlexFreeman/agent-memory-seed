@@ -2,7 +2,7 @@
 
 **Read this file at the start of every session before applying any thresholds or curation rules.**
 
-This is the single authoritative source for the system's currently active operational parameters. It is updated during each periodic review after a maturity assessment. All other threshold values in `curation-policy.md` and `README.md` are Calibration-stage reference values shown for illustration — the values below are what actually governs the live system.
+This is the single authoritative source for the system's currently active operational parameters. It is updated during each periodic review after a maturity assessment. All other threshold values in `curation-policy.md` and `README.md` are reference values shown for illustration — the values below are what actually governs the live system. `meta/system-maturity.md` is a reference used to assess maturity and choose the next parameter set; it is not the live runtime config.
 
 ---
 
@@ -28,6 +28,16 @@ The agent should update this date when completing a full periodic review (same c
 | Knowledge flooding alarm | 5 files/day | Exploration |
 | Task similarity method | Session co-occurrence | Exploration |
 | Cluster co-retrieval threshold | 3 sessions | Exploration |
+
+---
+
+## Active task similarity method
+
+**Method:** Session co-occurrence
+
+**Grouping precedence:** Group ACCESS entries by `session_id` when present. If an entry predates `session_id`, fall back to `date` for backward compatibility.
+
+**Default before first assessment:** Treat the system as Exploration and use the values recorded in this file.
 
 ---
 
@@ -67,7 +77,7 @@ Aggregate when entries accumulated since last aggregation reach **15**. Aggregat
 1. Updates SUMMARY.md files with refreshed usage patterns.
 2. Identifies high-value files (5+ retrievals, mean helpfulness ≥ 0.7) → enrich per knowledge amplification protocol.
 3. Identifies low-value files (3+ retrievals, mean helpfulness ≤ 0.3) → investigate for retirement.
-4. Scans for cross-folder co-retrieval clusters using the active task similarity method (currently: **session co-occurrence** — groups entries by date, identifies file sets co-occurring in 3+ date-groups, flags clusters of 3+ files from 2+ folders). See `meta/curation-policy.md` § "Task similarity definition" for the full algorithm.
+4. Scans for cross-folder co-retrieval clusters using the active task similarity method (currently: **session co-occurrence** — groups entries by `session_id` when present, otherwise by legacy `date`, identifies file sets co-occurring in 3+ session-groups, and flags clusters of 3+ files from 2+ folders). See `meta/curation-policy.md` § "Task similarity definition" for the full algorithm.
 5. Archives **all processed entries** to `ACCESS.archive.jsonl` and resets `ACCESS.jsonl` to empty. The archive is the historical record used for staleness detection across aggregation cycles.
 
 ---

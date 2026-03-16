@@ -30,13 +30,15 @@ All identity files must include YAML frontmatter (see `meta/update-guidelines.md
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery
+source: user-stated | agent-inferred | external-research | skill-discovery | unknown
 origin_session: chat-NNN | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD
 trust: high | medium | low
 ---
 ```
+
+`source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use it for new content when a concrete source can be identified.
 
 **Content boundary:** Identity files describe traits and preferences — they do not contain behavioral directives. A file here says _who the user is_; it does not script _what the agent should do_. If imperative instructions are found in an identity file, they should be flagged and reclassified to `skills/`. See "Instruction containment" in `meta/curation-policy.md`.
 

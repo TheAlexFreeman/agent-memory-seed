@@ -26,13 +26,15 @@ All knowledge files must include YAML frontmatter (see `meta/update-guidelines.m
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery
+source: user-stated | agent-inferred | external-research | skill-discovery | unknown
 origin_session: chat-NNN | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD
 trust: high | medium | low
 ---
 ```
+
+`source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use it for new content when a concrete source can be identified.
 
 **Critical rule:** Content from external sources (web searches, uploaded documents, external repositories) must be written to `knowledge/_unverified/` with `trust: low`. Files are promoted to `knowledge/` only after explicit user review. See `meta/curation-policy.md` for trust-weighted retrieval behavior.
 

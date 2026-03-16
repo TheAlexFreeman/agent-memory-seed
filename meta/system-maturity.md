@@ -1,6 +1,6 @@
 # System Maturity
 
-This document tracks the memory system's developmental stage and parameterizes governance thresholds accordingly. The core insight: a young system should bias toward exploration (capturing aggressively, retiring slowly), while a mature system should bias toward order (capturing selectively, retiring confidently).
+This document tracks the memory system's developmental stage and defines candidate parameter sets for each stage. The core insight: a young system should bias toward exploration (capturing aggressively, retiring slowly), while a mature system should bias toward order (capturing selectively, retiring confidently). This file is a reference for maturity assessment and parameter selection during periodic review; `meta/quick-reference.md` is the live runtime source for active thresholds.
 
 ## Maturity signals
 

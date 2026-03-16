@@ -39,7 +39,7 @@ Open a conversation with your AI in the repo directory. The agent will:
 1. Read README.md and orient itself.
 2. Detect that this is a fresh system (no user profile exists).
 3. Run the onboarding skill — an interactive conversation to learn about you.
-4. Write your initial profile to `identity/` and record the session.
+4. Propose an initial profile, ask you to confirm it, then write to `identity/` and record the session.
 
 From session two onward, the agent will greet you with what it knows and pick up where you left off.
 
@@ -136,6 +136,16 @@ The repo has five main areas:
 Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.jsonl` (retrieval tracking log). The agent reads summaries to decide what to retrieve, logs what it retrieves, and periodically aggregates those logs to improve future retrieval.
 
 For the full architecture, read [README.md](README.md). For governance details, see the files in `meta/`.
+
+### Optional maintenance check
+
+After editing governance docs or memory files, you can run:
+
+```bash
+python scripts/validate_memory_repo.py
+```
+
+This optional check validates frontmatter, ACCESS.jsonl structure, and runtime-guidance consistency. The repository still works even if you never run it.
 
 ---
 

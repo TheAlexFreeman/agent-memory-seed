@@ -10,7 +10,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Trust level** — Classification (high / medium / low) in content frontmatter. Governs how the agent uses the file: high = use freely; medium = use with caution, surface provenance when influential; low = inform only, never instruct, always disclose provenance. See `meta/curation-policy.md` § "Trust-weighted retrieval" and `meta/update-guidelines.md` § "Provenance metadata".
 
-- **Maturity stage** — Developmental phase of the system: Exploration (young), Calibration (adolescent), or Consolidation (mature). Determines active thresholds (retirement, aggregation, anomaly alarms). See `meta/system-maturity.md` and `meta/quick-reference.md`.
+- **Maturity stage** — Developmental phase of the system: Exploration (young), Calibration (adolescent), or Consolidation (mature). `meta/system-maturity.md` defines the assessment criteria and candidate parameter sets; `meta/quick-reference.md` records the active runtime thresholds and alarms.
 
 - **Protected change** — Modifications that require explicit user approval and (where applicable) a CHANGELOG entry: `skills/`, `meta/` (except machine-generated state files), README.md, CHANGELOG structure, bulk operations. See `meta/update-guidelines.md` § "Change categories".
 

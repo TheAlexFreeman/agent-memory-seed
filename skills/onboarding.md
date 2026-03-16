@@ -17,6 +17,8 @@ Activate this skill on the **first session only** — when both of these conditi
 
 If either condition is false, the system has already been onboarded. Skip this skill and proceed with the normal bootstrap sequence.
 
+Before using this skill, the agent should already have read `meta/quick-reference.md`, reviewed the relevant change-control and read-only sections of `meta/update-guidelines.md`, and checked write access per README.md's bootstrap sequence.
+
 ## Steps
 
 ### 1. Introduce the memory system
@@ -57,11 +59,11 @@ Ask: _"Is there anything else you'd like me to remember going forward? Anything 
 
 This catches important context that structured questions miss.
 
-### 6. Write the initial profile
+### 6. Propose and write the initial profile
 
 Based on the conversation:
 
-1. Create one or more files in `identity/` capturing the discovered traits. Use the frontmatter schema:
+1. Draft one or more proposed files in `identity/` capturing the discovered traits. Use the frontmatter schema:
    ```yaml
    ---
    source: user-stated
@@ -71,15 +73,21 @@ Based on the conversation:
    trust: high
    ---
    ```
-2. Tag each trait with `[observed]` confidence (the user stated it directly).
-3. Update `identity/SUMMARY.md` — replace the "No portrait yet" placeholder with an initial portrait summarizing the key traits.
+2. Tag each trait with `[observed]` confidence when the user stated it directly.
+3. Present the proposed portrait to the user and state that saving to `identity/` is a proposed-tier change that requires explicit confirmation.
+4. If the user requests edits, revise the proposal and ask for confirmation again.
+5. Only after explicit in-chat confirmation may you create the `identity/` files and update `identity/SUMMARY.md`.
+6. That explicit confirmation counts as the required approval for the first identity-file creation during onboarding.
+7. If write access is unavailable, do not attempt the write. Instead, produce deferred actions for the proposed `identity/` updates following `meta/update-guidelines.md` § "Read-only operation".
+8. If the session ends without confirmation, do not write to `identity/`.
 
 ### 7. Record the session
 
 Log this conversation following the standard chat archival structure:
 - Create the appropriate `chats/YYYY/MM/DD/chat-001/` folder.
 - Write `transcript.md`, `SUMMARY.md`, and `reflection.md`.
-- Append access notes to the relevant ACCESS.jsonl files for any content files you read.
+- Append access notes to the relevant ACCESS.jsonl files for any content files you read. Include `session_id` whenever the chat folder is known.
+- If the repository is read-only, keep chat archival behavior aligned with the normal deferred-action rules rather than inventing a separate onboarding exception.
 
 ## Quality criteria
 
@@ -87,6 +95,7 @@ Log this conversation following the standard chat archival structure:
 - The user should feel accurately represented — not a caricature or a list of demographics, but a useful working portrait.
 - Communication preferences should be specific enough to measurably change agent behavior in the next session.
 - No trait should be invented or inferred beyond what the user actually said. If something is ambiguous, note it as `[tentative]` rather than guessing.
+- No `identity/` write should occur before explicit user confirmation.
 
 ## Anti-patterns
 
@@ -94,6 +103,7 @@ Log this conversation following the standard chat archival structure:
 - **Don't over-collect.** 5–10 solid traits are better than 25 shallow ones. You'll learn more over time.
 - **Don't promise too much.** The memory system improves with use — don't set expectations for perfect recall from session one.
 - **Don't skip the open-ended question.** It consistently surfaces the most important context.
+- **Don't write memory optimistically.** Proposal first, confirmation second, write third.
 
 ## After first use
 
