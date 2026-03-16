@@ -16,6 +16,32 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-15] Self-organizing dynamics — from passive storage to emergent intelligence
+
+**Changed:**
+
+- **System maturity tracking.** Created `meta/system-maturity.md` defining three developmental stages (Exploration, Calibration, Consolidation) with quantitative signals for assessment and stage-appropriate parameter tables. All hardcoded governance thresholds (retirement windows, aggregation triggers, anomaly detection alarms) are now parameterized by maturity stage. Young systems bias toward exploration (capture aggressively, retire slowly); mature systems bias toward order (capture selectively, retire confidently).
+
+- **Governance feedback mechanism.** New section in `meta/curation-policy.md` establishing that governance rules are subject to the same evolutionary pressure as content. During periodic review, the agent evaluates whether thresholds, anomaly signals, and process requirements are producing good outcomes — checking for premature archival, false positive rates, and process friction. Issues are written as governance proposals to `meta/review-queue.md` with quantitative evidence. Closes the loop: governance shapes curation, curation generates evidence, evidence reshapes governance.
+
+- **Governance proposal format.** Extended `meta/review-queue.md` with a new `governance` type entry format including rule affected, evidence, current behavior, proposed change, and expected impact fields.
+
+- **Knowledge amplification protocol.** New section in `meta/curation-policy.md` creating a self-reinforcing dynamic for memory value. High-value files (5+ retrievals, mean helpfulness ≥ 0.7) are actively enriched with cross-references, task context annotations, expansion suggestions, and strengthened summary presence. Low-value files (3+ retrievals, mean helpfulness ≤ 0.3) are investigated, demoted in summaries, and flagged for retirement. Referenced in `README.md` aggregation section.
+
+- **Emergent categorization protocol.** New section in `meta/curation-policy.md` enabling the system to discover organizational structure from usage patterns rather than relying solely on the initial taxonomy. Cross-folder retrieval clusters (3+ files from 2+ folders co-retrieved in 3+ sessions) are detected, named, documented, and used to evaluate whether the folder structure should evolve. Includes a taxonomy health check for periodic review.
+
+- **Emergent abstractions.** New section in `README.md` summary hierarchy enabling conceptual compression alongside temporal compression. When the agent notices cross-domain structural patterns in knowledge files, it can propose meta-knowledge files that capture the abstraction — creating higher-level representations that enrich reasoning across constituent domains.
+
+- **Session reflection protocol.** New section in `README.md` adding meta-level self-observation to session output. Each session produces a reflection note alongside the chat summary, tracking which memory was retrieved, how it influenced responses, outcome quality, gaps noticed, and system-level observations. Over time, reflection notes reveal characteristic strengths, blind spots, and retrieval pattern quality — enabling genuine self-organization rather than mere accumulation.
+
+- **Enhanced periodic review.** Updated `meta/update-guidelines.md` to include governance evaluation, maturity assessment, emergent categorization review, and session reflection theme analysis as part of the 30-day review cycle.
+
+- **Updated README.md.** Repository structure diagram now includes `meta/system-maturity.md`. Aggregation section references cross-folder analysis and knowledge amplification protocols.
+
+**Reasoning:** The memory system's architecture already contained both bottom-up forces (raw data flowing in through interactions and ACCESS.jsonl) and top-down forces (governance rules, curation policy, trust hierarchy). But these forces were operating independently rather than interpenetrating. The governance layer was too rigid — it couldn't learn from its own outcomes. The categorization was imposed top-down without mechanisms for emergence. The positive feedback loop stopped at helpfulness scoring without actively reinforcing high-value regions. The thresholds were static rather than adaptive to system maturity. The conceptual hierarchy was flat. And the system lacked self-observation of its own reasoning patterns. These six changes establish the missing feedback mechanisms: governance rules are now shaped by the evidence they generate; categories emerge from co-retrieval patterns; high-value knowledge attracts further development; thresholds adapt to developmental stage; conceptual abstractions emerge from cross-domain patterns; and session reflection enables the system to observe its own cognitive dynamics. Together, these move the system from a structured storage mechanism toward a self-sustaining process at the boundary between order and chaos.
+
+**Approved by:** user
+
 ## [2026-03-15] Memetic threat defense — defense-in-depth against memory injection
 
 **Changed:**
