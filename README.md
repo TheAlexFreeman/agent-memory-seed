@@ -174,13 +174,14 @@ These abstractions then become available as top-down context that enriches futur
 If this is a fresh instantiation (the repo has just been cloned or linked for the first time with a new model), follow this sequence:
 
 1. Read this README.md fully. ✓
-2. Read `identity/SUMMARY.md` to understand the user.
-3. Read `meta/curation-policy.md` to understand memory governance, **including the trust-weighted retrieval rules, instruction containment policy, and anomaly detection signals.**
-4. Read `meta/update-guidelines.md` to understand the **provenance metadata schema** and change-control tiers.
-5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
-6. Read `chats/SUMMARY.md` to get historical context.
-7. **Check write access.** Can you write to this repository? If not, read `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
-8. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+2. Read `CHANGELOG.md` to understand the system's evolutionary trajectory — why rules exist and what problems they solve.
+3. Read `identity/SUMMARY.md` to understand the user.
+4. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
+5. Read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session.
+6. Read `knowledge/SUMMARY.md` and `skills/SUMMARY.md` to understand what knowledge and capabilities the system has accumulated. If these are empty (new system), skip ahead.
+7. Read `chats/SUMMARY.md` to get historical context.
+8. **Check write access.** Can you write to this repository? If not, read `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
+9. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
 ## Session reflection
 
