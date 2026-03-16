@@ -17,7 +17,7 @@ This quarantine zone ensures that **all externally sourced content is visible, l
   - Approve the file as-is (move to `knowledge/`, update `trust` to `medium` or `high`).
   - Edit and approve (correct inaccuracies, remove embedded instructions, then promote).
   - Reject (archive or delete the file).
-- **Files that remain here for 60+ days** without promotion are automatically archived to `knowledge/_archive/` per the temporal decay rules in `meta/curation-policy.md`.
+- **Files that remain here past the active low-trust retirement threshold** (see `meta/quick-reference.md` for the current value) without promotion are automatically archived to `knowledge/_archive/` per the temporal decay rules in `meta/curation-policy.md`.
 
 ## Current contents
 

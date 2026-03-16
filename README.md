@@ -50,6 +50,7 @@ This repository is a structured, version-controlled memory that persists across 
 │           └── artifacts/  ← Any files created or uploaded during the chat.
 │
 └── meta/                  ← Governance. How this system updates itself.
+    ├── quick-reference.md  ← Active operational parameters. The single threshold lookup.
     ├── curation-policy.md  ← Rules for memory hygiene, decay, and promotion.
     ├── update-guidelines.md ← Protocols for proposing and merging changes.
     ├── review-queue.md     ← Pending suggestions for system modifications.
