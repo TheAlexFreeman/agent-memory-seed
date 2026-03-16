@@ -107,6 +107,10 @@ During any session, if the agent notices it has been more than 30 days since the
 4. Does the overall folder structure still make sense given how the system is actually being used?
 5. Are there any security flags (type: `security`) in `meta/review-queue.md`?
 6. Are there files in `knowledge/_unverified/` older than 60 days awaiting review?
+7. **Governance evaluation.** Are the curation rules producing good outcomes? Check for: premature archival (re-retrieval of recently archived files), false positive rates on anomaly signals, and process friction that slows legitimate work without catching real problems. If issues are found, write a governance proposal to `meta/review-queue.md`. See `meta/curation-policy.md` § "Governance feedback" for the full protocol.
+8. **Maturity assessment.** Assess the system's developmental stage using the signals in `meta/system-maturity.md`. If the stage has changed since the last assessment, log the transition and adjust active thresholds accordingly.
+9. **Emergent categorization.** Are there cross-folder retrieval clusters that suggest the current taxonomy doesn't capture how the system is actually being used? See `meta/curation-policy.md` § "Emergent categorization."
+10. **Session reflection themes.** Review recent session reflection notes for recurring strengths, blind spots, or retrieval pattern issues. Address systematic findings through summary updates or review-queue proposals.
 
 This review should be lightweight — a quick summary and any recommendations, not a full audit. The user can engage as much or as little as they want.
 

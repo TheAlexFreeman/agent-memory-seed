@@ -50,10 +50,11 @@ This repository is a structured, version-controlled memory that persists across 
 │           └── artifacts/  ← Any files created or uploaded during the chat.
 │
 └── meta/                  ← Governance. How this system updates itself.
-    ├── curation-policy.md ← Rules for memory hygiene, decay, and promotion.
+    ├── curation-policy.md  ← Rules for memory hygiene, decay, and promotion.
     ├── update-guidelines.md ← Protocols for proposing and merging changes.
-    ├── review-queue.md    ← Pending suggestions for system modifications.
-    └── belief-diff-log.md ← Periodic audit log tracking content drift.
+    ├── review-queue.md     ← Pending suggestions for system modifications.
+    ├── belief-diff-log.md  ← Periodic audit log tracking content drift.
+    └── system-maturity.md  ← Developmental stage tracking and adaptive thresholds.
 ```
 
 ## Memory curation
@@ -87,6 +88,14 @@ When an `ACCESS.jsonl` file accumulates 20 or more entries, the next agent sessi
 5. Archive the processed entries to `ACCESS.archive.jsonl` and start a fresh `ACCESS.jsonl`.
 
 This creates a feedback loop: access notes → aggregated usage patterns → better summaries → smarter retrieval → better access notes.
+
+### Cross-folder analysis
+
+Aggregation should not be limited to a single folder. When processing any folder's ACCESS.jsonl, the agent should also check whether files from this folder are consistently co-retrieved with files from other folders. These cross-folder clusters represent emergent categories that the existing taxonomy may not capture. See `meta/curation-policy.md` § "Emergent categorization" for the full protocol.
+
+### Knowledge amplification
+
+High-value files identified during aggregation should be actively enriched — cross-referenced, annotated with task contexts, and given stronger summary presence. Low-value files should be investigated and potentially retired. See `meta/curation-policy.md` § "Knowledge amplification" for the full protocol. The goal is a self-reinforcing dynamic where successful knowledge attracts development and unsuccessful knowledge fades.
 
 ## Principles for updating memory
 
@@ -133,6 +142,23 @@ Summaries exist at every level of the folder hierarchy and serve as the primary 
 
 When writing summaries, ask: "If an agent six months from now reads only this summary, what do they need to know to serve this user well?"
 
+### Emergent abstractions
+
+The summary hierarchy compresses along the temporal dimension. But knowledge also compresses along the conceptual dimension — and this compression should emerge from usage, not be imposed upfront.
+
+When the agent notices that several knowledge files across different domains share a common structural pattern or underlying principle, it should create a **meta-knowledge file** in `knowledge/` that captures the abstraction. For example:
+
+- If the user works on both React frontend optimization and Django query optimization, the agent might notice both involve lazy evaluation, caching at boundaries, and measuring before optimizing — and create a file capturing this cross-domain "performance optimization" principle.
+- If the user's debugging approach in JavaScript and Python follows the same bisection-and-isolation pattern, that's a transferable methodology worth abstracting.
+
+Meta-knowledge files should:
+
+- Reference the concrete files they abstract from (so the lineage is traceable).
+- Be tagged `source: agent-inferred` and `trust: medium` until the user confirms the abstraction is accurate.
+- Be proposed to the user, not created silently — emergent abstractions are a form of the agent saying "I notice this pattern across your work."
+
+These abstractions then become available as top-down context that enriches future reasoning in any of the constituent domains — the same way higher layers in a neural network develop representations useful across multiple lower-level tasks.
+
 ## Bootstrap sequence
 
 If this is a fresh instantiation (the repo has just been cloned or linked for the first time with a new model), follow this sequence:
@@ -141,8 +167,46 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 2. Read `identity/SUMMARY.md` to understand the user.
 3. Read `meta/curation-policy.md` to understand memory governance, **including the trust-weighted retrieval rules, instruction containment policy, and anomaly detection signals.**
 4. Read `meta/update-guidelines.md` to understand the **provenance metadata schema** and change-control tiers.
-5. Read `chats/SUMMARY.md` to get historical context.
-6. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+5. Read `meta/system-maturity.md` to understand the system's current developmental stage and active thresholds.
+6. Read `chats/SUMMARY.md` to get historical context.
+7. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+
+## Session reflection
+
+At the end of each session, the agent writes a chat summary (per the compression hierarchy above). But summaries capture _what happened_ — they don't capture _how the memory system performed_. Session reflection adds this meta-level self-observation.
+
+### The reflection note
+
+In addition to the chat summary, each session should produce a brief **reflection note** appended to the chat folder (e.g., `chats/YYYY/MM/DD/chat-NNN/reflection.md`). Format:
+
+```markdown
+## Session reflection
+
+**Memory retrieved:** [list of files accessed, with helpfulness scores]
+**Memory influence:** [1-2 sentences on how retrieved memory shaped the session's responses]
+**Outcome quality:** [brief assessment: did the session go well? did memory help or hinder?]
+**Gaps noticed:** [any moments where relevant memory was missing, or irrelevant memory intruded]
+**System observations:** [optional: any patterns about the memory system itself — e.g., "the knowledge/ folder lacks coverage of topic X which came up repeatedly"]
+```
+
+### Why this matters
+
+ACCESS.jsonl tracks file-level retrieval — which files were opened and whether they helped. Session reflection tracks the _reasoning level_ — how memory was used, which combinations worked, and where the system's cognitive patterns have blind spots. Over time, reflection notes reveal:
+
+- **Characteristic strengths:** Types of tasks where memory consistently improves performance.
+- **Characteristic blind spots:** Types of tasks where the system struggles despite having relevant memory, or where it consistently lacks memory that would help.
+- **Retrieval pattern quality:** Whether the agent is finding the right files, or consistently retrieving near-misses.
+- **Combinatorial insights:** Which combinations of memories produce the best outcomes — information that pure access tracking can't capture.
+
+### Aggregation
+
+When the agent reviews reflection notes during periodic review, it should look for recurring themes and update:
+
+- Folder SUMMARY.md files to address identified gaps.
+- `meta/review-queue.md` with proposals to address systematic blind spots.
+- `meta/system-maturity.md` with observations relevant to stage assessment.
+
+Session reflection is the mechanism by which the system observes its own dynamics — the meta-level self-observation that enables genuine self-organization rather than mere accumulation.
 
 ## Security model
 
