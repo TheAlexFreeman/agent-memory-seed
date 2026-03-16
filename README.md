@@ -88,7 +88,7 @@ The `category` field is **added at Consolidation stage only** — omit it until 
 
 ### Aggregation
 
-When an `ACCESS.jsonl` file accumulates 20 or more entries, the next agent session should:
+When an `ACCESS.jsonl` file accumulates entries at or above the active aggregation trigger (see `meta/quick-reference.md` for the current threshold), the next agent session should:
 
 1. Analyze the access patterns (which files are retrieved often, which are never touched, what tasks drive retrieval).
 2. Update the folder's `SUMMARY.md` with a "Usage patterns" section describing how and why the agent typically uses this folder.
