@@ -227,7 +227,7 @@ This memory system employs **defense-in-depth** against memory injection — the
 | **Quarantine**               | `knowledge/_unverified/` staging area   | All external content lands here at `trust: low`. Promoted only after user review.                                     |
 | **Instruction containment**  | Only `skills/` and `meta/` may instruct | Agent refuses to follow imperatives in `knowledge/` or `identity/` files. Detected violations are flagged.            |
 | **Protected skills**         | `skills/` is protected-tier             | Creating or modifying any skill requires explicit user approval + CHANGELOG entry.                                    |
-| **Temporal decay**           | Unverified content expires              | `trust: low` unverified 60+ days → auto-archived. `trust: medium` unverified 120+ days → flagged.                     |
+| **Temporal decay**           | Unverified content expires              | `trust: low` unverified past the low-trust retirement threshold → auto-archived. `trust: medium` unverified past the medium-trust flagging threshold → flagged. Thresholds are stage-specific; see `meta/system-maturity.md`.  |
 | **Anomaly detection**        | ACCESS.jsonl pattern analysis           | High-frequency retrieval of unapproved files, dormant file access spikes, instruction leakage across folders.         |
 | **Belief diff**              | Periodic drift audit                    | 30-day review generates a changelog of content drift, making unexpected changes visible.                              |
 | **Git integrity**            | Signed commits, branch protection       | Cryptographic chain of custody. Unsigned commits on protected files are flagged.                                      |
