@@ -21,6 +21,18 @@ Before using this skill, the agent should already have read `meta/quick-referenc
 
 ## Steps
 
+### 0. Check for a starter profile template
+
+If `identity/` contains a file with `source: template` in its YAML frontmatter (placed there by `setup.sh --profile`), the user chose a starter profile during setup. In this case:
+
+1. Read the template file.
+2. Present the pre-filled traits to the user: "I see you started with the [role] template. Let me walk through these to see what fits."
+3. For each trait marked `[template]`, ask whether it's accurate, needs adjustment, or should be removed.
+4. Fill in any blank fields through conversation.
+5. Skip to step 5 (open-ended capture) after confirming all template traits — steps 2–4 below are for blank-slate onboarding.
+
+If no template exists, proceed with step 1 as normal.
+
 ### 1. Introduce the memory system
 
 Briefly explain to the user:
@@ -78,7 +90,7 @@ Based on the conversation:
 4. If the user requests edits, revise the proposal and ask for confirmation again.
 5. Only after explicit in-chat confirmation may you create the `identity/` files and update `identity/SUMMARY.md`.
 6. That explicit confirmation counts as the required approval for the first identity-file creation during onboarding.
-7. If write access is unavailable, do not attempt the write. Instead, produce deferred actions for the proposed `identity/` updates following `meta/update-guidelines.md` § "Read-only operation".
+7. If write access is unavailable, do not attempt the write. Instead, produce the confirmed profile using the **onboarding export format** (see `scripts/onboard-export-template.md`): output a single markdown document with `## Identity Profile`, `## Session Summary`, and `## Session Reflection` sections. Tell the user to save this output to a file and run `bash scripts/onboard-export.sh <file>` to import it into the repo. This replaces the generic deferred-action format for onboarding specifically, since the export script handles frontmatter, chat folder creation, and committing.
 8. If the session ends without confirmation, do not write to `identity/`.
 
 ### 7. Record the session

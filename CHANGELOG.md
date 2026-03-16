@@ -16,6 +16,32 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Human-friendly startup: guided setup, starter profiles, and daily workflow skills
+
+**Changed:**
+
+- **Guided setup mode.** Rewrote `setup.sh` with interactive platform picker (Claude Code, Cursor, ChatGPT, Generic) and starter profile selector. Platform choice generates tailored next-step instructions; ChatGPT and Generic modes auto-generate `chatgpt-instructions.txt` or `system-prompt.txt` with the correct custom instructions/system prompt. New flags: `--platform <name>`, `--profile <name>`.
+
+- **Starter profile templates.** Created `templates/profiles/` with three starter identities: `software-developer.md`, `researcher.md`, `project-manager.md`. Each ships with `source: template`, `trust: medium` frontmatter and `[template]`-tagged traits. Setup installs the chosen template to `identity/profile.md` and updates `identity/SUMMARY.md` to flag it as pending onboarding confirmation.
+
+- **Template-aware onboarding.** Updated `skills/onboarding.md` with a new step 0: if a `source: template` profile exists in `identity/`, the agent presents the pre-filled traits for confirmation/adjustment instead of starting from a blank slate.
+
+- **First-run flow.** Created `meta/first-run.md` — an agent-facing document that condenses bootstrap steps 1–9 into a streamlined silent setup + interactive onboarding flow. The agent reads governance files silently and only surfaces the conversational onboarding to the user. Updated `README.md` step 4 and `meta/session-checklists.md` to reference it.
+
+- **Daily workflow skills.** Created three new skills implementing the "Two Notes, Three Commands" pattern:
+  - `skills/session-start.md` — Session opener: loads recent context, checks pending items, greets with continuity.
+  - `skills/session-sync.md` — Mid-session checkpoint: captures decisions and progress on demand.
+  - `skills/session-wrapup.md` — Session closer: writes summary, reflection, ACCESS entries, produces deferred actions on read-only platforms.
+  Updated `skills/SUMMARY.md` and `meta/session-checklists.md` to reference the new skills.
+
+- **Updated QUICKSTART.md.** Documented the new setup flow (three interactive choices), CLI flags for scripted use, and starter profiles.
+
+**Reasoning:** The system's architecture was sound but the human-facing first five minutes were intimidating. Non-technical users had to understand git concepts before getting value, the 13-step bootstrap was surfaced as-is to new users, and there was no way to avoid a blank-canvas cold start. These changes implement progressive disclosure: `setup.sh` now feels like a consumer install wizard (pick a number, not a workflow); starter profiles solve the cold-start problem; `meta/first-run.md` hides bootstrap complexity from the user; and daily workflow skills give immediate tangible value from session one. Inspired by OpenClaw's "run this, answer questions, start chatting" pattern while preserving this system's security model.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-16] Governance hardening and validation pass
 
 **Changed:**

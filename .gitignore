@@ -10,5 +10,13 @@ Thumbs.db
 # Claude Code working files (worktrees, plans, session state)
 .claude/
 
+# Generated platform files (created by setup.sh for ChatGPT/generic users)
+chatgpt-instructions.txt
+system-prompt.txt
+
+# Python cache
+__pycache__/
+*.pyc
+
 # Do not ignore ACCESS.jsonl files — they are part of the system
 # Do not ignore any .md files — they are the system

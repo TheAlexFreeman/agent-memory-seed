@@ -26,7 +26,16 @@ rm -rf .git && git init
 bash setup.sh
 ```
 
-This personalizes the template: sets the creation date in CHANGELOG.md and prints next steps. For automated/CI environments, use `bash setup.sh --non-interactive`.
+The script walks you through three choices:
+1. **Git remote** — where to push your memory repo (optional).
+2. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank. The agent will confirm and refine these during onboarding.
+3. **AI platform** — tells you exactly what to do next for Claude Code, Cursor, ChatGPT, or other tools.
+
+For automated/CI environments: `bash setup.sh --non-interactive`. You can also pass flags directly:
+
+```bash
+bash setup.sh --platform claude-code --profile software-developer --remote https://github.com/you/my-memory.git
+```
 
 ### 3. Connect your AI platform
 
@@ -108,6 +117,23 @@ Key rules:
 ```
 
 **Model requirements:** The model should be capable of reading files, following multi-step instructions, and ideally writing to the repository. Models without tool use can still benefit from the memory system in read-only mode — see `meta/update-guidelines.md` § "Read-only operation" for how this degrades gracefully.
+
+### Read-only platforms (ChatGPT, Claude Projects, etc.)
+
+If your AI platform can't write files directly, the onboarding still works — you just import the results manually afterward:
+
+1. Share the repo files with your AI and start a conversation. The agent runs onboarding as usual.
+2. At the end of the session, the agent outputs a structured **onboarding export** — a single markdown document with your profile and session record.
+3. Save that output to a file (e.g., `my-onboarding.md`).
+4. Run the import script:
+
+```bash
+bash scripts/onboard-export.sh my-onboarding.md
+```
+
+This writes your profile to `identity/`, creates the first chat record in `chats/`, and commits everything. From the next session onward, the agent will recognize you.
+
+Use `--dry-run` to preview what would be written without making changes.
 
 ### Switching models
 

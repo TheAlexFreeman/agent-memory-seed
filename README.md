@@ -192,6 +192,7 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 2. Read `CHANGELOG.md` to understand the system's evolutionary trajectory — why rules exist and what problems they solve.
 3. Read `identity/SUMMARY.md` to understand the user.
 4. Determine whether this is **first run**: `identity/SUMMARY.md` still contains "No portrait yet" and no date-organized chat folders exist under `chats/`.
+   - **Agent shortcut:** If this is first run, see `meta/first-run.md` for a streamlined flow that condenses steps 1–9 into a silent setup + interactive onboarding. The full sequence below remains as reference documentation.
 5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
 6. **If this is first run,** read the relevant parts of `meta/update-guidelines.md` before doing anything else: `Change categories`, `Read-only operation`, and the periodic-review trigger reference only if needed. This loads change-control and write-access rules before onboarding writes are considered.
 7. **Check write access.** Can you write to this repository? If not, follow `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
