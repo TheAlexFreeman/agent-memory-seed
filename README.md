@@ -59,27 +59,36 @@ This repository is a structured, version-controlled memory that persists across 
 
 ## Memory curation
 
-Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a file from that folder during a session, append a note in this format:
+Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a specific content file from that folder during a session, append a note in this format:
+
+**What counts as a retrieval:** Opening a specific content file (in `identity/`, `knowledge/`, `skills/`, or `chats/`) in response to a user query. SUMMARY.md files and `meta/` governance files are navigation tools — do not log reads of those. Log every retrieved content file, **whether or not it was ultimately used in the response**. Misses are signal too.
 
 ```json
 {
   "file": "relative/path.md",
   "date": "YYYY-MM-DD",
   "task": "brief description of what the user asked",
+  "category": "task-category",
   "helpfulness": 0.0,
   "note": "why this file was or wasn't useful"
 }
 ```
 
-- `helpfulness` is a float from 0.0 (not useful, wrong file) to 1.0 (exactly what was needed).
-- `note` should be one sentence explaining relevance or lack thereof.
-- Be honest. A 0.2 with a clear note is more valuable than a polite 0.8.
+The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/task-categories.md` (once it exists) for the active vocabulary, and `meta/curation-policy.md` § "Task similarity definition" for how it develops.
 
-**Do not fabricate access notes.** Only log files you actually retrieved and used.
+`helpfulness` uses a three-state model:
+
+- **0.0 – 0.1 (wrong context):** File was clearly irrelevant — retrieved in error or drawn by a false-positive attractor in SUMMARY.md. Note what attracted the retrieval so it can be corrected.
+- **0.2 – 0.4 (retrieved, not used):** File was in the right neighborhood but not incorporated in the response — a near-miss. May indicate the file needs better differentiation from similar files, or splitting.
+- **0.5 – 1.0 (used and helpful):** File materially influenced the response. Score higher when it was central to the answer, lower when it was peripheral context.
+
+`note` should be one sentence explaining relevance or lack thereof. Be honest — a 0.1 with a note like *"retrieved because of 'React' in title, query was actually about React Native"* is more valuable to the feedback loop than a polite 0.7.
+
+**Do not fabricate access notes.** Log every content file you actually opened, including misses.
 
 ### Aggregation
 
-When an `ACCESS.jsonl` file accumulates 20 or more entries, the next agent session should:
+When an `ACCESS.jsonl` file accumulates entries at or above the active aggregation trigger (see `meta/quick-reference.md` for the current threshold), the next agent session should:
 
 1. Analyze the access patterns (which files are retrieved often, which are never touched, what tasks drive retrieval).
 2. Update the folder's `SUMMARY.md` with a "Usage patterns" section describing how and why the agent typically uses this folder.
@@ -167,9 +176,10 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 2. Read `identity/SUMMARY.md` to understand the user.
 3. Read `meta/curation-policy.md` to understand memory governance, **including the trust-weighted retrieval rules, instruction containment policy, and anomaly detection signals.**
 4. Read `meta/update-guidelines.md` to understand the **provenance metadata schema** and change-control tiers.
-5. Read `meta/system-maturity.md` to understand the system's current developmental stage and active thresholds.
+5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
 6. Read `chats/SUMMARY.md` to get historical context.
-7. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+7. **Check write access.** Can you write to this repository? If not, read `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
+8. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
 ## Session reflection
 
