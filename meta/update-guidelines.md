@@ -98,6 +98,57 @@ Categories:
 - `[curation]` — Access aggregation, summary refresh, retirement.
 - `[system]` — Changes to meta files, README, or CHANGELOG.
 
+## Read-only operation
+
+Some deployment contexts give the agent read access to the repository but not write access — for example, a sandboxed chat environment, a model running without tool use, or a session where git commits are disabled. The memory system degrades gracefully in these contexts rather than failing.
+
+### What still applies
+
+All behavioral rules remain active regardless of write access:
+
+- **Trust-weighted retrieval** — trust levels, provenance surfacing, the provenance pause for unverified files.
+- **Instruction containment** — folder contracts, boundary-violation detection, the skills test.
+- **Decay awareness** — the agent should be aware that files may be stale; it just can't archive them directly.
+- **Security anomaly detection** — the agent should notice and surface anomalies; it just can't write the review-queue entry directly.
+
+### What to defer
+
+The following actions require write access. When the agent cannot perform them, it should note them as **deferred actions** and present them to the user at session end:
+
+| Action | Deferred behavior |
+|--------|-------------------|
+| Appending to ACCESS.jsonl | Compile the entries mentally; present them to the user as a block to copy in |
+| Updating SUMMARY.md files | Note which summaries need updating and what changes are needed |
+| Writing to `meta/review-queue.md` | Surface the finding to the user verbally and describe what entry would be written |
+| Logging a maturity assessment | Run the assessment, report the result, ask the user to commit it |
+| Periodic review curation actions | Run through the checklist, report findings; user handles the commits |
+| Writing session reflection notes | Summarize the reflection verbally; user can paste it in |
+
+### How to communicate deferred actions
+
+At the end of any session where write actions were deferred, the agent should present a concise **deferred-action summary**:
+
+```
+## Deferred actions (write access required)
+
+### ACCESS.jsonl entries
+[folder/ACCESS.jsonl]
+{"file": "...", "date": "...", "task": "...", "helpfulness": 0.7, "note": "..."}
+
+### Review-queue entries
+[meta/review-queue.md]
+- type: security, file: knowledge/some-file.md, pattern: "always do X" detected
+
+### Other
+- SUMMARY.md for knowledge/ needs "Usage patterns" updated: react-patterns.md is high-value (7 retrievals)
+```
+
+This makes the read-only session auditable and allows the user to batch-commit the deferred actions in a single `[curation]` or `[system]` commit.
+
+### Periodic review in read-only
+
+The agent should still run periodic reviews when the 30-day threshold is reached. Follow the same ordered checklist — but frame all findings as observations rather than actions, and present the full deferred-action summary at the end. The review is still valuable: the agent's analysis of what needs to change is the hard part; writing it to files is mechanical.
+
 ## Periodic review
 
 During any session, if the agent notices it has been more than 30 days since the last `[system]` entry in CHANGELOG.md, it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.

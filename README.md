@@ -178,7 +178,8 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 4. Read `meta/update-guidelines.md` to understand the **provenance metadata schema** and change-control tiers.
 5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
 6. Read `chats/SUMMARY.md` to get historical context.
-7. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+7. **Check write access.** Can you write to this repository? If not, read `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
+8. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
 ## Session reflection
 
