@@ -7,7 +7,6 @@ import textwrap
 import unittest
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR_PATH = REPO_ROOT / "scripts" / "validate_memory_repo.py"
 
@@ -86,7 +85,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         result = validator.validate_repo(REPO_ROOT)
         self.assertEqual(result.errors, [], "\n".join(result.errors))
 
-    def test_access_entries_with_and_without_session_id_and_unknown_source_pass(self) -> None:
+    def test_access_entries_with_and_without_session_id_and_unknown_source_pass(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
@@ -202,7 +203,12 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
             result = validator.validate_repo(root)
-            self.assertTrue(any("missing required frontmatter keys" in error for error in result.errors))
+            self.assertTrue(
+                any(
+                    "missing required frontmatter keys" in error
+                    for error in result.errors
+                )
+            )
 
     def test_runtime_guidance_pointing_to_system_maturity_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -214,7 +220,12 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
             result = validator.validate_repo(root)
-            self.assertTrue(any("forbidden runtime guidance pattern" in error for error in result.errors))
+            self.assertTrue(
+                any(
+                    "forbidden runtime guidance pattern" in error
+                    for error in result.errors
+                )
+            )
 
 
 if __name__ == "__main__":

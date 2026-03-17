@@ -8,7 +8,7 @@ A companion document for humans exploring this project — covering the architec
 
 ### The core premise
 
-Every AI conversation starts from zero. Models have no persistent state between sessions — no memory of who you are, what you've told them, or what you've built together. This forces users into a repetitive cycle: re-explain context, re-state preferences, re-teach workflows. The more capable the model, the more painful this reset becomes, because the gap between what the model *could* do with context and what it *actually* does without it grows wider with each generation.
+Every AI conversation starts from zero. Models have no persistent state between sessions — no memory of who you are, what you've told them, or what you've built together. This forces users into a repetitive cycle: re-explain context, re-state preferences, re-teach workflows. The more capable the model, the more painful this reset becomes, because the gap between what the model _could_ do with context and what it _actually_ does without it grows wider with each generation.
 
 Agent Memory Seed solves this by externalizing memory into a structured, version-controlled repository that any model can read. The key insight is that **memory is data, not state** — it belongs in files the user owns, not in a platform's opaque context window or fine-tuning parameters.
 
@@ -118,6 +118,7 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 **2. Automated belief-diff generation.** The `meta/belief-diff-log.md` protocol is currently manual. A scheduled script (or a GitHub Action on a 30-day cron) could generate the belief diff automatically, making drift detection passive rather than requiring agent initiative.
 
 **3. Import/export tooling.** Beyond `onboard-export.sh`, the system needs tools for:
+
 - Exporting a complete memory snapshot (for backup or migration).
 - Importing memory from other formats (plain text notes, structured databases, other agent memory systems).
 - Partial export (sharing knowledge files without identity data, for team contexts).
@@ -129,6 +130,7 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 ### Medium-term (architectural extensions)
 
 **6. Multi-user support.** The current architecture assumes a single user. Supporting multiple users (e.g., a team repo) would require:
+
 - Per-user identity folders (or a shared identity with user-specific overlays).
 - Access control on identity files (Alice's preferences shouldn't be writable by Bob's agent).
 - Conflict resolution for concurrent writes to shared knowledge.
@@ -141,11 +143,12 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 **8. Real-time sync.** For users who switch between platforms within a single working session (e.g., Claude Code for coding, ChatGPT for brainstorming), the current per-session architecture means one platform's changes aren't visible to the other until the session ends. A lightweight sync mechanism (filesystem watcher + auto-commit, or a shared working directory) would enable mid-session handoffs.
 
 **9. Memory visualization.** A web dashboard showing:
+
 - A knowledge graph of how files relate to each other (based on cross-references and co-retrieval patterns).
 - A heat map of retrieval frequency and helpfulness across the repo.
 - A timeline of how the user's profile has evolved.
 - Maturity stage tracking with historical trend.
-This would make the system's self-organizing dynamics visible and engaging, especially for users who are more visual than textual.
+  This would make the system's self-organizing dynamics visible and engaging, especially for users who are more visual than textual.
 
 **10. Skill marketplace.** Once multiple users have mature memory systems, commonly useful skills become shareable. A skill marketplace (a curated repository of skill files) would allow users to install pre-built workflows. The protected-tier security model already handles this: installed skills would arrive at `trust: low` and require user review before execution, the same way external knowledge is quarantined.
 
@@ -156,6 +159,7 @@ This would make the system's self-organizing dynamics visible and engaging, espe
 **12. Agent-to-agent memory transfer.** When a user has multiple specialized agents (a coding agent, a research agent, a writing agent), they currently share a single memory repo. A more sophisticated architecture would allow agents to maintain separate working memories while sharing a common long-term memory layer — similar to how human working memory is task-specific but draws on shared long-term memory.
 
 **13. Temporal reasoning.** The system currently stores memory with timestamps but doesn't reason temporally in sophisticated ways. Future extensions could support:
+
 - Automatic detection of time-dependent knowledge ("this API version is current as of March 2026" becoming stale).
 - Predictive retrieval based on temporal patterns ("the user usually asks about deployment on Fridays").
 - Narrative generation from the temporal stream ("here's how your understanding of distributed systems evolved over the past year").
@@ -169,6 +173,7 @@ This would make the system's self-organizing dynamics visible and engaging, espe
 ### Platform integrations
 
 **MCP (Model Context Protocol) server.** The memory repo could be exposed as an MCP server, allowing any MCP-compatible client (Claude Code, Cursor, IDEs with MCP support) to access memory files through a standardized tool interface. The MCP server would provide:
+
 - `read_memory(path)` — retrieve a file with trust-level metadata.
 - `search_memory(query)` — semantic search across the repo.
 - `propose_change(path, content, reasoning)` — queue a proposed change with governance enforcement.
@@ -178,6 +183,7 @@ This would make the system's self-organizing dynamics visible and engaging, espe
 This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursorrules) and make the memory system a first-class tool rather than a set of instructions the model must parse and follow.
 
 **VS Code / IDE extension.** A lightweight extension that:
+
 - Shows the current user profile in a sidebar panel.
 - Provides a "Memory Search" command that queries the repo using the summary hierarchy.
 - Highlights when a file being edited is referenced in the memory system.
@@ -185,6 +191,7 @@ This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursor
 - Surfaces pending review-queue items as IDE notifications.
 
 **GitHub App.** A GitHub App that:
+
 - Runs `validate_memory_repo.py` on every push (CI validation).
 - Generates belief diffs on a schedule (automated drift detection).
 - Auto-archives expired low-trust content (temporal decay enforcement).
@@ -201,11 +208,13 @@ This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursor
 ### Data integrations
 
 **Obsidian sync.** Many knowledge workers already maintain Obsidian vaults. A bidirectional sync tool could:
+
 - Import relevant Obsidian notes into `knowledge/` (with `source: external-research`, landing in `_unverified/`).
 - Export knowledge files back to Obsidian for the user's personal reference.
 - Map Obsidian's tag system to the memory repo's emergent categorization.
 
 **Notion / Linear / Jira.** Project management tools contain context that enriches the memory system. Integrations could:
+
 - Import active project context (current sprint, assigned tickets, project goals) as knowledge files.
 - Export the agent's session summaries as Notion pages or Linear comments.
 - Sync task status bidirectionally so the agent knows what the user is working on.
@@ -215,12 +224,14 @@ This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursor
 ### Developer tooling integrations
 
 **Git hooks.** Pre-commit hooks that:
+
 - Validate frontmatter on all staged content files.
 - Check ACCESS.jsonl format.
 - Prevent accidental commits of sensitive data to identity files.
 - Enforce the protected-tier requirement (skills and meta changes require a CHANGELOG entry in the same commit).
 
 **CLI tool.** A dedicated CLI (`ams` or `memory`) that wraps common operations:
+
 - `memory status` — show system health, maturity stage, pending items.
 - `memory search <query>` — search across all files using the summary hierarchy.
 - `memory import <file>` — import external content to quarantine.

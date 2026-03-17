@@ -35,6 +35,7 @@ Open `setup.html` in any browser. The wizard walks you through the same choices 
 ---
 
 Either path walks you through three choices:
+
 1. **Git remote** — where to push your memory repo (optional).
 2. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank. The agent will confirm and refine these during onboarding.
 3. **AI platform** — tells you exactly what to do next for Claude Code, Cursor, ChatGPT, or other tools.
@@ -159,13 +160,13 @@ All accumulated knowledge, skills, and identity information transfers automatica
 
 The repo has five main areas:
 
-| Folder | Contains | Purpose |
-|--------|----------|---------|
-| `identity/` | User traits, preferences, values | Shape *how* the agent communicates |
-| `knowledge/` | Research, project context, reference material | Inform *what* the agent knows |
-| `skills/` | Codified procedures and workflows | Define *how* the agent performs tasks |
-| `chats/` | Session transcripts and summaries | Provide *episodic* memory |
-| `meta/` | Governance rules and system state | Control *how the system itself operates* |
+| Folder       | Contains                                      | Purpose                                  |
+| ------------ | --------------------------------------------- | ---------------------------------------- |
+| `identity/`  | User traits, preferences, values              | Shape _how_ the agent communicates       |
+| `knowledge/` | Research, project context, reference material | Inform _what_ the agent knows            |
+| `skills/`    | Codified procedures and workflows             | Define _how_ the agent performs tasks    |
+| `chats/`     | Session transcripts and summaries             | Provide _episodic_ memory                |
+| `meta/`      | Governance rules and system state             | Control _how the system itself operates_ |
 
 Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.jsonl` (retrieval tracking log). The agent reads summaries to decide what to retrieve, logs what it retrieves, and periodically aggregates those logs to improve future retrieval.
 
@@ -199,7 +200,7 @@ This creates `.memory.db`, a git-ignored SQLite database containing derived meta
 
 **Can I use multiple models simultaneously?**
 
-Yes. The memory is in files, not in any model's state. Two different models can read the same repo. Be cautious with concurrent *writes* — if two models write to the same file in the same session, you'll need to resolve conflicts manually (git makes this safe with its merge tooling).
+Yes. The memory is in files, not in any model's state. Two different models can read the same repo. Be cautious with concurrent _writes_ — if two models write to the same file in the same session, you'll need to resolve conflicts manually (git makes this safe with its merge tooling).
 
 **How do I back up my memory?**
 
