@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import re
 import sqlite3
@@ -12,6 +13,30 @@ from typing import Any, Iterable, cast
 INDEXED_MARKDOWN_DIRS = ("identity", "knowledge", "skills", "chats")
 ACCESS_DIRS = INDEXED_MARKDOWN_DIRS
 DEFAULT_DB_NAME = ".memory.db"
+TASK_GROUP_MERGE_THRESHOLD = 0.7
+TASK_NAME_LIMIT = 6
+TASK_STOPWORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "at",
+        "before",
+        "by",
+        "for",
+        "from",
+        "in",
+        "into",
+        "of",
+        "on",
+        "or",
+        "the",
+        "through",
+        "to",
+        "under",
+        "with",
+    }
+)
 
 
 @dataclass
@@ -44,6 +69,19 @@ def parse_args() -> argparse.Namespace:
         "--dry-run",
         action="store_true",
         help="Preview rebuild counts without writing the database",
+    )
+
+    task_groups_parser = subparsers.add_parser(
+        "task-groups", help="Preview normalized task groups from ACCESS history"
+    )
+    task_groups_parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON"
+    )
+    task_groups_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Maximum number of task groups to print",
     )
 
     return parser.parse_args()
@@ -228,11 +266,201 @@ def load_inventory(repo_root: Path) -> Inventory:
     )
 
 
+def strip_doubled_suffix(token: str) -> str:
+    if len(token) >= 3 and token[-1] == token[-2]:
+        return token[:-1]
+    return token
+
+
+def normalize_task_token(token: str) -> str:
+    if len(token) <= 3:
+        return token
+    if token.endswith("ies") and len(token) > 4:
+        return token[:-3] + "y"
+    if token.endswith("ing") and len(token) > 5:
+        return strip_doubled_suffix(token[:-3])
+    if token.endswith("ed") and len(token) > 4:
+        return strip_doubled_suffix(token[:-2])
+    if token.endswith("es") and len(token) > 4 and not token.endswith(
+        ("ses", "xes", "zes", "ches", "shes")
+    ):
+        return token[:-2]
+    if token.endswith("s") and len(token) > 3 and not token.endswith(
+        ("ss", "us", "is")
+    ):
+        return token[:-1]
+    return token
+
+
+def normalize_task(task: str) -> tuple[str, ...]:
+    raw_tokens = re.findall(r"[a-z0-9]+", task.lower())
+    filtered_tokens = [
+        normalize_task_token(token)
+        for token in raw_tokens
+        if token not in TASK_STOPWORDS
+    ]
+    filtered_tokens = [token for token in filtered_tokens if token]
+    if not filtered_tokens:
+        filtered_tokens = [normalize_task_token(token) for token in raw_tokens if token]
+    if not filtered_tokens:
+        return ("untitled",)
+    return tuple(sorted(set(filtered_tokens)))
+
+
+def jaccard_similarity(left: tuple[str, ...], right: tuple[str, ...]) -> float:
+    left_set = set(left)
+    right_set = set(right)
+    union = left_set | right_set
+    if not union:
+        return 1.0
+    return len(left_set & right_set) / len(union)
+
+
+def build_task_group_name(task: str, normalized_tokens: tuple[str, ...]) -> str:
+    tokens = normalize_task(task)
+    if tokens != ("untitled",):
+        return "-".join(tokens[:TASK_NAME_LIMIT])
+    if normalized_tokens != ("untitled",):
+        return "-".join(normalized_tokens[:TASK_NAME_LIMIT])
+    return "untitled-task"
+
+
+def count_value(counter: Counter[str], value: str, amount: int = 1) -> None:
+    counter[value] += amount
+
+
+def build_task_groups(access_entries: list[dict[str, object]]) -> list[dict[str, object]]:
+    exact_groups: dict[tuple[str, ...], dict[str, object]] = {}
+
+    for entry in access_entries:
+        task = str(entry["task"])
+        normalized_tokens = normalize_task(task)
+        entry["normalized_task"] = " ".join(normalized_tokens)
+        group = exact_groups.setdefault(
+            normalized_tokens,
+            {
+                "canonical_tokens": normalized_tokens,
+                "task_counts": Counter(),
+                "file_counts": Counter(),
+                "dates": set(),
+                "sessions": set(),
+                "entries": [],
+            },
+        )
+        task_counts = cast(Counter[str], group["task_counts"])
+        file_counts = cast(Counter[str], group["file_counts"])
+        dates = cast(set[str], group["dates"])
+        sessions = cast(set[str], group["sessions"])
+        entries = cast(list[dict[str, object]], group["entries"])
+
+        count_value(task_counts, task)
+        count_value(file_counts, str(entry["file"]))
+        dates.add(str(entry["retrieval_date"]))
+        session_id = str(entry.get("session_id") or "").strip()
+        sessions.add(session_id or f"date:{entry['retrieval_date']}")
+        entries.append(entry)
+
+    merged_groups: list[dict[str, object]] = []
+    sorted_exact_groups = sorted(
+        exact_groups.values(),
+        key=lambda group: (
+            -len(cast(list[dict[str, object]], group["entries"])),
+            cast(tuple[str, ...], group["canonical_tokens"]),
+        ),
+    )
+
+    for exact_group in sorted_exact_groups:
+        best_match: dict[str, object] | None = None
+        best_similarity = 0.0
+        exact_tokens = cast(tuple[str, ...], exact_group["canonical_tokens"])
+        for merged_group in merged_groups:
+            similarity = jaccard_similarity(
+                exact_tokens, cast(tuple[str, ...], merged_group["canonical_tokens"])
+            )
+            if similarity >= TASK_GROUP_MERGE_THRESHOLD and similarity > best_similarity:
+                best_match = merged_group
+                best_similarity = similarity
+
+        if best_match is None:
+            merged_groups.append(
+                {
+                    "canonical_tokens": exact_tokens,
+                    "task_counts": Counter(cast(Counter[str], exact_group["task_counts"])),
+                    "file_counts": Counter(cast(Counter[str], exact_group["file_counts"])),
+                    "dates": set(cast(set[str], exact_group["dates"])),
+                    "sessions": set(cast(set[str], exact_group["sessions"])),
+                    "entries": list(cast(list[dict[str, object]], exact_group["entries"])),
+                }
+            )
+            continue
+
+        cast(Counter[str], best_match["task_counts"]).update(
+            cast(Counter[str], exact_group["task_counts"])
+        )
+        cast(Counter[str], best_match["file_counts"]).update(
+            cast(Counter[str], exact_group["file_counts"])
+        )
+        cast(set[str], best_match["dates"]).update(cast(set[str], exact_group["dates"]))
+        cast(set[str], best_match["sessions"]).update(
+            cast(set[str], exact_group["sessions"])
+        )
+        cast(list[dict[str, object]], best_match["entries"]).extend(
+            cast(list[dict[str, object]], exact_group["entries"])
+        )
+
+    serialized_groups: list[dict[str, object]] = []
+    used_names: set[str] = set()
+    sorted_merged_groups = sorted(
+        merged_groups,
+        key=lambda group: (
+            -len(cast(list[dict[str, object]], group["entries"])),
+            cast(tuple[str, ...], group["canonical_tokens"]),
+        ),
+    )
+    for group in sorted_merged_groups:
+        task_counts = cast(Counter[str], group["task_counts"])
+        file_counts = cast(Counter[str], group["file_counts"])
+        sorted_dates = sorted(cast(set[str], group["dates"]))
+        sessions = cast(set[str], group["sessions"])
+        representative_tasks = [task for task, _count in task_counts.most_common(3)]
+        group_name = build_task_group_name(
+            representative_tasks[0] if representative_tasks else "",
+            cast(tuple[str, ...], group["canonical_tokens"]),
+        )
+        original_name = group_name
+        suffix = 2
+        while group_name in used_names:
+            group_name = f"{original_name}-{suffix}"
+            suffix += 1
+        used_names.add(group_name)
+
+        serialized_group: dict[str, object] = {
+            "group_name": group_name,
+            "normalized_tokens": list(cast(tuple[str, ...], group["canonical_tokens"])),
+            "representative_tasks": representative_tasks,
+            "first_seen_date": sorted_dates[0] if sorted_dates else None,
+            "last_seen_date": sorted_dates[-1] if sorted_dates else None,
+            "entry_count": len(cast(list[dict[str, object]], group["entries"])),
+            "session_count": len(sessions),
+            "distinct_dates_count": len(sorted_dates),
+            "common_files": [
+                {"file": file_name, "count": count}
+                for file_name, count in file_counts.most_common(5)
+            ],
+        }
+        for entry in cast(list[dict[str, object]], group["entries"]):
+            entry["task_group_name"] = group_name
+        serialized_groups.append(serialized_group)
+
+    return serialized_groups
+
+
 def initialize_schema(connection: sqlite3.Connection) -> None:
     connection.executescript(
         """
         DROP TABLE IF EXISTS access_entries;
         DROP TABLE IF EXISTS files;
+        DROP TABLE IF EXISTS task_groups;
         DROP TABLE IF EXISTS aggregation_checkpoints;
         DROP TABLE IF EXISTS clusters;
         DROP TABLE IF EXISTS anomalies;
@@ -257,11 +485,26 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
             retrieval_date TEXT NOT NULL,
             session_id TEXT,
             task TEXT NOT NULL,
+            normalized_task TEXT NOT NULL,
+            task_group_name TEXT NOT NULL,
             helpfulness REAL NOT NULL,
             note TEXT NOT NULL,
             source_file TEXT NOT NULL,
             source_line INTEGER NOT NULL,
             FOREIGN KEY (file_id) REFERENCES files(id)
+        );
+
+        CREATE TABLE task_groups (
+            id INTEGER PRIMARY KEY,
+            group_name TEXT UNIQUE NOT NULL,
+            normalized_tokens_json TEXT NOT NULL,
+            representative_tasks_json TEXT NOT NULL,
+            first_seen_date TEXT,
+            last_seen_date TEXT,
+            entry_count INTEGER NOT NULL,
+            session_count INTEGER NOT NULL,
+            distinct_dates_count INTEGER NOT NULL,
+            common_files_json TEXT NOT NULL
         );
 
         CREATE TABLE aggregation_checkpoints (
@@ -309,6 +552,7 @@ def write_database(
     db_path: Path, inventory: Inventory, quick_reference: dict[str, object]
 ) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    task_groups = build_task_groups(inventory.access_entries)
     connection = sqlite3.connect(db_path)
     connection.execute("PRAGMA foreign_keys = ON")
     try:
@@ -327,12 +571,41 @@ def write_database(
         connection.executemany(
             """
             INSERT INTO access_entries (
-                file_id, file, retrieval_date, session_id, task, helpfulness, note, source_file, source_line
+                file_id, file, retrieval_date, session_id, task, normalized_task, task_group_name, helpfulness, note, source_file, source_line
             ) VALUES (
-                :file_id, :file, :retrieval_date, :session_id, :task, :helpfulness, :note, :source_file, :source_line
+                :file_id, :file, :retrieval_date, :session_id, :task, :normalized_task, :task_group_name, :helpfulness, :note, :source_file, :source_line
             )
             """,
             inventory.access_entries,
+        )
+        connection.executemany(
+            """
+            INSERT INTO task_groups (
+                group_name, normalized_tokens_json, representative_tasks_json, first_seen_date, last_seen_date,
+                entry_count, session_count, distinct_dates_count, common_files_json
+            ) VALUES (
+                :group_name, :normalized_tokens_json, :representative_tasks_json, :first_seen_date, :last_seen_date,
+                :entry_count, :session_count, :distinct_dates_count, :common_files_json
+            )
+            """,
+            [
+                {
+                    "group_name": group["group_name"],
+                    "normalized_tokens_json": json.dumps(
+                        group["normalized_tokens"], sort_keys=True
+                    ),
+                    "representative_tasks_json": json.dumps(
+                        group["representative_tasks"], sort_keys=True
+                    ),
+                    "first_seen_date": group["first_seen_date"],
+                    "last_seen_date": group["last_seen_date"],
+                    "entry_count": group["entry_count"],
+                    "session_count": group["session_count"],
+                    "distinct_dates_count": group["distinct_dates_count"],
+                    "common_files_json": json.dumps(group["common_files"], sort_keys=True),
+                }
+                for group in task_groups
+            ],
         )
         connection.execute(
             """
@@ -353,6 +626,14 @@ def write_database(
         connection.commit()
     finally:
         connection.close()
+
+
+def table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
+    row = connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return row is not None
 
 
 def format_status(
@@ -379,7 +660,7 @@ def format_status(
         connection = sqlite3.connect(db_path)
         try:
             connection.execute("PRAGMA foreign_keys = ON")
-            status["database"] = {
+            database_snapshot = {
                 "indexed_files": connection.execute(
                     "SELECT COUNT(*) FROM files"
                 ).fetchone()[0],
@@ -387,6 +668,11 @@ def format_status(
                     "SELECT COUNT(*) FROM access_entries"
                 ).fetchone()[0],
             }
+            if table_exists(connection, "task_groups"):
+                database_snapshot["task_groups"] = connection.execute(
+                    "SELECT COUNT(*) FROM task_groups"
+                ).fetchone()[0]
+            status["database"] = database_snapshot
         finally:
             connection.close()
 
@@ -415,9 +701,59 @@ def print_status(status: dict[str, object], as_json: bool) -> None:
         print("Database snapshot:")
         print(f"  Indexed files: {database['indexed_files']}")
         print(f"  ACCESS entries: {database['access_entries']}")
+        if "task_groups" in database:
+            print(f"  Task groups: {database['task_groups']}")
     print("Active thresholds:")
     for parameter, value in thresholds.items():
         print(f"  - {parameter}: {value}")
+
+
+def format_task_group_report(
+    repo_root: Path, inventory: Inventory, limit: int
+) -> dict[str, object]:
+    task_groups = build_task_groups(inventory.access_entries)
+    sorted_task_groups = sorted(
+        task_groups,
+        key=lambda group: (
+            -cast(int, group["entry_count"]),
+            -cast(int, group["session_count"]),
+            cast(str, group["group_name"]),
+        ),
+    )
+    return {
+        "repo_root": str(repo_root),
+        "entries_analyzed": len(inventory.access_entries),
+        "task_groups_count": len(sorted_task_groups),
+        "task_groups": sorted_task_groups[: max(limit, 0)],
+    }
+
+
+def print_task_group_report(report: dict[str, object], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return
+
+    print(f"Repo root: {report['repo_root']}")
+    print(f"ACCESS entries analyzed: {report['entries_analyzed']}")
+    print(f"Task groups: {report['task_groups_count']}")
+    for group in cast(list[dict[str, object]], report["task_groups"]):
+        representative_tasks = cast(list[str], group["representative_tasks"])
+        normalized_tokens = cast(list[str], group["normalized_tokens"])
+        common_files = cast(list[dict[str, object]], group["common_files"])
+        print()
+        print(f"[{group['group_name']}]")
+        print(
+            "  Entries: "
+            f"{group['entry_count']} | Sessions: {group['session_count']} | Dates: {group['distinct_dates_count']}"
+        )
+        print(f"  Tokens: {', '.join(normalized_tokens)}")
+        if representative_tasks:
+            print(f"  Representative tasks: {'; '.join(representative_tasks)}")
+        if common_files:
+            formatted_files = ", ".join(
+                f"{item['file']} ({item['count']})" for item in common_files
+            )
+            print(f"  Common files: {formatted_files}")
 
 
 def run_status(args: argparse.Namespace) -> int:
@@ -451,12 +787,23 @@ def run_rebuild(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_task_groups(args: argparse.Namespace) -> int:
+    repo_root = detect_repo_root(args.repo_root)
+    inventory = load_inventory(repo_root)
+    print_task_group_report(
+        format_task_group_report(repo_root, inventory, args.limit), args.json
+    )
+    return 0
+
+
 def main() -> int:
     args = parse_args()
     if args.command == "status":
         return run_status(args)
     if args.command == "rebuild":
         return run_rebuild(args)
+    if args.command == "task-groups":
+        return run_task_groups(args)
     raise SystemExit(f"Unknown command: {args.command}")
 
 

@@ -154,15 +154,74 @@ class MemoryEngineTests(unittest.TestCase):
                 access_entries = connection.execute(
                     "SELECT COUNT(*) FROM access_entries"
                 ).fetchone()[0]
+                task_groups = connection.execute(
+                    "SELECT COUNT(*) FROM task_groups"
+                ).fetchone()[0]
                 stage = connection.execute(
                     "SELECT maturity_stage FROM system_state WHERE id = 1"
+                ).fetchone()[0]
+                task_group_name = connection.execute(
+                    "SELECT task_group_name FROM access_entries LIMIT 1"
                 ).fetchone()[0]
             finally:
                 connection.close()
 
             self.assertGreaterEqual(indexed_files, 6)
             self.assertEqual(access_entries, 1)
+            self.assertEqual(task_groups, 1)
             self.assertEqual(stage, "Exploration")
+            self.assertEqual(task_group_name, "status-test")
+
+    def test_task_group_report_merges_similar_tasks(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.archive.jsonl",
+                "\n".join(
+                    [
+                        '{"file":"identity/profile.md","date":"2026-03-16","task":"Debugging the React performance bug","helpfulness":0.9,"note":"used","session_id":"chats/2026/03/16/chat-001"}',
+                        '{"file":"knowledge/SUMMARY.md","date":"2026-03-17","task":"Debug React performance bugs","helpfulness":0.7,"note":"used","session_id":"chats/2026/03/17/chat-001"}',
+                        '{"file":"skills/SUMMARY.md","date":"2026-03-18","task":"Plan release checklist","helpfulness":0.6,"note":"used","session_id":"chats/2026/03/18/chat-001"}',
+                    ]
+                )
+                + "\n",
+            )
+
+            inventory = memory_engine.load_inventory(root)
+            report = memory_engine.format_task_group_report(root, inventory, limit=10)
+
+            self.assertEqual(report["entries_analyzed"], 4)
+            self.assertEqual(report["task_groups_count"], 3)
+
+            first_group = report["task_groups"][0]
+            self.assertEqual(first_group["group_name"], "bug-debug-performance-react")
+            self.assertEqual(first_group["entry_count"], 2)
+            self.assertEqual(
+                first_group["normalized_tokens"],
+                ["bug", "debug", "performance", "react"],
+            )
+
+    def test_status_includes_task_groups_after_rebuild(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            db_path = root / ".memory.db"
+
+            memory_engine.write_database(
+                db_path,
+                memory_engine.load_inventory(root),
+                memory_engine.parse_quick_reference(root / "meta" / "quick-reference.md"),
+            )
+
+            status = memory_engine.format_status(
+                root,
+                db_path,
+                memory_engine.load_inventory(root),
+                memory_engine.parse_quick_reference(root / "meta" / "quick-reference.md"),
+            )
+
+            self.assertEqual(status["database"]["task_groups"], 1)
 
     def test_malformed_access_jsonl_exits_with_context(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

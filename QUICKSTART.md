@@ -190,9 +190,12 @@ If you want a local derived index for future CLI and MCP workflows, you can init
 python scripts/memory_engine.py status
 python scripts/memory_engine.py rebuild --dry-run
 python scripts/memory_engine.py rebuild
+python scripts/memory_engine.py task-groups
 ```
 
 This creates `.memory.db`, a git-ignored SQLite database containing derived metadata from the repo. It does **not** replace the Markdown and JSONL files, and deleting it is safe — the CLI can rebuild it from source.
+
+`task-groups` stays read-only and works even before you rebuild the database. It previews how free-text ACCESS `task` strings collapse into normalized groups, which is the first Phase 2 step toward finer-grained clustering than session co-occurrence.
 
 ---
 

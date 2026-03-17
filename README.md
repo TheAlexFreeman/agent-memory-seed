@@ -88,9 +88,12 @@ An optional Phase 1 memory engine foundation is available as a standard-library 
 python scripts/memory_engine.py status
 python scripts/memory_engine.py rebuild --dry-run
 python scripts/memory_engine.py rebuild
+python scripts/memory_engine.py task-groups
 ```
 
 The CLI creates `.memory.db` as a **derived** SQLite index. It is not part of the canonical memory store, is ignored by git, and can be deleted/rebuilt at any time from the repo's Markdown and JSONL files. The initial Phase 1 implementation is intentionally conservative: it inventories the repo, records ACCESS history, and snapshots the live thresholds from `meta/quick-reference.md`. Search, aggregation automation, and MCP integration build on this foundation later.
+
+The first Phase 2 precursor is also read-only: `task-groups` normalizes ACCESS `task` strings into derived equivalence classes so you can inspect how the repo's free-text task history is starting to cluster before any aggregation writes are automated.
 
 ## Memory curation
 
