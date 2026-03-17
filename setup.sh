@@ -48,17 +48,20 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate flag values
-VALID_PLATFORMS="claude-code cursor chatgpt generic"
-VALID_PROFILES="software-developer researcher project-manager"
-
-if [[ -n "$PLATFORM" ]] && ! echo "$VALID_PLATFORMS" | grep -qw "$PLATFORM"; then
-    echo "Error: unknown platform '$PLATFORM'. Valid options: $VALID_PLATFORMS"
-    exit 1
+# Validate flag values using exact case-match (no regex interpretation)
+if [[ -n "$PLATFORM" ]]; then
+    case "$PLATFORM" in
+        claude-code|cursor|chatgpt|generic) ;;
+        *) echo "Error: unknown platform '$PLATFORM'. Valid options: claude-code cursor chatgpt generic"
+           exit 1 ;;
+    esac
 fi
-if [[ -n "$PROFILE" ]] && ! echo "$VALID_PROFILES" | grep -qw "$PROFILE"; then
-    echo "Error: unknown profile '$PROFILE'. Valid options: $VALID_PROFILES"
-    exit 1
+if [[ -n "$PROFILE" ]]; then
+    case "$PROFILE" in
+        software-developer|researcher|project-manager) ;;
+        *) echo "Error: unknown profile '$PROFILE'. Valid options: software-developer researcher project-manager"
+           exit 1 ;;
+    esac
 fi
 
 # Validate we're in the right directory
