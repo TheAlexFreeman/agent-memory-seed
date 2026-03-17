@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Phase 1 memory engine foundation
+
+**Changed:**
+
+- **Optional derived SQLite sidecar.** Added `scripts/memory_engine.py`, a standard-library Python CLI with two Phase 1 commands: `status` and `rebuild`. `status` reports the live stage and thresholds from `meta/quick-reference.md`, inventories the current repo, and shows whether the derived SQLite database exists. `rebuild` scans the repo and builds `.memory.db`, a git-ignored SQLite database that records indexed Markdown files, ACCESS entries, and a snapshot of the live runtime config.
+
+- **Explicit derived-state schema.** The new CLI creates a minimal Phase 1 schema (`files`, `access_entries`, `aggregation_checkpoints`, `clusters`, `anomalies`, `system_state`) without changing the canonical storage model. The database is rebuildable from source files and can be safely deleted at any time.
+
+- **Tests for the foundation.** Added `tests/test_memory_engine.py` covering status reporting, dry-run rebuild behavior, and deterministic SQLite population from a minimal repo fixture.
+
+- **Docs and ignore rules.** Added `.memory.db` to `.gitignore` and documented the optional engine in `README.md`, `QUICKSTART.md`, and `DESIGN.md` as a Phase 1 foundation rather than a replacement for the file-based system.
+
+**Reasoning:** The deep-research follow-up identified the highest-leverage initial step as making the persistence boundary explicit before adding richer search or MCP operations. This change implements that boundary in code. It keeps Markdown and JSONL as the canonical memory substrate, uses SQLite only as disposable derived state, and creates a concrete CLI surface future phases can extend without rewriting the governance model.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-16] Browser setup wizard (setup.html)
 
 **Changed:**
@@ -62,7 +80,7 @@ Each entry should explain not just what changed, but **why** — so that future 
   - `skills/session-start.md` — Session opener: loads recent context, checks pending items, greets with continuity.
   - `skills/session-sync.md` — Mid-session checkpoint: captures decisions and progress on demand.
   - `skills/session-wrapup.md` — Session closer: writes summary, reflection, ACCESS entries, produces deferred actions on read-only platforms.
-  Updated `skills/SUMMARY.md` and `meta/session-checklists.md` to reference the new skills.
+    Updated `skills/SUMMARY.md` and `meta/session-checklists.md` to reference the new skills.
 
 - **Updated QUICKSTART.md.** Documented the new setup flow (three interactive choices), CLI flags for scripted use, and starter profiles.
 

@@ -34,6 +34,7 @@ Skip this skill on the very first session — use `meta/first-run.md` and the on
 ### 4. Greet with continuity (interactive)
 
 Greet the user in a way that reflects:
+
 - What they were working on last time (from the recent chat summary).
 - Any pending items that need attention (from the review queue).
 - Any system maintenance due (aggregation, periodic review).
