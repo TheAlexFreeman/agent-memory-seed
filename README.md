@@ -26,6 +26,7 @@ This repository is a structured, version-controlled memory that persists across 
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
 ├── setup.sh               ← Post-clone setup script (interactive or CLI flags).
 ├── setup.html             ← Browser-based setup wizard (no terminal required).
+├── .memory.db             ← Optional derived SQLite index created by the memory engine CLI.
 │
 ├── identity/              ← Who the user is. Personality, preferences, values.
 │   ├── SUMMARY.md         ← Start here. High-level portrait of the user.
@@ -78,6 +79,18 @@ This repository is a structured, version-controlled memory that persists across 
 │
 └── tests/                 ← Test suite for the validator.
 ```
+
+### Optional memory engine
+
+An optional Phase 1 memory engine foundation is available as a standard-library Python CLI:
+
+```bash
+python scripts/memory_engine.py status
+python scripts/memory_engine.py rebuild --dry-run
+python scripts/memory_engine.py rebuild
+```
+
+The CLI creates `.memory.db` as a **derived** SQLite index. It is not part of the canonical memory store, is ignored by git, and can be deleted/rebuilt at any time from the repo's Markdown and JSONL files. The initial Phase 1 implementation is intentionally conservative: it inventories the repo, records ACCESS history, and snapshots the live thresholds from `meta/quick-reference.md`. Search, aggregation automation, and MCP integration build on this foundation later.
 
 ## Memory curation
 

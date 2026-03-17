@@ -181,6 +181,18 @@ python scripts/validate_memory_repo.py
 
 This optional check validates frontmatter, ACCESS.jsonl structure, and runtime-guidance consistency. The repository still works even if you never run it.
 
+### Optional Phase 1 memory engine foundation
+
+If you want a local derived index for future CLI and MCP workflows, you can initialize the Phase 1 foundation:
+
+```bash
+python scripts/memory_engine.py status
+python scripts/memory_engine.py rebuild --dry-run
+python scripts/memory_engine.py rebuild
+```
+
+This creates `.memory.db`, a git-ignored SQLite database containing derived metadata from the repo. It does **not** replace the Markdown and JSONL files, and deleting it is safe — the CLI can rebuild it from source.
+
 ---
 
 ## FAQ

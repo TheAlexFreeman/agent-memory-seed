@@ -136,6 +136,8 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 
 **7. Semantic retrieval.** The current retrieval mechanism is SUMMARY.md-based: the agent reads summaries and decides what to fetch. This works well but becomes less effective as the system grows. Adding a local embedding index (e.g., using a lightweight model to embed all files and perform nearest-neighbor search) would dramatically improve retrieval precision at scale without changing the fundamental architecture. The embedding index would be a supplementary retrieval mechanism alongside SUMMARY-based navigation, not a replacement.
 
+**Current implementation note:** The repository now includes a Phase 1 foundation for this direction: an optional Python CLI that builds a derived SQLite index (`.memory.db`) from the repo. The Phase 1 engine is intentionally limited to inventorying files, ACCESS entries, and live runtime thresholds so the persistence boundary is explicit before richer retrieval logic is added.
+
 **8. Real-time sync.** For users who switch between platforms within a single working session (e.g., Claude Code for coding, ChatGPT for brainstorming), the current per-session architecture means one platform's changes aren't visible to the other until the session ends. A lightweight sync mechanism (filesystem watcher + auto-commit, or a shared working directory) would enable mid-session handoffs.
 
 **9. Memory visualization.** A web dashboard showing:
@@ -225,6 +227,8 @@ This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursor
 - `memory review` — interactive review of pending queue items.
 - `memory export --format <obsidian|notion|plain>` — export for other tools.
 - `memory validate` — run the validator with formatted output.
+
+**Current implementation note:** Phase 1 ships the smallest safe subset of this idea as `python scripts/memory_engine.py` with `status` and `rebuild` commands. It is standard-library only, keeps the repo canonical, and establishes the derived-state contract for later search, review, and MCP features.
 
 ---
 

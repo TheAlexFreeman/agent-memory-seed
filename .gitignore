@@ -18,5 +18,8 @@ system-prompt.txt
 __pycache__/
 *.pyc
 
+# Optional derived memory engine state
+.memory.db
+
 # Do not ignore ACCESS.jsonl files — they are part of the system
 # Do not ignore any .md files — they are the system
