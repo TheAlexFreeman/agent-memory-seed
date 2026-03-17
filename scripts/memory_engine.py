@@ -287,10 +287,10 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
 def write_database(db_path: Path, inventory: Inventory, quick_reference: dict[str, object]) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
+    connection.execute("PRAGMA foreign_keys = ON")
     try:
         connection.execute("PRAGMA foreign_keys = ON")
         initialize_schema(connection)
-        connection.executemany(
             """
             INSERT INTO files (
                 id, relative_path, folder, file_type, source, trust, created, last_verified, file_size_bytes
