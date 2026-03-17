@@ -25,6 +25,7 @@ ALLOWED_SOURCE_VALUES = {
     "agent-inferred",
     "external-research",
     "skill-discovery",
+    "template",
     "unknown",
 }
 ALLOWED_TRUST_VALUES = {"high", "medium", "low"}
