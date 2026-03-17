@@ -6,11 +6,14 @@ Compact runbooks for session start and end. See README.md for full bootstrap and
 
 If this is the very first session (no user profile, no chat history), follow `meta/first-run.md` instead of the checklists below. It condenses the bootstrap into a streamlined silent setup + interactive onboarding flow.
 
-## Session start
+## Session start (returning sessions)
 
-1. Run the **bootstrap sequence** in README § "Bootstrap sequence", including the first-run branch that loads change-control rules and checks write access before onboarding writes are considered.
+This is the **compact path** for agents who have already completed the full bootstrap at least once. On first instantiation, follow the full bootstrap sequence in README.md instead.
+
+1. Read `README.md`, `identity/SUMMARY.md`, and `meta/quick-reference.md`. Consult `meta/curation-policy.md` and `meta/update-guidelines.md` as-needed during the session — you do not need to re-read them in full.
 2. **Check write access.** If you cannot write to the repo, follow `meta/update-guidelines.md` § "Read-only operation" and prepare to output a deferred-action summary at session end.
-3. Greet the user and ask if anything important has changed since the last session.
+3. Read `knowledge/SUMMARY.md`, `skills/SUMMARY.md`, and `chats/SUMMARY.md` for accumulated context. Skip any that are empty.
+4. Greet the user and ask if anything important has changed since the last session.
 
 For the full executable workflow, see `skills/session-start.md`.
 

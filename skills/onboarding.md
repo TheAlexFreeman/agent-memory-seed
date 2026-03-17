@@ -29,13 +29,15 @@ If `identity/` contains a file with `source: template` in its YAML frontmatter (
 2. Present the pre-filled traits to the user: "I see you started with the [role] template. Let me walk through these to see what fits."
 3. For each trait marked `[template]`, ask whether it's accurate, needs adjustment, or should be removed.
 4. Fill in any blank fields through conversation.
-5. Skip to step 5 (open-ended capture) after confirming all template traits — steps 2–4 below are for blank-slate onboarding.
+5. Rewrite the profile: retag confirmed traits from `[template]` to `[observed]`, drop traits the user rejected, and incorporate any new traits discovered. Update the file's YAML frontmatter from `source: template` to `source: user-stated` and `trust: high`, and set `last_verified` to today's date.
+6. Skip to step 5 (open-ended capture) after confirming all template traits — steps 2–4 below are for blank-slate onboarding.
 
 If no template exists, proceed with step 1 as normal.
 
 ### 1. Introduce the memory system
 
 Briefly explain to the user:
+
 - You have persistent memory stored in this repository.
 - What you learn in this conversation will be available in future sessions, even across different models.
 - You'd like to ask a few questions to build an initial profile so future interactions start strong.
@@ -45,6 +47,7 @@ Keep it concise — one short paragraph, not a lecture.
 ### 2. Discover the user's role and context
 
 Ask about:
+
 - **Role and responsibilities.** What they do, what domain they work in.
 - **Key projects.** What they're actively working on or will be working on with AI assistance.
 - **Domain expertise.** What they know well (so you can calibrate depth) and what's new to them.
@@ -52,6 +55,7 @@ Ask about:
 ### 3. Discover communication preferences
 
 Ask about:
+
 - **Detail level.** Do they prefer concise answers or thorough explanations?
 - **Tone.** Casual, professional, direct, exploratory?
 - **Format preferences.** Do they like bullet points, prose, code-first, examples-first?
@@ -60,6 +64,7 @@ Ask about:
 ### 4. Discover tools and environment
 
 Ask about:
+
 - **Primary languages and frameworks** they work with.
 - **Editor/IDE** they use.
 - **Platforms and services** that come up regularly (cloud providers, CI/CD, etc.).
@@ -96,6 +101,7 @@ Based on the conversation:
 ### 7. Record the session
 
 Log this conversation following the standard chat archival structure:
+
 - Create the appropriate `chats/YYYY/MM/DD/chat-001/` folder.
 - Write `transcript.md`, `SUMMARY.md`, and `reflection.md`.
 - Append access notes to the relevant ACCESS.jsonl files for any content files you read. Include `session_id` whenever the chat folder is known.

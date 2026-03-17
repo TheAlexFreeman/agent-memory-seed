@@ -18,16 +18,16 @@ The agent should update this date when completing a full periodic review (same c
 
 ## Active thresholds
 
-| Parameter | Active value | Stage |
-|-----------|-------------|-------|
-| Low-trust retirement threshold | 120 days | Exploration |
-| Medium-trust flagging threshold | 180 days | Exploration |
-| Staleness trigger (no access) | 120 days | Exploration |
-| Aggregation trigger | 15 entries | Exploration |
-| Identity churn alarm | 5 traits/session | Exploration |
-| Knowledge flooding alarm | 5 files/day | Exploration |
-| Task similarity method | Session co-occurrence | Exploration |
-| Cluster co-retrieval threshold | 3 sessions | Exploration |
+| Parameter                       | Active value          | Stage       |
+| ------------------------------- | --------------------- | ----------- |
+| Low-trust retirement threshold  | 120 days              | Exploration |
+| Medium-trust flagging threshold | 180 days              | Exploration |
+| Staleness trigger (no access)   | 120 days              | Exploration |
+| Aggregation trigger             | 15 entries            | Exploration |
+| Identity churn alarm            | 5 traits/session      | Exploration |
+| Knowledge flooding alarm        | 5 files/day           | Exploration |
+| Task similarity method          | Session co-occurrence | Exploration |
+| Cluster co-retrieval threshold  | 3 sessions            | Exploration |
 
 ---
 
@@ -44,15 +44,18 @@ The agent should update this date when completing a full periodic review (same c
 ## Decision guide: trust decay
 
 ### `trust: low` file
+
 1. Has `last_verified` gone unupdated for more than **120 days**? → Archive to `knowledge/_archive/`, remove from SUMMARY.md, log as `[curation]` commit.
 2. Otherwise → retain.
 
 ### `trust: medium` file
+
 1. Has `last_verified` gone unupdated for more than **180 days**? → Flag in `meta/review-queue.md` for re-verification or demotion.
 2. If demoted to `low` → the 120-day low-trust retirement clock starts from the demotion date.
 3. Otherwise → retain.
 
 ### `trust: high` file
+
 1. Is `last_verified` older than **365 days**? → Mention in periodic review for a freshness check (informational — no automatic action).
 2. Otherwise → no action needed.
 
@@ -62,18 +65,19 @@ The agent should update this date when completing a full periodic review (same c
 
 ## Decision guide: anomaly detection
 
-| Signal | Trigger | Action |
-|--------|---------|--------|
-| Identity traits changed in one session | > **5** traits | Flag in `meta/review-queue.md` |
-| Knowledge files on same topic from `external-research`, same session or day | > **5** files | Flag in `meta/review-queue.md` |
+| Signal                                                                            | Trigger              | Action                         |
+| --------------------------------------------------------------------------------- | -------------------- | ------------------------------ |
+| Identity traits changed in one session                                            | > **5** traits       | Flag in `meta/review-queue.md` |
+| Knowledge files on same topic from `external-research`, same session or day       | > **5** files        | Flag in `meta/review-queue.md` |
 | File with zero retrievals in last **120 days**, then 3+ retrievals in one session | Spike after dormancy | Flag in `meta/review-queue.md` |
-| File retrieved 5+ times total but never explicitly approved by user | 5 retrievals | Flag in `meta/review-queue.md` |
+| File retrieved 5+ times total but never explicitly approved by user               | 5 retrievals         | Flag in `meta/review-queue.md` |
 
 ---
 
 ## Decision guide: ACCESS.jsonl aggregation
 
 Aggregate when entries accumulated since last aggregation reach **15**. Aggregation:
+
 1. Updates SUMMARY.md files with refreshed usage patterns.
 2. Identifies high-value files (5+ retrievals, mean helpfulness ≥ 0.7) → enrich per knowledge amplification protocol.
 3. Identifies low-value files (3+ retrievals, mean helpfulness ≤ 0.3) → investigate for retirement.
@@ -95,3 +99,9 @@ After completing the maturity assessment during periodic review:
 5. Log the update as a `[system]` commit in `CHANGELOG.md`.
 
 Stage parameter tables: see `meta/system-maturity.md` §§ "Stage 1: Exploration", "Stage 2: Calibration", "Stage 3: Consolidation".
+
+---
+
+## Context budget guideline
+
+The full bootstrap sequence reads approximately 1,400 lines (~15,000–20,000 tokens) across all referenced files. For models with context windows under 32k, use the compact returning-session checklist in `meta/session-checklists.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.

@@ -86,7 +86,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         result = validator.validate_repo(REPO_ROOT)
         self.assertEqual(result.errors, [], "\n".join(result.errors))
 
-    def test_access_entries_with_and_without_session_id_and_unknown_source_pass(self) -> None:
+    def test_access_entries_with_and_without_session_id_and_unknown_source_pass(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
@@ -202,7 +204,12 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
             result = validator.validate_repo(root)
-            self.assertTrue(any("missing required frontmatter keys" in error for error in result.errors))
+            self.assertTrue(
+                any(
+                    "missing required frontmatter keys" in error
+                    for error in result.errors
+                )
+            )
 
     def test_runtime_guidance_pointing_to_system_maturity_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -214,7 +221,96 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
             result = validator.validate_repo(root)
-            self.assertTrue(any("forbidden runtime guidance pattern" in error for error in result.errors))
+            self.assertTrue(
+                any(
+                    "forbidden runtime guidance pattern" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_quarantine_file_with_wrong_trust_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "knowledge" / "_unverified" / "suspect.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: external-research
+                    origin_session: chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: medium
+                    ---
+
+                    # Suspect
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "quarantine file must have trust: low" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_quarantine_file_with_correct_trust_and_source_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "knowledge" / "_unverified" / "legit.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: external-research
+                    origin_session: chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: low
+                    ---
+
+                    # Legit external content
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+
+    def test_quarantine_file_with_wrong_source_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "knowledge" / "_unverified" / "odd-source.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: agent-inferred
+                    origin_session: chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: low
+                    ---
+
+                    # Odd source in quarantine
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any(
+                    "quarantine file expected source: external-research" in w
+                    for w in result.warnings
+                )
+            )
 
 
 if __name__ == "__main__":

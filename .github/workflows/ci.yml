@@ -19,10 +19,18 @@ jobs:
           python-version: "3.11"
 
       - name: Install test dependencies
-        run: pip install pytest
+        run: pip install pytest ruff
+
+      - name: Lint Python
+        run: ruff check scripts/ tests/
 
       - name: Run validator
         run: python scripts/validate_memory_repo.py
 
       - name: Run tests
         run: python -m pytest tests/ -v
+
+      - name: Lint shell scripts
+        run: |
+          sudo apt-get install -y shellcheck
+          shellcheck setup.sh scripts/onboard-export.sh

@@ -124,7 +124,9 @@ def iter_access_files(root: Path) -> list[Path]:
     return sorted(paths)
 
 
-def parse_frontmatter(path: Path, text: str, result: ValidationResult) -> dict[str, str] | None:
+def parse_frontmatter(
+    path: Path, text: str, result: ValidationResult
+) -> dict[str, str] | None:
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -135,7 +137,9 @@ def parse_frontmatter(path: Path, text: str, result: ValidationResult) -> dict[s
             end_index = index
             break
     if end_index is None:
-        result.error(f"{path}: frontmatter starts with '---' but has no closing delimiter")
+        result.error(
+            f"{path}: frontmatter starts with '---' but has no closing delimiter"
+        )
         return None
 
     data: dict[str, str] = {}
@@ -155,14 +159,18 @@ def parse_frontmatter(path: Path, text: str, result: ValidationResult) -> dict[s
     return data
 
 
-def validate_iso_date(value: object, path: Path, field_name: str, result: ValidationResult) -> None:
+def validate_iso_date(
+    value: object, path: Path, field_name: str, result: ValidationResult
+) -> None:
     if not isinstance(value, str):
         result.error(f"{path}: {field_name} must be a string in YYYY-MM-DD format")
         return
     try:
         date.fromisoformat(value)
     except ValueError:
-        result.error(f"{path}: {field_name} must be a valid YYYY-MM-DD date, got {value!r}")
+        result.error(
+            f"{path}: {field_name} must be a valid YYYY-MM-DD date, got {value!r}"
+        )
 
 
 def validate_frontmatter(path: Path, result: ValidationResult) -> None:
@@ -216,7 +224,9 @@ def validate_access_file(path: Path, result: ValidationResult) -> None:
 
         missing = sorted(REQUIRED_ACCESS_FIELDS - payload.keys())
         if missing:
-            result.error(f"{path}:{line_number}: missing required ACCESS fields: {', '.join(missing)}")
+            result.error(
+                f"{path}:{line_number}: missing required ACCESS fields: {', '.join(missing)}"
+            )
             continue
 
         if not isinstance(payload["file"], str):
@@ -231,12 +241,18 @@ def validate_access_file(path: Path, result: ValidationResult) -> None:
         if not isinstance(helpfulness, (int, float)):
             result.error(f"{path}:{line_number}: helpfulness must be numeric")
         elif not 0.0 <= float(helpfulness) <= 1.0:
-            result.error(f"{path}:{line_number}: helpfulness must be between 0.0 and 1.0")
+            result.error(
+                f"{path}:{line_number}: helpfulness must be between 0.0 and 1.0"
+            )
 
         if "session_id" in payload and not isinstance(payload["session_id"], str):
-            result.error(f"{path}:{line_number}: session_id must be a string when present")
+            result.error(
+                f"{path}:{line_number}: session_id must be a string when present"
+            )
         if "category" in payload and not isinstance(payload["category"], str):
-            result.error(f"{path}:{line_number}: category must be a string when present")
+            result.error(
+                f"{path}:{line_number}: category must be a string when present"
+            )
 
         unknown_keys = set(payload) - REQUIRED_ACCESS_FIELDS - OPTIONAL_ACCESS_FIELDS
         if unknown_keys:
@@ -278,7 +294,38 @@ def validate_runtime_guidance(root: Path, result: ValidationResult) -> None:
             continue
         for pattern in FORBIDDEN_RUNTIME_PATTERNS:
             if re.search(pattern, text):
-                result.error(f"{path}: contains forbidden runtime guidance pattern {pattern!r}")
+                result.error(
+                    f"{path}: contains forbidden runtime guidance pattern {pattern!r}"
+                )
+
+
+def validate_quarantine(root: Path, result: ValidationResult) -> None:
+    unverified = root / "knowledge" / "_unverified"
+    if not unverified.exists():
+        return
+
+    for path in sorted(unverified.rglob("*.md")):
+        if should_ignore(path.relative_to(root)):
+            continue
+        if path.name == "SUMMARY.md":
+            continue
+        text = read_text(path, result)
+        if text is None:
+            continue
+
+        frontmatter = parse_frontmatter(path, text, result)
+        if frontmatter is None:
+            continue
+
+        trust = frontmatter.get("trust")
+        if trust and trust != "low":
+            result.error(f"{path}: quarantine file must have trust: low, got {trust!r}")
+
+        source = frontmatter.get("source")
+        if source and source != "external-research":
+            result.warn(
+                f"{path}: quarantine file expected source: external-research, got {source!r}"
+            )
 
 
 def validate_repo(root: Path) -> ValidationResult:
@@ -286,6 +333,7 @@ def validate_repo(root: Path) -> ValidationResult:
 
     validate_quick_reference(root, result)
     validate_runtime_guidance(root, result)
+    validate_quarantine(root, result)
 
     for path in iter_content_files(root):
         validate_frontmatter(path, result)
@@ -307,7 +355,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ERROR: {error}")
 
     if result.errors:
-        print(f"Validation failed with {len(result.errors)} error(s) and {len(result.warnings)} warning(s).")
+        print(
+            f"Validation failed with {len(result.errors)} error(s) and {len(result.warnings)} warning(s)."
+        )
         return 1
 
     print(f"Validation passed with {len(result.warnings)} warning(s).")
