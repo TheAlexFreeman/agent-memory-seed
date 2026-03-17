@@ -4,7 +4,9 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, Callable, NotRequired, TypedDict, TypeVar, cast
+from typing import Callable, NotRequired, TypeVar, cast
+
+from typing_extensions import TypedDict
 
 import memory_engine_core.engine as memory_engine
 

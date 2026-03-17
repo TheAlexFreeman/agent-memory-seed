@@ -9,10 +9,10 @@ import unittest
 from pathlib import Path
 from typing import Any, cast
 
+import memory_engine_core.engine as memory_engine
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ENGINE_PATH = REPO_ROOT / "scripts" / "memory_engine.py"
-
-import memory_engine_core.engine as memory_engine
 
 
 VALID_QUICK_REFERENCE = textwrap.dedent(
