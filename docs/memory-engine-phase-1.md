@@ -62,9 +62,11 @@ The schema is intentionally ahead of current behavior so later phases can add se
 `rebuild` must:
 
 - detect the repo root
-- scan the canonical Markdown and ACCESS files
+- scan Markdown files in `identity/`, `knowledge/`, `skills/`, and `chats/` and ACCESS logs in those same directories
 - populate the Phase 1 SQLite schema
 - leave canonical files unchanged
+
+Note: `meta/` files are read for threshold snapshots (`meta/quick-reference.md`) but are not indexed into the `files` table in Phase 1.
 
 `rebuild --dry-run` must not create or modify `.memory.db`.
 

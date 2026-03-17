@@ -57,7 +57,10 @@ def is_repo_root(path: Path) -> bool:
 
 def ensure_repo_root(path: Path) -> None:
     if not is_repo_root(path):
-        raise SystemExit(f"{path} does not look like an agent-memory-seed repository root")
+        raise SystemExit(
+            f"{path} does not look like a memory repo root "
+            "(expected README.md and meta/quick-reference.md)"
+        )
 
 
 def resolve_db_path(repo_root: Path, explicit_db_path: Path | None) -> Path:
@@ -174,24 +177,30 @@ def load_inventory(repo_root: Path) -> Inventory:
 
     access_entries: list[dict[str, object]] = []
     for path in iter_access_files(repo_root):
+        source_file = path.relative_to(repo_root).as_posix()
         for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
             line = raw_line.strip()
             if not line:
                 continue
-            payload = json.loads(line)
-            access_entries.append(
-                {
-                    "file_id": file_lookup.get(payload["file"]),
-                    "file": payload["file"],
-                    "retrieval_date": payload["date"],
-                    "session_id": payload.get("session_id"),
-                    "task": payload["task"],
-                    "helpfulness": float(payload["helpfulness"]),
-                    "note": payload["note"],
-                    "source_file": path.relative_to(repo_root).as_posix(),
-                    "source_line": line_number,
-                }
-            )
+            try:
+                payload = json.loads(line)
+                access_entries.append(
+                    {
+                        "file_id": file_lookup.get(payload["file"]),
+                        "file": payload["file"],
+                        "retrieval_date": payload["date"],
+                        "session_id": payload.get("session_id"),
+                        "task": payload["task"],
+                        "helpfulness": float(payload["helpfulness"]),
+                        "note": payload["note"],
+                        "source_file": source_file,
+                        "source_line": line_number,
+                    }
+                )
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+                raise SystemExit(
+                    f"Error parsing {source_file} line {line_number}: {exc}"
+                ) from exc
 
     chats_root = repo_root / "chats"
     sessions = sum(1 for path in chats_root.rglob("chat-*") if path.is_dir()) if chats_root.exists() else 0
@@ -279,6 +288,7 @@ def write_database(db_path: Path, inventory: Inventory, quick_reference: dict[st
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
     try:
+        connection.execute("PRAGMA foreign_keys = ON")
         initialize_schema(connection)
         connection.executemany(
             """
@@ -339,6 +349,7 @@ def format_status(repo_root: Path, db_path: Path, inventory: Inventory, quick_re
     if db_path.exists():
         connection = sqlite3.connect(db_path)
         try:
+            connection.execute("PRAGMA foreign_keys = ON")
             status["database"] = {
                 "indexed_files": connection.execute("SELECT COUNT(*) FROM files").fetchone()[0],
                 "access_entries": connection.execute("SELECT COUNT(*) FROM access_entries").fetchone()[0],
