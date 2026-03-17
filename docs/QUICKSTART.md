@@ -117,7 +117,7 @@ At the start of this session:
 1. If this is your first exposure to the repo, or the task touches the memory system, governance, or protected writes, read README.md fully.
 2. Otherwise start with meta/session-checklists.md and meta/quick-reference.md.
 3. Read identity/SUMMARY.md plus only the relevant folder summaries and chat summaries for the current task.
-4. Read meta/CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
+4. Read meta/REFERENCE.md, meta/CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
 5. Check whether you have write access to the repository.
 6. Greet the user and ask if anything has changed since the last session.
 
