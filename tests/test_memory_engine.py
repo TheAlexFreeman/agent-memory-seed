@@ -289,7 +289,10 @@ class MemoryEngineTests(unittest.TestCase):
             task_groups_path = root / "meta" / "task-groups.md"
             self.assertTrue(task_groups_path.exists())
             self.assertIn("Would write task groups: yes", completed.stdout)
-            self.assertIn("## bug-debug-performance-react", task_groups_path.read_text(encoding="utf-8"))
+            self.assertIn(
+                "## bug-debug-performance-react",
+                task_groups_path.read_text(encoding="utf-8"),
+            )
 
     def test_aggregate_dry_run_does_not_write_task_groups(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

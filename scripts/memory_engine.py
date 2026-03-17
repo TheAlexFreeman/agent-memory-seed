@@ -890,7 +890,9 @@ def format_aggregation_report(
         str(thresholds.get("Aggregation trigger", ""))
     )
     pending_entries = [
-        entry for entry in inventory.access_entries if not bool(entry.get("is_archived"))
+        entry
+        for entry in inventory.access_entries
+        if not bool(entry.get("is_archived"))
     ]
     task_groups = build_task_groups(inventory.access_entries)
     supports_writes = stage_supports_task_group_writes(str(quick_reference["stage"]))
@@ -1035,9 +1037,9 @@ def format_query_report(
             },
         )
         score_entry["hit_count"] = cast(int, score_entry["hit_count"]) + 1
-        score_entry["helpfulness_total"] = cast(float, score_entry["helpfulness_total"]) + cast(
-            float, entry["helpfulness"]
-        )
+        score_entry["helpfulness_total"] = cast(
+            float, score_entry["helpfulness_total"]
+        ) + cast(float, entry["helpfulness"])
         cast(set[str], score_entry["task_groups"]).add(group_name)
         score_entry["best_group_score"] = max(
             cast(float, score_entry["best_group_score"]),
