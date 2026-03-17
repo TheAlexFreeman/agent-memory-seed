@@ -93,7 +93,7 @@ Session-start rules:
 - If this is your first exposure to the repo, or the task touches the memory system, governance, or protected writes, read README.md fully.
 - Otherwise start with meta/session-checklists.md and meta/quick-reference.md.
 - Read identity/SUMMARY.md and only the relevant folder summaries and chat summaries for the current task.
-- Read CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
+- Read meta/REFERENCE.md, meta/CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
 - Check meta/quick-reference.md for all active operational thresholds.
 
 Key rules:
@@ -117,7 +117,7 @@ At the start of this session:
 1. If this is your first exposure to the repo, or the task touches the memory system, governance, or protected writes, read README.md fully.
 2. Otherwise start with meta/session-checklists.md and meta/quick-reference.md.
 3. Read identity/SUMMARY.md plus only the relevant folder summaries and chat summaries for the current task.
-4. Read CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
+4. Read meta/CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
 5. Check whether you have write access to the repository.
 6. Greet the user and ask if anything has changed since the last session.
 
@@ -155,7 +155,7 @@ The memory system is model-agnostic. To switch:
 
 1. Set up the new platform using the instructions above.
 2. On first exposure, the new model reads `README.md` fully. After that it can use `meta/session-checklists.md` for normal returning sessions.
-3. The CHANGELOG.md should record model transitions as system events.
+3. The `meta/CHANGELOG.md` should record model transitions as system events.
 
 All accumulated knowledge, skills, and identity information transfers automatically because it's stored in files, not in any model's context.
 
@@ -175,7 +175,7 @@ The repo has five main areas:
 
 Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.jsonl` (retrieval tracking log). The agent reads summaries to decide what to retrieve, logs what it retrieves, and periodically aggregates those logs to improve future retrieval.
 
-For the full architecture, read [README.md](README.md). For governance details, see the files in `meta/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
+For the full architecture, read [README.md](../README.md). For governance details, see the files in `meta/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
 
 ### Optional maintenance check
 

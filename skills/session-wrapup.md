@@ -23,7 +23,7 @@ Activate when:
 
 Create the session's chat folder if it doesn't exist: `chats/YYYY/MM/DD/chat-NNN/`.
 
-Write `SUMMARY.md` following the compression hierarchy in README.md § "Summaries":
+Write `SUMMARY.md` following the compression hierarchy in `meta/REFERENCE.md` § "Summaries":
 
 - Key topics discussed.
 - Decisions made and their reasoning.
@@ -32,7 +32,7 @@ Write `SUMMARY.md` following the compression hierarchy in README.md § "Summarie
 
 ### 2. Write the reflection note
 
-Write `reflection.md` in the same chat folder, following the format in README.md § "Session reflection":
+Write `reflection.md` in the same chat folder, following the format in `meta/REFERENCE.md` § "Session reflection":
 
 - Memory retrieved (files accessed, with helpfulness scores).
 - Memory influence (how retrieved memory shaped responses).
@@ -42,7 +42,7 @@ Write `reflection.md` in the same chat folder, following the format in README.md
 
 ### 3. Flush ACCESS entries
 
-Append entries to the appropriate `ACCESS.jsonl` files for every content file retrieved during this session. Include `session_id` now that the chat folder path is known. Follow the format and helpfulness scoring in README.md § "Memory curation".
+Append entries to the appropriate `ACCESS.jsonl` files for every content file retrieved during this session. Include `session_id` now that the chat folder path is known. Follow the format and helpfulness scoring in `meta/REFERENCE.md` § "Memory curation".
 
 ### 4. Update summaries if warranted
 

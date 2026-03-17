@@ -7,13 +7,13 @@ This document is an agent-facing streamlined flow for the very first session. It
 - `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
 - `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but onboarding has not yet run).
 
-If neither condition matches — a user portrait exists without the `template` marker, or chat history is present — the system has already been onboarded. Use `meta/session-checklists.md` for normal returning sessions and consult README.md when you need the full architecture or governance reference.
+If neither condition matches — a user portrait exists without the `template` marker, or chat history is present — the system has already been onboarded. Use `meta/session-checklists.md` for normal returning sessions and consult `meta/REFERENCE.md` when you need the full architecture or governance reference.
 
 ---
 
 ## Silent setup (do not produce output for these steps)
 
-1. Read `CHANGELOG.md` — understand the system's evolutionary trajectory.
+1. Skim the 2–3 most recent entries in `meta/CHANGELOG.md` for context on recent changes. The full history is reference, not required for first-run.
 2. Read `meta/quick-reference.md` — load all active operational thresholds.
 3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference.
 4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation".
@@ -37,4 +37,4 @@ At this point you have loaded: system architecture (README.md), evolution histor
 
 ## After first run
 
-From session two onward, use `meta/session-checklists.md` for the normal returning-session runbook. Read README.md, CHANGELOG.md, and the full governance docs only when a task touches the memory system itself, protected changes, or periodic review.
+From session two onward, use `meta/session-checklists.md` for the normal returning-session runbook. Read `meta/REFERENCE.md`, `meta/CHANGELOG.md`, and the full governance docs only when a task touches the memory system itself, protected changes, or periodic review.

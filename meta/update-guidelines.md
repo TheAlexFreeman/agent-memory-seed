@@ -68,21 +68,21 @@ Files that predate this schema should have frontmatter added during the next per
 ### Proposed changes (require user awareness)
 
 - Adding new knowledge files to `knowledge/` (i.e., outside `_unverified/`).
-- Creating **meta-knowledge files** (emergent abstractions from cross-domain patterns in knowledge) — propose to the user, do not create silently; see README § "Emergent abstractions".
+- Creating **meta-knowledge files** (emergent abstractions from cross-domain patterns in knowledge) — propose to the user, do not create silently; see `meta/REFERENCE.md` § "Emergent abstractions".
 - Adding, modifying, or removing files in `identity/`.
 - Promoting files from `knowledge/_unverified/` to `knowledge/`.
 - Restructuring folders (renaming, splitting, merging).
 - Retiring or archiving memory files.
 - Modifying any SUMMARY.md in ways that change meaning rather than just updating coverage.
 
-For proposed changes: describe the change and reasoning to the user. If approved, apply and log in CHANGELOG.md. If the user is unavailable, add to `meta/review-queue.md`.
+For proposed changes: describe the change and reasoning to the user. If approved, apply and log in `meta/CHANGELOG.md`. If the user is unavailable, add to `meta/review-queue.md`.
 
 ### Protected changes (require explicit approval)
 
 - Creating, modifying, or removing files in `skills/`.
 - Any modification to files in `meta/` (including this file), **with the exception of machine-generated state files** listed below.
 - Any modification to `README.md`.
-- Any modification to `CHANGELOG.md` beyond appending new entries.
+- Any modification to `meta/CHANGELOG.md` beyond appending new entries.
 - Bulk operations (retiring multiple files, restructuring multiple folders).
 
 **Machine-generated state files in `meta/` (exempt from protected-change requirement):**
@@ -170,14 +170,14 @@ The agent should still run periodic reviews when the 30-day threshold is reached
 
 ## Periodic review
 
-During any session, if the agent notices it has been more than 30 days since the date in `meta/quick-reference.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` CHANGELOG entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
+During any session, if the agent notices it has been more than 30 days since the date in `meta/quick-reference.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` `meta/CHANGELOG.md` entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
 
 1. **Security flags.** Are there any security flags (type: `security`) in `meta/review-queue.md`? Resolve or escalate before proceeding — a security issue can invalidate curation and governance decisions made without awareness of it.
 2. **Unverified content.** Are there files in `knowledge/_unverified/` awaiting promotion or retirement? Check against the active low-trust retirement threshold in `meta/quick-reference.md`.
 3. **Conflict resolution.** Are there any `[CONFLICT]` tags unresolved in identity or knowledge files?
 4. **Review queue.** Are there any non-security entries in `meta/review-queue.md` awaiting approval?
 5. **Unhelpful memory.** Are there files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with the knowledge amplification protocol in `meta/curation-policy.md` § "Knowledge amplification".
-6. **Maturity assessment.** Assess the system's developmental stage using the signals in `meta/system-maturity.md`. If the stage has changed since the last assessment, log the transition in this file's assessment log and in `CHANGELOG.md`, then **update `meta/quick-reference.md`** with the new stage and parameter values.
+6. **Maturity assessment.** Assess the system's developmental stage using the signals in `meta/system-maturity.md`. If the stage has changed since the last assessment, log the transition in this file's assessment log and in `meta/CHANGELOG.md`, then **update `meta/quick-reference.md`** with the new stage and parameter values.
 7. **Governance evaluation.** Are the curation rules producing good outcomes? Check for: premature archival (re-retrieval of recently archived files), false positive rates on anomaly signals, and process friction that slows legitimate work without catching real problems. If issues are found, write a governance proposal to `meta/review-queue.md`. See `meta/curation-policy.md` § "Governance feedback" for the full protocol.
 8. **Folder structure.** Does the overall folder structure still make sense given how the system is actually being used? Consider findings from the maturity assessment and governance evaluation above.
 9. **Emergent categorization.** Are there cross-folder retrieval clusters that suggest the current taxonomy doesn't capture how the system is actually being used? See `meta/curation-policy.md` § "Emergent categorization." (This is the most expensive step — do it last.)
@@ -214,4 +214,4 @@ This system is designed to work with any capable language model. When switching 
 - No changes to the repository should be needed.
 - A new model should read README.md fully on first exposure to the repo, then use `meta/session-checklists.md` plus `meta/quick-reference.md` for normal returning sessions.
 - If the new model has significantly different capabilities (e.g., smaller context window, no tool use), it should note any limitations in `meta/review-queue.md` so the user can decide whether to adapt the system.
-- The CHANGELOG.md should record model transitions as system events.
+- The `meta/CHANGELOG.md` should record model transitions as system events.

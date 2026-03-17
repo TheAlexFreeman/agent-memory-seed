@@ -58,7 +58,7 @@ def build_minimal_repo(root: Path) -> None:
         "# README\nRead `meta/quick-reference.md` for active thresholds.\n",
     )
     write(
-        root / "QUICKSTART.md",
+        root / "docs" / "QUICKSTART.md",
         "# Quickstart\nOptional check: `python scripts/validate_memory_repo.py`\n",
     )
     write(root / "meta" / "quick-reference.md", VALID_QUICK_REFERENCE)

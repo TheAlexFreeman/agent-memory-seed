@@ -30,7 +30,7 @@ Skip this skill on the very first session — use `meta/first-run.md` and the on
 - Read `meta/review-queue.md`. Are there pending proposals the user hasn't reviewed?
 - Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag for aggregation during or after this session.
 - Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
-- Read `README.md`, `CHANGELOG.md`, `meta/curation-policy.md`, or `meta/update-guidelines.md` only if the session touches the memory system itself, protected changes, periodic review, or a governance question the summaries cannot answer.
+- Read `meta/REFERENCE.md`, `meta/CHANGELOG.md`, `meta/curation-policy.md`, or `meta/update-guidelines.md` only if the session touches the memory system itself, protected changes, periodic review, or a governance question the summaries cannot answer.
 
 ### 3. Check write access (silent)
 

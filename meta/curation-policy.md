@@ -18,7 +18,7 @@ Every piece of stored memory passes through these stages:
 
 ### 1. Capture
 
-New information enters the system during a chat session. The agent identifies what is worth persisting based on the criteria in README.md ("What to store" / "What not to store").
+New information enters the system during a chat session. The agent identifies what is worth persisting based on the criteria in `meta/REFERENCE.md` ("What to store" / "What not to store").
 
 ### 2. Provisional storage
 

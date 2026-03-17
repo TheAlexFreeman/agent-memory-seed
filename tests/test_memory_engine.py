@@ -48,7 +48,7 @@ def write(path: Path, content: str) -> None:
 
 def build_minimal_repo(root: Path) -> None:
     write(root / "README.md", "# README\n")
-    write(root / "QUICKSTART.md", "# Quickstart\n")
+    write(root / "docs" / "QUICKSTART.md", "# Quickstart\n")
     write(root / "meta" / "quick-reference.md", VALID_QUICK_REFERENCE)
     write(root / "identity" / "SUMMARY.md", "# Identity summary\n")
     write(root / "identity" / "ACCESS.jsonl", "")

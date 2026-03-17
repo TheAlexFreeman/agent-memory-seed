@@ -130,6 +130,6 @@ This skill is designed for one-time use. After successful onboarding:
 
 1. Propose archiving this file to `skills/_archive/onboarding.md`.
 2. Update `skills/SUMMARY.md` to reflect the archival.
-3. Log the archival in `CHANGELOG.md` as a `[curation]` entry.
+3. Log the archival in `meta/CHANGELOG.md` as a `[curation]` entry.
 
 The skill remains available in git history if the user ever wants to re-run onboarding (e.g., after a major life or role change).

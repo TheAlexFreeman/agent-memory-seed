@@ -25,7 +25,7 @@ jobs:
         run: python scripts/validate_memory_repo.py
 
       - name: MCP smoke check
-        run: python -c "from pathlib import Path; from memory_mcp.server import MemoryMCPApplication; app = MemoryMCPApplication(Path('.')); status = app.status_memory(); assert status['stage']; print(status['stage'])"
+        run: PYTHONPATH=engine python -c "from pathlib import Path; from memory_mcp.server import MemoryMCPApplication; app = MemoryMCPApplication(Path('.')); status = app.status_memory(); assert status['stage']; print(status['stage'])"
 
       - name: Run tests
         run: python -m pytest tests/ -v

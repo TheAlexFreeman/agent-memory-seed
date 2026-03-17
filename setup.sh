@@ -73,14 +73,14 @@ fi
 echo "=== Agent Memory System Setup ==="
 echo ""
 
-# 1. Set today's date in CHANGELOG.md
+# 1. Set today's date in meta/CHANGELOG.md
 TODAY=$(date +%Y-%m-%d)
-if grep -q '\[YYYY-MM-DD\] Initial system creation' CHANGELOG.md 2>/dev/null; then
-    sed -i.bak "s/\[YYYY-MM-DD\] Initial system creation/[$TODAY] Initial system creation/" CHANGELOG.md
-    rm -f CHANGELOG.md.bak
-    echo "[ok] Set creation date to $TODAY in CHANGELOG.md"
+if grep -q '\[YYYY-MM-DD\] Initial system creation' meta/CHANGELOG.md 2>/dev/null; then
+    sed -i.bak "s/\[YYYY-MM-DD\] Initial system creation/[$TODAY] Initial system creation/" meta/CHANGELOG.md
+    rm -f meta/CHANGELOG.md.bak
+    echo "[ok] Set creation date to $TODAY in meta/CHANGELOG.md"
 else
-    echo "[skip] CHANGELOG.md creation date already set"
+    echo "[skip] meta/CHANGELOG.md creation date already set"
 fi
 
 # 2. Initialize git if needed
@@ -188,8 +188,8 @@ Session-start rules:
 - If this is your first exposure to the repo, or the task touches the memory system, governance, or protected writes, read README.md fully.
 - Otherwise start with meta/session-checklists.md and meta/quick-reference.md.
 - Read identity/SUMMARY.md and only the relevant folder summaries and chat summaries for the current task.
-- Read CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
-- Check meta/quick-reference.md for all active operational thresholds.
+- Read meta/REFERENCE.md, meta/CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
+- Check meta/quick-reference.md for all active operational thresholds and decision guides.
 
 Key rules:
 - Log all content file retrievals to the appropriate ACCESS.jsonl.
@@ -219,7 +219,7 @@ At the start of this session:
 1. If this is your first exposure to the repo, or the task touches the memory system, governance, or protected writes, read README.md fully.
 2. Otherwise start with meta/session-checklists.md and meta/quick-reference.md.
 3. Read identity/SUMMARY.md plus only the relevant folder summaries and chat summaries for the current task.
-4. Read CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
+4. Read meta/REFERENCE.md, meta/CHANGELOG.md, meta/curation-policy.md, and meta/update-guidelines.md only when the task touches memory/governance/protected writes, periodic review is due, or the summaries are insufficient.
 5. Check whether you have write access to the repository.
 6. Greet the user and ask if anything has changed since the last session.
 
@@ -239,7 +239,7 @@ GENERIC_EOF
         *)
             echo "=== Next Steps ==="
             echo ""
-            echo "  1. See QUICKSTART.md for platform-specific setup instructions."
+            echo "  1. See docs/QUICKSTART.md for platform-specific setup instructions."
             echo "  2. Start a session with your AI — it will run the onboarding skill"
             echo "     and ask you a few questions to build your initial profile."
             echo "  3. Your memory system grows from there."
