@@ -14,9 +14,8 @@
       }
 
       body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
-          Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
         line-height: 1.6;
         color: #1a1a1a;
         background: #f8f9fa;
@@ -957,7 +956,9 @@
               "Download the files above and place them in your agent-memory-seed repo, overwriting any existing files at the same paths.",
             );
           }
-          addStep("If you want git init or remote setup, run setup.sh later from a terminal. The browser path does not perform git setup.");
+          addStep(
+            "If you want git init or remote setup, run setup.sh later from a terminal. The browser path does not perform git setup.",
+          );
 
           if (selectedPlatform === "claude-code") {
             addStep("Start your first session:", "claude");
@@ -976,7 +977,9 @@
             );
             addStep("Start a conversation and share the key repo files.");
           } else {
-            addStep("See docs/QUICKSTART.md for platform-specific instructions.");
+            addStep(
+              "See docs/QUICKSTART.md for platform-specific instructions.",
+            );
           }
           addStep(
             "The agent will follow the session-start guidance, run the onboarding skill if this is a fresh repo, and ask you a few questions to build your profile.",

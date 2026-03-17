@@ -173,17 +173,17 @@ This memory system employs **defense-in-depth** against memory injection — the
 
 ### Defense layers
 
-| Layer | Mechanism | Details |
-| --- | --- | --- |
-| **Provenance** | YAML frontmatter on every content file | Tracks source, trust level, creation date, last verification. See `meta/update-guidelines.md`. |
-| **Trust-weighted retrieval** | Behavior varies by trust level | See `meta/quick-reference.md` § "Decision guide: trust-weighted retrieval" and `meta/curation-policy.md` § "Trust-weighted retrieval". |
-| **Quarantine** | `knowledge/_unverified/` staging area | All external content lands here at `trust: low`. Promoted only after user review. |
-| **Instruction containment** | Folder behavioral contracts | See `meta/quick-reference.md` § "Decision guide: instruction containment" and `meta/curation-policy.md` § "Instruction containment". |
-| **Protected skills** | `skills/` is protected-tier | Creating or modifying any skill requires explicit user approval + CHANGELOG entry. |
-| **Temporal decay** | Unverified content expires | See `meta/quick-reference.md` § "Decision guide: trust decay". |
-| **Anomaly detection** | ACCESS.jsonl pattern analysis | See `meta/quick-reference.md` § "Decision guide: anomaly detection". |
-| **Belief diff** | Periodic drift audit | 30-day review generates a changelog of content drift, making unexpected changes visible. |
-| **Git integrity** | Signed commits, branch protection | Cryptographic chain of custody. Unsigned commits on protected files are flagged. |
+| Layer                        | Mechanism                              | Details                                                                                                                                |
+| ---------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Provenance**               | YAML frontmatter on every content file | Tracks source, trust level, creation date, last verification. See `meta/update-guidelines.md`.                                         |
+| **Trust-weighted retrieval** | Behavior varies by trust level         | See `meta/quick-reference.md` § "Decision guide: trust-weighted retrieval" and `meta/curation-policy.md` § "Trust-weighted retrieval". |
+| **Quarantine**               | `knowledge/_unverified/` staging area  | All external content lands here at `trust: low`. Promoted only after user review.                                                      |
+| **Instruction containment**  | Folder behavioral contracts            | See `meta/quick-reference.md` § "Decision guide: instruction containment" and `meta/curation-policy.md` § "Instruction containment".   |
+| **Protected skills**         | `skills/` is protected-tier            | Creating or modifying any skill requires explicit user approval + CHANGELOG entry.                                                     |
+| **Temporal decay**           | Unverified content expires             | See `meta/quick-reference.md` § "Decision guide: trust decay".                                                                         |
+| **Anomaly detection**        | ACCESS.jsonl pattern analysis          | See `meta/quick-reference.md` § "Decision guide: anomaly detection".                                                                   |
+| **Belief diff**              | Periodic drift audit                   | 30-day review generates a changelog of content drift, making unexpected changes visible.                                               |
+| **Git integrity**            | Signed commits, branch protection      | Cryptographic chain of custody. Unsigned commits on protected files are flagged.                                                       |
 
 ### What this does not defend against
 
