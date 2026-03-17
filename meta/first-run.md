@@ -14,8 +14,8 @@ If neither condition matches — a user portrait exists without the `template` m
 
 1. Read `CHANGELOG.md` — understand the system's evolutionary trajectory. (README bootstrap step 2)
 2. Read `meta/quick-reference.md` — load all active operational thresholds. (README bootstrap step 5)
-3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference. (README bootstrap step 6)
-4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation". (README bootstrap step 7)
+3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference only if needed. (README bootstrap step 6)
+4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format. (README bootstrap step 7)
 5. Read `skills/SUMMARY.md` and `skills/onboarding.md`. (README bootstrap step 8)
 
 At this point you have loaded: system architecture (README.md), evolution history, active thresholds, change-control rules, write-access status, and the onboarding skill. Do not summarize any of this to the user.
@@ -31,9 +31,11 @@ At this point you have loaded: system architecture (README.md), evolution histor
 - `knowledge/SUMMARY.md` — empty on first run.
 - `chats/SUMMARY.md` — empty on first run.
 - `meta/curation-policy.md` and the full `meta/update-guidelines.md` — you loaded the essential sections in step 3. Read the full governance docs from session two onward.
+- `meta/glossary.md` — human reference only; never needs to be loaded by agents.
+- `meta/curation-algorithms.md` — only needed during aggregation or stage transitions.
 
 ---
 
 ## After first run
 
-From session two onward, use the full bootstrap sequence in README.md § "Bootstrap sequence" and the compact runbook in `meta/session-checklists.md`.
+From session two onward, use the full bootstrap sequence in README.md § "Bootstrap sequence" and the compact runbook in `meta/session-checklists.md`. See `meta/quick-reference.md` § "Context loading manifest" for the complete file-loading guide per session type.

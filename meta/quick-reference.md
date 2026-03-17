@@ -6,6 +6,23 @@ This is the single authoritative source for the system's currently active operat
 
 ---
 
+## Context loading manifest
+
+Use this table to determine which files to read for each session type. Load files in the listed order. Files marked _(skip if empty)_ should be skipped when they contain only placeholder text.
+
+| Session type | Files to load |
+|---|---|
+| **First run** | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
+| **Compact returning** | `README.md`, `identity/SUMMARY.md`, this file → `knowledge/SUMMARY.md` _(skip if empty)_, `skills/SUMMARY.md` _(skip if empty)_, `chats/SUMMARY.md` _(skip if empty)_ |
+| **Full bootstrap** | Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
+| **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
+| **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
+| **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
+
+**Do not load** `meta/glossary.md` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above).
+
+---
+
 ## Current active stage: Exploration
 
 _Last assessed: not yet assessed — Exploration defaults apply_
@@ -39,6 +56,8 @@ The agent should update this date when completing a full periodic review (same c
 
 **Default before first assessment:** Treat the system as Exploration and use the values recorded in this file.
 
+**Full algorithm details:** See `meta/curation-algorithms.md` (load only when running aggregation or a stage transition).
+
 ---
 
 ## Decision guide: trust decay
@@ -61,6 +80,8 @@ The agent should update this date when completing a full periodic review (same c
 
 **Definition of "unverified":** `last_verified` has not been updated since the decay clock started. Any user interaction that confirms the content (explicit approval, correction, or re-confirmation) resets the clock.
 
+**Files without frontmatter:** Treated as `trust: medium` with `last_verified` set to the date frontmatter was retroactively added. This prevents mass archival of legacy content.
+
 ---
 
 ## Decision guide: anomaly detection
@@ -81,7 +102,7 @@ Aggregate when entries accumulated since last aggregation reach **15**. Aggregat
 1. Updates SUMMARY.md files with refreshed usage patterns.
 2. Identifies high-value files (5+ retrievals, mean helpfulness ≥ 0.7) → enrich per knowledge amplification protocol.
 3. Identifies low-value files (3+ retrievals, mean helpfulness ≤ 0.3) → investigate for retirement.
-4. Scans for cross-folder co-retrieval clusters using the active task similarity method (currently: **session co-occurrence** — groups entries by `session_id` when present, otherwise by legacy `date`, identifies file sets co-occurring in 3+ session-groups, and flags clusters of 3+ files from 2+ folders). See `meta/curation-policy.md` § "Task similarity definition" for the full algorithm.
+4. Scans for cross-folder co-retrieval clusters using the active task similarity method (currently: **session co-occurrence**). For the full algorithm, load `meta/curation-algorithms.md`.
 5. Archives **all processed entries** to `ACCESS.archive.jsonl` and resets `ACCESS.jsonl` to empty. The archive is the historical record used for staleness detection across aggregation cycles.
 
 **Entry counting rule:** Always count entries in the current `ACCESS.jsonl` file (not the archive). After each aggregation, `ACCESS.jsonl` is reset to empty, so all entries in it are by definition accumulated since the last aggregation. The archive is append-only and used only for historical staleness detection.
@@ -103,8 +124,6 @@ Stage parameter tables: see `meta/system-maturity.md` §§ "Stage 1: Exploration
 ---
 
 ## Context budget guideline
-
-Use these rough planning numbers when deciding how much repo state to load:
 
 | Session mode | Typical token cost | When |
 | --- | --- | --- |

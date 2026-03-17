@@ -42,13 +42,13 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 | Parameter | Calibration setting | Rationale |
 |-----------|-------------------|-----------|
-| Low-trust retirement threshold | 60 days | Matches curation-policy default; start applying pressure on unverified content |
-| Medium-trust flagging threshold | 120 days | Matches curation-policy default; moderate verification expectations |
+| Low-trust retirement threshold | 60 days | Start applying pressure on unverified content |
+| Medium-trust flagging threshold | 120 days | Moderate verification expectations |
 | Staleness trigger (no access) | 90 days | Standard maintenance cadence |
 | Aggregation trigger | 20 entries | Standard aggregation frequency |
 | Identity churn alarm | 3 traits/session | Standard drift detection |
 | Knowledge flooding alarm | 3 files/day | Standard flooding detection |
-| Task similarity method | Task-string normalization | Finer-grained than session co-occurrence; retroactively normalizes Phase 1 data |
+| Task similarity method | Task-string normalization | Finer-grained; retroactively normalizes Phase 1 data. See `meta/curation-algorithms.md` § Phase 2 |
 | Cluster co-retrieval threshold | 3 sessions | Same threshold; task-group scoping reduces false positives |
 
 ### Stage 3: Consolidation (mature system)
@@ -59,14 +59,14 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 | Parameter | Consolidation setting | Rationale |
 |-----------|----------------------|-----------|
-| Low-trust retirement threshold | 45 days | Aggressive cleanup — the system has enough signal to judge value quickly |
+| Low-trust retirement threshold | 45 days | Aggressive cleanup — enough signal to judge value quickly |
 | Medium-trust flagging threshold | 90 days | Expect timely verification |
-| Staleness trigger (no access) | 60 days | Unused memory in a mature system is likely genuinely irrelevant |
+| Staleness trigger (no access) | 60 days | Unused memory in a mature system is likely irrelevant |
 | Aggregation trigger | 25 entries | Larger batches for more statistically meaningful patterns |
-| Identity churn alarm | 2 traits/session | Mature identity should be stable — changes are more suspicious |
-| Knowledge flooding alarm | 2 files/day | The system should be past bulk knowledge acquisition |
-| Task similarity method | Controlled category vocabulary | Machine-readable, stable across sessions and model switches |
-| Cluster co-retrieval threshold | 4 sessions | Higher bar appropriate for cleaner category-based signal |
+| Identity churn alarm | 2 traits/session | Mature identity should be stable |
+| Knowledge flooding alarm | 2 files/day | Past bulk knowledge acquisition |
+| Task similarity method | Controlled category vocabulary | Machine-readable, stable across sessions. See `meta/curation-algorithms.md` § Phase 3 |
+| Cluster co-retrieval threshold | 4 sessions | Higher bar for cleaner category-based signal |
 
 ## Current stage assessment
 
@@ -105,3 +105,5 @@ Transitions are not hard boundaries. The agent should:
 5. **Log all transitions and close calls** in both this file's assessment log and in `CHANGELOG.md`. A "close call" (3-3 split that was resolved by tiebreaker) is worth noting so future assessments can see the trend.
 
 The system can also regress: if a user's focus shifts dramatically (new job, new domain), many existing files may become irrelevant, file coverage drops, and the system should temporarily revert toward exploration parameters for the new domain while maintaining consolidation parameters for stable areas. This is a judgment call for the agent, documented in the assessment log.
+
+When a stage transition occurs, load `meta/curation-algorithms.md` for the full algorithmic specifications of the new stage's task similarity method.

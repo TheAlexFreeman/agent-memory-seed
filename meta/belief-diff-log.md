@@ -34,10 +34,6 @@ The belief diff makes **drift visible**. A single malicious injection might be c
 Brief overall assessment: is the system's evolution consistent with legitimate use, or are there patterns that warrant investigation?
 ```
 
-## Future enhancement
-
-Automated enforcement (e.g., a GitHub Actions workflow that generates the belief diff on a schedule, auto-archives expired low-trust files, and auto-populates the review queue) is a natural extension of this manual protocol.
-
 ---
 
 _No entries yet._ The first belief diff will be generated during the first periodic review after this protocol was established.

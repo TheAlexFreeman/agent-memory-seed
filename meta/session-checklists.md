@@ -2,9 +2,11 @@
 
 Compact runbooks for session start and end. See README.md for full bootstrap and reflection protocols. These checklists are implemented as executable skills in `skills/session-start.md`, `skills/session-sync.md`, and `skills/session-wrapup.md`.
 
+For a complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest".
+
 ## First session
 
-If this is the very first session (no user profile, no chat history), follow `meta/first-run.md` instead of the checklists below. It condenses the bootstrap into a streamlined silent setup + interactive onboarding flow.
+If this is the very first session (no user profile, no chat history), follow `meta/first-run.md` instead of the checklists below.
 
 ## Session start (returning sessions)
 
@@ -26,6 +28,7 @@ Use `skills/session-sync.md` when the user requests a checkpoint or when a long 
 1. **Chat summary** — Write or update the summary for this chat (and daily/monthly/yearly summaries if due) per the compression hierarchy in README § "Summaries".
 2. **Reflection note** — Write `reflection.md` in this session's chat folder. See README § "Session reflection" for the canonical format.
 3. **ACCESS.jsonl** — Append an entry for every content file you retrieved from identity/, knowledge/, skills/, or chats/ during this session. See README § "Memory curation" for the canonical format. Include `session_id` whenever the chat folder is known.
-4. **If read-only** — Produce a deferred-action summary listing all ACCESS entries, review-queue items, and summary updates the user should apply (see `meta/update-guidelines.md` § "How to communicate deferred actions").
+4. **Aggregation check** — If any ACCESS.jsonl has reached the active aggregation trigger (see `meta/quick-reference.md`), load `meta/curation-algorithms.md` and run aggregation.
+5. **If read-only** — Produce a deferred-action summary listing all ACCESS entries, review-queue items, and summary updates the user should apply (see `meta/update-guidelines.md` § "How to communicate deferred actions"; for a worked example, see `meta/deferred-action-template.md`).
 
 For the full executable workflow, see `skills/session-wrapup.md`.
