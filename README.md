@@ -89,11 +89,17 @@ python scripts/memory_engine.py status
 python scripts/memory_engine.py rebuild --dry-run
 python scripts/memory_engine.py rebuild
 python scripts/memory_engine.py task-groups
+python scripts/memory_engine.py aggregate --dry-run
+python scripts/memory_engine.py query "react performance debug"
 ```
 
-The CLI creates `.memory.db` as a **derived** SQLite index. It is not part of the canonical memory store, is ignored by git, and can be deleted/rebuilt at any time from the repo's Markdown and JSONL files. The initial Phase 1 implementation is intentionally conservative: it inventories the repo, records ACCESS history, and snapshots the live thresholds from `meta/quick-reference.md`. Search, aggregation automation, and MCP integration build on this foundation later.
+The CLI creates `.memory.db` as a **derived** SQLite index. It is not part of the canonical memory store, is ignored by git, and can be deleted/rebuilt at any time from the repo's Markdown and JSONL files. The initial Phase 1 implementation is intentionally conservative: it inventories the repo, records ACCESS history, and snapshots the live thresholds from `meta/quick-reference.md`. Query, task-group aggregation, and MCP integration build on this foundation later.
 
-The first Phase 2 precursor is also read-only: `task-groups` normalizes ACCESS `task` strings into derived equivalence classes so you can inspect how the repo's free-text task history is starting to cluster before any aggregation writes are automated.
+`task-groups` remains a read-heavy preview surface: it normalizes ACCESS `task` strings into derived equivalence classes so you can inspect how the repo's free-text task history is clustering.
+
+`aggregate` is the first bridge back into canonical state. In Calibration and Consolidation, once the current ACCESS backlog reaches the live aggregation trigger in `meta/quick-reference.md`, it emits the machine-generated [meta/task-groups.md](meta/task-groups.md) file described in the governance docs. Use `--dry-run` to preview whether a write would occur.
+
+`query` stays read-only. It matches a free-text query against derived task groups, then ranks files using task-group similarity, retrieval frequency, helpfulness, and recency so the engine has a useful search-like surface before a fuller MCP layer exists.
 
 ## Memory curation
 

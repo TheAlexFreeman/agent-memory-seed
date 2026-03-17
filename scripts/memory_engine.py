@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from datetime import date
 import json
 import re
 import sqlite3
@@ -13,6 +14,7 @@ from typing import Any, Iterable, cast
 INDEXED_MARKDOWN_DIRS = ("identity", "knowledge", "skills", "chats")
 ACCESS_DIRS = INDEXED_MARKDOWN_DIRS
 DEFAULT_DB_NAME = ".memory.db"
+TASK_GROUPS_PATH = Path("meta") / "task-groups.md"
 TASK_GROUP_MERGE_THRESHOLD = 0.7
 TASK_NAME_LIMIT = 6
 TASK_STOPWORDS = frozenset(
@@ -47,7 +49,7 @@ class Inventory:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Phase 1 memory engine foundation")
+    parser = argparse.ArgumentParser(description="Memory engine foundation")
     parser.add_argument(
         "--repo-root", type=Path, default=None, help="Path to the memory repo root"
     )
@@ -82,6 +84,53 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=10,
         help="Maximum number of task groups to print",
+    )
+
+    aggregate_parser = subparsers.add_parser(
+        "aggregate", help="Analyze ACCESS history and emit task-group state"
+    )
+    aggregate_parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON"
+    )
+    aggregate_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview aggregation output without writing task-group state",
+    )
+    aggregate_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Bypass the aggregation trigger threshold for the current stage",
+    )
+
+    query_parser = subparsers.add_parser(
+        "query", help="Rank files using derived task-group matches"
+    )
+    query_parser.add_argument(
+        "query",
+        nargs="?",
+        default="",
+        help="Free-text query used to match task groups and files",
+    )
+    query_parser.add_argument(
+        "--task-group",
+        default=None,
+        help="Restrict results to a specific derived task-group name",
+    )
+    query_parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON"
+    )
+    query_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Maximum number of ranked files to print",
+    )
+    query_parser.add_argument(
+        "--group-limit",
+        type=int,
+        default=5,
+        help="Maximum number of matched task groups to include in the report",
     )
 
     return parser.parse_args()
@@ -248,6 +297,7 @@ def load_inventory(repo_root: Path) -> Inventory:
                         "note": payload["note"],
                         "source_file": source_file,
                         "source_line": line_number,
+                        "is_archived": path.name != "ACCESS.jsonl",
                     }
                 )
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
@@ -331,6 +381,26 @@ def build_task_group_name(task: str, normalized_tokens: tuple[str, ...]) -> str:
 
 def count_value(counter: Counter[str], value: str, amount: int = 1) -> None:
     counter[value] += amount
+
+
+def parse_threshold_count(raw_value: str) -> int | None:
+    match = re.search(r"(\d+)", raw_value)
+    if match is None:
+        return None
+    return int(match.group(1))
+
+
+def stage_supports_task_group_writes(stage: str) -> bool:
+    return stage.lower() in {"calibration", "consolidation"}
+
+
+def parse_iso_date(raw_value: object) -> date | None:
+    if not isinstance(raw_value, str):
+        return None
+    try:
+        return date.fromisoformat(raw_value)
+    except ValueError:
+        return None
 
 
 def build_task_groups(
@@ -745,6 +815,332 @@ def format_task_group_report(
     }
 
 
+def render_task_groups_markdown(
+    stage: str,
+    aggregation_trigger: int | None,
+    task_groups: list[dict[str, object]],
+) -> str:
+    lines = [
+        "# Task Groups",
+        "",
+        "This file is machine-generated from ACCESS history during aggregation.",
+        "",
+        f"- Stage: {stage}",
+        (
+            f"- Aggregation trigger: {aggregation_trigger} entries"
+            if aggregation_trigger is not None
+            else "- Aggregation trigger: unavailable"
+        ),
+        f"- Recorded task groups: {len(task_groups)}",
+        "",
+        "Update source: `python scripts/memory_engine.py aggregate`",
+        "",
+    ]
+
+    if not task_groups:
+        lines.extend(
+            [
+                "No task groups met the current aggregation criteria.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    for group in task_groups:
+        representative_tasks = cast(list[str], group["representative_tasks"])
+        normalized_tokens = cast(list[str], group["normalized_tokens"])
+        common_files = cast(list[dict[str, object]], group["common_files"])
+        lines.extend(
+            [
+                f"## {group['group_name']}",
+                "",
+                f"- First seen: {group['first_seen_date'] or 'unknown'}",
+                f"- Last seen: {group['last_seen_date'] or 'unknown'}",
+                f"- Sessions: {group['session_count']}",
+                f"- Entries: {group['entry_count']}",
+                f"- Distinct dates: {group['distinct_dates_count']}",
+                f"- Normalized tokens: {', '.join(normalized_tokens) if normalized_tokens else 'none'}",
+                (
+                    f"- Representative tasks: {'; '.join(representative_tasks)}"
+                    if representative_tasks
+                    else "- Representative tasks: none"
+                ),
+                "- Commonly co-retrieved files:",
+            ]
+        )
+        if common_files:
+            lines.extend(
+                [f"  - {item['file']} ({item['count']})" for item in common_files]
+            )
+        else:
+            lines.append("  - none")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def format_aggregation_report(
+    repo_root: Path,
+    quick_reference: dict[str, object],
+    inventory: Inventory,
+    force: bool,
+) -> tuple[dict[str, object], str | None]:
+    thresholds = cast(dict[str, str], quick_reference["thresholds"])
+    aggregation_trigger = parse_threshold_count(
+        str(thresholds.get("Aggregation trigger", ""))
+    )
+    pending_entries = [
+        entry for entry in inventory.access_entries if not bool(entry.get("is_archived"))
+    ]
+    task_groups = build_task_groups(inventory.access_entries)
+    supports_writes = stage_supports_task_group_writes(str(quick_reference["stage"]))
+    meets_trigger = (
+        aggregation_trigger is not None and len(pending_entries) >= aggregation_trigger
+    )
+    should_write = supports_writes and (meets_trigger or force)
+    task_groups_markdown = None
+    if should_write:
+        task_groups_markdown = render_task_groups_markdown(
+            str(quick_reference["stage"]), aggregation_trigger, task_groups
+        )
+
+    report = {
+        "repo_root": str(repo_root),
+        "stage": quick_reference["stage"],
+        "aggregation_trigger": aggregation_trigger,
+        "pending_entries": len(pending_entries),
+        "historical_entries": len(inventory.access_entries),
+        "task_groups_count": len(task_groups),
+        "task_groups_path": str(repo_root / TASK_GROUPS_PATH),
+        "supports_task_group_writes": supports_writes,
+        "meets_trigger": meets_trigger,
+        "would_write_task_groups": should_write,
+        "task_groups": task_groups,
+    }
+    return report, task_groups_markdown
+
+
+def write_task_groups_file(repo_root: Path, markdown: str) -> Path:
+    output_path = repo_root / TASK_GROUPS_PATH
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(markdown, encoding="utf-8")
+    return output_path
+
+
+def print_aggregation_report(report: dict[str, object], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return
+
+    print(f"Repo root: {report['repo_root']}")
+    print(f"Current stage: {report['stage']}")
+    print(f"Pending ACCESS entries: {report['pending_entries']}")
+    print(f"Historical ACCESS entries: {report['historical_entries']}")
+    print(f"Aggregation trigger: {report['aggregation_trigger']}")
+    print(f"Task groups: {report['task_groups_count']}")
+    print(
+        "Task-group writes supported: "
+        f"{'yes' if report['supports_task_group_writes'] else 'no'}"
+    )
+    print(f"Meets trigger: {'yes' if report['meets_trigger'] else 'no'}")
+    print(
+        "Would write task groups: "
+        f"{'yes' if report['would_write_task_groups'] else 'no'}"
+    )
+    print(f"Task groups path: {report['task_groups_path']}")
+
+
+def format_query_report(
+    repo_root: Path,
+    inventory: Inventory,
+    raw_query: str,
+    task_group_name: str | None,
+    limit: int,
+    group_limit: int,
+) -> dict[str, object]:
+    task_groups = build_task_groups(inventory.access_entries)
+    task_group_by_name = {
+        cast(str, group["group_name"]): group for group in task_groups
+    }
+
+    normalized_query_tokens = normalize_task(raw_query or task_group_name or "")
+    if not raw_query and task_group_name is None:
+        raise SystemExit("query requires a free-text query or --task-group")
+
+    matched_groups: list[dict[str, object]] = []
+    if task_group_name is not None:
+        selected_group = task_group_by_name.get(task_group_name)
+        if selected_group is None:
+            raise SystemExit(f"Unknown task group: {task_group_name}")
+        matched_groups.append({"group": selected_group, "score": 1.0})
+    else:
+        for group in task_groups:
+            score = jaccard_similarity(
+                normalized_query_tokens,
+                tuple(cast(list[str], group["normalized_tokens"])),
+            )
+            if score > 0:
+                matched_groups.append({"group": group, "score": score})
+        matched_groups.sort(
+            key=lambda item: (
+                -cast(float, item["score"]),
+                -cast(int, cast(dict[str, object], item["group"])["entry_count"]),
+                cast(str, cast(dict[str, object], item["group"])["group_name"]),
+            )
+        )
+
+    if not matched_groups and task_group_name is None:
+        matched_groups = [
+            {"group": group, "score": 0.0}
+            for group in sorted(
+                task_groups,
+                key=lambda group: (
+                    -cast(int, group["entry_count"]),
+                    cast(str, group["group_name"]),
+                ),
+            )[: max(group_limit, 0)]
+        ]
+
+    selected_group_names = {
+        cast(str, cast(dict[str, object], item["group"])["group_name"])
+        for item in matched_groups[: max(group_limit, 0)]
+    }
+    selected_group_scores = {
+        cast(str, cast(dict[str, object], item["group"])["group_name"]): cast(
+            float, item["score"]
+        )
+        for item in matched_groups[: max(group_limit, 0)]
+    }
+
+    file_metadata = {
+        cast(str, file_info["relative_path"]): file_info
+        for file_info in inventory.indexed_files
+    }
+    file_scores: dict[str, dict[str, object]] = {}
+    recent_dates: list[date] = []
+    for entry in inventory.access_entries:
+        group_name = cast(str, entry.get("task_group_name") or "")
+        if group_name not in selected_group_names:
+            continue
+        file_name = cast(str, entry["file"])
+        score_entry = file_scores.setdefault(
+            file_name,
+            {
+                "file": file_name,
+                "hit_count": 0,
+                "helpfulness_total": 0.0,
+                "last_seen_date": None,
+                "task_groups": set(),
+                "best_group_score": 0.0,
+            },
+        )
+        score_entry["hit_count"] = cast(int, score_entry["hit_count"]) + 1
+        score_entry["helpfulness_total"] = cast(float, score_entry["helpfulness_total"]) + cast(
+            float, entry["helpfulness"]
+        )
+        cast(set[str], score_entry["task_groups"]).add(group_name)
+        score_entry["best_group_score"] = max(
+            cast(float, score_entry["best_group_score"]),
+            selected_group_scores[group_name],
+        )
+
+        entry_date = parse_iso_date(entry["retrieval_date"])
+        if entry_date is not None:
+            recent_dates.append(entry_date)
+            previous_date = parse_iso_date(score_entry["last_seen_date"])
+            if previous_date is None or entry_date > previous_date:
+                score_entry["last_seen_date"] = entry["retrieval_date"]
+
+    latest_date = max(recent_dates) if recent_dates else None
+    ranked_files: list[dict[str, object]] = []
+    for file_name, score_entry in file_scores.items():
+        hit_count = cast(int, score_entry["hit_count"])
+        avg_helpfulness = cast(float, score_entry["helpfulness_total"]) / hit_count
+        frequency_score = min(hit_count / 3, 1.0)
+        last_seen = parse_iso_date(score_entry["last_seen_date"])
+        recency_score = 0.0
+        if latest_date is not None and last_seen is not None:
+            age_days = max((latest_date - last_seen).days, 0)
+            recency_score = max(0.0, 1.0 - min(age_days, 365) / 365)
+        total_score = (
+            cast(float, score_entry["best_group_score"]) * 0.5
+            + frequency_score * 0.25
+            + avg_helpfulness * 0.2
+            + recency_score * 0.05
+        )
+        metadata = file_metadata.get(file_name, {})
+        ranked_files.append(
+            {
+                "file": file_name,
+                "folder": metadata.get("folder"),
+                "file_type": metadata.get("file_type"),
+                "score": round(total_score, 4),
+                "hit_count": hit_count,
+                "avg_helpfulness": round(avg_helpfulness, 4),
+                "last_seen_date": score_entry["last_seen_date"],
+                "task_groups": sorted(cast(set[str], score_entry["task_groups"])),
+            }
+        )
+
+    ranked_files.sort(
+        key=lambda item: (
+            -cast(float, item["score"]),
+            -cast(int, item["hit_count"]),
+            cast(str, item["file"]),
+        )
+    )
+
+    return {
+        "repo_root": str(repo_root),
+        "query": raw_query,
+        "normalized_query_tokens": list(normalized_query_tokens),
+        "task_group_filter": task_group_name,
+        "matched_task_groups": [
+            {
+                "group_name": cast(dict[str, object], item["group"])["group_name"],
+                "score": round(cast(float, item["score"]), 4),
+                "entry_count": cast(dict[str, object], item["group"])["entry_count"],
+            }
+            for item in matched_groups[: max(group_limit, 0)]
+        ],
+        "results": ranked_files[: max(limit, 0)],
+    }
+
+
+def print_query_report(report: dict[str, object], as_json: bool) -> None:
+    if as_json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return
+
+    print(f"Repo root: {report['repo_root']}")
+    print(f"Query: {report['query'] or '(task-group only)'}")
+    print(
+        "Normalized query tokens: "
+        f"{', '.join(cast(list[str], report['normalized_query_tokens'])) or 'none'}"
+    )
+    if report["task_group_filter"] is not None:
+        print(f"Task-group filter: {report['task_group_filter']}")
+    print("Matched task groups:")
+    matched_groups = cast(list[dict[str, object]], report["matched_task_groups"])
+    if matched_groups:
+        for group in matched_groups:
+            print(
+                f"  - {group['group_name']} (score={group['score']}, entries={group['entry_count']})"
+            )
+    else:
+        print("  - none")
+
+    print("Ranked files:")
+    results = cast(list[dict[str, object]], report["results"])
+    if results:
+        for item in results:
+            print(
+                f"  - {item['file']} (score={item['score']}, hits={item['hit_count']}, avg_helpfulness={item['avg_helpfulness']}, groups={', '.join(cast(list[str], item['task_groups']))})"
+            )
+    else:
+        print("  - none")
+
+
 def print_task_group_report(report: dict[str, object], as_json: bool) -> None:
     if as_json:
         print(json.dumps(report, indent=2, sort_keys=True))
@@ -813,6 +1209,37 @@ def run_task_groups(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_aggregate(args: argparse.Namespace) -> int:
+    repo_root = detect_repo_root(args.repo_root)
+    quick_reference = parse_quick_reference(repo_root / "meta" / "quick-reference.md")
+    inventory = load_inventory(repo_root)
+    report, markdown = format_aggregation_report(
+        repo_root, quick_reference, inventory, args.force
+    )
+    wrote_task_groups = False
+    if markdown is not None and not args.dry_run:
+        write_task_groups_file(repo_root, markdown)
+        wrote_task_groups = True
+    report["wrote_task_groups"] = wrote_task_groups
+    print_aggregation_report(report, args.json)
+    return 0
+
+
+def run_query(args: argparse.Namespace) -> int:
+    repo_root = detect_repo_root(args.repo_root)
+    inventory = load_inventory(repo_root)
+    report = format_query_report(
+        repo_root,
+        inventory,
+        args.query,
+        args.task_group,
+        args.limit,
+        args.group_limit,
+    )
+    print_query_report(report, args.json)
+    return 0
+
+
 def main() -> int:
     args = parse_args()
     if args.command == "status":
@@ -821,6 +1248,10 @@ def main() -> int:
         return run_rebuild(args)
     if args.command == "task-groups":
         return run_task_groups(args)
+    if args.command == "aggregate":
+        return run_aggregate(args)
+    if args.command == "query":
+        return run_query(args)
     raise SystemExit(f"Unknown command: {args.command}")
 
 
