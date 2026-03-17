@@ -20,13 +20,21 @@ cd my-memory
 rm -rf .git && git init
 ```
 
-### 2. Run the setup script
+### 2. Run setup
+
+**Option A — Terminal** (recommended):
 
 ```bash
 bash setup.sh
 ```
 
-The script walks you through three choices:
+**Option B — Browser** (no terminal required):
+
+Open `setup.html` in any browser. The wizard walks you through the same choices and generates the files for you to download and place in the repo. Nothing is uploaded — everything runs locally.
+
+---
+
+Either path walks you through three choices:
 1. **Git remote** — where to push your memory repo (optional).
 2. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank. The agent will confirm and refine these during onboarding.
 3. **AI platform** — tells you exactly what to do next for Claude Code, Cursor, ChatGPT, or other tools.
@@ -161,7 +169,7 @@ The repo has five main areas:
 
 Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.jsonl` (retrieval tracking log). The agent reads summaries to decide what to retrieve, logs what it retrieves, and periodically aggregates those logs to improve future retrieval.
 
-For the full architecture, read [README.md](README.md). For governance details, see the files in `meta/`.
+For the full architecture, read [README.md](README.md). For governance details, see the files in `meta/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
 
 ### Optional maintenance check
 

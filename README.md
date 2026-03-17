@@ -21,7 +21,11 @@ This repository is a structured, version-controlled memory that persists across 
 ```
 /
 ├── README.md              ← You are here. System architecture and protocols.
+├── QUICKSTART.md          ← Human-facing setup guide. Start here if you're a person.
+├── DESIGN.md              ← Design philosophy, use cases, and future directions.
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
+├── setup.sh               ← Post-clone setup script (interactive or CLI flags).
+├── setup.html             ← Browser-based setup wizard (no terminal required).
 │
 ├── identity/              ← Who the user is. Personality, preferences, values.
 │   ├── SUMMARY.md         ← Start here. High-level portrait of the user.
@@ -51,15 +55,28 @@ This repository is a structured, version-controlled memory that persists across 
 │           ├── SUMMARY.md
 │           └── artifacts/  ← Any files created or uploaded during the chat.
 │
-└── meta/                  ← Governance. How this system updates itself.
-    ├── quick-reference.md  ← Active operational parameters. The single threshold lookup.
-    ├── curation-policy.md  ← Rules for memory hygiene, decay, and promotion.
-    ├── update-guidelines.md ← Protocols for proposing and merging changes.
-    ├── review-queue.md     ← Pending suggestions for system modifications.
-    ├── belief-diff-log.md  ← Periodic audit log tracking content drift.
-    ├── system-maturity.md  ← Developmental stage tracking and adaptive thresholds.
-    ├── (task-groups.md     ← Created at Calibration stage; emergent task groups from ACCESS.)
-    └── (task-categories.md ← Created at Consolidation stage; controlled category vocabulary.)
+├── meta/                  ← Governance. How this system updates itself.
+│   ├── quick-reference.md  ← Active operational parameters. The single threshold lookup.
+│   ├── curation-policy.md  ← Rules for memory hygiene, decay, and promotion.
+│   ├── update-guidelines.md ← Protocols for proposing and merging changes.
+│   ├── review-queue.md     ← Pending suggestions for system modifications.
+│   ├── belief-diff-log.md  ← Periodic audit log tracking content drift.
+│   ├── system-maturity.md  ← Developmental stage tracking and adaptive thresholds.
+│   ├── first-run.md        ← Streamlined first-session flow for agents.
+│   ├── session-checklists.md ← Compact session start/end runbooks.
+│   ├── glossary.md          ← Definitions of system terminology.
+│   ├── integrity-checklist.md ← Advisory audit checklist.
+│   ├── (task-groups.md     ← Created at Calibration stage; emergent task groups from ACCESS.)
+│   └── (task-categories.md ← Created at Consolidation stage; controlled category vocabulary.)
+│
+├── templates/profiles/    ← Starter identity templates for setup.sh / setup.html.
+│
+├── scripts/               ← Maintenance and import tooling.
+│   ├── validate_memory_repo.py ← Optional structural validator.
+│   ├── onboard-export.sh       ← Import onboarding exports from read-only platforms.
+│   └── onboard-export-template.md ← Structured format for onboarding exports.
+│
+└── tests/                 ← Test suite for the validator.
 ```
 
 ## Memory curation
