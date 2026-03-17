@@ -16,6 +16,36 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Browser setup wizard (setup.html)
+
+**Changed:**
+
+- **`setup.html` companion wizard.** Added a single-file, zero-dependency browser wizard that mirrors `setup.sh` for users who prefer a graphical interface or are on platforms where running shell scripts is inconvenient. Three-step flow: About You (optional name and AI-use context) → Starter Profile (card picker) → AI Platform (option list with inline contextual hints). Step 4 generates and provides download links for the appropriate files (`identity/profile.md`, `identity/SUMMARY.md`, `chatgpt-instructions.txt`, or `system-prompt.txt`) with per-file Preview and Download buttons and platform-specific next-steps instructions. Runs entirely client-side — no server or network requests. All DOM construction uses `textContent` and safe DOM methods (no `innerHTML` with dynamic content). `<noscript>` fallback directs users to `setup.sh`.
+
+**Reasoning:** Some users — especially those on Windows, corporate machines, or unfamiliar with terminals — find even `bash setup.sh` a barrier. Opening an HTML file in a browser requires no tools. The wizard produces identical output to `setup.sh` for the same choices, so both paths lead to the same starting state. Inspired by OpenClaw's browser-based setup wizard pattern.
+
+**Approved by:** user
+
+---
+
+## [2026-03-16] Zero-edit onboarding path for read-only platforms
+
+**Changed:**
+
+- **`scripts/onboard-export.sh`.** Added an import script that parses a structured onboarding export document and writes the resulting files into the repo: `identity/profile.md` (with correct frontmatter), `identity/SUMMARY.md`, the first chat record under `chats/YYYY/MM/DD/chat-001/` (SUMMARY.md and optional reflection.md), and `chats/SUMMARY.md` (only when no real history exists — guarded against clobbering). Stages and commits automatically when git author identity is configured; prints manual commit instructions otherwise. Supports `--dry-run` to preview all writes. Hardened comment stripping: sed range `/^<!--/,/^-->$/d` matches the template's multi-word comment openers (e.g., `<!-- The agent writes...`).
+
+- **`scripts/onboard-export-template.md`.** Added a structured template the agent fills in at the end of a first session on a read-only platform. Three sections with HTML comment placeholders: `## Identity Profile`, `## Session Summary`, `## Session Reflection`. The agent outputs this document; the user saves it and runs the import script.
+
+- **Updated `skills/onboarding.md` step 6.** Added explicit instructions for write-unavailable sessions: produce the export in the three-section template format and tell the user to run `bash scripts/onboard-export.sh <file>`.
+
+- **Updated `QUICKSTART.md`.** Added "Read-only platforms" subsection documenting the full export/import flow.
+
+**Reasoning:** Users on ChatGPT, Claude Projects, or other sandboxed platforms can run the onboarding conversation but cannot have the agent write files directly. Previously, the only option was manual copy-paste with no structure. The export script eliminates that friction: the user saves one file and runs one command. The three-section format also makes the exported document human-readable and editable before import, so users can review what the agent captured before it gets committed.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-16] Human-friendly startup: guided setup, starter profiles, and daily workflow skills
 
 **Changed:**

@@ -10,12 +10,12 @@ trust: high
 
 ## When to use this skill
 
-Activate this skill on the **first session only** — when both of these conditions are true:
+Activate this skill on the **first session only** — when no date-organized chat folders exist in `chats/`, AND either:
 
-1. `identity/SUMMARY.md` contains "No portrait yet" (no user profile has been created).
-2. No date-organized chat folders exist in `chats/` (no prior sessions have been recorded).
+1. `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
+2. `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but has not yet been confirmed through onboarding).
 
-If either condition is false, the system has already been onboarded. Skip this skill and proceed with the normal bootstrap sequence.
+If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Skip this skill and proceed with the normal bootstrap sequence.
 
 Before using this skill, the agent should already have read `meta/quick-reference.md`, reviewed the relevant change-control and read-only sections of `meta/update-guidelines.md`, and checked write access per README.md's bootstrap sequence.
 
