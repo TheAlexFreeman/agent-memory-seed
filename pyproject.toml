@@ -2,6 +2,9 @@
 line-length = 88
 target-version = "py311"
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 # E501 (line-too-long) is owned by the formatter; string literals and comments

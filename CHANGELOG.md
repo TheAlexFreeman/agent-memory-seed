@@ -16,6 +16,70 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-17] Typed service results and MCP smoke coverage
+
+**Changed:**
+
+- **Typed public service payloads.** Added explicit typed result shapes for the shared service's public status, query, read, context, and ACCESS-log responses so the Phase 3 boundary is clearer for Python callers and future MCP extensions.
+
+- **Typed MCP tool returns.** Updated `memory_mcp/server.py` to use those service result shapes for the exported MCP tool methods, keeping the transport layer aligned with the service contract.
+
+- **CI-level MCP smoke invocation.** Extended `.github/workflows/ci.yml` with a smoke check that boots `MemoryMCPApplication` against the repository and invokes `status_memory()`, catching packaging or import regressions before the full test run.
+
+**Reasoning:** The previous slice made failure behavior predictable, but the public payload contract was still informal and CI had no direct initialization check for the MCP runtime boundary. This change makes the response surface more explicit and adds a fast packaging-level safeguard in CI.
+
+**Approved by:** agent (pending review)
+
+---
+
+## [2026-03-17] Service and MCP failure boundary hardening
+
+**Changed:**
+
+- **Explicit service errors.** Added a small exception hierarchy in `memory_engine_service/service.py` so invalid repo roots, malformed ACCESS history, traversal attempts, missing files, unsupported targets, and ACCESS write conflicts are surfaced as stable service-level failures.
+
+- **Thin MCP error mapping.** Updated `memory_mcp/server.py` to convert service failures into MCP `ToolError` responses instead of leaking raw Python exception types through the transport boundary.
+
+- **Boundary regression coverage.** Expanded `tests/test_memory_mcp.py` to cover invalid repo roots, traversal rejection, missing and unsupported files, malformed ACCESS data, invalid ACCESS inputs, and MCP-facing tool error behavior.
+
+**Reasoning:** The shared engine extraction made the runtime layering explicit, but the failure contract was still implicit and inconsistent. Hardening the service and MCP boundaries now reduces drift between clients, keeps governance-related failures predictable, and creates a stable base for the rest of the Phase 3 work.
+
+**Approved by:** agent (pending review)
+
+---
+
+## [2026-03-16] Extract shared memory engine package
+
+**Changed:**
+
+- **Importable engine package.** Extracted the memory engine implementation into `memory_engine_core/engine.py`, creating a true shared package boundary for the CLI, service layer, and MCP server.
+
+- **CLI compatibility wrapper.** Reduced `scripts/memory_engine.py` to a thin wrapper that imports and runs the shared engine package so existing commands and docs remain stable.
+
+- **Service/test dependency cleanup.** Updated `memory_engine_service/service.py` and `tests/test_memory_engine.py` to import the shared engine package directly instead of dynamically loading the script file.
+
+**Reasoning:** The earlier service layer still depended on loading the monolithic CLI script at runtime, which kept the script boundary as the de facto API. Extracting the engine into a real package makes the runtime dependency graph explicit, removes import indirection, and gives the Phase 3 MCP surface a stable Python integration point.
+
+**Approved by:** agent (pending review)
+
+---
+
+## [2026-03-16] Phase 3 MCP server scaffold
+
+**Changed:**
+
+- **Shared engine service layer.** Added `memory_engine_service/` as the first importable wrapper over the existing memory engine so non-CLI entry points can reuse the same status, query, read, and aggregation-readiness behavior.
+
+- **Initial MCP server.** Added `memory_mcp/server.py` plus `scripts/memory_mcp_server.py`, an SDK-backed stdio MCP server exposing `status_memory`, `read_memory`, `query_memory`, `get_context`, and `log_access`. The server intentionally keeps write scope narrow: `log_access` appends ACCESS entries and reports aggregation readiness, but no proposed or protected writes are exposed.
+
+- **Coverage and CI.** Added MCP-focused tests and updated CI to install the MCP dependency so the new Phase 3 slice is exercised alongside the existing engine suite.
+
+**Reasoning:** The Phase 2 engine is now useful enough to support a thin MCP layer without inventing a second retrieval stack. This first Phase 3 slice proves the server boundary, keeps governance centralized, and exposes only the read-heavy operations plus ACCESS logging that fit the current maturity of the repo.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-16] Aggregation and query surfaces for the memory engine
 
 **Changed:**
