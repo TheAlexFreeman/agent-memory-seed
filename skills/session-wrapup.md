@@ -58,7 +58,7 @@ If write access is unavailable, produce a deferred-action summary listing:
 - All file writes (summaries, reflections, knowledge updates) that should be applied.
 - All review-queue items.
 
-Present this to the user in a format they can act on (copy-paste or run through `scripts/onboard-export.sh`).
+Present this to the user in the deferred-action format defined in `meta/update-guidelines.md` § "How to communicate deferred actions" — a structured block the user can copy and paste or commit directly. (`scripts/onboard-export.sh` is for the first-session onboarding import only; it does not apply here.)
 
 ### 7. Sign off
 

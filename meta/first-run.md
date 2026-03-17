@@ -2,11 +2,11 @@
 
 This document is an agent-facing streamlined flow for the very first session. It condenses bootstrap steps 1–9 from README.md into a single checklist with clear silent/interactive annotations.
 
-**When to use:** Both of these conditions are true:
-- `identity/SUMMARY.md` contains "No portrait yet"
-- No date-organized chat folders exist under `chats/`
+**When to use:** No date-organized chat folders exist under `chats/`, AND either:
+- `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
+- `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but onboarding has not yet run).
 
-If either condition is false, the system has already been onboarded. Use the full bootstrap sequence in README.md instead.
+If neither condition matches — a user portrait exists without the `template` marker, or chat history is present — the system has already been onboarded. Use the full bootstrap sequence in README.md instead.
 
 ---
 
