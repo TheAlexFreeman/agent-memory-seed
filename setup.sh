@@ -48,6 +48,22 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Validate flag values using exact case-match (no regex interpretation)
+if [[ -n "$PLATFORM" ]]; then
+    case "$PLATFORM" in
+        claude-code|cursor|chatgpt|generic) ;;
+        *) echo "Error: unknown platform '$PLATFORM'. Valid options: claude-code cursor chatgpt generic"
+           exit 1 ;;
+    esac
+fi
+if [[ -n "$PROFILE" ]]; then
+    case "$PROFILE" in
+        software-developer|researcher|project-manager) ;;
+        *) echo "Error: unknown profile '$PROFILE'. Valid options: software-developer researcher project-manager"
+           exit 1 ;;
+    esac
+fi
+
 # Validate we're in the right directory
 if [[ ! -f "README.md" ]] || [[ ! -d "meta" ]]; then
     echo "Error: setup.sh must be run from the root of the agent-memory-seed repository."
