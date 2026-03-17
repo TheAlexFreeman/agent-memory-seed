@@ -143,6 +143,32 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(any("invalid source" in error for error in result.errors))
 
+    def test_template_source_passes(self) -> None:
+        # source: template is set by setup.sh when installing starter profiles;
+        # the validator must accept it so fresh template-installed repos pass CI.
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: template
+                    origin_session: setup
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: medium
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+
     def test_malformed_access_jsonl_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
