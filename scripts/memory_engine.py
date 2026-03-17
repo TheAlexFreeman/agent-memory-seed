@@ -281,12 +281,16 @@ def normalize_task_token(token: str) -> str:
         return strip_doubled_suffix(token[:-3])
     if token.endswith("ed") and len(token) > 4:
         return strip_doubled_suffix(token[:-2])
-    if token.endswith("es") and len(token) > 4 and not token.endswith(
-        ("ses", "xes", "zes", "ches", "shes")
+    if (
+        token.endswith("es")
+        and len(token) > 4
+        and not token.endswith(("ses", "xes", "zes", "ches", "shes"))
     ):
         return token[:-2]
-    if token.endswith("s") and len(token) > 3 and not token.endswith(
-        ("ss", "us", "is")
+    if (
+        token.endswith("s")
+        and len(token) > 3
+        and not token.endswith(("ss", "us", "is"))
     ):
         return token[:-1]
     return token
@@ -329,7 +333,9 @@ def count_value(counter: Counter[str], value: str, amount: int = 1) -> None:
     counter[value] += amount
 
 
-def build_task_groups(access_entries: list[dict[str, object]]) -> list[dict[str, object]]:
+def build_task_groups(
+    access_entries: list[dict[str, object]],
+) -> list[dict[str, object]]:
     exact_groups: dict[tuple[str, ...], dict[str, object]] = {}
 
     for entry in access_entries:
@@ -377,7 +383,10 @@ def build_task_groups(access_entries: list[dict[str, object]]) -> list[dict[str,
             similarity = jaccard_similarity(
                 exact_tokens, cast(tuple[str, ...], merged_group["canonical_tokens"])
             )
-            if similarity >= TASK_GROUP_MERGE_THRESHOLD and similarity > best_similarity:
+            if (
+                similarity >= TASK_GROUP_MERGE_THRESHOLD
+                and similarity > best_similarity
+            ):
                 best_match = merged_group
                 best_similarity = similarity
 
@@ -385,11 +394,17 @@ def build_task_groups(access_entries: list[dict[str, object]]) -> list[dict[str,
             merged_groups.append(
                 {
                     "canonical_tokens": exact_tokens,
-                    "task_counts": Counter(cast(Counter[str], exact_group["task_counts"])),
-                    "file_counts": Counter(cast(Counter[str], exact_group["file_counts"])),
+                    "task_counts": Counter(
+                        cast(Counter[str], exact_group["task_counts"])
+                    ),
+                    "file_counts": Counter(
+                        cast(Counter[str], exact_group["file_counts"])
+                    ),
                     "dates": set(cast(set[str], exact_group["dates"])),
                     "sessions": set(cast(set[str], exact_group["sessions"])),
-                    "entries": list(cast(list[dict[str, object]], exact_group["entries"])),
+                    "entries": list(
+                        cast(list[dict[str, object]], exact_group["entries"])
+                    ),
                 }
             )
             continue
@@ -602,7 +617,9 @@ def write_database(
                     "entry_count": group["entry_count"],
                     "session_count": group["session_count"],
                     "distinct_dates_count": group["distinct_dates_count"],
-                    "common_files_json": json.dumps(group["common_files"], sort_keys=True),
+                    "common_files_json": json.dumps(
+                        group["common_files"], sort_keys=True
+                    ),
                 }
                 for group in task_groups
             ],

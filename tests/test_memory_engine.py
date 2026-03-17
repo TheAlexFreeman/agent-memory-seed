@@ -211,14 +211,18 @@ class MemoryEngineTests(unittest.TestCase):
             memory_engine.write_database(
                 db_path,
                 memory_engine.load_inventory(root),
-                memory_engine.parse_quick_reference(root / "meta" / "quick-reference.md"),
+                memory_engine.parse_quick_reference(
+                    root / "meta" / "quick-reference.md"
+                ),
             )
 
             status = memory_engine.format_status(
                 root,
                 db_path,
                 memory_engine.load_inventory(root),
-                memory_engine.parse_quick_reference(root / "meta" / "quick-reference.md"),
+                memory_engine.parse_quick_reference(
+                    root / "meta" / "quick-reference.md"
+                ),
             )
 
             self.assertEqual(status["database"]["task_groups"], 1)
