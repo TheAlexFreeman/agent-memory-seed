@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import importlib.util
 import json
 import os
-import sys
 import time
-from functools import lru_cache
 from pathlib import Path
-from types import ModuleType
 from typing import Any, cast
 
-ENGINE_SCRIPT_PATH = (
-    Path(__file__).resolve().parents[1] / "scripts" / "memory_engine.py"
-)
+import memory_engine_core.engine as memory_engine
+
 READABLE_TEXT_EXTENSIONS = {
     ".json",
     ".jsonl",
@@ -58,22 +53,9 @@ class FileLock:
             pass
 
 
-@lru_cache(maxsize=1)
-def load_engine_module() -> ModuleType:
-    spec = importlib.util.spec_from_file_location(
-        "agent_memory_engine_script", ENGINE_SCRIPT_PATH
-    )
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load memory engine from {ENGINE_SCRIPT_PATH}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
 class MemoryEngineService:
     def __init__(self, repo_root: Path, db_path: Path | None = None) -> None:
-        self.engine = load_engine_module()
+        self.engine = memory_engine
         self.repo_root = cast(Path, self.engine.detect_repo_root(repo_root))
         self.db_path = cast(Path, self.engine.resolve_db_path(self.repo_root, db_path))
 

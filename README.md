@@ -96,6 +96,8 @@ python scripts/memory_mcp_server.py --repo-root .
 
 The CLI creates `.memory.db` as a **derived** SQLite index. It is not part of the canonical memory store, is ignored by git, and can be deleted/rebuilt at any time from the repo's Markdown and JSONL files. The initial Phase 1 implementation is intentionally conservative: it inventories the repo, records ACCESS history, and snapshots the live thresholds from `meta/quick-reference.md`. Query, task-group aggregation, and MCP integration build on this foundation later.
 
+The shared engine implementation now lives in `memory_engine_core/engine.py`. `scripts/memory_engine.py` is kept as a thin compatibility wrapper so the CLI entrypoint stays stable while MCP and other Python surfaces can import the same engine package directly.
+
 `task-groups` remains a read-heavy preview surface: it normalizes ACCESS `task` strings into derived equivalence classes so you can inspect how the repo's free-text task history is clustering.
 
 `aggregate` is the first bridge back into canonical state. In Calibration and Consolidation, once the current ACCESS backlog reaches the live aggregation trigger in `meta/quick-reference.md`, it emits the machine-generated [meta/task-groups.md](meta/task-groups.md) file described in the governance docs. Use `--dry-run` to preview whether a write would occur.

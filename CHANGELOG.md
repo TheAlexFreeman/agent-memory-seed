@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Extract shared memory engine package
+
+**Changed:**
+
+- **Importable engine package.** Extracted the memory engine implementation into `memory_engine_core/engine.py`, creating a true shared package boundary for the CLI, service layer, and MCP server.
+
+- **CLI compatibility wrapper.** Reduced `scripts/memory_engine.py` to a thin wrapper that imports and runs the shared engine package so existing commands and docs remain stable.
+
+- **Service/test dependency cleanup.** Updated `memory_engine_service/service.py` and `tests/test_memory_engine.py` to import the shared engine package directly instead of dynamically loading the script file.
+
+**Reasoning:** The earlier service layer still depended on loading the monolithic CLI script at runtime, which kept the script boundary as the de facto API. Extracting the engine into a real package makes the runtime dependency graph explicit, removes import indirection, and gives the Phase 3 MCP surface a stable Python integration point.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-16] Phase 3 MCP server scaffold
 
 **Changed:**

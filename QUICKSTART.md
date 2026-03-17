@@ -198,6 +198,8 @@ python scripts/memory_mcp_server.py --repo-root .
 
 This creates `.memory.db`, a git-ignored SQLite database containing derived metadata from the repo. It does **not** replace the Markdown and JSONL files, and deleting it is safe — the CLI can rebuild it from source.
 
+The engine logic now lives in the importable `memory_engine_core/` package. The existing `scripts/memory_engine.py` command remains the supported CLI entrypoint, but MCP and other Python integrations no longer need to cross the script boundary.
+
 `task-groups` stays read-only and works even before you rebuild the database. It previews how free-text ACCESS `task` strings collapse into normalized groups, which is the first Phase 2 step toward finer-grained clustering than session co-occurrence.
 
 `aggregate` is the first command that can write canonical state back into the repo. In Calibration or Consolidation, when the current ACCESS backlog meets the live aggregation trigger, it writes the machine-generated `meta/task-groups.md` file. Use `--dry-run` first.

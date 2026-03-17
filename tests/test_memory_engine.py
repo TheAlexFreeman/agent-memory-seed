@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.util
 import sqlite3
 import subprocess
 import sys
@@ -8,16 +7,12 @@ import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from typing import Any, cast
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ENGINE_PATH = REPO_ROOT / "scripts" / "memory_engine.py"
 
-SPEC = importlib.util.spec_from_file_location("memory_engine", ENGINE_PATH)
-assert SPEC is not None
-memory_engine = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-sys.modules[SPEC.name] = memory_engine
-SPEC.loader.exec_module(memory_engine)
+import memory_engine_core.engine as memory_engine
 
 
 VALID_QUICK_REFERENCE = textwrap.dedent(
@@ -128,10 +123,11 @@ class MemoryEngineTests(unittest.TestCase):
             status = memory_engine.format_status(
                 root, root / ".memory.db", inventory, quick_reference
             )
+            inventory_status = cast(dict[str, Any], status["inventory"])
 
             self.assertEqual(status["stage"], "Exploration")
-            self.assertEqual(status["inventory"]["access_entries"], 1)
-            self.assertEqual(status["inventory"]["sessions"], 1)
+            self.assertEqual(inventory_status["access_entries"], 1)
+            self.assertEqual(inventory_status["sessions"], 1)
             self.assertFalse(status["db_exists"])
 
     def test_rebuild_dry_run_does_not_create_db(self) -> None:
@@ -217,11 +213,12 @@ class MemoryEngineTests(unittest.TestCase):
 
             inventory = memory_engine.load_inventory(root)
             report = memory_engine.format_task_group_report(root, inventory, limit=10)
+            task_groups = cast(list[dict[str, Any]], report["task_groups"])
 
             self.assertEqual(report["entries_analyzed"], 4)
             self.assertEqual(report["task_groups_count"], 3)
 
-            first_group = report["task_groups"][0]
+            first_group = task_groups[0]
             self.assertEqual(first_group["group_name"], "bug-debug-performance-react")
             self.assertEqual(first_group["entry_count"], 2)
             self.assertEqual(
@@ -251,8 +248,9 @@ class MemoryEngineTests(unittest.TestCase):
                     root / "meta" / "quick-reference.md"
                 ),
             )
+            database_status = cast(dict[str, Any], status["database"])
 
-            self.assertEqual(status["database"]["task_groups"], 1)
+            self.assertEqual(database_status["task_groups"], 1)
 
     def test_aggregate_writes_task_groups_in_calibration(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -345,12 +343,16 @@ class MemoryEngineTests(unittest.TestCase):
                 limit=5,
                 group_limit=3,
             )
+            matched_task_groups = cast(
+                list[dict[str, Any]], report["matched_task_groups"]
+            )
+            results = cast(list[dict[str, Any]], report["results"])
 
             self.assertEqual(
-                report["matched_task_groups"][0]["group_name"],
+                matched_task_groups[0]["group_name"],
                 "bug-debug-performance-react",
             )
-            self.assertEqual(report["results"][0]["file"], "identity/profile.md")
+            self.assertEqual(results[0]["file"], "identity/profile.md")
 
     def test_query_supports_explicit_task_group_filter(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -370,9 +372,13 @@ class MemoryEngineTests(unittest.TestCase):
                 limit=5,
                 group_limit=3,
             )
+            matched_task_groups = cast(
+                list[dict[str, Any]], report["matched_task_groups"]
+            )
+            results = cast(list[dict[str, Any]], report["results"])
 
-            self.assertEqual(report["matched_task_groups"][0]["score"], 1.0)
-            self.assertEqual(report["results"][0]["file"], "identity/profile.md")
+            self.assertEqual(matched_task_groups[0]["score"], 1.0)
+            self.assertEqual(results[0]["file"], "identity/profile.md")
 
     def test_malformed_access_jsonl_exits_with_context(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
