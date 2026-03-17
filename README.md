@@ -1,6 +1,6 @@
 # Agent Memory System
 
-You are reading a persistent memory system stored as a git repository. This file is your entry point. Read it fully before doing anything else.
+You are reading a persistent memory system stored as a git repository. This file is the full system reference. Read it fully on first exposure to the repo, after governance changes, or whenever you need the full architecture and policy context. For normal returning sessions, start with `meta/session-checklists.md`.
 
 **If you are a human setting up this system for the first time**, see [QUICKSTART.md](QUICKSTART.md) for a step-by-step guide.
 
@@ -10,11 +10,19 @@ This repository is a structured, version-controlled memory that persists across 
 
 ## How to orient yourself
 
-1. **Read this file** to understand the system architecture.
+1. **Use this file as the full system reference** when you need architecture, governance, or rationale.
 2. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
 3. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
 4. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
 5. **Log your access** using the access-note format described below.
+
+## Returning sessions
+
+For normal returning sessions, use `meta/session-checklists.md` as the authoritative runbook and `meta/quick-reference.md` as the live threshold lookup.
+
+- Start with `meta/session-checklists.md`, `meta/quick-reference.md`, `identity/SUMMARY.md`, and only the summaries relevant to the current task.
+- Read recent chat summaries before raw transcripts; load full transcripts only when summaries are insufficient.
+- Read `README.md`, `CHANGELOG.md`, `meta/curation-policy.md`, and `meta/update-guidelines.md` only on first exposure, when periodic review is due, when the task touches memory/governance/protected writes, or when summaries are insufficient.
 
 ## Repository structure
 
@@ -25,7 +33,7 @@ This repository is a structured, version-controlled memory that persists across 
 ├── DESIGN.md              ← Design philosophy, use cases, and future directions.
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
 ├── setup.sh               ← Post-clone setup script (interactive or CLI flags).
-├── setup.html             ← Browser-based setup wizard (no terminal required).
+├── setup.html             ← Browser-based setup wizard for manual file prep (no terminal required).
 ├── .memory.db             ← Optional derived SQLite index created by the memory engine CLI.
 │
 ├── identity/              ← Who the user is. Personality, preferences, values.
@@ -246,12 +254,11 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 7. **Check write access.** Can you write to this repository? If not, follow `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
 8. **If this is first run,** read `skills/SUMMARY.md` and `skills/onboarding.md`.
 9. **If this is first run,** run the onboarding skill. `knowledge/SUMMARY.md` and `chats/SUMMARY.md` are skippable on first run when they are empty. After onboarding completes, greet the user using what you learned.
-10. **Otherwise,** read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session.
-11. Read `knowledge/SUMMARY.md` and `skills/SUMMARY.md` to understand what knowledge and capabilities the system has accumulated. If these are empty, skip ahead.
-12. Read `chats/SUMMARY.md` to get historical context (skip if no chat folders exist).
-13. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+10. **Otherwise,** use `meta/session-checklists.md` as the authoritative runbook for normal returning sessions. It starts with `meta/quick-reference.md`, relevant summaries, and recent chat summaries.
+11. Read `README.md`, `CHANGELOG.md`, `meta/curation-policy.md`, and `meta/update-guidelines.md` only when this is your first exposure, periodic review is due, the task touches memory/governance/protected writes, or the summaries are insufficient.
+12. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
-For a compact session start/end runbook, see `meta/session-checklists.md`.
+For normal returning sessions, use `meta/session-checklists.md` as the compact session start/end runbook.
 
 ## Session reflection
 

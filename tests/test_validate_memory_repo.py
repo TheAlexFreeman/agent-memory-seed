@@ -101,6 +101,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: medium
+                    verification_status: backfilled
                     ---
 
                     # Example
@@ -134,6 +135,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: medium
+                    verification_status: backfilled
                     ---
 
                     # Example
@@ -160,6 +162,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: medium
+                    verification_status: not-reviewed
                     ---
 
                     # Profile
@@ -208,6 +211,88 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     "missing required frontmatter keys" in error
                     for error in result.errors
                 )
+            )
+
+    def test_invalid_verification_status_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "example.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    verification_status: verified
+                    ---
+
+                    # Example
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("invalid verification_status" in error for error in result.errors)
+            )
+
+    def test_legacy_origin_session_warns_but_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "example.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    verification_status: user-confirmed
+                    ---
+
+                    # Example
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any("legacy origin_session" in warning for warning in result.warnings)
+            )
+
+    def test_invalid_origin_session_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "example.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chats/2026/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    verification_status: user-confirmed
+                    ---
+
+                    # Example
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("invalid origin_session" in error for error in result.errors)
             )
 
     def test_runtime_guidance_pointing_to_system_maturity_fails(self) -> None:

@@ -10,11 +10,12 @@ Every content file in `identity/`, `knowledge/`, and `skills/` must include YAML
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery | unknown
-origin_session: chat-NNN | manual | unknown
+source: user-stated | agent-inferred | external-research | skill-discovery | template | unknown
+origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD
 trust: high | medium | low
+verification_status: user-confirmed | backfilled | not-reviewed
 ---
 ```
 
@@ -25,11 +26,16 @@ trust: high | medium | low
   - `agent-inferred`: The agent synthesized this from patterns across interactions.
   - `external-research`: Content originated from web searches, uploaded documents, or any source outside direct user conversation.
   - `skill-discovery`: A procedural pattern the agent identified from user corrections or repeated workflows.
+  - `template`: Starter content installed by setup tooling and awaiting user confirmation.
   - `unknown`: Reserved for legacy backfill or genuinely unrecoverable origin. Do not use for newly authored content when a concrete source can be identified.
-- **origin_session** — The chat session that produced this file, or `manual` for hand-authored content, or `unknown` for files predating this schema.
+- **origin_session** — The canonical session path that produced this file (`chats/YYYY/MM/DD/chat-NNN`), or `setup` for starter templates, or `manual` for hand-authored content, or `unknown` for files predating this schema. Legacy bare `chat-NNN` values are accepted only for backward compatibility.
 - **created** — Date the file was first written.
 - **last_verified** — Date a human last reviewed or confirmed the content. Updated when the user explicitly approves, corrects, or re-confirms the file.
 - **trust** — The current trust classification (see `meta/curation-policy.md` for retrieval behavior at each level).
+- **verification_status** — Whether a human has explicitly confirmed the content.
+  - `user-confirmed`: A human explicitly reviewed or approved the file.
+  - `backfilled`: Verification metadata was added retroactively during schema migration or audit work, not through direct user confirmation.
+  - `not-reviewed`: The file has not yet been explicitly confirmed by a human.
 
 ### Trust assignment rules
 
@@ -39,13 +45,14 @@ trust: high | medium | low
 | `agent-inferred`    | `medium`      | → `high` when user explicitly confirms                              |
 | `skill-discovery`   | `medium`      | → `high` after user approval + successful use                       |
 | `external-research` | `low`         | → `medium` after user review; → `high` after user confirms accuracy |
+| `template`          | `medium`      | → `high` when onboarding confirms the template content              |
 | `unknown`           | `medium`      | Replace with a concrete source if later recovered                   |
 
 Trust may also be demoted: if a `high`-trust file is found to contain inaccuracies or the user expresses doubt, downgrade to `medium` and update `last_verified`.
 
 ### Retroactive application
 
-Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, and `last_verified` set to the review date. `source: unknown` is the legacy/backfill path and should not become the default for new content unless the true origin genuinely cannot be recovered.
+Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, `verification_status: backfilled`, and `last_verified` set to the review date. `source: unknown` is the legacy/backfill path and should not become the default for new content unless the true origin genuinely cannot be recovered.
 
 ## Change categories
 
@@ -205,6 +212,6 @@ Protected changes should use GPG-signed commits (`git commit -S`) when the envir
 This system is designed to work with any capable language model. When switching models:
 
 - No changes to the repository should be needed.
-- The new model should follow the bootstrap sequence in README.md.
+- A new model should read README.md fully on first exposure to the repo, then use `meta/session-checklists.md` plus `meta/quick-reference.md` for normal returning sessions.
 - If the new model has significantly different capabilities (e.g., smaller context window, no tool use), it should note any limitations in `meta/review-queue.md` so the user can decide whether to adapt the system.
 - The CHANGELOG.md should record model transitions as system events.

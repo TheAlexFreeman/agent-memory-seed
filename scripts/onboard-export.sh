@@ -10,7 +10,8 @@ set -euo pipefail
 #   <agent output> | bash scripts/onboard-export.sh
 #
 # The export file should follow the format in scripts/onboard-export-template.md,
-# with three sections: "## Identity Profile", "## Session Summary", "## Session Reflection".
+# with top-level frontmatter for session metadata plus three sections:
+# "## Identity Profile", "## Session Summary", "## Session Reflection".
 
 usage() {
     echo "Usage: onboard-export.sh [<export-file>]"
@@ -65,6 +66,64 @@ else
     INPUT=$(cat)
 fi
 
+extract_document_frontmatter() {
+    local content="$1"
+    printf '%s\n' "$content" \
+        | awk '
+            NR == 1 && $0 == "---" { in_frontmatter=1; next }
+            in_frontmatter && $0 == "---" { exit }
+            in_frontmatter { print }
+        '
+}
+
+strip_document_frontmatter() {
+    local content="$1"
+    printf '%s\n' "$content" \
+        | awk '
+            NR == 1 && $0 == "---" { in_frontmatter=1; next }
+            in_frontmatter && $0 == "---" { in_frontmatter=0; next }
+            !in_frontmatter { print }
+        '
+}
+
+frontmatter_value() {
+    local key="$1"
+    local content="$2"
+    printf '%s\n' "$content" \
+        | awk -F':' -v key="$key" '
+            $1 == key {
+                value = substr($0, index($0, ":") + 1)
+                sub(/^[[:space:]]+/, "", value)
+                print value
+                exit
+            }
+        '
+}
+
+DOCUMENT_FRONTMATTER=$(extract_document_frontmatter "$INPUT")
+INPUT_BODY="$INPUT"
+if [[ -n "$DOCUMENT_FRONTMATTER" ]]; then
+    INPUT_BODY=$(strip_document_frontmatter "$INPUT")
+fi
+
+SESSION_DATE=$(frontmatter_value "session_date" "$DOCUMENT_FRONTMATTER")
+SESSION_ID=$(frontmatter_value "session_id" "$DOCUMENT_FRONTMATTER")
+
+if [[ -n "$SESSION_DATE" ]] && [[ ! "$SESSION_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    echo "[warn] Invalid session_date in export frontmatter: $SESSION_DATE"
+    SESSION_DATE=""
+fi
+
+if [[ -n "$SESSION_ID" ]] && [[ ! "$SESSION_ID" =~ ^chats/[0-9]{4}/[0-9]{2}/[0-9]{2}/chat-[0-9]+$ ]]; then
+    echo "[warn] Invalid session_id in export frontmatter: $SESSION_ID"
+    SESSION_ID=""
+fi
+
+if [[ -n "$SESSION_ID" ]] && [[ -z "$SESSION_DATE" ]]; then
+    IFS='/' read -r _ year month day _chat <<< "$SESSION_ID"
+    SESSION_DATE="${year}-${month}-${day}"
+fi
+
 # --- Parse sections ---
 # Extract content between the three known top-level sections, stripping HTML comments.
 # The Identity Profile section may contain its own ## sub-headers (e.g., ## Role and context),
@@ -88,9 +147,9 @@ extract_section() {
         | sed 's/<!--.*-->//g'
 }
 
-IDENTITY_CONTENT=$(extract_section "Identity Profile" "$INPUT")
-SESSION_SUMMARY=$(extract_section "Session Summary" "$INPUT")
-SESSION_REFLECTION=$(extract_section "Session Reflection" "$INPUT")
+IDENTITY_CONTENT=$(extract_section "Identity Profile" "$INPUT_BODY")
+SESSION_SUMMARY=$(extract_section "Session Summary" "$INPUT_BODY")
+SESSION_REFLECTION=$(extract_section "Session Reflection" "$INPUT_BODY")
 
 # Trim leading/trailing blank lines
 trim() {
@@ -113,8 +172,16 @@ if [[ -z "$SESSION_SUMMARY" ]]; then
 fi
 
 # --- Prepare output ---
-TODAY=$(date +%Y-%m-%d)
-CHAT_DIR="chats/$(date +%Y/%m/%d)/chat-001"
+IMPORT_DATE=$(date +%Y-%m-%d)
+TODAY="${SESSION_DATE:-$IMPORT_DATE}"
+if [[ -n "$SESSION_ID" ]]; then
+    CHAT_DIR="$SESSION_ID"
+elif [[ -n "$SESSION_DATE" ]]; then
+    SESSION_PATH_DATE="${SESSION_DATE//-/\/}"
+    CHAT_DIR="chats/${SESSION_PATH_DATE}/chat-001"
+else
+    CHAT_DIR="chats/$(date +%Y/%m/%d)/chat-001"
+fi
 
 echo "=== Onboarding Export ==="
 echo ""
@@ -127,6 +194,7 @@ origin_session: ${CHAT_DIR}
 created: ${TODAY}
 last_verified: ${TODAY}
 trust: high
+verification_status: user-confirmed
 ---
 
 ${IDENTITY_CONTENT}"
@@ -152,6 +220,7 @@ origin_session: ${CHAT_DIR}
 created: ${TODAY}
 last_verified: ${TODAY}
 trust: high
+verification_status: user-confirmed
 ---
 
 # Session Summary — Onboarding
@@ -264,7 +333,7 @@ else
     git commit -m "[system] Import onboarding profile
 
 Onboarding conducted on a read-only platform. Profile and session
-record imported via onboard-export.sh on ${TODAY}."
+record imported via onboard-export.sh on ${IMPORT_DATE}."
     echo "[ok] Committed onboarding import"
 fi
 

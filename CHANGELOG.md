@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-17] Align frontmatter, retrieval behavior, and setup flows
+
+**Changed:**
+
+- **Canonical frontmatter and verification metadata.** Extended the documented schema and validator to recognize `source: template`, canonical full-path `origin_session` values, and the new `verification_status` field, while continuing to accept legacy bare `chat-NNN` session identifiers as backward-compatible input. Updated repo-owned templates, skills, and onboarding materials to emit the canonical metadata.
+
+- **Safer provenance and bounded context behavior.** Changed the service-layer provenance pause logic so explicit user confirmation clears the pause even for medium-trust files, while unreviewed, backfilled, quarantined, and low-trust content still requires confirmation. `get_context` now excludes `transcript.md` from the bounded context surface so summaries remain the default retrieval path and raw transcripts require explicit reads.
+
+- **Honest browser setup and stable onboarding imports.** Reworked the browser wizard and generated prompt snippets so the browser path is clearly manual file preparation rather than a hidden wrapper around `setup.sh`, and added export metadata handling so onboarding imports preserve the original session date and canonical session path when available.
+
+- **Compact returning-session guidance.** Rewrote README, QUICKSTART, setup-generated prompts, and session-start instructions so `meta/session-checklists.md` is the authoritative normal-session runbook, with README, CHANGELOG, and full governance docs reserved for first run, periodic review, and governance-touching work.
+
+**Reasoning:** The repo had drifted between its documented schema, generated files, runtime behavior, and onboarding/setup UX. These changes realign the public contract, reduce unnecessary context use in normal sessions, preserve chronology for deferred imports, and make the advertised no-terminal browser path truthful.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-17] Typed service results and MCP smoke coverage
 
 **Changed:**

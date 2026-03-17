@@ -35,6 +35,62 @@ class MemoryMCPTests(unittest.TestCase):
             self.assertTrue(result["requires_access_log"])
             self.assertFalse(result["provenance_pause_required"])
 
+    def test_read_memory_skips_pause_for_user_confirmed_medium_trust_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "knowledge" / "synthesis.md").write_text(
+                "\n".join(
+                    [
+                        "---",
+                        "source: agent-inferred",
+                        "origin_session: chats/2026/03/16/chat-001",
+                        "created: 2026-03-16",
+                        "last_verified: 2026-03-17",
+                        "trust: medium",
+                        "verification_status: user-confirmed",
+                        "---",
+                        "",
+                        "# Synthesis",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            service = MemoryEngineService(root)
+            result = cast(dict[str, Any], service.read_memory("knowledge/synthesis.md"))
+
+            self.assertFalse(result["provenance_pause_required"])
+
+    def test_read_memory_requires_pause_for_unreviewed_medium_trust_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "knowledge" / "draft.md").write_text(
+                "\n".join(
+                    [
+                        "---",
+                        "source: agent-inferred",
+                        "origin_session: chats/2026/03/16/chat-001",
+                        "created: 2026-03-16",
+                        "last_verified: 2026-03-16",
+                        "trust: medium",
+                        "verification_status: not-reviewed",
+                        "---",
+                        "",
+                        "# Draft",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            service = MemoryEngineService(root)
+            result = cast(dict[str, Any], service.read_memory("knowledge/draft.md"))
+
+            self.assertTrue(result["provenance_pause_required"])
+
     def test_read_memory_rejects_path_traversal(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -173,6 +229,51 @@ class MemoryMCPTests(unittest.TestCase):
 
             self.assertEqual(len(context_items), 1)
             self.assertEqual(context_items[0]["path"], "identity/profile.md")
+
+    def test_get_context_excludes_transcripts(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "chats" / "2026" / "03" / "16" / "chat-001" / "transcript.md").write_text(
+                "full transcript body",
+                encoding="utf-8",
+            )
+            (root / "chats" / "ACCESS.jsonl").write_text(
+                '{"file":"chats/2026/03/16/chat-001/transcript.md","date":"2026-03-17","task":"status test","helpfulness":1.0,"note":"used","session_id":"chats/2026/03/16/chat-001"}\n',
+                encoding="utf-8",
+            )
+
+            service = MemoryEngineService(root)
+            context = cast(
+                dict[str, Any],
+                service.get_context("status test", limit=5, excerpt_chars=80),
+            )
+            context_items = cast(list[dict[str, Any]], context["context"])
+
+            self.assertTrue(
+                all(
+                    item["path"] != "chats/2026/03/16/chat-001/transcript.md"
+                    for item in context_items
+                )
+            )
+
+    def test_read_memory_allows_explicit_transcript_reads(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "chats" / "2026" / "03" / "16" / "chat-001" / "transcript.md").write_text(
+                "full transcript body",
+                encoding="utf-8",
+            )
+
+            service = MemoryEngineService(root)
+            result = cast(
+                dict[str, Any],
+                service.read_memory("chats/2026/03/16/chat-001/transcript.md"),
+            )
+
+            self.assertEqual(result["file_type"], "transcript")
+            self.assertEqual(result["content"], "full transcript body")
 
     def test_build_server_returns_fastmcp(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

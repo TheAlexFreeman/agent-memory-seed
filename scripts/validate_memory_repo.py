@@ -19,6 +19,7 @@ REQUIRED_FRONTMATTER_KEYS = (
     "last_verified",
     "trust",
 )
+OPTIONAL_FRONTMATTER_KEYS = ("verification_status",)
 ALLOWED_SOURCE_VALUES = {
     "user-stated",
     "agent-inferred",
@@ -28,6 +29,13 @@ ALLOWED_SOURCE_VALUES = {
     "unknown",
 }
 ALLOWED_TRUST_VALUES = {"high", "medium", "low"}
+ALLOWED_VERIFICATION_STATUS_VALUES = {
+    "user-confirmed",
+    "backfilled",
+    "not-reviewed",
+}
+CANONICAL_ORIGIN_SESSION_PATTERN = re.compile(r"^chats/\d{4}/\d{2}/\d{2}/chat-\d+$")
+LEGACY_ORIGIN_SESSION_PATTERN = re.compile(r"^chat-\d+$")
 
 REQUIRED_ACCESS_FIELDS = {"file", "date", "task", "helpfulness", "note"}
 OPTIONAL_ACCESS_FIELDS = {"session_id", "category"}
@@ -172,6 +180,28 @@ def validate_iso_date(
         )
 
 
+def validate_origin_session(
+    value: object, path: Path, result: ValidationResult
+) -> None:
+    if not isinstance(value, str) or not value:
+        result.error(f"{path}: origin_session must not be empty")
+        return
+    if value in {"manual", "setup", "unknown"}:
+        return
+    if CANONICAL_ORIGIN_SESSION_PATTERN.fullmatch(value):
+        return
+    if LEGACY_ORIGIN_SESSION_PATTERN.fullmatch(value):
+        result.warn(
+            f"{path}: legacy origin_session {value!r}; use canonical "
+            "'chats/YYYY/MM/DD/chat-NNN' for new content"
+        )
+        return
+    result.error(
+        f"{path}: invalid origin_session {value!r}; expected setup/manual/unknown "
+        "or chats/YYYY/MM/DD/chat-NNN"
+    )
+
+
 def validate_frontmatter(path: Path, result: ValidationResult) -> None:
     text = read_text(path, result)
     if text is None:
@@ -197,9 +227,19 @@ def validate_frontmatter(path: Path, result: ValidationResult) -> None:
 
     validate_iso_date(frontmatter["created"], path, "created", result)
     validate_iso_date(frontmatter["last_verified"], path, "last_verified", result)
+    validate_origin_session(frontmatter["origin_session"], path, result)
 
-    if not frontmatter["origin_session"]:
-        result.error(f"{path}: origin_session must not be empty")
+    verification_status = frontmatter.get("verification_status")
+    if verification_status is None:
+        result.warn(
+            f"{path}: missing verification_status; legacy content is accepted, "
+            "but new content should set it"
+        )
+        return
+    if verification_status not in ALLOWED_VERIFICATION_STATUS_VALUES:
+        result.error(
+            f"{path}: invalid verification_status {verification_status!r}"
+        )
 
 
 def validate_access_file(path: Path, result: ValidationResult) -> None:

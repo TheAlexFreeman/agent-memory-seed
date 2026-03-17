@@ -67,10 +67,11 @@ def build_minimal_repo(root: Path) -> None:
             """\
             ---
             source: user-stated
-            origin_session: manual
+            origin_session: chats/2026/03/16/chat-001
             created: 2026-03-16
             last_verified: 2026-03-16
             trust: high
+            verification_status: user-confirmed
             ---
 
             # Profile

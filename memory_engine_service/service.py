@@ -23,7 +23,6 @@ READABLE_TEXT_EXTENSIONS = {
     ".yml",
 }
 RETRIEVAL_ROOTS = {"identity", "knowledge", "skills", "chats"}
-LOW_CONFIDENCE_SOURCES = {"agent-inferred", "external-research", "skill-discovery"}
 
 ResultT = TypeVar("ResultT")
 
@@ -304,11 +303,15 @@ class MemoryEngineService:
             and file_path.name != "SUMMARY.md"
         )
         trust = frontmatter.get("trust")
-        source = frontmatter.get("source")
+        verification_status = self._effective_verification_status(frontmatter)
         provenance_pause_required = bool(
             is_quarantined
-            or trust in {"low", "medium"}
-            or source in LOW_CONFIDENCE_SOURCES
+            or trust == "low"
+            or (
+                frontmatter
+                and verification_status != "user-confirmed"
+                and top_level != "meta"
+            )
         )
         return {
             "path": relative_path,
@@ -321,6 +324,14 @@ class MemoryEngineService:
             "content": "",
             "size_bytes": 0,
         }
+
+    def _effective_verification_status(self, frontmatter: dict[str, str]) -> str:
+        verification_status = frontmatter.get("verification_status")
+        if verification_status in {"user-confirmed", "backfilled", "not-reviewed"}:
+            return verification_status
+        if frontmatter.get("source") == "user-stated":
+            return "user-confirmed"
+        return "not-reviewed"
 
     def read_memory(self, relative_path: str) -> ReadMemoryResult:
         file_path = self._resolve_repo_file(relative_path)
@@ -347,6 +358,8 @@ class MemoryEngineService:
         query_report = self.query(topic, limit=limit, group_limit=group_limit)
         context_items: list[ContextItem] = []
         for result in query_report["results"]:
+            if result["file_type"] == "transcript":
+                continue
             try:
                 read_result = self.read_memory(result["file"])
             except MemoryEngineServiceError:

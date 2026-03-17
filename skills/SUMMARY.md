@@ -41,15 +41,16 @@ All skill files must include YAML frontmatter (see `meta/update-guidelines.md` f
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery | unknown
-origin_session: chat-NNN | manual | unknown
+source: user-stated | agent-inferred | external-research | skill-discovery | template | unknown
+origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD
 trust: high | medium | low
+verification_status: user-confirmed | backfilled | not-reviewed
 ---
 ```
 
-`source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use it for new content when a concrete source can be identified.
+`source: template` is reserved for setup-installed starter profiles awaiting onboarding confirmation. `source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use either as the default for newly authored content when a concrete source can be identified. Use canonical full session paths for `origin_session`; legacy bare `chat-NNN` values are accepted only for backward compatibility.
 
 **Protected status:** Skill files are **protected-tier** changes — creating, modifying, or removing any skill requires explicit user approval and a CHANGELOG.md entry. This is because skill files contain procedures the agent will execute; they are the highest-value target for memory injection.
 
