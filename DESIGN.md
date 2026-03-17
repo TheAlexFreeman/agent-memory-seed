@@ -180,6 +180,8 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 - `log_access(file, task, helpfulness)` — append to ACCESS.jsonl.
 - `get_context(topic)` — return the most relevant files for a given topic, navigating the summary hierarchy automatically.
 
+**Current implementation note:** The first Phase 3 slice now exists as a thin SDK-backed stdio server that wraps the local engine rather than reimplementing it. The current tool surface is intentionally narrow: `status_memory`, `read_memory`, `query_memory`, `get_context`, and `log_access`. Proposed or protected write paths remain deferred until the category layer and governance automation mature.
+
 This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursorrules) and make the memory system a first-class tool rather than a set of instructions the model must parse and follow.
 
 **VS Code / IDE extension.** A lightweight extension that:

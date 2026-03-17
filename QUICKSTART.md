@@ -193,6 +193,7 @@ python scripts/memory_engine.py rebuild
 python scripts/memory_engine.py task-groups
 python scripts/memory_engine.py aggregate --dry-run
 python scripts/memory_engine.py query "react performance debug"
+python scripts/memory_mcp_server.py --repo-root .
 ```
 
 This creates `.memory.db`, a git-ignored SQLite database containing derived metadata from the repo. It does **not** replace the Markdown and JSONL files, and deleting it is safe — the CLI can rebuild it from source.
@@ -202,6 +203,8 @@ This creates `.memory.db`, a git-ignored SQLite database containing derived meta
 `aggregate` is the first command that can write canonical state back into the repo. In Calibration or Consolidation, when the current ACCESS backlog meets the live aggregation trigger, it writes the machine-generated `meta/task-groups.md` file. Use `--dry-run` first.
 
 `query` is the first search-like surface. It uses derived task groups and ACCESS history to rank likely-relevant files without changing any Markdown.
+
+If you want to expose the same governed engine surface to an MCP-compatible client, install the Python `mcp` package and run `python scripts/memory_mcp_server.py --repo-root .`. The initial server exposes read/query/context tools plus `log_access`; broader write operations remain deferred.
 
 ---
 

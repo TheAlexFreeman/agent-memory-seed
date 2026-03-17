@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Phase 3 MCP server scaffold
+
+**Changed:**
+
+- **Shared engine service layer.** Added `memory_engine_service/` as the first importable wrapper over the existing memory engine so non-CLI entry points can reuse the same status, query, read, and aggregation-readiness behavior.
+
+- **Initial MCP server.** Added `memory_mcp/server.py` plus `scripts/memory_mcp_server.py`, an SDK-backed stdio MCP server exposing `status_memory`, `read_memory`, `query_memory`, `get_context`, and `log_access`. The server intentionally keeps write scope narrow: `log_access` appends ACCESS entries and reports aggregation readiness, but no proposed or protected writes are exposed.
+
+- **Coverage and CI.** Added MCP-focused tests and updated CI to install the MCP dependency so the new Phase 3 slice is exercised alongside the existing engine suite.
+
+**Reasoning:** The Phase 2 engine is now useful enough to support a thin MCP layer without inventing a second retrieval stack. This first Phase 3 slice proves the server boundary, keeps governance centralized, and exposes only the read-heavy operations plus ACCESS logging that fit the current maturity of the repo.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-16] Aggregation and query surfaces for the memory engine
 
 **Changed:**
