@@ -191,7 +191,6 @@ Each entry should explain not just what changed, but **why** — so that future 
 - **First-run flow.** Created `meta/first-run.md` — an agent-facing document that condenses bootstrap steps 1–9 into a streamlined silent setup + interactive onboarding flow. The agent reads governance files silently and only surfaces the conversational onboarding to the user. Updated `README.md` step 4 and `meta/session-checklists.md` to reference it.
 
 - **Daily workflow skills.** Created three new skills implementing the "Two Notes, Three Commands" pattern:
-
   - `skills/session-start.md` — Session opener: loads recent context, checks pending items, greets with continuity.
   - `skills/session-sync.md` — Mid-session checkpoint: captures decisions and progress on demand.
   - `skills/session-wrapup.md` — Session closer: writes summary, reflection, ACCESS entries, produces deferred actions on read-only platforms.
