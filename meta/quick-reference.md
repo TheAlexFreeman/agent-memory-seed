@@ -104,4 +104,12 @@ Stage parameter tables: see `meta/system-maturity.md` §§ "Stage 1: Exploration
 
 ## Context budget guideline
 
-The full bootstrap sequence reads approximately 1,400 lines (~15,000–20,000 tokens) across all referenced files. For models with context windows under 32k, use the compact returning-session checklist in `meta/session-checklists.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
+Use these rough planning numbers when deciding how much repo state to load:
+
+| Session mode | Typical token cost | When |
+| --- | --- | --- |
+| First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
+| Returning compact session | ~2,000–5,000 | Normal day-to-day use via `meta/session-checklists.md` |
+| Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+
+For models with context windows under 32k, prefer the compact returning-session checklist after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.

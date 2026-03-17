@@ -10,7 +10,8 @@ set -euo pipefail
 #   <agent output> | bash scripts/onboard-export.sh
 #
 # The export file should follow the format in scripts/onboard-export-template.md,
-# with three sections: "## Identity Profile", "## Session Summary", "## Session Reflection".
+# with top-level session metadata and four sections: "## Identity Profile",
+# "## Session Transcript", "## Session Summary", and "## Session Reflection".
 
 usage() {
     echo "Usage: onboard-export.sh [<export-file>]"
@@ -65,12 +66,42 @@ else
     INPUT=$(cat)
 fi
 
-# --- Parse sections ---
-# Extract content between the three known top-level sections, stripping HTML comments.
-# The Identity Profile section may contain its own ## sub-headers (e.g., ## Role and context),
-# so we split only on the three known section boundaries.
+# --- Parse frontmatter + sections ---
+# Canonical exports include top-level YAML frontmatter with session metadata.
+# Legacy exports (pre-migration) omit that frontmatter and the transcript section.
 
-KNOWN_SECTIONS="^## Identity Profile$|^## Session Summary$|^## Session Reflection$"
+FRONTMATTER=""
+INPUT_BODY="$INPUT"
+if printf '%s\n' "$INPUT" | awk 'NR==1 { exit($0 == "---" ? 0 : 1) }'; then
+    FRONTMATTER=$(printf '%s\n' "$INPUT" | awk '
+        NR == 1 && $0 == "---" { in_fm = 1; next }
+        in_fm && $0 == "---" { exit }
+        in_fm { print }
+    ')
+    INPUT_BODY=$(printf '%s\n' "$INPUT" | awk '
+        BEGIN { body = 0 }
+        NR == 1 && $0 == "---" { in_fm = 1; next }
+        in_fm && $0 == "---" { in_fm = 0; body = 1; next }
+        !in_fm { print }
+    ')
+fi
+
+frontmatter_value() {
+    local key="$1"
+    printf '%s\n' "$FRONTMATTER" | awk -F': *' -v key="$key" '
+        $1 == key {
+            sub($1 ":[[:space:]]*", "")
+            print
+            exit
+        }
+    '
+}
+
+# Extract content between the known top-level sections, stripping HTML comments.
+# The Identity Profile section may contain its own ## sub-headers (e.g., ## Role and context),
+# so we split only on the four known section boundaries.
+
+KNOWN_SECTIONS="^## Identity Profile$|^## Session Transcript$|^## Session Summary$|^## Session Reflection$"
 
 extract_section() {
     local section_name="$1"
@@ -88,9 +119,10 @@ extract_section() {
         | sed 's/<!--.*-->//g'
 }
 
-IDENTITY_CONTENT=$(extract_section "Identity Profile" "$INPUT")
-SESSION_SUMMARY=$(extract_section "Session Summary" "$INPUT")
-SESSION_REFLECTION=$(extract_section "Session Reflection" "$INPUT")
+IDENTITY_CONTENT=$(extract_section "Identity Profile" "$INPUT_BODY")
+SESSION_TRANSCRIPT=$(extract_section "Session Transcript" "$INPUT_BODY")
+SESSION_SUMMARY=$(extract_section "Session Summary" "$INPUT_BODY")
+SESSION_REFLECTION=$(extract_section "Session Reflection" "$INPUT_BODY")
 
 # Trim leading/trailing blank lines
 trim() {
@@ -98,8 +130,21 @@ trim() {
 }
 
 IDENTITY_CONTENT=$(trim "$IDENTITY_CONTENT")
+SESSION_TRANSCRIPT=$(trim "$SESSION_TRANSCRIPT")
 SESSION_SUMMARY=$(trim "$SESSION_SUMMARY")
 SESSION_REFLECTION=$(trim "$SESSION_REFLECTION")
+
+SESSION_ID=$(trim "$(frontmatter_value "session_id")")
+SESSION_DATE=$(trim "$(frontmatter_value "session_date")")
+HAS_TRANSCRIPT_HEADER=false
+if printf '%s\n' "$INPUT_BODY" | grep -q '^## Session Transcript$'; then
+    HAS_TRANSCRIPT_HEADER=true
+fi
+
+LEGACY_EXPORT=false
+if [[ -z "$SESSION_ID" ]] && [[ -z "$SESSION_DATE" ]] && [[ "$HAS_TRANSCRIPT_HEADER" == false ]]; then
+    LEGACY_EXPORT=true
+fi
 
 # Validate we got something
 if [[ -z "$IDENTITY_CONTENT" ]]; then
@@ -108,13 +153,54 @@ if [[ -z "$IDENTITY_CONTENT" ]]; then
     exit 1
 fi
 
-if [[ -z "$SESSION_SUMMARY" ]]; then
-    echo "[warn] No content found in '## Session Summary' section. Skipping chat record."
+if [[ "$LEGACY_EXPORT" == false ]]; then
+    if [[ -z "$SESSION_ID" ]] || [[ -z "$SESSION_DATE" ]]; then
+        echo "Error: Canonical onboarding exports must include session_id and session_date in top-level frontmatter."
+        exit 1
+    fi
+
+    if [[ ! "$SESSION_ID" =~ ^chats/[0-9]{4}/[0-9]{2}/[0-9]{2}/chat-[0-9]{3}$ ]]; then
+        echo "Error: session_id must match chats/YYYY/MM/DD/chat-NNN. Got: $SESSION_ID"
+        exit 1
+    fi
+
+    if [[ ! "$SESSION_DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+        echo "Error: session_date must use YYYY-MM-DD. Got: $SESSION_DATE"
+        exit 1
+    fi
+
+    SESSION_PATH_DATE=$(printf '%s\n' "$SESSION_ID" | sed -E 's#^chats/([0-9]{4})/([0-9]{2})/([0-9]{2})/chat-[0-9]{3}$#\1-\2-\3#')
+    if [[ "$SESSION_PATH_DATE" != "$SESSION_DATE" ]]; then
+        echo "Error: session_date ($SESSION_DATE) must match the date encoded in session_id ($SESSION_ID)."
+        exit 1
+    fi
+
+    if [[ "$HAS_TRANSCRIPT_HEADER" == false ]] || [[ -z "$SESSION_TRANSCRIPT" ]]; then
+        echo "Error: Canonical onboarding exports must include a non-empty '## Session Transcript' section."
+        exit 1
+    fi
+
+    if [[ -z "$SESSION_SUMMARY" ]]; then
+        echo "Error: Canonical onboarding exports must include a non-empty '## Session Summary' section."
+        exit 1
+    fi
+else
+    echo "[warn] Legacy onboarding export detected — missing session metadata and transcript section."
+    echo "       Falling back to today's date and chats/YYYY/MM/DD/chat-001."
+    if [[ -z "$SESSION_SUMMARY" ]]; then
+        echo "[warn] No content found in '## Session Summary' section. Skipping chat record."
+    fi
 fi
 
 # --- Prepare output ---
-TODAY=$(date +%Y-%m-%d)
-CHAT_DIR="chats/$(date +%Y/%m/%d)/chat-001"
+IMPORT_DATE=$(date +%Y-%m-%d)
+if [[ "$LEGACY_EXPORT" == true ]]; then
+    SESSION_DATE="$IMPORT_DATE"
+    CHAT_DIR="chats/$(date +%Y/%m/%d)/chat-001"
+else
+    CHAT_DIR="$SESSION_ID"
+fi
+CHAT_NAME="${CHAT_DIR##*/}"
 
 echo "=== Onboarding Export ==="
 echo ""
@@ -124,8 +210,8 @@ PROFILE_FILE="identity/profile.md"
 PROFILE_CONTENT="---
 source: user-stated
 origin_session: ${CHAT_DIR}
-created: ${TODAY}
-last_verified: ${TODAY}
+created: ${SESSION_DATE}
+last_verified: ${SESSION_DATE}
 trust: high
 ---
 
@@ -136,7 +222,7 @@ echo "[plan] Write identity profile to: $PROFILE_FILE"
 # 2. Write identity/SUMMARY.md
 SUMMARY_CONTENT="# Identity Summary
 
-User profile created via onboarding export on ${TODAY}.
+User profile created via onboarding export on ${SESSION_DATE}.
 
 See [profile.md](profile.md) for the full portrait."
 
@@ -146,20 +232,17 @@ echo "[plan] Update identity summary: identity/SUMMARY.md"
 if [[ -n "$SESSION_SUMMARY" ]]; then
     echo "[plan] Create chat record: ${CHAT_DIR}/"
 
-    CHAT_SUMMARY_CONTENT="---
-source: user-stated
-origin_session: ${CHAT_DIR}
-created: ${TODAY}
-last_verified: ${TODAY}
-trust: high
----
-
-# Session Summary — Onboarding
+    CHAT_SUMMARY_CONTENT="# Session Summary — Onboarding
 
 ${SESSION_SUMMARY}"
 
+    if [[ -n "$SESSION_TRANSCRIPT" ]]; then
+        TRANSCRIPT_CONTENT="${SESSION_TRANSCRIPT}"
+        echo "[plan] Write transcript: ${CHAT_DIR}/transcript.md"
+    fi
+
     if [[ -n "$SESSION_REFLECTION" ]]; then
-        REFLECTION_CONTENT="# Session Reflection — Onboarding
+        REFLECTION_CONTENT="## Session reflection
 
 ${SESSION_REFLECTION}"
         echo "[plan] Write reflection: ${CHAT_DIR}/reflection.md"
@@ -175,11 +258,11 @@ chats_summary_has_history() {
     [[ -f "$f" ]] && ! grep -q '\*No conversations yet\.' "$f"
 }
 
-CHATS_SUMMARY_CONTENT="# Chat History Summary
+CHATS_SUMMARY_CONTENT="# Chats Summary
 
-## ${TODAY}
+## Overall history
 
-- **chat-001** — First session: onboarding. User profile created."
+First recorded conversation on ${SESSION_DATE}: **${CHAT_NAME}** — onboarding and initial user profile creation."
 
 if chats_summary_has_history; then
     echo "[plan] SKIP chats/SUMMARY.md — existing history detected (would overwrite)"
@@ -199,6 +282,11 @@ if [[ "$DRY_RUN" == true ]]; then
     echo "$SUMMARY_CONTENT"
     if [[ -n "$SESSION_SUMMARY" ]]; then
         echo ""
+        if [[ -n "$SESSION_TRANSCRIPT" ]]; then
+            echo "--- ${CHAT_DIR}/transcript.md ---"
+            echo "$TRANSCRIPT_CONTENT"
+            echo ""
+        fi
         echo "--- ${CHAT_DIR}/SUMMARY.md ---"
         echo "$CHAT_SUMMARY_CONTENT"
         if [[ -n "$SESSION_REFLECTION" ]]; then
@@ -222,21 +310,26 @@ if [[ "$DRY_RUN" == true ]]; then
 fi
 
 # Write identity profile
-echo "$PROFILE_CONTENT" > "$PROFILE_FILE"
+printf '%s\n' "$PROFILE_CONTENT" > "$PROFILE_FILE"
 echo "[ok] Wrote $PROFILE_FILE"
 
 # Write identity summary
-echo "$SUMMARY_CONTENT" > "identity/SUMMARY.md"
+printf '%s\n' "$SUMMARY_CONTENT" > "identity/SUMMARY.md"
 echo "[ok] Updated identity/SUMMARY.md"
 
 # Write chat record
 if [[ -n "$SESSION_SUMMARY" ]]; then
     mkdir -p "$CHAT_DIR"
-    echo "$CHAT_SUMMARY_CONTENT" > "${CHAT_DIR}/SUMMARY.md"
+    if [[ -n "$SESSION_TRANSCRIPT" ]]; then
+        printf '%s\n' "$TRANSCRIPT_CONTENT" > "${CHAT_DIR}/transcript.md"
+        echo "[ok] Wrote ${CHAT_DIR}/transcript.md"
+    fi
+
+    printf '%s\n' "$CHAT_SUMMARY_CONTENT" > "${CHAT_DIR}/SUMMARY.md"
     echo "[ok] Wrote ${CHAT_DIR}/SUMMARY.md"
 
     if [[ -n "$SESSION_REFLECTION" ]]; then
-        echo "$REFLECTION_CONTENT" > "${CHAT_DIR}/reflection.md"
+        printf '%s\n' "$REFLECTION_CONTENT" > "${CHAT_DIR}/reflection.md"
         echo "[ok] Wrote ${CHAT_DIR}/reflection.md"
     fi
 fi
@@ -245,10 +338,9 @@ fi
 if chats_summary_has_history; then
     echo "[skip] chats/SUMMARY.md already contains session history — not overwritten."
     echo "       Add the new entry manually:"
-    echo "         ## ${TODAY}"
-    echo "         - **chat-001** — First session: onboarding. User profile created."
+    echo "         First recorded conversation on ${SESSION_DATE}: **${CHAT_NAME}** — onboarding and initial user profile creation."
 else
-    echo "$CHATS_SUMMARY_CONTENT" > "chats/SUMMARY.md"
+    printf '%s\n' "$CHATS_SUMMARY_CONTENT" > "chats/SUMMARY.md"
     echo "[ok] Updated chats/SUMMARY.md"
 fi
 
@@ -264,7 +356,7 @@ else
     git commit -m "[system] Import onboarding profile
 
 Onboarding conducted on a read-only platform. Profile and session
-record imported via onboard-export.sh on ${TODAY}."
+record imported via onboard-export.sh on ${IMPORT_DATE}."
     echo "[ok] Committed onboarding import"
 fi
 

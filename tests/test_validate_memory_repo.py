@@ -10,6 +10,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 VALIDATOR_PATH = REPO_ROOT / "scripts" / "validate_memory_repo.py"
+ROUTED_PROMPT_LINE = (
+    "start with README.md and follow its routing rules"
+)
+ROUTED_SESSION_LINE = (
+    "Use meta/first-run.md for blank-slate onboarding, meta/session-checklists.md for returning sessions, and the full bootstrap only when README.md routes you there."
+)
+LIVE_CONFIG_LINE = (
+    "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
+)
 
 SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
 validator = importlib.util.module_from_spec(SPEC)
@@ -193,7 +202,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     """\
                     ---
                     source: user-stated
-                    origin_session: chat-001
+                    origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
                     trust: high
                     ---
@@ -209,6 +218,84 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     "missing required frontmatter keys" in error
                     for error in result.errors
                 )
+            )
+
+    def test_canonical_origin_session_path_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+
+    def test_legacy_origin_session_warns_but_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any("legacy origin_session" in warning for warning in result.warnings)
+            )
+
+    def test_malformed_origin_session_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chats/2026/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("origin_session must be" in error for error in result.errors)
             )
 
     def test_runtime_guidance_pointing_to_system_maturity_fails(self) -> None:
@@ -238,7 +325,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     """\
                     ---
                     source: external-research
-                    origin_session: chat-001
+                    origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: medium
@@ -267,7 +354,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     """\
                     ---
                     source: external-research
-                    origin_session: chat-001
+                    origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: low
@@ -292,7 +379,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     """\
                     ---
                     source: agent-inferred
-                    origin_session: chat-001
+                    origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: low
@@ -311,6 +398,48 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     for w in result.warnings
                 )
             )
+
+    def test_setup_copy_uses_readme_routing_language(self) -> None:
+        for path in (REPO_ROOT / "setup.sh", REPO_ROOT / "setup.html", REPO_ROOT / "QUICKSTART.md"):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(ROUTED_PROMPT_LINE, text)
+            self.assertIn(ROUTED_SESSION_LINE, text)
+            self.assertIn(LIVE_CONFIG_LINE, text)
+
+        self.assertNotIn(
+            "At the start of this session:",
+            (REPO_ROOT / "setup.sh").read_text(encoding="utf-8"),
+        )
+        self.assertNotIn(
+            "At the start of this session:",
+            (REPO_ROOT / "setup.html").read_text(encoding="utf-8"),
+        )
+
+    def test_browser_setup_copy_no_longer_claims_remote_parity(self) -> None:
+        quickstart = (REPO_ROOT / "QUICKSTART.md").read_text(encoding="utf-8")
+        setup_html = (REPO_ROOT / "setup.html").read_text(encoding="utf-8")
+
+        self.assertIn("Git remote setup stays manual.", quickstart)
+        self.assertIn("git remote setup stays manual", setup_html)
+        self.assertNotIn("Either path walks you through three choices", quickstart)
+
+    def test_context_budget_copy_uses_canonical_ranges(self) -> None:
+        required_phrases = (
+            "First-run onboarding bootstrap",
+            "~15,000–20,000",
+            "Returning compact session",
+            "~2,000–5,000",
+            "Full bootstrap / periodic review",
+            "~18,000–25,000",
+        )
+        for path in (
+            REPO_ROOT / "README.md",
+            REPO_ROOT / "QUICKSTART.md",
+            REPO_ROOT / "meta" / "quick-reference.md",
+        ):
+            text = path.read_text(encoding="utf-8")
+            for phrase in required_phrases:
+                self.assertIn(phrase, text)
 
 
 if __name__ == "__main__":

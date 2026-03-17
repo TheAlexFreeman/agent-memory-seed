@@ -10,8 +10,8 @@ Every content file in `identity/`, `knowledge/`, and `skills/` must include YAML
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery | unknown
-origin_session: chat-NNN | manual | unknown
+source: user-stated | agent-inferred | external-research | skill-discovery | template | unknown
+origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD
 trust: high | medium | low
@@ -27,7 +27,7 @@ trust: high | medium | low
   - `skill-discovery`: A procedural pattern the agent identified from user corrections or repeated workflows.
   - `unknown`: Reserved for legacy backfill or genuinely unrecoverable origin. Do not use for newly authored content when a concrete source can be identified.
   - `template`: Content pre-populated from a starter profile template installed by `setup.sh --profile`. Replaced with a concrete source (typically `user-stated`) after onboarding confirmation.
-- **origin_session** — The chat session that produced this file, or `manual` for hand-authored content, or `unknown` for files predating this schema.
+- **origin_session** — The canonical session path that produced this file (`chats/YYYY/MM/DD/chat-NNN`), or `setup` for starter templates, or `manual` for hand-authored content, or `unknown` for files predating this schema. Legacy bare `chat-NNN` values are accepted only for backward compatibility and should be migrated during normal edits or periodic review.
 - **created** — Date the file was first written.
 - **last_verified** — Date a human last reviewed or confirmed the content. Updated when the user explicitly approves, corrects, or re-confirms the file.
 - **trust** — The current trust classification (see `meta/curation-policy.md` for retrieval behavior at each level).

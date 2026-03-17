@@ -29,6 +29,9 @@ ALLOWED_SOURCE_VALUES = {
     "unknown",
 }
 ALLOWED_TRUST_VALUES = {"high", "medium", "low"}
+CANONICAL_ORIGIN_SESSION_RE = re.compile(r"^chats/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
+LEGACY_ORIGIN_SESSION_RE = re.compile(r"^chat-\d{3}$")
+SPECIAL_ORIGIN_SESSION_VALUES = {"setup", "manual", "unknown"}
 
 REQUIRED_ACCESS_FIELDS = {"file", "date", "task", "helpfulness", "note"}
 OPTIONAL_ACCESS_FIELDS = {"session_id", "category"}
@@ -199,8 +202,19 @@ def validate_frontmatter(path: Path, result: ValidationResult) -> None:
     validate_iso_date(frontmatter["created"], path, "created", result)
     validate_iso_date(frontmatter["last_verified"], path, "last_verified", result)
 
-    if not frontmatter["origin_session"]:
-        result.error(f"{path}: origin_session must not be empty")
+    origin_session = frontmatter["origin_session"]
+    if origin_session in SPECIAL_ORIGIN_SESSION_VALUES:
+        return
+    if CANONICAL_ORIGIN_SESSION_RE.fullmatch(origin_session):
+        return
+    if LEGACY_ORIGIN_SESSION_RE.fullmatch(origin_session):
+        result.warn(
+            f"{path}: legacy origin_session {origin_session!r}; prefer chats/YYYY/MM/DD/chat-NNN"
+        )
+        return
+    result.error(
+        f"{path}: origin_session must be chats/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
+    )
 
 
 def validate_access_file(path: Path, result: ValidationResult) -> None:

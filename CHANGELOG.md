@@ -16,6 +16,26 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-17] Canonical provenance, read-only onboarding fidelity, and setup routing cleanup
+
+**Changed:**
+
+- **Canonical `origin_session` contract.** Updated `meta/update-guidelines.md`, onboarding examples, and related docs so `origin_session` now uses the canonical form `chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown`. Bare `chat-NNN` values are now documented as legacy-only. Tightened `scripts/validate_memory_repo.py` to enforce the canonical form while warning on legacy bare chat ids.
+
+- **Read-only onboarding round-trip preservation.** Expanded `scripts/onboard-export-template.md` to include top-level `session_id` / `session_date` metadata and a `## Session Transcript` section. Reworked `scripts/onboard-export.sh` to parse canonical exports, preserve the original session path/date, recreate `transcript.md`, write chat summaries without provenance frontmatter, and fall back with a visible warning for legacy three-section exports.
+
+- **README-routed setup prompts.** Updated the ChatGPT and generic prompt text in `setup.sh`, `setup.html`, and `QUICKSTART.md` so generated prompts tell models to start with `README.md` and follow its routing rules, explicitly pointing returning sessions to `meta/session-checklists.md` instead of hardcoding the full bootstrap on every run.
+
+- **Browser setup scope clarity.** Reframed `setup.html` and `QUICKSTART.md` to describe the browser flow as a local starter-file generator rather than a full parity replacement for `setup.sh`. Browser copy now explicitly states that git remote setup remains manual.
+
+- **Unified context-budget messaging and broader tests.** Replaced conflicting token estimates in `README.md`, `QUICKSTART.md`, and `meta/quick-reference.md` with a shared three-row planning table for first-run bootstrap, returning compact sessions, and full bootstrap / periodic review. Expanded the test suite to cover canonical/legacy provenance validation, onboarding import behavior, prompt-copy consistency, and context-budget copy drift.
+
+**Reasoning:** The prior system had a real contract drift problem: provenance examples emitted incompatible `origin_session` formats, read-only onboarding could not faithfully recreate the original first session, generated prompts ignored the compact returning-session path and wasted context, and the browser setup copy overpromised parity with the shell setup flow. These changes make the written rules, generated artifacts, and enforcement tooling agree on one operational model, while preserving backward compatibility for older exports and legacy provenance values.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-16] Browser setup wizard (setup.html)
 
 **Changed:**

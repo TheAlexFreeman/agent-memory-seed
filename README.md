@@ -37,7 +37,7 @@ Use this decision tree to determine your entry point:
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
 ├── .cursorrules           ← Cursor platform adapter. Points to README.md.
 ├── setup.sh               ← Post-clone setup script (interactive or CLI flags).
-├── setup.html             ← Browser-based setup wizard (no terminal required).
+├── setup.html             ← Browser-based starter-file generator (no terminal required).
 │
 ├── identity/              ← Who the user is. Personality, preferences, values.
 │   ├── SUMMARY.md         ← Start here. High-level portrait of the user.
@@ -88,7 +88,7 @@ Use this decision tree to determine your entry point:
 │   ├── onboard-export.sh       ← Import onboarding exports from read-only platforms.
 │   └── onboard-export-template.md ← Structured format for onboarding exports.
 │
-└── tests/                 ← Test suite for the validator.
+└── tests/                 ← Test suite for the validator and import tooling.
 ```
 
 ## Memory curation
@@ -236,7 +236,15 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 
 ### Context budget
 
-The full bootstrap sequence reads approximately 1,400 lines (~15,000–20,000 tokens) across all referenced files. For models with smaller context windows, use the compact returning-session checklist in `meta/session-checklists.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
+Context cost depends on whether the model is onboarding, resuming normally, or reopening the full governance stack. Use these rough planning numbers:
+
+| Session mode                  | Typical token cost | When to expect it |
+| ----------------------------- | ------------------ | ----------------- |
+| First-run onboarding bootstrap | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo |
+| Returning compact session     | ~2,000–5,000       | Normal day-to-day use via `meta/session-checklists.md` |
+| Full bootstrap / periodic review | ~18,000–25,000  | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+
+For models with smaller context windows, prefer the compact returning-session checklist in `meta/session-checklists.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 
 For a compact session start/end runbook, see `meta/session-checklists.md`.
 
