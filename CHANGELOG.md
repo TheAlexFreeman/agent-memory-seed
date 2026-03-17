@@ -16,6 +16,38 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-16] Aggregation and query surfaces for the memory engine
+
+**Changed:**
+
+- **Aggregation path into canonical task-group state.** Extended `scripts/memory_engine.py` with an `aggregate` command that reads the live stage and aggregation trigger from `meta/quick-reference.md`, analyzes ACCESS history, and writes the machine-generated `meta/task-groups.md` file when task-group writes are allowed for the active stage and the trigger has been met. `--dry-run` previews the same decision without mutating the repo.
+
+- **Read-only query command.** Added a `query` command that matches free-text queries against derived task groups and ranks files using task-group similarity, retrieval frequency, helpfulness, and recency. This gives the engine a practical search-like surface before introducing an MCP server or a heavier retrieval stack.
+
+- **Expanded coverage and docs.** Added tests covering Calibration-stage aggregation and query ranking, and updated `README.md`, `QUICKSTART.md`, `DESIGN.md`, and `docs/memory-engine-phase-2.md` so the implemented Phase 2 surface matches the repo documentation.
+
+**Reasoning:** The previous slice made task normalization visible but stopped short of using it in the repo's governed workflows. This change connects the derived task-group layer to the first canonical output already anticipated by the governance model (`meta/task-groups.md`) and adds a query surface that exercises those groups in a user-facing way. That closes the main remaining gap before planning a Phase 3 category vocabulary and MCP-facing interfaces.
+
+**Approved by:** agent (pending review)
+
+---
+
+## [2026-03-16] Task-group analysis preview for the memory engine
+
+**Changed:**
+
+- **Derived task normalization.** Extended `scripts/memory_engine.py` with a read-only `task-groups` command that analyzes ACCESS history, normalizes free-text `task` strings with a conservative standard-library heuristic, and reports the resulting task-group candidates.
+
+- **SQLite task-group snapshots.** `rebuild` now stores derived task-group rows in a new `task_groups` table and annotates each indexed ACCESS entry with its normalized task string and derived task-group name. This keeps the grouping logic disposable and rebuildable while making later retrieval and aggregation work cheaper.
+
+- **Coverage and docs.** Expanded `tests/test_memory_engine.py` to cover task-group reporting and SQLite persistence, and updated `README.md`, `QUICKSTART.md`, and `DESIGN.md` to document the new command and its place in the roadmap.
+
+**Reasoning:** Phase 1 made the persistence boundary explicit. The next smallest safe step is to make the repo's existing ACCESS `task` history operational without yet writing back into canonical Markdown. Task normalization is the Phase 2 precursor already described in `meta/curation-policy.md`: it reduces false co-occurrence from long sessions, gives the CLI a more useful read surface, and prepares the engine for later aggregation and MCP features without changing the canonical memory model.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-16] Phase 1 memory engine foundation
 
 **Changed:**
