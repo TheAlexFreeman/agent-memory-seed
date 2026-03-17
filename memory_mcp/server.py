@@ -7,7 +7,15 @@ from typing import Any, Callable, TypeVar
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 
-from memory_engine_service import MemoryEngineService, MemoryEngineServiceError
+from memory_engine_service import (
+    ContextResult,
+    LogAccessResult,
+    MemoryEngineService,
+    MemoryEngineServiceError,
+    QueryResult,
+    ReadMemoryResult,
+    StatusResult,
+)
 
 ResultT = TypeVar("ResultT")
 
@@ -22,10 +30,10 @@ class MemoryMCPApplication:
         except MemoryEngineServiceError as exc:
             raise ToolError(f"{exc.code}: {exc}") from exc
 
-    def status_memory(self) -> dict[str, object]:
+    def status_memory(self) -> StatusResult:
         return self._run_tool(self.service.status)
 
-    def read_memory(self, path: str) -> dict[str, object]:
+    def read_memory(self, path: str) -> ReadMemoryResult:
         return self._run_tool(lambda: self.service.read_memory(path))
 
     def query_memory(
@@ -34,7 +42,7 @@ class MemoryMCPApplication:
         task_group: str | None = None,
         limit: int = 10,
         group_limit: int = 5,
-    ) -> dict[str, object]:
+    ) -> QueryResult:
         return self._run_tool(
             lambda: self.service.query(query, task_group, limit, group_limit)
         )
@@ -45,7 +53,7 @@ class MemoryMCPApplication:
         limit: int = 3,
         group_limit: int = 3,
         excerpt_chars: int = 1200,
-    ) -> dict[str, object]:
+    ) -> ContextResult:
         return self._run_tool(
             lambda: self.service.get_context(topic, limit, group_limit, excerpt_chars)
         )
@@ -58,7 +66,7 @@ class MemoryMCPApplication:
         note: str,
         session_id: str | None = None,
         access_date: str | None = None,
-    ) -> dict[str, object]:
+    ) -> LogAccessResult:
         return self._run_tool(
             lambda: self.service.log_access(
                 path,

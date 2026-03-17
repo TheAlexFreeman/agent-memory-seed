@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-17] Typed service results and MCP smoke coverage
+
+**Changed:**
+
+- **Typed public service payloads.** Added explicit typed result shapes for the shared service's public status, query, read, context, and ACCESS-log responses so the Phase 3 boundary is clearer for Python callers and future MCP extensions.
+
+- **Typed MCP tool returns.** Updated `memory_mcp/server.py` to use those service result shapes for the exported MCP tool methods, keeping the transport layer aligned with the service contract.
+
+- **CI-level MCP smoke invocation.** Extended `.github/workflows/ci.yml` with a smoke check that boots `MemoryMCPApplication` against the repository and invokes `status_memory()`, catching packaging or import regressions before the full test run.
+
+**Reasoning:** The previous slice made failure behavior predictable, but the public payload contract was still informal and CI had no direct initialization check for the MCP runtime boundary. This change makes the response surface more explicit and adds a fast packaging-level safeguard in CI.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-17] Service and MCP failure boundary hardening
 
 **Changed:**

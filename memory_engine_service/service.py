@@ -4,7 +4,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, Callable, NotRequired, TypedDict, TypeVar, cast
 
 import memory_engine_core.engine as memory_engine
 
@@ -24,6 +24,104 @@ RETRIEVAL_ROOTS = {"identity", "knowledge", "skills", "chats"}
 LOW_CONFIDENCE_SOURCES = {"agent-inferred", "external-research", "skill-discovery"}
 
 ResultT = TypeVar("ResultT")
+
+
+class StatusInventory(TypedDict):
+    indexed_files: int
+    access_entries: int
+    sessions: int
+
+
+class StatusDatabaseSnapshot(TypedDict, total=False):
+    indexed_files: int
+    access_entries: int
+    task_groups: int
+
+
+class StatusResult(TypedDict):
+    repo_root: str
+    db_path: str
+    db_exists: bool
+    stage: object
+    last_periodic_review: object
+    thresholds: object
+    inventory: StatusInventory
+    database: NotRequired[StatusDatabaseSnapshot]
+
+
+class QueryMatchedTaskGroup(TypedDict):
+    group_name: object
+    score: float
+    entry_count: object
+
+
+class QueryResultItem(TypedDict):
+    file: str
+    folder: object
+    file_type: object
+    score: float
+    hit_count: int
+    avg_helpfulness: float
+    last_seen_date: object
+    task_groups: list[str]
+
+
+class QueryResult(TypedDict):
+    repo_root: str
+    query: str
+    normalized_query_tokens: list[str]
+    task_group_filter: str | None
+    matched_task_groups: list[QueryMatchedTaskGroup]
+    results: list[QueryResultItem]
+
+
+class ReadMemoryResult(TypedDict):
+    path: str
+    folder: str
+    file_type: str
+    frontmatter: dict[str, str]
+    is_quarantined: bool
+    requires_access_log: bool
+    provenance_pause_required: bool
+    content: str
+    size_bytes: int
+
+
+class ContextItem(TypedDict):
+    path: str
+    score: float
+    task_groups: list[str]
+    provenance_pause_required: bool
+    excerpt: str
+    frontmatter: dict[str, str]
+
+
+class ContextResult(TypedDict):
+    topic: str
+    matched_task_groups: list[QueryMatchedTaskGroup]
+    context: list[ContextItem]
+
+
+class AccessLogEntry(TypedDict):
+    file: str
+    date: str
+    task: str
+    helpfulness: float
+    note: str
+    session_id: NotRequired[str]
+
+
+class AggregationState(TypedDict):
+    stage: object
+    pending_entries: object
+    aggregation_trigger: object
+    would_write_task_groups: object
+
+
+class LogAccessResult(TypedDict):
+    entry: AccessLogEntry
+    access_log: str
+    aggregation: AggregationState
 
 
 class MemoryEngineServiceError(Exception):
@@ -113,7 +211,7 @@ class MemoryEngineService:
         if value < 0:
             raise InvalidMemoryRequestError(f"{name} must be non-negative")
 
-    def load_inventory(self) -> Any:
+    def load_inventory(self) -> memory_engine.Inventory:
         return self._wrap_engine_system_exit(
             lambda: self.engine.load_inventory(self.repo_root),
             InventoryLoadError,
@@ -132,9 +230,9 @@ class MemoryEngineService:
                 f"Unable to read quick reference: {exc}"
             ) from exc
 
-    def status(self) -> dict[str, object]:
+    def status(self) -> StatusResult:
         return cast(
-            dict[str, object],
+            StatusResult,
             self.engine.format_status(
                 self.repo_root,
                 self.db_path,
@@ -149,11 +247,11 @@ class MemoryEngineService:
         task_group: str | None = None,
         limit: int = 10,
         group_limit: int = 5,
-    ) -> dict[str, object]:
+    ) -> QueryResult:
         self._validate_non_negative("limit", limit)
         self._validate_non_negative("group_limit", group_limit)
         return cast(
-            dict[str, object],
+            QueryResult,
             self._wrap_engine_system_exit(
                 lambda: self.engine.format_query_report(
                     self.repo_root,
@@ -183,7 +281,7 @@ class MemoryEngineService:
             )
         return candidate
 
-    def _build_read_metadata(self, file_path: Path) -> dict[str, object]:
+    def _build_read_metadata(self, file_path: Path) -> ReadMemoryResult:
         relative_path = file_path.relative_to(self.repo_root).as_posix()
         top_level = relative_path.split("/", 1)[0]
         file_type = (
@@ -218,17 +316,17 @@ class MemoryEngineService:
             "is_quarantined": is_quarantined,
             "requires_access_log": requires_access_log,
             "provenance_pause_required": provenance_pause_required,
+            "content": "",
+            "size_bytes": 0,
         }
 
-    def read_memory(self, relative_path: str) -> dict[str, object]:
+    def read_memory(self, relative_path: str) -> ReadMemoryResult:
         file_path = self._resolve_repo_file(relative_path)
         metadata = self._build_read_metadata(file_path)
         try:
-            return {
-                **metadata,
-                "content": file_path.read_text(encoding="utf-8"),
-                "size_bytes": file_path.stat().st_size,
-            }
+            metadata["content"] = file_path.read_text(encoding="utf-8")
+            metadata["size_bytes"] = file_path.stat().st_size
+            return metadata
         except OSError as exc:
             raise MemoryEngineServiceError(
                 f"Unable to read memory file {relative_path}: {exc}"
@@ -240,14 +338,14 @@ class MemoryEngineService:
         limit: int = 3,
         group_limit: int = 3,
         excerpt_chars: int = 1200,
-    ) -> dict[str, object]:
+    ) -> ContextResult:
         self._validate_non_negative("limit", limit)
         self._validate_non_negative("group_limit", group_limit)
         self._validate_non_negative("excerpt_chars", excerpt_chars)
         query_report = self.query(topic, limit=limit, group_limit=group_limit)
-        context_items: list[dict[str, object]] = []
-        for result in cast(list[dict[str, object]], query_report["results"]):
-            read_result = self.read_memory(cast(str, result["file"]))
+        context_items: list[ContextItem] = []
+        for result in query_report["results"]:
+            read_result = self.read_memory(result["file"])
             context_items.append(
                 {
                     "path": result["file"],
@@ -302,12 +400,12 @@ class MemoryEngineService:
         note: str,
         session_id: str | None = None,
         access_date: str | None = None,
-    ) -> dict[str, object]:
+    ) -> LogAccessResult:
         if not 0.0 <= helpfulness <= 1.0:
             raise InvalidMemoryRequestError("helpfulness must be between 0.0 and 1.0")
         file_path = self._resolve_repo_file(relative_path)
         access_log_path = self._find_access_log(file_path)
-        entry = {
+        entry: AccessLogEntry = {
             "file": file_path.relative_to(self.repo_root).as_posix(),
             "date": access_date or time.strftime("%Y-%m-%d"),
             "task": task,
