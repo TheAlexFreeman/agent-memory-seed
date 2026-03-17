@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, cast
 
-
 INDEXED_MARKDOWN_DIRS = ("identity", "knowledge", "skills", "chats")
 ACCESS_DIRS = INDEXED_MARKDOWN_DIRS
 DEFAULT_DB_NAME = ".memory.db"
@@ -24,16 +23,28 @@ class Inventory:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Phase 1 memory engine foundation")
-    parser.add_argument("--repo-root", type=Path, default=None, help="Path to the memory repo root")
-    parser.add_argument("--db-path", type=Path, default=None, help="Path to the derived SQLite database")
+    parser.add_argument(
+        "--repo-root", type=Path, default=None, help="Path to the memory repo root"
+    )
+    parser.add_argument(
+        "--db-path", type=Path, default=None, help="Path to the derived SQLite database"
+    )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     status_parser = subparsers.add_parser("status", help="Show repo and index status")
-    status_parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    status_parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON"
+    )
 
-    rebuild_parser = subparsers.add_parser("rebuild", help="Rebuild the derived SQLite database")
-    rebuild_parser.add_argument("--dry-run", action="store_true", help="Preview rebuild counts without writing the database")
+    rebuild_parser = subparsers.add_parser(
+        "rebuild", help="Rebuild the derived SQLite database"
+    )
+    rebuild_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview rebuild counts without writing the database",
+    )
 
     return parser.parse_args()
 
@@ -52,7 +63,9 @@ def detect_repo_root(explicit_root: Path | None) -> Path:
 
 
 def is_repo_root(path: Path) -> bool:
-    return (path / "README.md").exists() and (path / "meta" / "quick-reference.md").exists()
+    return (path / "README.md").exists() and (
+        path / "meta" / "quick-reference.md"
+    ).exists()
 
 
 def ensure_repo_root(path: Path) -> None:
@@ -178,7 +191,9 @@ def load_inventory(repo_root: Path) -> Inventory:
     access_entries: list[dict[str, object]] = []
     for path in iter_access_files(repo_root):
         source_file = path.relative_to(repo_root).as_posix()
-        for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        for line_number, raw_line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             line = raw_line.strip()
             if not line:
                 continue
@@ -203,8 +218,14 @@ def load_inventory(repo_root: Path) -> Inventory:
                 ) from exc
 
     chats_root = repo_root / "chats"
-    sessions = sum(1 for path in chats_root.rglob("chat-*") if path.is_dir()) if chats_root.exists() else 0
-    return Inventory(indexed_files=indexed_files, access_entries=access_entries, sessions=sessions)
+    sessions = (
+        sum(1 for path in chats_root.rglob("chat-*") if path.is_dir())
+        if chats_root.exists()
+        else 0
+    )
+    return Inventory(
+        indexed_files=indexed_files, access_entries=access_entries, sessions=sessions
+    )
 
 
 def initialize_schema(connection: sqlite3.Connection) -> None:
@@ -284,13 +305,16 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
     )
 
 
-def write_database(db_path: Path, inventory: Inventory, quick_reference: dict[str, object]) -> None:
+def write_database(
+    db_path: Path, inventory: Inventory, quick_reference: dict[str, object]
+) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
     connection.execute("PRAGMA foreign_keys = ON")
     try:
         connection.execute("PRAGMA foreign_keys = ON")
         initialize_schema(connection)
+        connection.executemany(
             """
             INSERT INTO files (
                 id, relative_path, folder, file_type, source, trust, created, last_verified, file_size_bytes
@@ -331,7 +355,12 @@ def write_database(db_path: Path, inventory: Inventory, quick_reference: dict[st
         connection.close()
 
 
-def format_status(repo_root: Path, db_path: Path, inventory: Inventory, quick_reference: dict[str, object]) -> dict[str, object]:
+def format_status(
+    repo_root: Path,
+    db_path: Path,
+    inventory: Inventory,
+    quick_reference: dict[str, object],
+) -> dict[str, object]:
     status: dict[str, object] = {
         "repo_root": str(repo_root),
         "db_path": str(db_path),
@@ -351,8 +380,12 @@ def format_status(repo_root: Path, db_path: Path, inventory: Inventory, quick_re
         try:
             connection.execute("PRAGMA foreign_keys = ON")
             status["database"] = {
-                "indexed_files": connection.execute("SELECT COUNT(*) FROM files").fetchone()[0],
-                "access_entries": connection.execute("SELECT COUNT(*) FROM access_entries").fetchone()[0],
+                "indexed_files": connection.execute(
+                    "SELECT COUNT(*) FROM files"
+                ).fetchone()[0],
+                "access_entries": connection.execute(
+                    "SELECT COUNT(*) FROM access_entries"
+                ).fetchone()[0],
             }
         finally:
             connection.close()
@@ -392,7 +425,9 @@ def run_status(args: argparse.Namespace) -> int:
     db_path = resolve_db_path(repo_root, args.db_path)
     quick_reference = parse_quick_reference(repo_root / "meta" / "quick-reference.md")
     inventory = load_inventory(repo_root)
-    print_status(format_status(repo_root, db_path, inventory, quick_reference), args.json)
+    print_status(
+        format_status(repo_root, db_path, inventory, quick_reference), args.json
+    )
     return 0
 
 

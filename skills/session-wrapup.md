@@ -11,6 +11,7 @@ trust: high
 ## When to use this skill
 
 Activate when:
+
 - The user says "wrap up", "end session", "that's all", or similar.
 - The session is clearly concluding (final thanks, sign-off language).
 - Context window is running low and the session should be archived before context is lost.
@@ -22,6 +23,7 @@ Activate when:
 Create the session's chat folder if it doesn't exist: `chats/YYYY/MM/DD/chat-NNN/`.
 
 Write `SUMMARY.md` following the compression hierarchy in README.md § "Summaries":
+
 - Key topics discussed.
 - Decisions made and their reasoning.
 - Action items (for the user or for future sessions).
@@ -30,6 +32,7 @@ Write `SUMMARY.md` following the compression hierarchy in README.md § "Summarie
 ### 2. Write the reflection note
 
 Write `reflection.md` in the same chat folder, following the format in README.md § "Session reflection":
+
 - Memory retrieved (files accessed, with helpfulness scores).
 - Memory influence (how retrieved memory shaped responses).
 - Outcome quality (did the session go well?).
@@ -43,6 +46,7 @@ Append entries to the appropriate `ACCESS.jsonl` files for every content file re
 ### 4. Update summaries if warranted
 
 If this session produced significant new knowledge, identity changes, or skill refinements:
+
 - Update the relevant folder's `SUMMARY.md` to reflect the new content.
 - For identity or meta changes, ensure they were proposed and approved per `meta/update-guidelines.md`.
 
@@ -54,6 +58,7 @@ If this session produced significant new knowledge, identity changes, or skill r
 ### 6. Produce deferred actions (if read-only)
 
 If write access is unavailable, produce a deferred-action summary listing:
+
 - All ACCESS entries that should be appended.
 - All file writes (summaries, reflections, knowledge updates) that should be applied.
 - All review-queue items.

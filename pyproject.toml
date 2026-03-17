@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+# E501 (line-too-long) is owned by the formatter; string literals and comments
+# can't be auto-wrapped, so we suppress the lint rule and let `ruff format`
+# handle code line length.
+ignore = ["E501"]
+
+[tool.ruff.format]
+# Defaults are Black-compatible.

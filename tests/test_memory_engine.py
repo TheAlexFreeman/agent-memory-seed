@@ -9,7 +9,6 @@ import textwrap
 import unittest
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ENGINE_PATH = REPO_ROOT / "scripts" / "memory_engine.py"
 
@@ -83,7 +82,10 @@ def build_minimal_repo(root: Path) -> None:
             """
         ),
     )
-    write(root / "chats" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md", "# Chat summary\n")
+    write(
+        root / "chats" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+        "# Chat summary\n",
+    )
 
 
 class MemoryEngineTests(unittest.TestCase):
@@ -93,8 +95,12 @@ class MemoryEngineTests(unittest.TestCase):
             build_minimal_repo(root)
 
             inventory = memory_engine.load_inventory(root)
-            quick_reference = memory_engine.parse_quick_reference(root / "meta" / "quick-reference.md")
-            status = memory_engine.format_status(root, root / ".memory.db", inventory, quick_reference)
+            quick_reference = memory_engine.parse_quick_reference(
+                root / "meta" / "quick-reference.md"
+            )
+            status = memory_engine.format_status(
+                root, root / ".memory.db", inventory, quick_reference
+            )
 
             self.assertEqual(status["stage"], "Exploration")
             self.assertEqual(status["inventory"]["access_entries"], 1)
@@ -108,7 +114,14 @@ class MemoryEngineTests(unittest.TestCase):
             db_path = root / ".memory.db"
 
             completed = subprocess.run(
-                [sys.executable, str(ENGINE_PATH), "--repo-root", str(root), "rebuild", "--dry-run"],
+                [
+                    sys.executable,
+                    str(ENGINE_PATH),
+                    "--repo-root",
+                    str(root),
+                    "rebuild",
+                    "--dry-run",
+                ],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -135,9 +148,15 @@ class MemoryEngineTests(unittest.TestCase):
 
             connection = sqlite3.connect(db_path)
             try:
-                indexed_files = connection.execute("SELECT COUNT(*) FROM files").fetchone()[0]
-                access_entries = connection.execute("SELECT COUNT(*) FROM access_entries").fetchone()[0]
-                stage = connection.execute("SELECT maturity_stage FROM system_state WHERE id = 1").fetchone()[0]
+                indexed_files = connection.execute(
+                    "SELECT COUNT(*) FROM files"
+                ).fetchone()[0]
+                access_entries = connection.execute(
+                    "SELECT COUNT(*) FROM access_entries"
+                ).fetchone()[0]
+                stage = connection.execute(
+                    "SELECT maturity_stage FROM system_state WHERE id = 1"
+                ).fetchone()[0]
             finally:
                 connection.close()
 

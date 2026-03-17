@@ -3,6 +3,7 @@
 This document is an agent-facing streamlined flow for the very first session. It condenses bootstrap steps 1–9 from README.md into a single checklist with clear silent/interactive annotations.
 
 **When to use:** No date-organized chat folders exist under `chats/`, AND either:
+
 - `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
 - `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but onboarding has not yet run).
 

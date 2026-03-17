@@ -6,13 +6,13 @@ This document tracks the memory system's developmental stage and defines candida
 
 The system's developmental stage is assessed from quantitative signals, not calendar time:
 
-| Signal | How to measure | What it indicates |
-|--------|---------------|-------------------|
-| **Total sessions** | Count of chat folders in `chats/` | Volume of interaction |
-| **ACCESS density** | Total ACCESS.jsonl entries across all folders | Depth of retrieval history |
-| **File coverage** | Percentage of content files accessed at least once | How much of the memory has proven relevant |
-| **Confirmation ratio** | Ratio of `trust: high` files to total content files | How much of the memory has been validated |
-| **Identity stability** | Sessions since last identity trait change | Whether the user portrait has converged |
+| Signal                     | How to measure                                      | What it indicates                           |
+| -------------------------- | --------------------------------------------------- | ------------------------------------------- |
+| **Total sessions**         | Count of chat folders in `chats/`                   | Volume of interaction                       |
+| **ACCESS density**         | Total ACCESS.jsonl entries across all folders       | Depth of retrieval history                  |
+| **File coverage**          | Percentage of content files accessed at least once  | How much of the memory has proven relevant  |
+| **Confirmation ratio**     | Ratio of `trust: high` files to total content files | How much of the memory has been validated   |
+| **Identity stability**     | Sessions since last identity trait change           | Whether the user portrait has converged     |
 | **Retrieval success rate** | Mean helpfulness score across recent ACCESS entries | Whether the system is serving useful memory |
 
 ## Maturity stages
@@ -23,16 +23,16 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 **Bias:** Toward chaos. The system doesn't yet know what matters.
 
-| Parameter | Exploration setting | Rationale |
-|-----------|-------------------|-----------|
-| Low-trust retirement threshold | 120 days | Keep unverified content longer — it might prove useful |
-| Medium-trust flagging threshold | 180 days | Don't rush to flag content for re-verification |
-| Staleness trigger (no access) | 120 days | Tolerate dormant files — usage patterns haven't stabilized |
-| Aggregation trigger | 15 entries | Aggregate sooner to build retrieval patterns faster |
-| Identity churn alarm | 5 traits/session | Allow more identity exploration before flagging |
-| Knowledge flooding alarm | 5 files/day | Allow more aggressive knowledge capture |
-| Task similarity method | Session co-occurrence | Coarse proxy; insufficient data for finer-grained detection |
-| Cluster co-retrieval threshold | 3 sessions | Low bar appropriate for small dataset |
+| Parameter                       | Exploration setting   | Rationale                                                   |
+| ------------------------------- | --------------------- | ----------------------------------------------------------- |
+| Low-trust retirement threshold  | 120 days              | Keep unverified content longer — it might prove useful      |
+| Medium-trust flagging threshold | 180 days              | Don't rush to flag content for re-verification              |
+| Staleness trigger (no access)   | 120 days              | Tolerate dormant files — usage patterns haven't stabilized  |
+| Aggregation trigger             | 15 entries            | Aggregate sooner to build retrieval patterns faster         |
+| Identity churn alarm            | 5 traits/session      | Allow more identity exploration before flagging             |
+| Knowledge flooding alarm        | 5 files/day           | Allow more aggressive knowledge capture                     |
+| Task similarity method          | Session co-occurrence | Coarse proxy; insufficient data for finer-grained detection |
+| Cluster co-retrieval threshold  | 3 sessions            | Low bar appropriate for small dataset                       |
 
 ### Stage 2: Calibration (adolescent system)
 
@@ -40,16 +40,16 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 **Bias:** Balanced. The system has patterns but they're still evolving.
 
-| Parameter | Calibration setting | Rationale |
-|-----------|-------------------|-----------|
-| Low-trust retirement threshold | 60 days | Matches curation-policy default; start applying pressure on unverified content |
-| Medium-trust flagging threshold | 120 days | Matches curation-policy default; moderate verification expectations |
-| Staleness trigger (no access) | 90 days | Standard maintenance cadence |
-| Aggregation trigger | 20 entries | Standard aggregation frequency |
-| Identity churn alarm | 3 traits/session | Standard drift detection |
-| Knowledge flooding alarm | 3 files/day | Standard flooding detection |
-| Task similarity method | Task-string normalization | Finer-grained than session co-occurrence; retroactively normalizes Phase 1 data |
-| Cluster co-retrieval threshold | 3 sessions | Same threshold; task-group scoping reduces false positives |
+| Parameter                       | Calibration setting       | Rationale                                                                       |
+| ------------------------------- | ------------------------- | ------------------------------------------------------------------------------- |
+| Low-trust retirement threshold  | 60 days                   | Matches curation-policy default; start applying pressure on unverified content  |
+| Medium-trust flagging threshold | 120 days                  | Matches curation-policy default; moderate verification expectations             |
+| Staleness trigger (no access)   | 90 days                   | Standard maintenance cadence                                                    |
+| Aggregation trigger             | 20 entries                | Standard aggregation frequency                                                  |
+| Identity churn alarm            | 3 traits/session          | Standard drift detection                                                        |
+| Knowledge flooding alarm        | 3 files/day               | Standard flooding detection                                                     |
+| Task similarity method          | Task-string normalization | Finer-grained than session co-occurrence; retroactively normalizes Phase 1 data |
+| Cluster co-retrieval threshold  | 3 sessions                | Same threshold; task-group scoping reduces false positives                      |
 
 ### Stage 3: Consolidation (mature system)
 
@@ -57,16 +57,16 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 **Bias:** Toward order. The system knows what matters and should be selective.
 
-| Parameter | Consolidation setting | Rationale |
-|-----------|----------------------|-----------|
-| Low-trust retirement threshold | 45 days | Aggressive cleanup — the system has enough signal to judge value quickly |
-| Medium-trust flagging threshold | 90 days | Expect timely verification |
-| Staleness trigger (no access) | 60 days | Unused memory in a mature system is likely genuinely irrelevant |
-| Aggregation trigger | 25 entries | Larger batches for more statistically meaningful patterns |
-| Identity churn alarm | 2 traits/session | Mature identity should be stable — changes are more suspicious |
-| Knowledge flooding alarm | 2 files/day | The system should be past bulk knowledge acquisition |
-| Task similarity method | Controlled category vocabulary | Machine-readable, stable across sessions and model switches |
-| Cluster co-retrieval threshold | 4 sessions | Higher bar appropriate for cleaner category-based signal |
+| Parameter                       | Consolidation setting          | Rationale                                                                |
+| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------ |
+| Low-trust retirement threshold  | 45 days                        | Aggressive cleanup — the system has enough signal to judge value quickly |
+| Medium-trust flagging threshold | 90 days                        | Expect timely verification                                               |
+| Staleness trigger (no access)   | 60 days                        | Unused memory in a mature system is likely genuinely irrelevant          |
+| Aggregation trigger             | 25 entries                     | Larger batches for more statistically meaningful patterns                |
+| Identity churn alarm            | 2 traits/session               | Mature identity should be stable — changes are more suspicious           |
+| Knowledge flooding alarm        | 2 files/day                    | The system should be past bulk knowledge acquisition                     |
+| Task similarity method          | Controlled category vocabulary | Machine-readable, stable across sessions and model switches              |
+| Cluster co-retrieval threshold  | 4 sessions                     | Higher bar appropriate for cleaner category-based signal                 |
 
 ## Current stage assessment
 

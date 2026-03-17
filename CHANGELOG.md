@@ -80,7 +80,7 @@ Each entry should explain not just what changed, but **why** — so that future 
   - `skills/session-start.md` — Session opener: loads recent context, checks pending items, greets with continuity.
   - `skills/session-sync.md` — Mid-session checkpoint: captures decisions and progress on demand.
   - `skills/session-wrapup.md` — Session closer: writes summary, reflection, ACCESS entries, produces deferred actions on read-only platforms.
-  Updated `skills/SUMMARY.md` and `meta/session-checklists.md` to reference the new skills.
+    Updated `skills/SUMMARY.md` and `meta/session-checklists.md` to reference the new skills.
 
 - **Updated QUICKSTART.md.** Documented the new setup flow (three interactive choices), CLI flags for scripted use, and starter profiles.
 
