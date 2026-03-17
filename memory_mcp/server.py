@@ -2,22 +2,31 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, TypeVar
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.exceptions import ToolError
 
-from memory_engine_service import MemoryEngineService
+from memory_engine_service import MemoryEngineService, MemoryEngineServiceError
+
+ResultT = TypeVar("ResultT")
 
 
 class MemoryMCPApplication:
     def __init__(self, repo_root: Path, db_path: Path | None = None) -> None:
         self.service = MemoryEngineService(repo_root, db_path)
 
+    def _run_tool(self, callback: Callable[[], ResultT]) -> ResultT:
+        try:
+            return callback()
+        except MemoryEngineServiceError as exc:
+            raise ToolError(f"{exc.code}: {exc}") from exc
+
     def status_memory(self) -> dict[str, object]:
-        return self.service.status()
+        return self._run_tool(self.service.status)
 
     def read_memory(self, path: str) -> dict[str, object]:
-        return self.service.read_memory(path)
+        return self._run_tool(lambda: self.service.read_memory(path))
 
     def query_memory(
         self,
@@ -26,7 +35,9 @@ class MemoryMCPApplication:
         limit: int = 10,
         group_limit: int = 5,
     ) -> dict[str, object]:
-        return self.service.query(query, task_group, limit, group_limit)
+        return self._run_tool(
+            lambda: self.service.query(query, task_group, limit, group_limit)
+        )
 
     def get_context(
         self,
@@ -35,7 +46,9 @@ class MemoryMCPApplication:
         group_limit: int = 3,
         excerpt_chars: int = 1200,
     ) -> dict[str, object]:
-        return self.service.get_context(topic, limit, group_limit, excerpt_chars)
+        return self._run_tool(
+            lambda: self.service.get_context(topic, limit, group_limit, excerpt_chars)
+        )
 
     def log_access(
         self,
@@ -46,13 +59,15 @@ class MemoryMCPApplication:
         session_id: str | None = None,
         access_date: str | None = None,
     ) -> dict[str, object]:
-        return self.service.log_access(
-            path,
-            task,
-            helpfulness,
-            note,
-            session_id,
-            access_date,
+        return self._run_tool(
+            lambda: self.service.log_access(
+                path,
+                task,
+                helpfulness,
+                note,
+                session_id,
+                access_date,
+            )
         )
 
     def build_server(self) -> FastMCP[Any]:

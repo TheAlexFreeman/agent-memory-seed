@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-17] Service and MCP failure boundary hardening
+
+**Changed:**
+
+- **Explicit service errors.** Added a small exception hierarchy in `memory_engine_service/service.py` so invalid repo roots, malformed ACCESS history, traversal attempts, missing files, unsupported targets, and ACCESS write conflicts are surfaced as stable service-level failures.
+
+- **Thin MCP error mapping.** Updated `memory_mcp/server.py` to convert service failures into MCP `ToolError` responses instead of leaking raw Python exception types through the transport boundary.
+
+- **Boundary regression coverage.** Expanded `tests/test_memory_mcp.py` to cover invalid repo roots, traversal rejection, missing and unsupported files, malformed ACCESS data, invalid ACCESS inputs, and MCP-facing tool error behavior.
+
+**Reasoning:** The shared engine extraction made the runtime layering explicit, but the failure contract was still implicit and inconsistent. Hardening the service and MCP boundaries now reduces drift between clients, keeps governance-related failures predictable, and creates a stable base for the rest of the Phase 3 work.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-16] Extract shared memory engine package
 
 **Changed:**

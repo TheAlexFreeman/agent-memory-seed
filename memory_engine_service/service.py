@@ -4,7 +4,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Callable, TypeVar, cast
 
 import memory_engine_core.engine as memory_engine
 
@@ -22,6 +22,36 @@ READABLE_TEXT_EXTENSIONS = {
 }
 RETRIEVAL_ROOTS = {"identity", "knowledge", "skills", "chats"}
 LOW_CONFIDENCE_SOURCES = {"agent-inferred", "external-research", "skill-discovery"}
+
+ResultT = TypeVar("ResultT")
+
+
+class MemoryEngineServiceError(Exception):
+    code = "service_error"
+
+
+class InvalidRepositoryError(MemoryEngineServiceError):
+    code = "invalid_repository"
+
+
+class InventoryLoadError(MemoryEngineServiceError):
+    code = "inventory_load_failed"
+
+
+class InvalidMemoryRequestError(MemoryEngineServiceError):
+    code = "invalid_request"
+
+
+class MemoryNotFoundError(MemoryEngineServiceError):
+    code = "memory_not_found"
+
+
+class UnsupportedMemoryTargetError(MemoryEngineServiceError):
+    code = "unsupported_target"
+
+
+class MemoryWriteConflictError(MemoryEngineServiceError):
+    code = "write_conflict"
 
 
 class FileLock:
@@ -56,19 +86,51 @@ class FileLock:
 class MemoryEngineService:
     def __init__(self, repo_root: Path, db_path: Path | None = None) -> None:
         self.engine = memory_engine
-        self.repo_root = cast(Path, self.engine.detect_repo_root(repo_root))
+        self.repo_root = self._resolve_repo_root(repo_root)
         self.db_path = cast(Path, self.engine.resolve_db_path(self.repo_root, db_path))
 
-    def load_inventory(self) -> Any:
-        return self.engine.load_inventory(self.repo_root)
+    def _wrap_engine_system_exit(
+        self,
+        callback: Callable[[], ResultT],
+        error_type: type[MemoryEngineServiceError],
+    ) -> ResultT:
+        try:
+            return callback()
+        except SystemExit as exc:
+            message = str(exc) or error_type.code.replace("_", " ")
+            raise error_type(message) from exc
 
-    def load_quick_reference(self) -> dict[str, object]:
+    def _resolve_repo_root(self, repo_root: Path) -> Path:
         return cast(
-            dict[str, object],
-            self.engine.parse_quick_reference(
-                self.repo_root / "meta" / "quick-reference.md"
+            Path,
+            self._wrap_engine_system_exit(
+                lambda: self.engine.detect_repo_root(repo_root),
+                InvalidRepositoryError,
             ),
         )
+
+    def _validate_non_negative(self, name: str, value: int) -> None:
+        if value < 0:
+            raise InvalidMemoryRequestError(f"{name} must be non-negative")
+
+    def load_inventory(self) -> Any:
+        return self._wrap_engine_system_exit(
+            lambda: self.engine.load_inventory(self.repo_root),
+            InventoryLoadError,
+        )
+
+    def load_quick_reference(self) -> dict[str, object]:
+        try:
+            return cast(
+                dict[str, object],
+                self.engine.parse_quick_reference(
+                    self.repo_root / "meta" / "quick-reference.md"
+                ),
+            )
+        except OSError as exc:
+            raise InvalidRepositoryError(
+                f"Unable to read quick reference: {exc}"
+            ) from exc
 
     def status(self) -> dict[str, object]:
         return cast(
@@ -88,15 +150,20 @@ class MemoryEngineService:
         limit: int = 10,
         group_limit: int = 5,
     ) -> dict[str, object]:
+        self._validate_non_negative("limit", limit)
+        self._validate_non_negative("group_limit", group_limit)
         return cast(
             dict[str, object],
-            self.engine.format_query_report(
-                self.repo_root,
-                self.load_inventory(),
-                query,
-                task_group,
-                limit,
-                group_limit,
+            self._wrap_engine_system_exit(
+                lambda: self.engine.format_query_report(
+                    self.repo_root,
+                    self.load_inventory(),
+                    query,
+                    task_group,
+                    limit,
+                    group_limit,
+                ),
+                InvalidMemoryRequestError,
             ),
         )
 
@@ -105,11 +172,15 @@ class MemoryEngineService:
         try:
             candidate.relative_to(self.repo_root)
         except ValueError as exc:
-            raise ValueError(f"Path escapes repo root: {relative_path}") from exc
+            raise InvalidMemoryRequestError(
+                f"Path escapes repo root: {relative_path}"
+            ) from exc
         if not candidate.exists() or not candidate.is_file():
-            raise FileNotFoundError(relative_path)
+            raise MemoryNotFoundError(relative_path)
         if candidate.suffix.lower() not in READABLE_TEXT_EXTENSIONS:
-            raise ValueError(f"Unsupported file type for MCP read: {relative_path}")
+            raise UnsupportedMemoryTargetError(
+                f"Unsupported file type for MCP read: {relative_path}"
+            )
         return candidate
 
     def _build_read_metadata(self, file_path: Path) -> dict[str, object]:
@@ -152,11 +223,16 @@ class MemoryEngineService:
     def read_memory(self, relative_path: str) -> dict[str, object]:
         file_path = self._resolve_repo_file(relative_path)
         metadata = self._build_read_metadata(file_path)
-        return {
-            **metadata,
-            "content": file_path.read_text(encoding="utf-8"),
-            "size_bytes": file_path.stat().st_size,
-        }
+        try:
+            return {
+                **metadata,
+                "content": file_path.read_text(encoding="utf-8"),
+                "size_bytes": file_path.stat().st_size,
+            }
+        except OSError as exc:
+            raise MemoryEngineServiceError(
+                f"Unable to read memory file {relative_path}: {exc}"
+            ) from exc
 
     def get_context(
         self,
@@ -165,6 +241,9 @@ class MemoryEngineService:
         group_limit: int = 3,
         excerpt_chars: int = 1200,
     ) -> dict[str, object]:
+        self._validate_non_negative("limit", limit)
+        self._validate_non_negative("group_limit", group_limit)
+        self._validate_non_negative("excerpt_chars", excerpt_chars)
         query_report = self.query(topic, limit=limit, group_limit=group_limit)
         context_items: list[dict[str, object]] = []
         for result in cast(list[dict[str, object]], query_report["results"]):
@@ -191,14 +270,18 @@ class MemoryEngineService:
         relative_path = file_path.relative_to(self.repo_root).as_posix()
         top_level = relative_path.split("/", 1)[0]
         if top_level not in RETRIEVAL_ROOTS:
-            raise ValueError(f"ACCESS logging is not supported for {relative_path}")
+            raise UnsupportedMemoryTargetError(
+                f"ACCESS logging is not supported for {relative_path}"
+            )
         if file_path.name == "SUMMARY.md":
-            raise ValueError("Do not log SUMMARY.md retrievals")
+            raise UnsupportedMemoryTargetError("Do not log SUMMARY.md retrievals")
         if (
             file_path.suffix.lower() == ".md"
             and cast(str, self.engine.determine_file_type(file_path)) != "content"
         ):
-            raise ValueError(f"ACCESS logging is not supported for {relative_path}")
+            raise UnsupportedMemoryTargetError(
+                f"ACCESS logging is not supported for {relative_path}"
+            )
         for parent in [file_path.parent, *file_path.parents]:
             if parent == self.repo_root.parent:
                 break
@@ -207,7 +290,9 @@ class MemoryEngineService:
                 return access_file
             if parent == self.repo_root:
                 break
-        raise ValueError(f"Could not locate ACCESS.jsonl for {relative_path}")
+        raise UnsupportedMemoryTargetError(
+            f"Could not locate ACCESS.jsonl for {relative_path}"
+        )
 
     def log_access(
         self,
@@ -219,7 +304,7 @@ class MemoryEngineService:
         access_date: str | None = None,
     ) -> dict[str, object]:
         if not 0.0 <= helpfulness <= 1.0:
-            raise ValueError("helpfulness must be between 0.0 and 1.0")
+            raise InvalidMemoryRequestError("helpfulness must be between 0.0 and 1.0")
         file_path = self._resolve_repo_file(relative_path)
         access_log_path = self._find_access_log(file_path)
         entry = {
@@ -233,9 +318,18 @@ class MemoryEngineService:
             entry["session_id"] = session_id
 
         lock_path = access_log_path.with_suffix(access_log_path.suffix + ".lock")
-        with FileLock(lock_path):
-            with access_log_path.open("a", encoding="utf-8") as handle:
-                handle.write(json.dumps(entry, sort_keys=True) + "\n")
+        try:
+            with FileLock(lock_path):
+                with access_log_path.open("a", encoding="utf-8") as handle:
+                    handle.write(json.dumps(entry, sort_keys=True) + "\n")
+        except TimeoutError as exc:
+            raise MemoryWriteConflictError(
+                f"Timed out writing ACCESS log for {relative_path}"
+            ) from exc
+        except OSError as exc:
+            raise MemoryEngineServiceError(
+                f"Unable to append ACCESS log for {relative_path}: {exc}"
+            ) from exc
 
         aggregation_report, _markdown = cast(
             tuple[dict[str, object], str | None],

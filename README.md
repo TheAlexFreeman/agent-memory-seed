@@ -106,6 +106,8 @@ The shared engine implementation now lives in `memory_engine_core/engine.py`. `s
 
 Phase 3 now starts with a thin MCP wrapper over the same engine logic. `python scripts/memory_mcp_server.py --repo-root .` launches a stdio MCP server that exposes `status_memory`, `read_memory`, `query_memory`, `get_context`, and `log_access`. The first MCP release is intentionally narrow: it reuses the engine's governed read/query behavior and limits writes to ACCESS appends.
 
+The Phase 3 runtime boundary is now explicit in code as well as packaging: `memory_engine_service/` owns governed repo validation, path safety, and ACCESS-write behavior, while `memory_mcp/` stays transport-thin and turns service failures into stable MCP tool errors.
+
 ## Memory curation
 
 A **session** is one chat folder under `chats/YYYY/MM/DD/` (e.g. `chat-001`); one conversation corresponds to one session.
