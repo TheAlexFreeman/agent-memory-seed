@@ -347,7 +347,10 @@ class MemoryEngineService:
         query_report = self.query(topic, limit=limit, group_limit=group_limit)
         context_items: list[ContextItem] = []
         for result in query_report["results"]:
-            read_result = self.read_memory(result["file"])
+            try:
+                read_result = self.read_memory(result["file"])
+            except MemoryEngineServiceError:
+                continue
             context_items.append(
                 {
                     "path": result["file"],
@@ -373,12 +376,13 @@ class MemoryEngineService:
             raise UnsupportedMemoryTargetError(
                 f"ACCESS logging is not supported for {relative_path}"
             )
+        if file_path.suffix.lower() != ".md":
+            raise UnsupportedMemoryTargetError(
+                f"ACCESS logging is only supported for content markdown files: {relative_path}"
+            )
         if file_path.name == "SUMMARY.md":
             raise UnsupportedMemoryTargetError("Do not log SUMMARY.md retrievals")
-        if (
-            file_path.suffix.lower() == ".md"
-            and cast(str, self.engine.determine_file_type(file_path)) != "content"
-        ):
+        if cast(str, self.engine.determine_file_type(file_path)) != "content":
             raise UnsupportedMemoryTargetError(
                 f"ACCESS logging is not supported for {relative_path}"
             )

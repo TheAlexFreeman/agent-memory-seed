@@ -107,6 +107,20 @@ class MemoryMCPTests(unittest.TestCase):
                     "used heavily",
                 )
 
+    def test_log_access_rejects_access_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+
+            service = MemoryEngineService(root)
+            with self.assertRaises(UnsupportedMemoryTargetError):
+                service.log_access(
+                    "identity/ACCESS.jsonl",
+                    "status follow-up",
+                    0.8,
+                    "used heavily",
+                )
+
     def test_status_raises_inventory_load_error_for_malformed_access(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -133,6 +147,31 @@ class MemoryMCPTests(unittest.TestCase):
 
             self.assertEqual(context["topic"], "status test")
             self.assertGreaterEqual(len(context_items), 1)
+            self.assertEqual(context_items[0]["path"], "identity/profile.md")
+
+    def test_get_context_skips_unreadable_ranked_hits(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "knowledge" / "ACCESS.jsonl").write_text(
+                "\n".join(
+                    [
+                        '{"file":"identity/profile.md","date":"2026-03-16","task":"status test","helpfulness":0.8,"note":"used","session_id":"chats/2026/03/16/chat-001"}',
+                        '{"file":"identity/missing.md","date":"2026-03-17","task":"status test","helpfulness":1.0,"note":"stale hit","session_id":"chats/2026/03/16/chat-001"}',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            service = MemoryEngineService(root)
+            context = cast(
+                dict[str, Any],
+                service.get_context("status test", limit=3, excerpt_chars=80),
+            )
+            context_items = cast(list[dict[str, Any]], context["context"])
+
+            self.assertEqual(len(context_items), 1)
             self.assertEqual(context_items[0]["path"], "identity/profile.md")
 
     def test_build_server_returns_fastmcp(self) -> None:
