@@ -7,7 +7,6 @@ from typing import Any, cast
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
-
 from memory_engine_service import (
     InvalidMemoryRequestError,
     InvalidRepositoryError,
@@ -17,6 +16,7 @@ from memory_engine_service import (
     UnsupportedMemoryTargetError,
 )
 from memory_mcp.server import MemoryMCPApplication, build_server
+
 from tests.test_memory_engine import build_minimal_repo
 
 
@@ -234,7 +234,9 @@ class MemoryMCPTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
-            (root / "chats" / "2026" / "03" / "16" / "chat-001" / "transcript.md").write_text(
+            (
+                root / "chats" / "2026" / "03" / "16" / "chat-001" / "transcript.md"
+            ).write_text(
                 "full transcript body",
                 encoding="utf-8",
             )
@@ -261,7 +263,9 @@ class MemoryMCPTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
-            (root / "chats" / "2026" / "03" / "16" / "chat-001" / "transcript.md").write_text(
+            (
+                root / "chats" / "2026" / "03" / "16" / "chat-001" / "transcript.md"
+            ).write_text(
                 "full transcript body",
                 encoding="utf-8",
             )

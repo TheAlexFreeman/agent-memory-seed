@@ -6,7 +6,6 @@ from typing import Any, Callable, TypeVar
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
-
 from memory_engine_service import (
     ContextResult,
     LogAccessResult,

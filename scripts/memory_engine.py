@@ -8,7 +8,7 @@ _repo_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_repo_root))
 sys.path.insert(0, str(_repo_root / "engine"))
 
-from memory_engine_core.engine import main as engine_main
+from memory_engine_core.engine import main as engine_main  # noqa: E402
 
 
 def main() -> int:

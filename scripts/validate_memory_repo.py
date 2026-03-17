@@ -237,9 +237,7 @@ def validate_frontmatter(path: Path, result: ValidationResult) -> None:
         )
         return
     if verification_status not in ALLOWED_VERIFICATION_STATUS_VALUES:
-        result.error(
-            f"{path}: invalid verification_status {verification_status!r}"
-        )
+        result.error(f"{path}: invalid verification_status {verification_status!r}")
 
 
 def validate_access_file(path: Path, result: ValidationResult) -> None:
