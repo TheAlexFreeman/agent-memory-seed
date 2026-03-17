@@ -164,6 +164,30 @@ class MemoryEngineTests(unittest.TestCase):
             self.assertEqual(access_entries, 1)
             self.assertEqual(stage, "Exploration")
 
+    def test_malformed_access_jsonl_exits_with_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            access_file = root / "knowledge" / "ACCESS.jsonl"
+            access_file.write_text("not valid json\n", encoding="utf-8")
+
+            with self.assertRaises(SystemExit) as ctx:
+                memory_engine.load_inventory(root)
+
+            message = str(ctx.exception)
+            self.assertIn("knowledge/ACCESS.jsonl", message)
+            self.assertIn("line 1", message)
+
+    def test_ensure_repo_root_message_describes_sentinel_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            with self.assertRaises(SystemExit) as ctx:
+                memory_engine.ensure_repo_root(root)
+
+            message = str(ctx.exception)
+            self.assertIn("README.md", message)
+            self.assertIn("meta/quick-reference.md", message)
+
 
 if __name__ == "__main__":
     unittest.main()
