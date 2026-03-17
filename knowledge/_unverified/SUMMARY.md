@@ -25,4 +25,8 @@ _No unverified files yet._ Files will appear here when the agent ingests externa
 
 ## Usage patterns
 
-_No access data yet._
+_No access data yet._ After aggregation, this section will contain:
+- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
+- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
+- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
+- **Retrieval trends** — frequency and helpfulness changes since last aggregation

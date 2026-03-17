@@ -29,12 +29,7 @@ Write `SUMMARY.md` following the compression hierarchy in README.md § "Summarie
 
 ### 2. Write the reflection note
 
-Write `reflection.md` in the same chat folder, following the format in README.md § "Session reflection":
-- Memory retrieved (files accessed, with helpfulness scores).
-- Memory influence (how retrieved memory shaped responses).
-- Outcome quality (did the session go well?).
-- Gaps noticed (missing memory, irrelevant intrusions).
-- System observations (optional meta-observations about the memory system).
+Write `reflection.md` in the same chat folder, following the canonical format in README.md § "Session reflection".
 
 ### 3. Flush ACCESS entries
 

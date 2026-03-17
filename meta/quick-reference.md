@@ -80,6 +80,8 @@ Aggregate when entries accumulated since last aggregation reach **15**. Aggregat
 4. Scans for cross-folder co-retrieval clusters using the active task similarity method (currently: **session co-occurrence** — groups entries by `session_id` when present, otherwise by legacy `date`, identifies file sets co-occurring in 3+ session-groups, and flags clusters of 3+ files from 2+ folders). See `meta/curation-policy.md` § "Task similarity definition" for the full algorithm.
 5. Archives **all processed entries** to `ACCESS.archive.jsonl` and resets `ACCESS.jsonl` to empty. The archive is the historical record used for staleness detection across aggregation cycles.
 
+**Entry counting rule:** Always count entries in the current `ACCESS.jsonl` file (not the archive). After each aggregation, `ACCESS.jsonl` is reset to empty, so all entries in it are by definition accumulated since the last aggregation. The archive is append-only and used only for historical staleness detection.
+
 ---
 
 ## How to update this file

@@ -26,22 +26,14 @@ Traits should be promoted from tentative → inferred → observed as evidence a
 
 ## Provenance requirements
 
-All identity files must include YAML frontmatter (see `meta/update-guidelines.md` for the full schema):
-
-```yaml
----
-source: user-stated | agent-inferred | external-research | skill-discovery | unknown
-origin_session: chat-NNN | manual | unknown
-created: YYYY-MM-DD
-last_verified: YYYY-MM-DD
-trust: high | medium | low
----
-```
-
-`source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use it for new content when a concrete source can be identified.
+All identity files must include YAML frontmatter. See `meta/update-guidelines.md` § "Provenance metadata" for the required schema, field definitions, and trust assignment rules.
 
 **Content boundary:** Identity files describe traits and preferences — they do not contain behavioral directives. A file here says _who the user is_; it does not script _what the agent should do_. If imperative instructions are found in an identity file, they should be flagged and reclassified to `skills/`. See "Instruction containment" in `meta/curation-policy.md`.
 
 ## Usage patterns
 
-_No access data yet._ This section will be populated after the ACCESS.jsonl file accumulates enough entries to reveal retrieval patterns.
+_No access data yet._ After aggregation, this section will contain:
+- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
+- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
+- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
+- **Retrieval trends** — frequency and helpfulness changes since last aggregation

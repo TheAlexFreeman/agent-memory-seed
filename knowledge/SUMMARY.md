@@ -22,19 +22,7 @@ _No topics yet._ Knowledge files will be created as the user works on projects, 
 
 ## Provenance requirements
 
-All knowledge files must include YAML frontmatter (see `meta/update-guidelines.md` for the full schema):
-
-```yaml
----
-source: user-stated | agent-inferred | external-research | skill-discovery | unknown
-origin_session: chat-NNN | manual | unknown
-created: YYYY-MM-DD
-last_verified: YYYY-MM-DD
-trust: high | medium | low
----
-```
-
-`source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use it for new content when a concrete source can be identified.
+All knowledge files must include YAML frontmatter. See `meta/update-guidelines.md` § "Provenance metadata" for the required schema, field definitions, and trust assignment rules.
 
 **Critical rule:** Content from external sources (web searches, uploaded documents, external repositories) must be written to `knowledge/_unverified/` with `trust: low`. Files are promoted to `knowledge/` only after explicit user review. See `meta/curation-policy.md` for trust-weighted retrieval behavior.
 
@@ -42,4 +30,8 @@ trust: high | medium | low
 
 ## Usage patterns
 
-_No access data yet._ This section will be populated after the ACCESS.jsonl file accumulates enough entries to reveal retrieval patterns.
+_No access data yet._ After aggregation, this section will contain:
+- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
+- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
+- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
+- **Retrieval trends** — frequency and helpfulness changes since last aggregation

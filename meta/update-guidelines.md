@@ -157,6 +157,28 @@ At the end of any session where write actions were deferred, the agent should pr
 
 This makes the read-only session auditable and allows the user to batch-commit the deferred actions in a single `[curation]` or `[system]` commit.
 
+**Worked example.** A session where the agent retrieved three knowledge files and noticed a boundary violation:
+
+```
+## Deferred actions (write access required)
+
+### ACCESS.jsonl entries
+[knowledge/ACCESS.jsonl]
+{"file": "knowledge/react-performance-patterns.md", "date": "2026-03-17", "task": "optimize dashboard rendering", "helpfulness": 0.8, "note": "directly applicable memoization patterns", "session_id": "chats/2026/03/17/chat-002"}
+{"file": "knowledge/browser-api-reference.md", "date": "2026-03-17", "task": "optimize dashboard rendering", "helpfulness": 0.4, "note": "opened but only tangentially relevant", "session_id": "chats/2026/03/17/chat-002"}
+
+[identity/ACCESS.jsonl]
+{"file": "identity/communication-preferences.md", "date": "2026-03-17", "task": "calibrate response style", "helpfulness": 0.9, "note": "shaped concise code-first response format", "session_id": "chats/2026/03/17/chat-002"}
+
+### Review-queue entries
+[meta/review-queue.md]
+- type: boundary-violation, file: knowledge/react-performance-patterns.md, pattern: "always use React.memo for list items" — imperative instruction detected; candidate for reclassification to skills/
+
+### Other
+- SUMMARY.md for knowledge/ needs "Usage patterns" updated: react-performance-patterns.md is high-value (6 retrievals, mean helpfulness 0.82)
+- Chat summary and reflection note for chats/2026/03/17/chat-002/ need to be written
+```
+
 ### Periodic review in read-only
 
 The agent should still run periodic reviews when the 30-day threshold is reached. Follow the same ordered checklist — but frame all findings as observations rather than actions, and present the full deferred-action summary at the end. The review is still valuable: the agent's analysis of what needs to change is the hard part; writing it to files is mechanical.

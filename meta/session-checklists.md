@@ -21,8 +21,8 @@ Use `skills/session-sync.md` when the user requests a checkpoint or when a long 
 ## Session end
 
 1. **Chat summary** — Write or update the summary for this chat (and daily/monthly/yearly summaries if due) per the compression hierarchy in README § "Summaries".
-2. **Reflection note** — Write `reflection.md` in this session's chat folder (README § "Session reflection").
-3. **ACCESS.jsonl** — Append an entry for every content file you retrieved from identity/, knowledge/, skills/, or chats/ during this session (README § "Memory curation"). Include `session_id` whenever the chat folder is known.
+2. **Reflection note** — Write `reflection.md` in this session's chat folder. See README § "Session reflection" for the canonical format.
+3. **ACCESS.jsonl** — Append an entry for every content file you retrieved from identity/, knowledge/, skills/, or chats/ during this session. See README § "Memory curation" for the canonical format. Include `session_id` whenever the chat folder is known.
 4. **If read-only** — Produce a deferred-action summary listing all ACCESS entries, review-queue items, and summary updates the user should apply (see `meta/update-guidelines.md` § "How to communicate deferred actions").
 
 For the full executable workflow, see `skills/session-wrapup.md`.

@@ -70,7 +70,7 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 ## Current stage assessment
 
-_Not yet assessed._ The first assessment should be generated when the system has accumulated enough sessions for the signals to be meaningful (approximately 5+ sessions). Record each assessment below with the date and signal values.
+_Not yet assessed._ The first assessment triggers at the earlier of: (a) the system reaching 5 sessions, or (b) the first periodic review. Until then, Exploration defaults apply (as recorded in `meta/quick-reference.md`). Record each assessment below with the date and signal values.
 
 ### Assessment log
 

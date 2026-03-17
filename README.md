@@ -16,6 +16,17 @@ This repository is a structured, version-controlled memory that persists across 
 4. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
 5. **Log your access** using the access-note format described below.
 
+## Agent routing
+
+Use this decision tree to determine your entry point:
+
+1. Is this a fresh instantiation (first time this model reads this repo)?
+   - **NO** → Use `meta/session-checklists.md` § "Session start" (3-step compact runbook).
+   - **YES** → Continue ↓
+2. Does `identity/SUMMARY.md` contain "No portrait yet" OR does `identity/` contain a file with `source: template`?
+   - **YES (first run)** → Go to `meta/first-run.md` for a streamlined flow.
+   - **NO (returning system)** → Follow the full "Bootstrap sequence" below.
+
 ## Repository structure
 
 ```

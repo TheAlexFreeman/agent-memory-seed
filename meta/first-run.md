@@ -12,11 +12,11 @@ If neither condition matches — a user portrait exists without the `template` m
 
 ## Silent setup (do not produce output for these steps)
 
-1. Read `CHANGELOG.md` — understand the system's evolutionary trajectory.
-2. Read `meta/quick-reference.md` — load all active operational thresholds.
-3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference.
-4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation".
-5. Read `skills/SUMMARY.md` and `skills/onboarding.md`.
+1. Read `CHANGELOG.md` — understand the system's evolutionary trajectory. (README bootstrap step 2)
+2. Read `meta/quick-reference.md` — load all active operational thresholds. (README bootstrap step 5)
+3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference. (README bootstrap step 6)
+4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation". (README bootstrap step 7)
+5. Read `skills/SUMMARY.md` and `skills/onboarding.md`. (README bootstrap step 8)
 
 At this point you have loaded: system architecture (README.md), evolution history, active thresholds, change-control rules, write-access status, and the onboarding skill. Do not summarize any of this to the user.
 

@@ -37,19 +37,7 @@ Skills often emerge from corrections. When the user says "no, do it like this in
 
 ## Provenance requirements
 
-All skill files must include YAML frontmatter (see `meta/update-guidelines.md` for the full schema):
-
-```yaml
----
-source: user-stated | agent-inferred | external-research | skill-discovery | unknown
-origin_session: chat-NNN | manual | unknown
-created: YYYY-MM-DD
-last_verified: YYYY-MM-DD
-trust: high | medium | low
----
-```
-
-`source: unknown` is reserved for legacy backfill or genuinely unrecoverable origin. Do not use it for new content when a concrete source can be identified.
+All skill files must include YAML frontmatter. See `meta/update-guidelines.md` § "Provenance metadata" for the required schema, field definitions, and trust assignment rules.
 
 **Protected status:** Skill files are **protected-tier** changes — creating, modifying, or removing any skill requires explicit user approval and a CHANGELOG.md entry. This is because skill files contain procedures the agent will execute; they are the highest-value target for memory injection.
 
@@ -57,4 +45,8 @@ trust: high | medium | low
 
 ## Usage patterns
 
-_No access data yet._ This section will be populated after the ACCESS.jsonl file accumulates enough entries to reveal retrieval patterns.
+_No access data yet._ After aggregation, this section will contain:
+- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
+- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
+- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
+- **Retrieval trends** — frequency and helpfulness changes since last aggregation

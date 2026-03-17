@@ -40,4 +40,8 @@ chats/
 
 ## Usage patterns
 
-*No access data yet.* This section will be populated after the ACCESS.jsonl file accumulates enough entries to reveal retrieval patterns.
+_No access data yet._ After aggregation, this section will contain:
+- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
+- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
+- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
+- **Retrieval trends** — frequency and helpfulness changes since last aggregation
