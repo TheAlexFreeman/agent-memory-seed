@@ -182,9 +182,10 @@ print_platform_instructions() {
             echo ""
             # Generate the custom instructions file
             cat > chatgpt-instructions.txt << 'CHATGPT_EOF'
-I have a persistent memory system stored as a git repository. When I share files from this repo, start with README.md and follow its routing rules.
+I have a persistent memory system stored as a git repository.
 
-Use meta/first-run.md for blank-slate onboarding, meta/session-checklists.md for returning sessions, and the full bootstrap only when README.md routes you there.
+Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
+Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
 
 Key rules:
 - meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds.
@@ -210,8 +211,8 @@ CHATGPT_EOF
             cat > system-prompt.txt << 'GENERIC_EOF'
 You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), chats/ (conversation history), and meta/ (governance rules).
 
-Start with README.md and follow its routing rules.
-Use meta/first-run.md for blank-slate onboarding, meta/session-checklists.md for returning sessions, and the full bootstrap only when README.md routes you there.
+Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
+Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
 
 Key rules:
 - meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds.

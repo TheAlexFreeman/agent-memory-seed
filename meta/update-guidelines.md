@@ -178,4 +178,4 @@ Protected changes should use GPG-signed commits (`git commit -S`) when the envir
 
 ## Model portability
 
-When switching models: no repository changes needed, the new model follows the bootstrap sequence in README.md, limitations should be noted in `meta/review-queue.md`, and model transitions recorded in CHANGELOG.md as system events.
+When switching models: no repository changes needed, the new model starts with `meta/quick-reference.md` and follows its routing, limitations should be noted in `meta/review-queue.md`, and model transitions recorded in CHANGELOG.md as system events.

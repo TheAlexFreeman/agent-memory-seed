@@ -55,6 +55,36 @@ RUNTIME_GUIDANCE_FILES = (
     Path("meta/update-guidelines.md"),
     Path("meta/session-checklists.md"),
 )
+PROMPT_COPY_FILES = (
+    Path("setup/setup.sh"),
+    Path("setup/setup.html"),
+    Path("HUMANS/docs/QUICKSTART.md"),
+)
+ADAPTER_FILES = (Path("AGENTS.md"), Path("CLAUDE.md"), Path(".cursorrules"))
+ROOT_SETUP_TARGETS = {
+    Path("setup.sh"): "setup/setup.sh",
+    Path("setup.html"): "setup/setup.html",
+}
+CANONICAL_SETUP_FILES = (Path("setup/setup.sh"), Path("setup/setup.html"))
+
+PROMPT_START_LINE = (
+    "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
+)
+PROMPT_ROUTE_LINE = (
+    "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
+)
+LIVE_CONFIG_LINE = (
+    "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
+)
+ADAPTER_ROUTING_PHRASE = "follow the routing rules in `meta/quick-reference.md`"
+README_START_PHRASE = "Start every session with `meta/quick-reference.md`."
+README_ARCHITECTURE_PHRASE = (
+    "Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review"
+)
+QUICK_REFERENCE_ROUTER_PHRASE = (
+    "Use this file as the operational router for every session:"
+)
+SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
 
 FORBIDDEN_RUNTIME_PATTERNS = (
     r"Check the current maturity stage in `meta/system-maturity\.md`",
@@ -64,6 +94,15 @@ FORBIDDEN_RUNTIME_PATTERNS = (
     r"The active thresholds are always determined by the system's current maturity stage as assessed in `meta/system-maturity\.md`",
     r"The session boundary is proxied by the `date` field",
     r"groups entries by date, identifies file sets co-occurring",
+    r"start with README\.md and follow its routing rules",
+    r"Use meta/first-run\.md for blank-slate onboarding, meta/session-checklists\.md for returning sessions",
+    r"This file is loaded every session",
+    r"follow the bootstrap sequence and rules in README\.md",
+    r"This file is your entry point\. Read it fully before doing anything else\.",
+    r"Normal day-to-day use via `meta/session-checklists\.md`",
+    r"Use `meta/session-checklists\.md` § \"Session start\"",
+    r"compact returning-session checklist",
+    r"~2,000–5,000",
 )
 
 
@@ -275,6 +314,17 @@ def validate_access_file(path: Path, result: ValidationResult) -> None:
             )
 
 
+def extract_manifest_row(text: str, session_type: str) -> str | None:
+    pattern = re.compile(
+        rf"^\| \*\*{re.escape(session_type)}\*\* \| (?P<body>.+?) \|$",
+        re.MULTILINE,
+    )
+    match = pattern.search(text)
+    if match is None:
+        return None
+    return match.group("body")
+
+
 def validate_quick_reference(root: Path, result: ValidationResult) -> None:
     path = root / "meta" / "quick-reference.md"
     text = read_text(path, result)
@@ -287,14 +337,41 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
 
     required_phrases = (
         "single authoritative source",
+        QUICK_REFERENCE_ROUTER_PHRASE,
         "Grouping precedence:",
         "`session_id`",
         "`date`",
         "Exploration defaults apply",
+        "metadata-first maintenance probes",
+        "Count non-empty lines in `ACCESS.jsonl` files",
+        "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",
     )
     for phrase in required_phrases:
         if phrase not in text:
             result.error(f"{path}: missing required runtime guidance phrase {phrase!r}")
+
+    compact_row = extract_manifest_row(text, "Compact returning")
+    if compact_row is None:
+        result.error(f"{path}: missing manifest row for 'Compact returning'")
+        return
+
+    required_compact_markers = (
+        "identity/SUMMARY.md",
+        "chats/SUMMARY.md",
+        "scratchpad/USER.md",
+        "scratchpad/CURRENT.md",
+        "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",
+    )
+    for marker in required_compact_markers:
+        if marker not in compact_row:
+            result.error(f"{path}: compact manifest is missing {marker!r}")
+
+    forbidden_compact_markers = ("README.md", "session-checklists")
+    for marker in forbidden_compact_markers:
+        if marker in compact_row:
+            result.error(
+                f"{path}: compact manifest must not require {marker!r} on returning sessions"
+            )
 
 
 def validate_runtime_guidance(root: Path, result: ValidationResult) -> None:
@@ -311,6 +388,68 @@ def validate_runtime_guidance(root: Path, result: ValidationResult) -> None:
                 result.error(
                     f"{path}: contains forbidden runtime guidance pattern {pattern!r}"
                 )
+
+
+def validate_setup_entrypoints(root: Path, result: ValidationResult) -> None:
+    for path, target in ROOT_SETUP_TARGETS.items():
+        absolute = root / path
+        if not absolute.exists():
+            result.error(f"{absolute}: missing repo-root setup entrypoint")
+            continue
+        text = read_text(absolute, result)
+        if text is None:
+            continue
+        if target not in text:
+            result.error(f"{absolute}: expected to reference {target!r}")
+
+    for path in CANONICAL_SETUP_FILES:
+        absolute = root / path
+        if not absolute.exists():
+            result.error(f"{absolute}: missing canonical setup implementation")
+
+
+def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
+    for relative_path in ADAPTER_FILES:
+        path = root / relative_path
+        if not path.exists():
+            result.error(f"{path}: missing adapter file")
+            continue
+        text = read_text(path, result)
+        if text is None:
+            continue
+        if "meta/quick-reference.md" not in text:
+            result.error(f"{path}: must point agents to meta/quick-reference.md")
+        if ADAPTER_ROUTING_PHRASE not in text:
+            result.error(f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}")
+
+
+def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
+    for relative_path in PROMPT_COPY_FILES:
+        path = root / relative_path
+        if not path.exists():
+            result.error(f"{path}: missing prompt-copy file")
+            continue
+        text = read_text(path, result)
+        if text is None:
+            continue
+        for phrase in (PROMPT_START_LINE, PROMPT_ROUTE_LINE, LIVE_CONFIG_LINE):
+            if phrase not in text:
+                result.error(f"{path}: missing prompt-copy phrase {phrase!r}")
+
+
+def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
+    readme = read_text(root / "README.md", result)
+    if readme is not None:
+        for phrase in (README_START_PHRASE, README_ARCHITECTURE_PHRASE):
+            if phrase not in readme:
+                result.error(f"{root / 'README.md'}: missing contract phrase {phrase!r}")
+
+    session_checklists = read_text(root / "meta" / "session-checklists.md", result)
+    if session_checklists is not None:
+        if SESSION_CHECKLISTS_ON_DEMAND_PHRASE not in session_checklists:
+            result.error(
+                f"{root / 'meta' / 'session-checklists.md'}: missing on-demand guidance"
+            )
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:
@@ -347,6 +486,10 @@ def validate_repo(root: Path) -> ValidationResult:
 
     validate_quick_reference(root, result)
     validate_runtime_guidance(root, result)
+    validate_setup_entrypoints(root, result)
+    validate_adapter_routing(root, result)
+    validate_prompt_copy(root, result)
+    validate_contract_consistency(root, result)
     validate_quarantine(root, result)
 
     for path in iter_content_files(root):

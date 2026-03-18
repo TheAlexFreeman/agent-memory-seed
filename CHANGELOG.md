@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-17] Quick-reference routing, root setup wrappers, and contract enforcement
+
+**Changed:**
+
+- **Operational routing moved to `meta/quick-reference.md`.** Updated `README.md`, `meta/quick-reference.md`, `meta/session-checklists.md`, `meta/first-run.md`, `meta/update-guidelines.md`, and the platform adapter files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`) so normal returning sessions start with `meta/quick-reference.md`. `README.md` now serves as architecture and full-bootstrap reference material rather than mandatory returning-session overhead.
+
+- **Compact returning manifest redesigned.** Tightened the compact path to `meta/quick-reference.md`, `identity/SUMMARY.md`, non-placeholder `chats/SUMMARY.md`, substantive scratchpad files, and only task-relevant `knowledge/` or `skills/` summaries. Added metadata-first maintenance guidance for `meta/review-queue.md` and `ACCESS.jsonl` checks, and restated the compact-session budget as `~3,000–6,000` across the canonical docs.
+
+- **Repo-root setup compatibility entrypoints.** Added root `setup.sh` and `setup.html` wrappers that forward to the canonical implementation in `setup/`. Updated `README.md`, `HUMANS/docs/QUICKSTART.md`, `setup/setup.sh`, and `setup/setup.html` to prefer the root entrypoints while keeping `setup/` as the implementation home.
+
+- **Validator, tests, and CI hardened.** Reworked `HUMANS/tooling/scripts/validate_memory_repo.py` to enforce quick-reference-first routing, root setup entrypoints, adapter/prompt consistency, and the compact-manifest contract. Expanded `HUMANS/tooling/tests/test_validate_memory_repo.py` to cover the new routing language, root wrappers, manifest shape, and compact-budget ceiling. Updated CI shellcheck coverage to include the new root `setup.sh`.
+
+**Reasoning:** The prior contract drifted in three damaging ways: returning sessions were routed through the heavyweight `README.md` path instead of the live manifest, human-facing setup instructions pointed to entrypoints that did not exist at the repo root, and CI only validated copied phrases rather than the actual operational model. These changes make the routing authority, user-facing setup surface, context-budget guidance, and enforcement tooling agree on a single compact returning-session workflow while preserving compatibility for existing setup instructions.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-17] Canonical provenance, read-only onboarding fidelity, and setup routing cleanup
 
 **Changed:**

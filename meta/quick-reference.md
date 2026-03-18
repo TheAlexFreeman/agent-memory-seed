@@ -6,6 +6,17 @@ This is the single authoritative source for the system's currently active operat
 
 ---
 
+## Session routing
+
+Use this file as the operational router for every session:
+
+1. Start here.
+2. If this is a fresh instantiation on a blank or template-backed repo, read `README.md` and then `meta/first-run.md`.
+3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
+4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
+
+---
+
 ## Context loading manifest
 
 Use this table to determine which files to read for each session type. Load files in the listed order. Files marked _(skip if empty)_ should be skipped when they contain only placeholder text.
@@ -13,13 +24,20 @@ Use this table to determine which files to read for each session type. Load file
 | Session type | Files to load |
 |---|---|
 | **First run** | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
-| **Compact returning** | `README.md`, `identity/SUMMARY.md`, this file → `knowledge/SUMMARY.md` _(skip if empty)_, `skills/SUMMARY.md` _(skip if empty)_, `chats/SUMMARY.md` _(skip if empty)_, `scratchpad/USER.md` _(skip if only placeholder)_, `scratchpad/CURRENT.md` _(skip if only placeholder)_ |
-| **Full bootstrap** | Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
+| **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
+| **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
 | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
 | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
 
-**Do not load** `HUMANS/docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above). `meta/scratchpad-guidelines.md` is also on-demand — load it only when writing to `scratchpad/` or reviewing scratchpad lifecycle; reading `scratchpad/USER.md` or `scratchpad/CURRENT.md` does not require loading the guidelines.
+**Do not load** `HUMANS/docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above). `meta/session-checklists.md` and `meta/scratchpad-guidelines.md` are also on-demand — load them only when you need detailed runbooks, session-end scratchpad review criteria, or extra protocol detail.
+
+### Compact returning notes
+
+- Run metadata-first maintenance probes before loading extra governance files:
+  - Check whether `meta/review-queue.md` still contains only its placeholder. Load the body only when real entries exist or the user asks about it.
+  - Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger. Load entries only when a trigger is hit or the current task requires retrieval analysis.
+- `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
 
 ---
 
@@ -128,7 +146,7 @@ Stage parameter tables: see `meta/system-maturity.md` §§ "Stage 1: Exploration
 | Session mode | Typical token cost | When |
 | --- | --- | --- |
 | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session | ~2,000–5,000 | Normal day-to-day use via `meta/session-checklists.md` |
+| Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in this file |
 | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
-For models with context windows under 32k, prefer the compact returning-session checklist after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
+For models with context windows under 32k, prefer the compact returning manifest in this file after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.

@@ -33,4 +33,4 @@ jobs:
       - name: Lint shell scripts
         run: |
           sudo apt-get install -y shellcheck
-          shellcheck setup/setup.sh HUMANS/tooling/scripts/onboard-export.sh
+          shellcheck setup.sh setup/setup.sh HUMANS/tooling/scripts/onboard-export.sh

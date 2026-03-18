@@ -30,7 +30,7 @@ bash setup.sh
 
 **Option B — Browser** (no terminal required):
 
-Open `setup.html` in any browser. It is a local starter-file generator: optional personal context, starter profile, and platform instructions. Git remote setup stays manual. Nothing is uploaded — everything runs locally.
+Open `setup.html` in any browser. It redirects to the local starter-file generator in `setup/setup.html`: optional personal context, starter profile, and platform instructions. Git remote setup stays manual. Nothing is uploaded — everything runs locally.
 
 ---
 
@@ -60,9 +60,9 @@ See [Platform setup](#platform-setup) below for your specific tool.
 
 Open a conversation with your AI in the repo directory. The agent will:
 
-1. Read README.md and orient itself.
+1. Read `meta/quick-reference.md` and follow its routing.
 2. Detect that this is a fresh system (no user profile exists).
-3. Run the onboarding skill — an interactive conversation to learn about you.
+3. Read `README.md` only if `meta/quick-reference.md` routes it into first-run bootstrap, then run the onboarding skill.
 4. Propose an initial profile, ask you to confirm it, then write to `identity/` and record the session.
 
 From session two onward, the agent will greet you with what it knows and pick up where you left off.
@@ -80,20 +80,21 @@ cd my-memory
 claude
 ```
 
-Claude Code will read `CLAUDE.md`, which directs it to the bootstrap sequence in `README.md`.
+Claude Code will read `CLAUDE.md`, which directs it to the live routing in `meta/quick-reference.md`.
 
 ### Cursor
 
-**Already configured.** The repo includes a `.cursorrules` file that Cursor reads automatically. Open the repo folder in Cursor and start a conversation — the agent will follow the bootstrap sequence.
+**Already configured.** The repo includes a `.cursorrules` file that Cursor reads automatically. Open the repo folder in Cursor and start a conversation — the agent will follow the live routing in `meta/quick-reference.md`.
 
 ### ChatGPT (Custom Instructions)
 
 Copy the following into your ChatGPT custom instructions (Settings → Personalization → Custom instructions → "What would you like ChatGPT to know about you?"):
 
 ```
-I have a persistent memory system stored as a git repository. When I share files from this repo, start with README.md and follow its routing rules.
+I have a persistent memory system stored as a git repository.
 
-Use meta/first-run.md for blank-slate onboarding, meta/session-checklists.md for returning sessions, and the full bootstrap only when README.md routes you there.
+Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
+Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
 
 Key rules:
 - meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds.
@@ -112,8 +113,8 @@ Use this preamble in your system prompt or session initialization:
 ```
 You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), chats/ (conversation history), and meta/ (governance rules and context loading guide).
 
-Start with README.md and follow its routing rules.
-Use meta/first-run.md for blank-slate onboarding, meta/session-checklists.md for returning sessions, and the full bootstrap only when README.md routes you there.
+Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
+Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
 
 Key rules:
 - meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds.
@@ -205,7 +206,7 @@ The repo itself is free — it's just files. The cost is in the tokens your AI m
 | Session mode | Typical token cost | When |
 | --- | --- | --- |
 | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session | ~2,000–5,000 | Normal day-to-day use via `meta/session-checklists.md` |
+| Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
 | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 The system uses a context loading manifest (`meta/quick-reference.md`) to ensure agents load only the files they need for each session type — governance files that are only relevant during aggregation or periodic review are not loaded during normal sessions.

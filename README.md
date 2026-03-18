@@ -9,7 +9,7 @@ An adaptive, self-organizing, version-controlled memory layer for AI agents. Any
 
 ## Agent bootstrap
 
-You are an AI agent reading this repository. This file is your entry point. Read it fully before doing anything else.
+You are an AI agent reading this repository. Start every session with `meta/quick-reference.md`. Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review, or when you need the system architecture and governance reference.
 
 ## Purpose
 
@@ -25,27 +25,27 @@ This repository is a structured, version-controlled memory that persists across 
 
 ## Agent routing
 
-Use this decision tree to determine your entry point:
+Use `meta/quick-reference.md` as the operational router:
 
-1. Is this a fresh instantiation (first time this model reads this repo)?
-   - **NO** → Use `meta/session-checklists.md` § "Session start" (4-step compact runbook).
-   - **YES** → Continue ↓
-2. Does `identity/SUMMARY.md` contain "No portrait yet" OR does `identity/` contain a file with `source: template`?
-   - **YES (first run)** → Go to `meta/first-run.md` for a streamlined flow.
-   - **NO (returning system)** → Follow the full "Bootstrap sequence" below.
+1. Start with `meta/quick-reference.md`.
+2. If it routes you to **First run**, read this `README.md` and then `meta/first-run.md`.
+3. If it routes you to **Full bootstrap** or **Periodic review**, read this `README.md` and continue with the relevant manifest.
+4. Otherwise, stay on the compact returning manifest in `meta/quick-reference.md` and load `knowledge/` or `skills/` summaries only when the current task makes them relevant.
 
-For a complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest".
+For the complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest". For detailed runbooks, see `meta/session-checklists.md`.
 
 ## Repository structure
 
 ```
 /
+├── setup.sh               ← Repo-root compatibility wrapper for `setup/setup.sh`.
+├── setup.html             ← Repo-root compatibility wrapper for `setup/setup.html`.
 ├── README.md              ← You are here. System architecture and protocols.
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
-├── .cursorrules           ← Cursor platform adapter. Points to README.md.
-├── setup/                 ← Setup tooling. Run setup.sh or open setup.html to get started.
-│   ├── setup.sh           ← Post-clone setup script (interactive or CLI flags).
-│   ├── setup.html         ← Browser-based starter-file generator (no terminal required).
+├── .cursorrules           ← Cursor platform adapter. Points to `meta/quick-reference.md`.
+├── setup/                 ← Canonical setup implementation. Run `setup.sh` or open `setup.html` from the repo root.
+│   ├── setup.sh           ← Post-clone setup script implementation (interactive or CLI flags).
+│   ├── setup.html         ← Browser-based starter-file generator implementation.
 │   └── templates/profiles/ ← Starter identity templates.
 │
 ├── identity/              ← Who the user is. Personality, preferences, values.
@@ -86,13 +86,13 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 │   ├── belief-diff-log.md    ← Periodic audit log tracking content drift.
 │   ├── system-maturity.md    ← Developmental stage tracking and adaptive thresholds.
 │   ├── first-run.md          ← Streamlined first-session flow for agents.
-│   ├── session-checklists.md ← Self-sufficient session start/end runbooks with quality criteria.
+│   ├── session-checklists.md ← On-demand session start/end runbooks with quality criteria.
 │   ├── scratchpad-guidelines.md ← On-demand governance for scratchpad/ use and lifecycle.
 │   ├── integrity-checklist.md ← Advisory audit checklist.
 │   ├── (task-groups.md       ← Created at Calibration stage; emergent task groups from ACCESS.)
 │   └── (task-categories.md   ← Created at Consolidation stage; controlled category vocabulary.)
 │
-├── scratchpad/            ← Sub-governance staging area. Both files read every session.
+├── scratchpad/            ← Sub-governance staging area. Load substantive files during compact returning sessions.
 │   ├── USER.md            ← User-authored context for the agent. Trust: high. Edit freely.
 │   ├── CURRENT.md         ← Agent working notes. Trust: medium. Promoted or cleared each session.
 │   └── (dated working files and _archive/ created by agent as needed)
@@ -233,7 +233,7 @@ These abstractions then become available as top-down context that enriches futur
 
 ## Bootstrap sequence
 
-If this is a fresh instantiation (the repo has just been cloned or linked for the first time with a new model), follow this sequence:
+If `meta/quick-reference.md` routes you to a fresh instantiation on a returning system, or you intentionally need the full governance stack, follow this sequence:
 
 1. Read this README.md fully. ✓
 2. Read `CHANGELOG.md` to understand the system's evolutionary trajectory — why rules exist and what problems they solve.
@@ -247,7 +247,7 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 7. **Check write access.** Can you write to this repository? If not, follow `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end. If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format.
 8. **If this is first run,** read `skills/SUMMARY.md` and `skills/onboarding.md`.
 9. **If this is first run,** run the onboarding skill. `knowledge/SUMMARY.md` and `chats/SUMMARY.md` are skippable on first run when they are empty. After onboarding completes, greet the user using what you learned.
-10. **Otherwise,** read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session. **On subsequent sessions,** you do not need to re-read these in full — consult them as-needed. See `meta/session-checklists.md` § "Session start" for the compact returning-session path.
+10. **Otherwise,** read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session. **On subsequent sessions,** return to the compact manifest in `meta/quick-reference.md` rather than re-reading this full sequence.
 11. Read `knowledge/SUMMARY.md` and `skills/SUMMARY.md` to understand what knowledge and capabilities the system has accumulated. If these are empty, skip ahead.
 12. Read `chats/SUMMARY.md` to get historical context (skip if no chat folders exist).
 13. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
@@ -261,12 +261,12 @@ Context cost depends on whether the model is onboarding, resuming normally, or r
 | Session mode                  | Typical token cost | When to expect it |
 | ----------------------------- | ------------------ | ----------------- |
 | First-run onboarding bootstrap | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session     | ~2,000–5,000       | Normal day-to-day use via `meta/session-checklists.md` |
+| Returning compact session     | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
 | Full bootstrap / periodic review | ~18,000–25,000  | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
-For models with smaller context windows, prefer the compact returning-session checklist in `meta/session-checklists.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
+For models with smaller context windows, prefer the compact returning manifest in `meta/quick-reference.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 
-For the complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest". For a compact session start/end runbook, see `meta/session-checklists.md`.
+For the complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest". For on-demand session start/end runbooks, see `meta/session-checklists.md`.
 
 ## Session reflection
 
