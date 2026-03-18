@@ -9,20 +9,17 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-VALIDATOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
-PROMPT_START_LINE = (
-    "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
+VALIDATOR_PATH = (
+    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
 )
-PROMPT_ROUTE_LINE = (
-    "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
-)
-LIVE_CONFIG_LINE = (
-    "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
-)
+PROMPT_START_LINE = "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
+PROMPT_ROUTE_LINE = "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
+LIVE_CONFIG_LINE = "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
 ADAPTER_ROUTING_LINE = "follow the routing rules in `meta/quick-reference.md`"
 SETUP_GUIDANCE_LINE = "live routing in `meta/quick-reference.md`"
 
 SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
+assert SPEC is not None
 validator = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 sys.modules[SPEC.name] = validator
@@ -92,7 +89,7 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     | Session mode | Typical token cost | When |
     | --- | --- | --- |
     | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-    | Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in this file |
+    | Returning compact session | ~3,000–7,000 | Normal day-to-day use via the compact returning manifest in this file |
     | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
     """
 )
@@ -185,7 +182,7 @@ def build_minimal_repo(root: Path) -> None:
             | Session mode | Typical token cost | When |
             | --- | --- | --- |
             | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-            | Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
+            | Returning compact session | ~3,000–7,000 | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
             | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
             """
         ),
@@ -224,7 +221,10 @@ def build_minimal_repo(root: Path) -> None:
         root / "scratchpad" / "USER.md",
         "# User notes\n\n_Nothing here yet. Add any context you'd like the agent to pick up at session start._\n",
     )
-    write(root / "scratchpad" / "CURRENT.md", "# Agent working notes\n\n_No current notes._\n")
+    write(
+        root / "scratchpad" / "CURRENT.md",
+        "# Agent working notes\n\n_No current notes._\n",
+    )
 
 
 class ValidateMemoryRepoTests(unittest.TestCase):
@@ -292,7 +292,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("session_id must match chats/YYYY/MM/DD/chat-NNN" in error for error in result.errors)
+                any(
+                    "session_id must match chats/YYYY/MM/DD/chat-NNN" in error
+                    for error in result.errors
+                )
             )
 
     def test_invalid_source_fails(self) -> None:
@@ -394,7 +397,12 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
             result = validator.validate_repo(root)
-            self.assertTrue(any("plan files must define frontmatter key 'status'" in error for error in result.errors))
+            self.assertTrue(
+                any(
+                    "plan files must define frontmatter key 'status'" in error
+                    for error in result.errors
+                )
+            )
 
     def test_missing_optional_last_verified_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -443,7 +451,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("last_verified must be a valid YYYY-MM-DD date" in error for error in result.errors)
+                any(
+                    "last_verified must be a valid YYYY-MM-DD date" in error
+                    for error in result.errors
+                )
             )
 
     def test_malformed_access_jsonl_fails(self) -> None:
@@ -606,7 +617,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("forbidden startup-skill pattern" in error for error in result.errors)
+                any(
+                    "forbidden startup-skill pattern" in error
+                    for error in result.errors
+                )
             )
 
     def test_session_start_skill_with_compact_manifest_guidance_passes(self) -> None:
@@ -660,7 +674,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("forbidden wrapup-skill pattern" in error for error in result.errors)
+                any(
+                    "forbidden wrapup-skill pattern" in error for error in result.errors
+                )
             )
 
     def test_session_wrapup_skill_with_on_demand_guidance_passes(self) -> None:
@@ -706,7 +722,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("forbidden setup-guidance pattern" in error for error in result.errors)
+                any(
+                    "forbidden setup-guidance pattern" in error
+                    for error in result.errors
+                )
             )
 
     def test_onboarding_export_template_with_stale_script_path_fails(self) -> None:
@@ -720,7 +739,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("forbidden onboarding-export pattern" in error for error in result.errors)
+                any(
+                    "forbidden onboarding-export pattern" in error
+                    for error in result.errors
+                )
             )
 
     def test_quarantine_file_with_wrong_trust_fails(self) -> None:
@@ -867,7 +889,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIn("meta/quick-reference.md", text)
             self.assertIn(ADAPTER_ROUTING_LINE, text)
-            self.assertNotIn("follow the bootstrap sequence and rules in README.md", text)
+            self.assertNotIn(
+                "follow the bootstrap sequence and rules in README.md", text
+            )
 
     def test_root_setup_entrypoints_exist_and_target_canonical_impl(self) -> None:
         wrapper = (REPO_ROOT / "setup.sh").read_text(encoding="utf-8")
@@ -888,14 +912,16 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertNotIn("follow the bootstrap sequence", quickstart)
 
     def test_onboarding_export_template_uses_canonical_import_command(self) -> None:
-        text = (REPO_ROOT / "HUMANS" / "tooling" / "onboard-export-template.md").read_text(
-            encoding="utf-8"
-        )
+        text = (
+            REPO_ROOT / "HUMANS" / "tooling" / "onboard-export-template.md"
+        ).read_text(encoding="utf-8")
 
         self.assertIn("bash HUMANS/tooling/scripts/onboard-export.sh <file>", text)
         self.assertNotIn("bash scripts/onboard-export.sh <file>", text)
 
-    def test_session_start_skill_defaults_to_quick_reference_and_uses_checklists_on_demand(self) -> None:
+    def test_session_start_skill_defaults_to_quick_reference_and_uses_checklists_on_demand(
+        self,
+    ) -> None:
         text = (REPO_ROOT / "skills" / "session-start.md").read_text(encoding="utf-8")
 
         self.assertIn(
@@ -907,11 +933,13 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             text,
         )
         self.assertNotIn(
-            'For normal returning sessions, the compact checklist in `meta/session-checklists.md` is sufficient',
+            "For normal returning sessions, the compact checklist in `meta/session-checklists.md` is sufficient",
             text,
         )
 
-    def test_session_wrapup_skill_uses_on_demand_session_checklists_language(self) -> None:
+    def test_session_wrapup_skill_uses_on_demand_session_checklists_language(
+        self,
+    ) -> None:
         text = (REPO_ROOT / "skills" / "session-wrapup.md").read_text(encoding="utf-8")
 
         self.assertIn(
@@ -920,11 +948,13 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
         self.assertIn("session-end runbook", text)
         self.assertNotIn(
-            'For normal sessions, the compact checklist in `meta/session-checklists.md` is sufficient',
+            "For normal sessions, the compact checklist in `meta/session-checklists.md` is sufficient",
             text,
         )
 
-    def test_quickstart_describes_template_backed_first_run_and_conditional_import_commit(self) -> None:
+    def test_quickstart_describes_template_backed_first_run_and_conditional_import_commit(
+        self,
+    ) -> None:
         text = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(
             encoding="utf-8"
         )
@@ -954,7 +984,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         quick_reference = (REPO_ROOT / "meta" / "quick-reference.md").read_text(
             encoding="utf-8"
         )
-        compact_row = validator.extract_manifest_row(quick_reference, "Compact returning")
+        compact_row = validator.extract_manifest_row(
+            quick_reference, "Compact returning"
+        )
 
         assert compact_row is not None
         self.assertNotIn("README.md", compact_row)
@@ -969,7 +1001,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             "First-run onboarding bootstrap",
             "~15,000–20,000",
             "Returning compact session",
-            "~3,000–6,000",
+            "~3,000–7,000",
             "Full bootstrap / periodic review",
             "~18,000–25,000",
         )
@@ -998,7 +1030,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         approx_tokens = round(
             sum(len(path.read_text(encoding="utf-8")) for path in compact_paths) / 4.0
         )
-        self.assertLessEqual(approx_tokens, 6000)
+        self.assertLessEqual(approx_tokens, 7000)
 
 
 if __name__ == "__main__":

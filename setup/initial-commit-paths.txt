@@ -42,6 +42,7 @@ knowledge/_unverified/ACCESS.jsonl
 knowledge/_unverified/SUMMARY.md
 knowledge/_unverified/django/celery-advanced-patterns.md
 knowledge/_unverified/django/celery-canvas-in-depth.md
+knowledge/_unverified/django/celery-worker-beat-ops.md
 knowledge/_unverified/django/django-6.0-whats-new.md
 knowledge/_unverified/django/django-caching-redis.md
 knowledge/_unverified/django/django-observability-structlog-sentry.md
@@ -79,9 +80,14 @@ meta/update-guidelines.md
 plans/ACCESS.jsonl
 plans/SUMMARY.md
 plans/agent-memory-mcp.md
+plans/codex-desktop-automation-continuity.md
+plans/codex-desktop-bootstrap-support.md
+plans/codex-desktop-github-network-ergonomics.md
+plans/codex-desktop-governed-memory-writes.md
 plans/devops-docker-research.md
 plans/django-stack-research.md
 plans/philosophy-history-survey.md
+plans/production-readiness-roadmap.md
 plans/react-stack-research.md
 scratchpad/CURRENT.md
 scratchpad/2026-03-18-automation-backlog.md

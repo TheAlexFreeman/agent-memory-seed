@@ -41,12 +41,14 @@ Open `setup.html` in any browser. It redirects to the local starter-file generat
 ---
 
 `setup.sh` can:
+
 1. **About you** — optional name and AI-use context for template-backed starter files.
 2. **Git remote** — optionally configure where to push your memory repo.
 3. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank.
 4. **AI platform** — generate or point you to the right startup instructions.
 
 `setup.html` covers:
+
 1. **About you** — optional personal context for starter files.
 2. **Starter profile** — the same role templates as `setup.sh`.
 3. **AI platform** — generates local instruction files where needed.
@@ -166,14 +168,14 @@ All accumulated knowledge, skills, and identity information transfers automatica
 
 The repo has five main areas:
 
-| Folder | Contains | Purpose |
-|--------|----------|---------|
-| `identity/` | User traits, preferences, values | Shape *how* the agent communicates |
-| `knowledge/` | Research, project context, reference material | Inform *what* the agent knows |
-| `skills/` | Codified procedures and workflows | Define *how* the agent performs tasks |
-| `plans/` | Multi-session plans and roadmaps | Track *what we are actively trying to do next* |
-| `chats/` | Session transcripts and summaries | Provide *episodic* memory |
-| `meta/` | Governance rules, operational parameters, context loading guide | Control *how the system itself operates* |
+| Folder       | Contains                                                        | Purpose                                        |
+| ------------ | --------------------------------------------------------------- | ---------------------------------------------- |
+| `identity/`  | User traits, preferences, values                                | Shape _how_ the agent communicates             |
+| `knowledge/` | Research, project context, reference material                   | Inform _what_ the agent knows                  |
+| `skills/`    | Codified procedures and workflows                               | Define _how_ the agent performs tasks          |
+| `plans/`     | Multi-session plans and roadmaps                                | Track _what we are actively trying to do next_ |
+| `chats/`     | Session transcripts and summaries                               | Provide _episodic_ memory                      |
+| `meta/`      | Governance rules, operational parameters, context loading guide | Control _how the system itself operates_       |
 
 Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.jsonl` (retrieval tracking log). The agent reads summaries to decide what to retrieve, logs what it retrieves, and periodically aggregates those logs to improve future retrieval.
 
@@ -197,7 +199,7 @@ This optional check validates frontmatter, ACCESS.jsonl structure, and runtime-g
 
 **Can I use multiple models simultaneously?**
 
-Yes. The memory is in files, not in any model's state. Two different models can read the same repo. Be cautious with concurrent *writes* — if two models write to the same file in the same session, you'll need to resolve conflicts manually (git makes this safe with its merge tooling).
+Yes. The memory is in files, not in any model's state. Two different models can read the same repo. Be cautious with concurrent _writes_ — if two models write to the same file in the same session, you'll need to resolve conflicts manually (git makes this safe with its merge tooling).
 
 **How do I back up my memory?**
 
@@ -211,11 +213,11 @@ Delete the content files but keep the structure. The easiest way: re-clone the t
 
 The repo itself is free — it's just files. The cost is in the tokens your AI model uses to read the files at session start. Rough planning numbers:
 
-| Session mode | Typical token cost | When |
-| --- | --- | --- |
-| First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
-| Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+| Session mode                     | Typical token cost | When                                                                                                      |
+| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
+| Returning compact session        | ~3,000–7,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md`                     |
+| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 The system uses a context loading manifest (`meta/quick-reference.md`) to ensure agents load only the files they need for each session type — governance files that are only relevant during aggregation or periodic review are not loaded during normal sessions.
 

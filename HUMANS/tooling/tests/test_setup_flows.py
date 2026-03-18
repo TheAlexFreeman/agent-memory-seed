@@ -112,7 +112,9 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertIn("**User:** Alex", summary)
             self.assertIn("**Uses AI for:** Writing code and debugging", summary)
-            self.assertIn("Template-based profile — pending onboarding confirmation.", summary)
+            self.assertIn(
+                "Template-based profile — pending onboarding confirmation.", summary
+            )
             self.assertNotIn("last_verified:", profile)
             self.assertIn("created:", profile)
 
@@ -141,7 +143,9 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertEqual("core", head_branch)
 
-    def test_shell_and_browser_setup_sources_keep_profile_summary_copy_aligned(self) -> None:
+    def test_shell_and_browser_setup_sources_keep_profile_summary_copy_aligned(
+        self,
+    ) -> None:
         shell_text = (REPO_ROOT / "setup" / "setup.sh").read_text(encoding="utf-8")
         browser_text = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
 
@@ -159,7 +163,9 @@ class SetupFlowTests(unittest.TestCase):
             self.assertIn(phrase, shell_text)
             self.assertIn(phrase, browser_text)
 
-    def test_browser_setup_uses_local_date_components_for_created_frontmatter(self) -> None:
+    def test_browser_setup_uses_local_date_components_for_created_frontmatter(
+        self,
+    ) -> None:
         browser_text = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
 
         self.assertNotIn("toISOString().slice(0, 10)", browser_text)
@@ -192,7 +198,9 @@ class SetupFlowTests(unittest.TestCase):
                 f"manifest path does not exist: {relative_path}",
             )
 
-    def test_setup_initial_commit_excludes_unrelated_local_files_and_generated_prompts(self) -> None:
+    def test_setup_initial_commit_excludes_unrelated_local_files_and_generated_prompts(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_setup_repo(root)
@@ -269,7 +277,9 @@ class SetupFlowTests(unittest.TestCase):
             self.assertNotIn("notes.txt", head_files)
             self.assertNotIn("system-prompt.txt", head_files)
 
-    def test_setup_missing_git_identity_stages_only_allowlisted_paths_and_prints_safe_command(self) -> None:
+    def test_setup_missing_git_identity_stages_only_allowlisted_paths_and_prints_safe_command(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_setup_repo(root)
