@@ -90,6 +90,41 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ["proposed", "protected"],
         )
 
+    def test_manifest_declares_fallback_behavior_profiles_for_raw_and_deferred_paths(
+        self,
+    ) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        fallback_behavior = manifest["fallback_behavior"]
+        desktop_operations = manifest["desktop_operations"]
+
+        self.assertEqual(
+            sorted(fallback_behavior),
+            ["preview_only", "read_only", "semantic_gap", "uninterpretable_target"],
+        )
+        self.assertTrue(fallback_behavior["semantic_gap"]["raw_tools_allowed"])
+        self.assertTrue(
+            fallback_behavior["semantic_gap"]["requires_contract_preservation"]
+        )
+        self.assertFalse(
+            fallback_behavior["uninterpretable_target"]["raw_tools_allowed"]
+        )
+        self.assertEqual(
+            fallback_behavior["preview_only"]["result"],
+            "return_preview_without_writing",
+        )
+        self.assertEqual(
+            fallback_behavior["read_only"]["result"],
+            "return_deferred_action_summary",
+        )
+        self.assertEqual(
+            desktop_operations["append_access_entry"]["fallback_profile"],
+            "semantic_gap",
+        )
+        self.assertEqual(
+            desktop_operations["record_session_reflection"]["fallback_profile"],
+            "semantic_gap",
+        )
+
     def test_manifest_declares_approval_preview_and_confirmation_flows(self) -> None:
         manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
         approval_ux = manifest["approval_ux"]

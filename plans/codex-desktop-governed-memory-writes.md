@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Define fallback behavior
+next_action: Decide integration boundary
 origin_session: manual
 source: agent-generated
 status: active
@@ -124,7 +124,7 @@ Error taxonomy is also explicit now. Current runtime support is:
 
 Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now validates the capability contract against the MCP runtime and highlights declared desktop-surface gaps such as ACCESS appends and session reflections.
 
-### Phase 2 — Governance and policy integration · ☐ 2/3 complete
+### Phase 2 — Governance and policy integration · ☑ 3/3 complete
 
 4. ☑ Map repo governance to app-side affordances
    - automatic changes
@@ -137,7 +137,7 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now
    - clear explanation of what files and invariants will change
    - explicit commit-category suggestions where applicable
 
-6. ☐ Define fallback behavior
+6. ☑ Define fallback behavior
    - use raw edit tools only when no semantic tool exists
    - preserve repo contract when the semantic layer cannot interpret a file
    - support dry-run / preview mode
@@ -186,6 +186,17 @@ The prototype also now distinguishes the two confirmation flows:
 - **Protected writes** use a higher-friction approval step with explicit protected-change framing, `open_files` / `defer` / `cancel` actions, and a blocked outcome until the user approves
 
 To support preview fidelity, each semantic operation now carries a `commit_category_hint`, and the capability resolver validates both the approval UX contract and those hints.
+
+#### 5. Fallback behavior should be explicit and scenario-based
+
+The governed-write contract now distinguishes four fallback scenarios instead of treating fallback as one vague escape hatch:
+
+- **`semantic_gap`**: use raw tools only when no semantic operation exists yet, and only when the caller still preserves the repo contract
+- **`uninterpretable_target`**: do not drop to raw writes when the semantic layer cannot model the file or repo shape confidently; defer instead and surface a contract warning
+- **`preview_only`**: support dry-run behavior that returns the same preview shape without writing
+- **`read_only`**: return a deferred-action summary instead of attempting writes when the runtime cannot write
+
+Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares these fallback profiles directly, gap operations point to the `semantic_gap` profile, and `HUMANS/tooling/scripts/resolve_memory_capabilities.py` plus `HUMANS/tooling/tests/test_memory_capabilities.py` validate the profile contract. This keeps raw fallback narrow, auditable, and distinct from contract-preserving defer paths.
 
 ### Phase 3 — Desktop and MCP integration · ☐ 0/3 complete
 
@@ -236,6 +247,7 @@ To support preview fidelity, each semantic operation now carries a `commit_categ
 | 2026-03-18 | Added `HUMANS/tooling/agent-memory-capabilities.toml` plus a resolver and tests to define the semantic tool set, invariant ownership model, shared result envelope, and current desktop-surface gaps |
 | 2026-03-18 | Extended the capability contract with `automatic` / `proposed` / `protected` change classes, read-only deferred behavior, raw-fallback inheritance rules, and validator coverage for operation-to-class mapping |
 | 2026-03-18 | Completed Design approval and confirmation UX (codex-desktop-governed-memory-writes 5/11) |
+| 2026-03-18 | Defined explicit fallback profiles for semantic gaps, uninterpretable targets, preview-only runs, and read-only contexts; completed Phase 2 (codex-desktop-governed-memory-writes 6/11) |
 
 ---
 

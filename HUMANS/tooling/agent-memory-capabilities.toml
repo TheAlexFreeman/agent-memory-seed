@@ -78,6 +78,34 @@ requires_change_class = true
 preview_required_for = ["proposed", "protected"]
 read_only_mode = "emit_deferred_action_summary"
 
+[fallback_behavior.semantic_gap]
+trigger = "no_semantic_tool_exists_for_requested_write"
+raw_tools_allowed = true
+requires_change_class = true
+requires_contract_preservation = true
+result = "use_raw_tools_with_preview_or_defer"
+
+[fallback_behavior.uninterpretable_target]
+trigger = "semantic_tool_cannot_model_target_file_or_repo_shape"
+raw_tools_allowed = false
+requires_change_class = true
+requires_contract_preservation = true
+result = "defer_with_contract_warning"
+
+[fallback_behavior.preview_only]
+trigger = "user_requested_preview_or_app_requested_dry_run"
+raw_tools_allowed = false
+requires_change_class = true
+requires_contract_preservation = false
+result = "return_preview_without_writing"
+
+[fallback_behavior.read_only]
+trigger = "runtime_disallows_writes_for_this_repo_or_thread"
+raw_tools_allowed = false
+requires_change_class = true
+requires_contract_preservation = false
+result = "return_deferred_action_summary"
+
 [approval_ux.preview]
 required_for = ["proposed", "protected"]
 sections = [
@@ -216,11 +244,13 @@ notes = "Narrow machine-generated governance append; not a general protected met
 [desktop_operations.append_access_entry]
 status = "gap"
 change_class = "automatic"
+fallback_profile = "semantic_gap"
 notes = "No dedicated semantic ACCESS append tool exists yet; callers still need raw writes or repo-specific batching."
 
 [desktop_operations.record_session_reflection]
 status = "gap"
 change_class = "automatic"
+fallback_profile = "semantic_gap"
 notes = "Chat summary creation exists, but reflection artifacts are not yet a first-class semantic write."
 
 [operations.memory_create_plan]

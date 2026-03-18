@@ -50,6 +50,19 @@ REQUIRED_RAW_FALLBACK_POLICY_KEYS = (
     "preview_required_for",
     "read_only_mode",
 )
+REQUIRED_FALLBACK_PROFILE_KEYS = (
+    "trigger",
+    "raw_tools_allowed",
+    "requires_change_class",
+    "requires_contract_preservation",
+    "result",
+)
+REQUIRED_FALLBACK_PROFILES = (
+    "semantic_gap",
+    "uninterpretable_target",
+    "preview_only",
+    "read_only",
+)
 REQUIRED_APPROVAL_PREVIEW_KEYS = (
     "required_for",
     "sections",
@@ -211,6 +224,70 @@ def resolve_capabilities(
         errors.append(
             f"{MANIFEST_PATH}: raw_fallback_policy.read_only_mode must be a string"
         )
+
+    fallback_behavior = manifest.get("fallback_behavior")
+    if not isinstance(fallback_behavior, dict):
+        errors.append(f"{MANIFEST_PATH}: fallback_behavior must be a TOML table")
+        fallback_behavior = {}
+    for profile_name in REQUIRED_FALLBACK_PROFILES:
+        profile = fallback_behavior.get(profile_name)
+        if not isinstance(profile, dict):
+            errors.append(
+                f"{MANIFEST_PATH}: fallback_behavior.{profile_name} must be a TOML table"
+            )
+            continue
+        for key in REQUIRED_FALLBACK_PROFILE_KEYS:
+            if key not in profile:
+                errors.append(
+                    f"{MANIFEST_PATH}: fallback_behavior.{profile_name} missing {key}"
+                )
+        if not isinstance(profile.get("trigger"), str):
+            errors.append(
+                f"{MANIFEST_PATH}: fallback_behavior.{profile_name}.trigger must be a string"
+            )
+        _ensure_bool(
+            errors,
+            f"fallback_behavior.{profile_name}.raw_tools_allowed",
+            profile.get("raw_tools_allowed"),
+        )
+        if profile.get("requires_change_class") is not True:
+            errors.append(
+                f"{MANIFEST_PATH}: fallback_behavior.{profile_name}.requires_change_class must be true"
+            )
+        _ensure_bool(
+            errors,
+            f"fallback_behavior.{profile_name}.requires_contract_preservation",
+            profile.get("requires_contract_preservation"),
+        )
+        if not isinstance(profile.get("result"), str):
+            errors.append(
+                f"{MANIFEST_PATH}: fallback_behavior.{profile_name}.result must be a string"
+            )
+
+    expected_fallback_flags = {
+        "semantic_gap": {"raw_tools_allowed": True, "requires_contract_preservation": True},
+        "uninterpretable_target": {
+            "raw_tools_allowed": False,
+            "requires_contract_preservation": True,
+        },
+        "preview_only": {
+            "raw_tools_allowed": False,
+            "requires_contract_preservation": False,
+        },
+        "read_only": {
+            "raw_tools_allowed": False,
+            "requires_contract_preservation": False,
+        },
+    }
+    for profile_name, expectations in expected_fallback_flags.items():
+        profile = fallback_behavior.get(profile_name)
+        if not isinstance(profile, dict):
+            continue
+        for key, expected in expectations.items():
+            if profile.get(key) != expected:
+                errors.append(
+                    f"{MANIFEST_PATH}: fallback_behavior.{profile_name}.{key} must be {expected!r}"
+                )
 
     approval_ux = manifest.get("approval_ux")
     if not isinstance(approval_ux, dict):
@@ -382,6 +459,15 @@ def resolve_capabilities(
             implemented_desktop_ops[operation_name] = tool_name
         elif status == "gap":
             gap_ops.append(operation_name)
+            fallback_profile = config.get("fallback_profile")
+            if not isinstance(fallback_profile, str):
+                errors.append(
+                    f"{MANIFEST_PATH}: desktop_operations.{operation_name}.fallback_profile must be a string for gap operations"
+                )
+            elif fallback_profile not in fallback_behavior:
+                errors.append(
+                    f"{MANIFEST_PATH}: desktop_operations.{operation_name}.fallback_profile references unknown fallback profile {fallback_profile!r}"
+                )
             if operation_name not in declared_gaps:
                 warnings.append(
                     f"{MANIFEST_PATH}: desktop gap {operation_name!r} is not listed in tool_sets.declared_gaps"
@@ -410,6 +496,7 @@ def resolve_capabilities(
             "declared_gaps": sorted(declared_gaps),
         },
         "raw_fallback_policy": raw_fallback_policy,
+        "fallback_behavior": fallback_behavior,
         "approval_ux": {
             "preview": preview,
             "proposed": approval_flows.get("proposed", {}),
@@ -417,6 +504,12 @@ def resolve_capabilities(
         },
         "implemented_desktop_operations": implemented_desktop_ops,
         "gap_operations": sorted(gap_ops),
+        "gap_operation_fallback_profiles": {
+            operation_name: desktop_operations[operation_name]["fallback_profile"]
+            for operation_name in sorted(gap_ops)
+            if isinstance(desktop_operations.get(operation_name), dict)
+            and "fallback_profile" in desktop_operations[operation_name]
+        },
         "operation_change_classes": {
             tool_name: operations[tool_name]["change_class"]
             for tool_name in sorted(semantic_extensions)

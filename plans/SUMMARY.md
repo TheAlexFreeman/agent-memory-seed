@@ -34,8 +34,8 @@ Implementation plan for memory-aware repo startup in Codex desktop. Focus: repo-
 
 <!-- BEGIN: codex-desktop-governed-memory-writes -->
 ### `codex-desktop-governed-memory-writes.md` · status: active · trust: medium
-**Progress:** 5/11 items complete
-**Next action:** Define fallback behavior
+**Progress:** 6/11 items complete
+**Next action:** Decide integration boundary
 <!-- END: codex-desktop-governed-memory-writes -->
 
 ---
