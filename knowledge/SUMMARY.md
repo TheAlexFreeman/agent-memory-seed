@@ -4,9 +4,9 @@ This folder contains structured information the user has accumulated or that the
 
 ## Current topics
 
-### `_unverified/philosophy/` — Intelligence, dynamical systems, consciousness (ingested 2026-03-18, trust: low)
+### `_unverified/philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18, trust: low)
 
-Six files on the philosophy and science of self-organizing intelligence, seeded from a philosophical conversation Alex shared. The synthesis file is the entry point.
+Nine files on the philosophy and science of self-organizing intelligence, seeded from a philosophical conversation Alex shared and extended through follow-up research. The synthesis file is the entry point.
 
 Key files:
 - `synthesis-intelligence-as-dynamical-regime.md` — **Start here.** Unified thesis: intelligence as edge-of-chaos dynamical regime; convergence table across traditions; open questions.
@@ -14,6 +14,9 @@ Key files:
 - `compression-intelligence-ait.md` — Kolmogorov complexity, Solomonoff induction, Bateson, AIXI
 - `free-energy-autopoiesis-cybernetics.md` — Friston FEP, Maturana/Varela, Wiener/Ashby
 - `emergence-consciousness-iit.md` — Strong emergence, downward causation, IIT, GWT, Chalmers
+- `llm-vs-human-mind-comparative-analysis.md` — Three root divergences framework, comparative strengths/weaknesses, memory system implications
+- `narrative-cognition.md` — Narrative as constitutive cognitive structure: Bruner's two modes, Ricoeur's idem/ipse, Lakoff/Johnson image schemas, Jungian archetypes, DMN as narrative engine, LLM implications
+- `cognitive-linguistics-metaphor-blending.md` — Lakoff & Johnson's CMT (primary/complex metaphors, embodied grounding, radial categories); Fauconnier & Turner's blending theory (mental spaces, four network types, vital relations, compression, optimality principles); Sweetser's polysemy and viewpoint work (three-domain modal model, frame semantics, fictive motion, gesture). Synthesis with dynamical systems framework and LLM implications.
 
 ### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
 

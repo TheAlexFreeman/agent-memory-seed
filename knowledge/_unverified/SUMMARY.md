@@ -35,9 +35,9 @@ Nine files synthesized from current Django, DRF, Celery, pytest-django, structlo
 - **`drf-testing-pytest-django-perf-rec.md`** — DRF testing/API-contract guidance plus pytest-django fixture/database patterns and django-perf-rec's current maintenance-mode role for query/cache regression checks.
 - **`django-observability-structlog-sentry.md`** — Observability guidance for this stack: structlog contextvars and Celery logging patterns, plus Sentry tracing, sampling, spans, and cache monitoring.
 
-### `philosophy/` — Intelligence, dynamical systems, consciousness (ingested 2026-03-18)
+### `philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18)
 
-Seven files synthesized from Alex's shared philosophical conversation and follow-up web research. All carry `trust: low` pending review.
+Ten files synthesized from Alex's shared philosophical conversation and follow-up web research. All carry `trust: low` pending review.
 
 - **`intelligence-dynamical-systems-conversation.md`** — Detailed notes from the Feb 28 conversation (https://claude.ai/share/3c3a22b3-946e-4a24-96df-2d812f159367). Cited by Alex as a philosophical foundation of the memory system project.
 - **`self-organized-criticality.md`** — Bak/Tang/Wiesenfeld SOC, Langton's edge of chaos, Kauffman's NK model, neural criticality hypothesis.
@@ -46,6 +46,9 @@ Seven files synthesized from Alex's shared philosophical conversation and follow
 - **`emergence-consciousness-iit.md`** — Weak/strong emergence, downward causation (Ellis), IIT (Tononi/Φ), Global Workspace Theory, Hofstadter's strange loops, Chalmers' hard problem.
 - **`synthesis-intelligence-as-dynamical-regime.md`** — Unified synthesis: intelligence as a dynamical regime (bottom-up positive + top-down negative feedback at the edge of chaos), convergence across traditions, open questions.
 - **`llm-vs-human-mind-comparative-analysis.md`** — Full comparative analysis using the dynamical framework: three root divergences (passive vs. active, atemporal vs. temporal, disembodied vs. embodied), downstream strengths/weaknesses, framework map table, implications for agent memory design.
+- **`narrative-cognition.md`** — Narrative as load-bearing cognitive structure: Bruner's two modes, Ricoeur's narrative identity (idem/ipse), Lakoff/Johnson image schemas and force dynamics, Jungian archetypes as compressed narrative templates, the Default Mode Network as the brain's narrative simulation engine, MacIntyre's narrative unity of a life, and AI implications for LLMs.
+- **`cognitive-linguistics-metaphor-blending.md`** — Deep dive into three foundational cognitive linguistics programs: Lakoff & Johnson's Conceptual Metaphor Theory (primary metaphors, embodied grounding, radial categories, basic-level categories); Fauconnier & Turner's Conceptual Blending Theory (mental spaces, four network types, vital relations, compression, optimality principles); Sweetser's polysemy and viewpoint work (three-domain model for modality/conjunctions/perception verbs, frame semantics, fictive motion, subjectivity, gesture). Includes synthesis of how all three connect to the dynamical systems framework and LLM implications.
+- **`blending-compression-coupling-construal.md`** — Focused synthesis on three themes and their convergence in narrative world-understanding: (1) blending-as-compression — the AIT/MDL parallel, the key divergence (observer-relative vs. objective), and how blending optimality maps onto narrative aesthetics; (2) structural coupling and metaphor — primary metaphors as coupling deposits, languaging as intersubjective coupling, narrative as transmission of coupling history, and the asymmetry problem; (3) subjective construal — Langacker's spectrum, subjectification, narrative focalization as multi-perspective blending, the immersion/distance dual-mode. Synthesis: narrative as cognitive triangulation (compression + coupling + construal), with the dark side.
 
 ### `react/` — React 19 + Chakra UI 3 frontend research (ingested 2026-03-18)
 
