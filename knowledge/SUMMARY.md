@@ -48,6 +48,14 @@ Key files:
 - `chakra-ui-3-styling-system.md` — `createSystem`, tokens, semantic tokens, recipes, slot recipes, virtual colors, cascade layers, and CLI typegen
 - `chakra-ui-3-react-frontend-patterns.md` — Practical synthesis for building consistent, accessible, responsive, and mode-aware React frontends with Chakra 3
 
+<!-- section: tooling -->
+### `tooling/` — Codex and MCP runtime notes (ingested 2026-03-18, trust: medium)
+
+One file capturing a local debugging session for the repo's `agent_memory` MCP server under Codex Desktop.
+
+Key files:
+- `codex-mcp-timeouts-git-stdin.md` — Investigation showing that apparent Codex MCP config failures were actually stdio transport interference from git subprocess stdin inheritance, plus the patch and verification path
+
 ## What belongs here
 
 - **Research notes and syntheses.** When the user asks the agent to research a topic deeply enough that the findings should persist, the results go here.

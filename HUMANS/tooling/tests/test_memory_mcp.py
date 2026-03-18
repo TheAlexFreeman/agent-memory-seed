@@ -7,9 +7,14 @@ import sys
 import unittest
 from pathlib import Path
 
+import anyio
+from mcp.client.session import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
+
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "memory_mcp.py"
+VENV_PYTHON = REPO_ROOT / ".venv" / "Scripts" / "python.exe"
 
 
 def load_memory_mcp_module():
@@ -78,6 +83,33 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertIn("version_token", payload)
         self.assertIsNone(payload["frontmatter"])
         self.assertIn("Quick Reference", payload["content"])
+
+    def test_read_file_works_over_stdio_transport(self) -> None:
+        if not VENV_PYTHON.exists():
+            raise unittest.SkipTest(f"venv interpreter not found: {VENV_PYTHON}")
+
+        server = StdioServerParameters(
+            command=str(VENV_PYTHON),
+            args=[str(SCRIPT_PATH)],
+            cwd=str(REPO_ROOT),
+            env={"MEMORY_REPO_ROOT": str(REPO_ROOT)},
+        )
+
+        async def run_call() -> dict[str, object]:
+            async with stdio_client(server) as (read_stream, write_stream):
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    result = await session.call_tool(
+                        "memory_read_file",
+                        {"path": "AGENTS.md"},
+                    )
+                    text_block = result.content[0]
+                    return json.loads(text_block.text)
+
+        payload = anyio.run(run_call)
+
+        self.assertIn("Agent Memory System", payload["content"])
+        self.assertIn("version_token", payload)
 
     def test_new_tools_are_exported(self) -> None:
         for name in (

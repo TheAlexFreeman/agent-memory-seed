@@ -61,6 +61,7 @@ def _build_delete_permission_hook(root: Path) -> DeletePermissionHook | None:
             cwd=str(root),
             capture_output=True,
             text=True,
+            stdin=subprocess.DEVNULL,
         )
         if result.returncode != 0:
             message = (result.stderr or result.stdout).strip() or (

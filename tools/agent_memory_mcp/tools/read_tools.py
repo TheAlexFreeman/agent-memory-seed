@@ -502,6 +502,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 capture_output=True,
                 text=True,
                 timeout=30,
+                stdin=subprocess.DEVNULL,
             )
             output = result.stdout + result.stderr
             return output.strip() or "Validation complete (no output)."

@@ -45,6 +45,7 @@ class GitRepo:
             cwd=str(self.root),
             capture_output=capture,
             text=True,
+            stdin=subprocess.DEVNULL,
         )
         if check and result.returncode != 0:
             stderr = result.stderr.strip()
