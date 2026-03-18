@@ -90,6 +90,50 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ["proposed", "protected"],
         )
 
+    def test_manifest_declares_hybrid_integration_boundary(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        boundary = manifest["integration_boundary"]
+
+        self.assertEqual(boundary["model"], "hybrid")
+        self.assertEqual(boundary["prefer"], "repo_local_semantic_mcp")
+        self.assertEqual(boundary["native_semantic_scope"], "generic_only")
+        self.assertTrue(boundary["manifest_required_for_repo_specific_semantics"])
+        self.assertEqual(
+            boundary["degradation_order"],
+            [
+                "repo_local_semantic_mcp",
+                "codex_native_preview_and_policy",
+                "raw_fallback_or_defer",
+            ],
+        )
+        self.assertTrue(
+            {
+                "approval_ux",
+                "change_class_enforcement",
+                "capability_discovery",
+                "preview_rendering",
+                "result_presentation",
+                "fallback_selection",
+            }.issubset(boundary["desktop_owns"])
+        )
+        self.assertTrue(
+            {
+                "semantic_execution",
+                "repo_specific_invariants",
+                "schema_validation",
+                "authoritative_mutation",
+                "structured_result_state",
+            }.issubset(boundary["repo_local_mcp_owns"])
+        )
+        self.assertEqual(
+            boundary["native_fallback_owns"],
+            [
+                "generic_preview",
+                "raw_tool_orchestration",
+                "deferred_action_summary",
+            ],
+        )
+
     def test_manifest_declares_fallback_behavior_profiles_for_raw_and_deferred_paths(
         self,
     ) -> None:
@@ -223,6 +267,21 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(errors["ValidationError"]["status"], "implemented")
         self.assertEqual(
             errors["AlreadyDoneError"]["status"], "defined_not_currently_emitted"
+        )
+
+    def test_resolver_returns_integration_boundary(self) -> None:
+        resolution = resolver.resolve_capabilities(REPO_ROOT, include_runtime=False)
+        boundary = resolution["integration_boundary"]
+
+        self.assertEqual(boundary["model"], "hybrid")
+        self.assertEqual(boundary["prefer"], "repo_local_semantic_mcp")
+        self.assertEqual(
+            boundary["degradation_order"],
+            [
+                "repo_local_semantic_mcp",
+                "codex_native_preview_and_policy",
+                "raw_fallback_or_defer",
+            ],
         )
 
 

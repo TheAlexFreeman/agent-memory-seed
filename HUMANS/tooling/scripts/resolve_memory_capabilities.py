@@ -22,6 +22,16 @@ REQUIRED_TOOL_SET_KEYS = (
     "semantic_extensions",
     "declared_gaps",
 )
+REQUIRED_INTEGRATION_BOUNDARY_KEYS = (
+    "model",
+    "prefer",
+    "native_semantic_scope",
+    "manifest_required_for_repo_specific_semantics",
+    "degradation_order",
+    "desktop_owns",
+    "repo_local_mcp_owns",
+    "native_fallback_owns",
+)
 REQUIRED_CHANGE_CLASS_KEYS = (
     "approval",
     "user_awareness",
@@ -93,6 +103,31 @@ ALLOWED_COMMIT_CATEGORY_HINTS = {
     "scratchpad",
     "system",
 }
+REQUIRED_DEGRADATION_ORDER = (
+    "repo_local_semantic_mcp",
+    "codex_native_preview_and_policy",
+    "raw_fallback_or_defer",
+)
+REQUIRED_DESKTOP_OWNERSHIP = {
+    "approval_ux",
+    "change_class_enforcement",
+    "capability_discovery",
+    "preview_rendering",
+    "result_presentation",
+    "fallback_selection",
+}
+REQUIRED_REPO_LOCAL_MCP_OWNERSHIP = {
+    "semantic_execution",
+    "repo_specific_invariants",
+    "schema_validation",
+    "authoritative_mutation",
+    "structured_result_state",
+}
+REQUIRED_NATIVE_FALLBACK_OWNERSHIP = {
+    "generic_preview",
+    "raw_tool_orchestration",
+    "deferred_action_summary",
+}
 
 
 def load_manifest(repo_root: Path) -> dict[str, Any]:
@@ -149,6 +184,62 @@ def resolve_capabilities(
     raw_fallback = set(tool_lists["raw_fallback"])
     semantic_extensions = set(tool_lists["semantic_extensions"])
     declared_gaps = set(tool_lists["declared_gaps"])
+
+    integration_boundary = manifest.get("integration_boundary")
+    if not isinstance(integration_boundary, dict):
+        errors.append(f"{MANIFEST_PATH}: integration_boundary must be a TOML table")
+        integration_boundary = {}
+    for key in REQUIRED_INTEGRATION_BOUNDARY_KEYS:
+        if key not in integration_boundary:
+            errors.append(f"{MANIFEST_PATH}: integration_boundary missing {key}")
+    if integration_boundary.get("model") != "hybrid":
+        errors.append(f"{MANIFEST_PATH}: integration_boundary.model must be 'hybrid'")
+    if integration_boundary.get("prefer") != "repo_local_semantic_mcp":
+        errors.append(
+            f"{MANIFEST_PATH}: integration_boundary.prefer must be 'repo_local_semantic_mcp'"
+        )
+    if integration_boundary.get("native_semantic_scope") != "generic_only":
+        errors.append(
+            f"{MANIFEST_PATH}: integration_boundary.native_semantic_scope must be 'generic_only'"
+        )
+    if integration_boundary.get("manifest_required_for_repo_specific_semantics") is not True:
+        errors.append(
+            f"{MANIFEST_PATH}: integration_boundary.manifest_required_for_repo_specific_semantics must be true"
+        )
+    degradation_order = _ensure_string_list(
+        errors,
+        "integration_boundary.degradation_order",
+        integration_boundary.get("degradation_order"),
+    )
+    if degradation_order != list(REQUIRED_DEGRADATION_ORDER):
+        errors.append(
+            f"{MANIFEST_PATH}: integration_boundary.degradation_order must match the hybrid fallback sequence"
+        )
+    ownership_specs = (
+        (
+            "desktop_owns",
+            REQUIRED_DESKTOP_OWNERSHIP,
+        ),
+        (
+            "repo_local_mcp_owns",
+            REQUIRED_REPO_LOCAL_MCP_OWNERSHIP,
+        ),
+        (
+            "native_fallback_owns",
+            REQUIRED_NATIVE_FALLBACK_OWNERSHIP,
+        ),
+    )
+    for key, required_items in ownership_specs:
+        value = _ensure_string_list(
+            errors,
+            f"integration_boundary.{key}",
+            integration_boundary.get(key),
+        )
+        missing_items = sorted(required_items - set(value))
+        if missing_items:
+            errors.append(
+                f"{MANIFEST_PATH}: integration_boundary.{key} is missing required ownership markers {missing_items!r}"
+            )
 
     for left_name, left, right_name, right in (
         ("read_support", read_support, "raw_fallback", raw_fallback),
@@ -495,6 +586,7 @@ def resolve_capabilities(
             "semantic_extensions": sorted(semantic_extensions),
             "declared_gaps": sorted(declared_gaps),
         },
+        "integration_boundary": integration_boundary,
         "raw_fallback_policy": raw_fallback_policy,
         "fallback_behavior": fallback_behavior,
         "approval_ux": {

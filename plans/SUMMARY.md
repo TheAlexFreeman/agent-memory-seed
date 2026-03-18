@@ -8,8 +8,8 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-governed-memory-writes.md`
-2. `codex-desktop-bootstrap-support.md`
+1. `codex-desktop-bootstrap-support.md`
+2. `codex-desktop-governed-memory-writes.md`
 3. `codex-desktop-automation-continuity.md`
 4. `codex-desktop-github-network-ergonomics.md`
 5. `django-stack-research.md`

@@ -40,6 +40,37 @@ declared_gaps = [
   "record_session_reflection",
 ]
 
+[integration_boundary]
+model = "hybrid"
+prefer = "repo_local_semantic_mcp"
+native_semantic_scope = "generic_only"
+manifest_required_for_repo_specific_semantics = true
+degradation_order = [
+  "repo_local_semantic_mcp",
+  "codex_native_preview_and_policy",
+  "raw_fallback_or_defer",
+]
+desktop_owns = [
+  "approval_ux",
+  "change_class_enforcement",
+  "capability_discovery",
+  "preview_rendering",
+  "result_presentation",
+  "fallback_selection",
+]
+repo_local_mcp_owns = [
+  "semantic_execution",
+  "repo_specific_invariants",
+  "schema_validation",
+  "authoritative_mutation",
+  "structured_result_state",
+]
+native_fallback_owns = [
+  "generic_preview",
+  "raw_tool_orchestration",
+  "deferred_action_summary",
+]
+
 [shared_result]
 fields = [
   "files_changed",
