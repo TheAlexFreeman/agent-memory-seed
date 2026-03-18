@@ -19,7 +19,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install test dependencies
-        run: pip install pytest ruff
+        run: pip install pytest ruff mcp
 
       - name: Lint Python
         run: ruff check HUMANS/tooling/scripts/ HUMANS/tooling/tests/
