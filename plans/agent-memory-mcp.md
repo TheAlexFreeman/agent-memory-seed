@@ -442,19 +442,116 @@ Adds an entry to `meta/review-queue.md` with the path, reason, date, and priorit
 
 ## Commit message conventions
 
-All commits from this MCP use bracketed category prefixes matching the existing system convention:
+### Format
 
-| Prefix | Used by |
+```
+[{category}] {Verb} {what changed, ≤60 chars}
+
+{optional body}
+```
+
+The subject line (first line) must fit within 72 characters total. The bracketed prefix consumes roughly 10–12 characters, leaving ~60 for the description. The body, when present, is separated from the subject by a blank line.
+
+---
+
+### Category prefixes and verb vocabulary
+
+Each category has a defined set of imperative-mood verbs. Using consistent verbs makes `git log --oneline` reliably scannable without opening the diff.
+
+| Prefix | Used by | Verbs |
+|---|---|---|
+| `[knowledge]` | `add_knowledge_file`, low-level knowledge writes | Add, Update, Expand, Split, Merge |
+| `[plan]` | `create_plan`, `mark_plan_item_complete`, `update_plan_next_action` | Create, Mark complete, Update next-action, Pause, Complete |
+| `[identity]` | `update_identity_trait` | Update, Add, Remove |
+| `[chat]` | `record_chat_summary` | Record |
+| `[curation]` | `promote_knowledge`, `demote_knowledge`, `archive_knowledge`, `flag_for_review` | Promote, Demote, Archive, Flag |
+| `[scratchpad]` | `append_scratchpad` | Append, Clear |
+| `[system]` | structural/governance changes, `memory_commit` catch-all | Add, Update, Migrate, Fix, Remove |
+
+**Imperative mood, no past tense.** Write "Add tanstack-query.md", not "Added tanstack-query.md."
+
+**Multi-category commits use the dominant category.** If writing a knowledge file also updates plan progress, use `[knowledge]` — the knowledge file is the substantive work, and the plan update is bookkeeping. Reach for `[system]` only when the commit has no dominant content category (e.g., migrating anchors, reorganising folders, fixing SUMMARY.md structure).
+
+---
+
+### Tier 1 tool subject line templates
+
+These are generated deterministically by the tool and require no agent judgment:
+
+| Tool | Template |
 |---|---|
-| `[knowledge]` | `add_knowledge_file`, knowledge-touching low-level commits |
-| `[plan]` | `create_plan`, `mark_plan_item_complete`, `update_plan_next_action` |
-| `[identity]` | `update_identity_trait` |
-| `[chat]` | `record_chat_summary` |
-| `[curation]` | `promote_knowledge`, `demote_knowledge`, `archive_knowledge`, `flag_for_review` |
-| `[system]` | `memory_commit` with system-level changes |
-| `[scratchpad]` | `append_scratchpad` |
+| `add_knowledge_file` | `[knowledge] Add {filename}` |
+| `mark_plan_item_complete` | `[plan] Mark {filename} complete ({plan_id} {n}/{total})` |
+| `create_plan` | `[plan] Create {plan_id}` |
+| `update_plan_next_action` | `[plan] Update next-action for {plan_id}` |
+| `promote_knowledge` | `[curation] Promote {filename} to knowledge/{subject}/ (trust: {level})` |
+| `demote_knowledge` | `[curation] Demote {filename} to _unverified/ ({reason})` |
+| `archive_knowledge` | `[curation] Archive {filename} ({reason})` |
+| `flag_for_review` | `[curation] Flag {path} for review ({priority})` |
+| `update_identity_trait` | `[identity] Update {key} in identity/{file}.md` |
+| `record_chat_summary` | `[chat] Record summary for {session_id}` |
+| `append_scratchpad` | `[scratchpad] Append to {target}` |
 
-The `memory_commit` Tier 2 tool accepts any message but should be called with a matching prefix by the agent.
+---
+
+### Agent commits via `memory_commit`: subject line
+
+The agent calls `memory_commit` when using Tier 2 tools for operations no Tier 1 tool covers, or when batching several related writes into one commit. The same subject line rules apply:
+
+```
+[knowledge] Add celery-canvas-in-depth.md
+[plan] Update react-stack-research phase 1 progress
+[system] Add machine-readable anchors to SUMMARY.md files
+```
+
+When a batch of Tier 2 writes produces a commit that would otherwise be described as multi-category, use the dominant category and note secondary changes in the body rather than stacking prefixes.
+
+---
+
+### Agent commits via `memory_commit`: optional body
+
+A body is optional for routine single-operation commits and expected for anything that involves a judgment call, multiple files, or external sources. Three structured fields, each on its own line:
+
+```
+Session: chats/2026/03/18/chat-001
+Plan: django-stack-research phase 1/10
+Sources: external-research (Celery docs, Celery Canvas guide)
+```
+
+`Session` anchors the commit to a specific chat for cross-referencing with `chats/` history. `Plan` identifies which research plan and phase drove the work — useful context when reading the log months later. `Sources` is for external-research commits and mirrors the frontmatter `source` field at the commit level for audit purposes.
+
+Free-form notes go after a blank line following the structured fields:
+
+```
+Session: chats/2026/03/18/chat-001
+Plan: django-stack-research phase 1/10
+Sources: external-research (Celery docs)
+
+Covers chain/group/chord in depth. chord reliability section expanded
+beyond original plan scope based on session discussion.
+```
+
+Body fields are optional individually — include whichever are relevant. Do not pad with boilerplate when the subject line is self-explanatory.
+
+---
+
+### Commit granularity for extended workflows
+
+**One logical unit per commit.** A logical unit is a piece of work that is independently meaningful and independently revertable. Not one commit per file write, and not one commit per session.
+
+Good heuristics:
+- Completing one knowledge file → one commit
+- Completing a plan phase (even if it spans multiple files) → one or a few commits, not one per file and not one for the whole phase
+- A structural change (adding anchors, reorganising a folder) → one commit, separate from content changes
+- Updating plan bookkeeping after writing content → fold into the content commit rather than making a separate trivial commit
+
+The failure modes to avoid: a giant end-of-session "catch-all" commit that buries multiple substantive changes and makes rollback destructive; and a per-write commit storm that fills the log with noise. When in doubt, ask: "would reverting this commit revert exactly the thing I'd want to undo?"
+
+---
+
+### Validation in `memory_commit`
+
+The tool warns (not errors) if the message does not begin with a recognised `[{category}]` prefix, since agents may legitimately need novel categories for unanticipated operations. The warning is surfaced in `new_state.warnings` so the agent can decide whether to proceed or revise the message. Unknown prefixes are logged but not blocked.
 
 ---
 
@@ -528,3 +625,4 @@ The `memory_commit` Tier 2 tool accepts any message but should be called with a 
 | 2026-03-18 | Plan created from design discussion; two-tier architecture, version token model, and full tool inventory defined |
 | 2026-03-18 | `memory_delete` scoped: auto-calls `allow_cowork_file_delete` only for paths under `knowledge/`, `plans/`, `scratchpad/`; hard `PermissionError` for all other paths |
 | 2026-03-18 | Anchor design resolved and migration applied: BEGIN/END pairs in `plans/SUMMARY.md`; `<!-- section: {id} -->` anchors in `knowledge/SUMMARY.md` and `knowledge/_unverified/SUMMARY.md` |
+| 2026-03-18 | Commit message conventions expanded: verb vocabulary, Tier 1 templates, agent body format, granularity guidance, `memory_commit` validation behaviour |
