@@ -24,7 +24,7 @@ This quarantine zone ensures that **all externally sourced content is visible, l
 <!-- section: django -->
 ### `django/` — Django 6.0 knowledge base (ingested 2026-03-18)
 
-Ten files synthesized from current Django, DRF, Celery, pytest-django, structlog, Sentry, and related ecosystem documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
+Eleven files synthesized from current Django, DRF, Celery, pytest-django, structlog, Sentry, and related ecosystem documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
 
 - **`django-6.0-whats-new.md`** — Django 6.0 release-line overview, including the base December 3, 2025 release and later 6.0.1 / 6.0.3 patch-line notes that matter for upgrade planning.
 - **`django-tasks-framework.md`** — Corrected deep dive on `django.tasks`: built-in `ImmediateBackend` / `DummyBackend`, JSON-serialization limits, transaction caveats, and the boundary between Django tasks and Celery.
@@ -33,6 +33,7 @@ Ten files synthesized from current Django, DRF, Celery, pytest-django, structlog
 - **`django-react-drf.md`** — DRF guidance for React frontends: session-vs-JWT auth choice, CSRF/CORS rules, renderer defaults, filtering, pagination, throttling caveats, and error-shape design.
 - **`celery-advanced-patterns.md`** — Celery guidance focused on idempotency, acknowledgement strategy, retries, queue separation, result-storage discipline, and Celery's continued role beside `django.tasks`.
 - **`celery-canvas-in-depth.md`** — Celery workflow primitives in depth: signatures, `chain`, `group`, `chord`, `chunks`, immutable callbacks, result-backend implications, and composition/error-handling patterns.
+- **`celery-worker-beat-ops.md`** — Celery operations note covering worker pool types, queue/concurrency design, autoscaling, beat singleton requirements, `django-celery-beat`, routing, graceful shutdown, and retry-exhaustion patterns.
 - **`django-production-stack.md`** — Operational synthesis for Django + Postgres + Redis + Celery + Docker: service boundaries, migrations, startup ordering, storage, health checks, and observability.
 - **`drf-testing-pytest-django-perf-rec.md`** — DRF testing/API-contract guidance plus pytest-django fixture/database patterns and django-perf-rec's current maintenance-mode role for query/cache regression checks.
 - **`django-observability-structlog-sentry.md`** — Observability guidance for this stack: structlog contextvars and Celery logging patterns, plus Sentry tracing, sampling, spans, and cache monitoring.

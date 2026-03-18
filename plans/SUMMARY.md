@@ -6,7 +6,74 @@ This folder holds multi-session research and implementation plans. Plans track i
 
 Read this section first during compact returning sessions when active plans exist.
 
-**Priority after MCP completion:** `django-stack-research` → `react-stack-research` → `devops-docker-research` → `philosophy-history-survey`
+Priority order for active work:
+
+1. `codex-desktop-bootstrap-support.md`
+2. `codex-desktop-governed-memory-writes.md`
+3. `codex-desktop-automation-continuity.md`
+4. `codex-desktop-github-network-ergonomics.md`
+5. `agent-memory-mcp.md`
+6. `django-stack-research.md`
+7. `react-stack-research.md`
+8. `devops-docker-research.md`
+9. `philosophy-history-survey.md`
+
+---
+
+<!-- BEGIN: codex-desktop-bootstrap-support -->
+### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
+
+Implementation plan for memory-aware repo startup in Codex desktop. Focus: repo-declared startup manifests, first-run vs. returning-session detection, compact preload ordering, and startup UI for branch/worktree/bootstrap state.
+
+**Progress:** 0/11 tasks complete
+**Next action:** Phase 1 — define the compact startup manifest contract and repo-declared bootstrap surface
+<!-- END: codex-desktop-bootstrap-support -->
+
+---
+
+<!-- BEGIN: codex-desktop-governed-memory-writes -->
+### `codex-desktop-governed-memory-writes.md` · status: active · trust: medium
+
+Implementation plan for first-class governed memory operations in Codex desktop. Focus: semantic write tools, invariant ownership, governance enforcement, and MCP/app integration for structured memory writes.
+
+**Progress:** 0/11 tasks complete
+**Next action:** Phase 1 — define the semantic memory operation set and invariant ownership model
+<!-- END: codex-desktop-governed-memory-writes -->
+
+---
+
+<!-- BEGIN: codex-desktop-automation-continuity -->
+### `codex-desktop-automation-continuity.md` · status: active · trust: medium
+
+Implementation plan for recurring-run continuity in Codex desktop. Focus: automation-local memory, plan pinning, branch/base-branch carry-forward, blocker persistence, and structured run writeback.
+
+**Progress:** 0/11 tasks complete
+**Next action:** Phase 1 — define the automation run-state model and memory handoff contract
+<!-- END: codex-desktop-automation-continuity -->
+
+---
+
+<!-- BEGIN: codex-desktop-github-network-ergonomics -->
+### `codex-desktop-github-network-ergonomics.md` · status: active · trust: medium
+
+Implementation plan for earlier GitHub, network, and runtime blocker detection in Codex desktop. Focus: preflight checks, task-aware readiness, blocker reporting, and recovery ergonomics.
+
+**Progress:** 0/11 tasks complete
+**Next action:** Phase 1 — define preflight checks for GitHub auth, network reachability, and local tooling availability
+<!-- END: codex-desktop-github-network-ergonomics -->
+
+---
+
+<!-- BEGIN: agent-memory-mcp -->
+### `agent-memory-mcp.md` · status: active · trust: medium
+
+Implementation plan for an enhanced agent-memory MCP with read/write and read/write/commit tooling. Two-tier architecture: Tier 1 semantic tools (auto-commit, own all invariants per operation) + Tier 2 low-level tools (staged writes + explicit `memory_commit`). Version tokens for optimistic locking. 17 tools total across 4 build phases. Stack: FastMCP (Python), subprocess git, python-frontmatter.
+
+**Progress:** 0/17 tools built (Phase 0: 0/3)
+**Next action:** Phase 0 — implement git integration layer and version token model
+<!-- END: agent-memory-mcp -->
+
+---
 
 <!-- BEGIN: philosophy-history-survey -->
 ### `philosophy-history-survey.md` · status: active · trust: medium
@@ -24,8 +91,8 @@ Broad survey of the history of philosophy — the overarching story of how ideas
 
 Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker stack. 10 files planned across 7 phases. Priority order: Celery Canvas in depth → Celery worker/beat ops → drf-spectacular → Django test data/factories → Django async → Django security → Django migrations advanced → gunicorn/uvicorn deployment → database connection pooling → django-storages. Output goes to `knowledge/_unverified/django/`.
 
-**Progress:** 1/10 files written
-**Next action:** Continue Phase 1 — write `knowledge/_unverified/django/celery-worker-beat-ops.md`
+**Progress:** 2/10 files written
+**Next action:** Begin Phase 2 — write `knowledge/_unverified/django/drf-spectacular.md`
 <!-- END: django-stack-research -->
 
 ---

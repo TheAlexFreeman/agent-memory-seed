@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Continue Phase 1 — write knowledge/_unverified/django/celery-worker-beat-ops.md"
+next_action: "Begin Phase 2 — write knowledge/_unverified/django/drf-spectacular.md"
 ---
 
 # Research Plan: Django Stack — Gaps and Depth
@@ -35,7 +35,7 @@ Alex will review the existing Django files "soon" for potential promotion from `
 
 ## Research phases and priority order
 
-### Phase 1 — Celery depth (highest priority) · ☐ 1/2 complete
+### Phase 1 — Celery depth (highest priority) · ☑ 2/2 complete
 
 Alex explicitly wants deep Celery expertise accumulated over time. The existing file is a good foundation but Canvas (chain/group/chord) is only briefly mentioned and worker ops are absent entirely.
 
@@ -49,7 +49,7 @@ Alex explicitly wants deep Celery expertise accumulated over time. The existing 
    - **Error handling in Canvas**: `on_error` callbacks, partial completion semantics, idempotency considerations for multi-step pipelines
    - Real-world patterns: fan-out processing pipeline, parallel API calls with aggregation, multi-step data transformation
 
-2. ☐ `celery-worker-beat-ops.md`
+2. ☑ `celery-worker-beat-ops.md`
    - **Worker pool types**: prefork (CPU-bound, fork safety, `CELERYD_MAX_TASKS_PER_CHILD`), gevent/eventlet (I/O-bound, patching caveats, Django ORM thread safety), solo (single-threaded, debug-friendly), threads
    - **Concurrency tuning**: how to choose pool type and concurrency for a mixed workload (CPU tasks vs. HTTP tasks vs. DB tasks)
    - **`django-celery-beat`**: database-backed periodic tasks, `PeriodicTask` model, dynamic schedule management, the beat lock problem in multi-replica deployments
@@ -170,6 +170,7 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 |---|---|
 | 2026-03-18 | Plan created; existing 9 Django files reviewed and gaps identified |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/celery-canvas-in-depth.md`; next up is `celery-worker-beat-ops.md` |
+| 2026-03-18 | Wrote `knowledge/_unverified/django/celery-worker-beat-ops.md`; Phase 1 complete, next up is `drf-spectacular.md` |
 
 ---
 
