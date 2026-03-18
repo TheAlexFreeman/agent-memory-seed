@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 1 — write knowledge/_unverified/django/celery-canvas-in-depth.md"
+next_action: "Continue Phase 1 — write knowledge/_unverified/django/celery-worker-beat-ops.md"
 ---
 
 # Research Plan: Django Stack — Gaps and Depth
@@ -35,11 +35,11 @@ Alex will review the existing Django files "soon" for potential promotion from `
 
 ## Research phases and priority order
 
-### Phase 1 — Celery depth (highest priority) · ☐ 0/2 complete
+### Phase 1 — Celery depth (highest priority) · ☐ 1/2 complete
 
 Alex explicitly wants deep Celery expertise accumulated over time. The existing file is a good foundation but Canvas (chain/group/chord) is only briefly mentioned and worker ops are absent entirely.
 
-1. ☐ `celery-canvas-in-depth.md`
+1. ☑ `celery-canvas-in-depth.md`
    - **chain**: linear pipelines, result passing, error propagation (link_error), partial chains
    - **group**: parallel execution, result aggregation with `GroupResult`, fault tolerance patterns
    - **chord**: fan-out/fan-in, the callback, chord header vs. body, the chord unlock task, Redis/database backend implications for chord reliability
@@ -169,6 +169,7 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created; existing 9 Django files reviewed and gaps identified |
+| 2026-03-18 | Wrote `knowledge/_unverified/django/celery-canvas-in-depth.md`; next up is `celery-worker-beat-ops.md` |
 
 ---
 
