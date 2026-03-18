@@ -17,11 +17,14 @@ This repository is a structured, version-controlled memory that persists across 
 
 ## How to orient yourself
 
-1. **Read this file** to understand the system architecture.
-2. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
-3. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
-4. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
-5. **Log your access** using the access-note format described below.
+1. **Start with `meta/quick-reference.md`** — it routes you to the right files for your session type.
+2. **Read this file when routed here** — for first runs, full bootstraps, or periodic reviews.
+3. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
+4. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
+5. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
+6. **Log your access** using the access-note format described below.
+
+> **This README is the architectural reference.** It is not a sequential entry point. For session routing, always start from `meta/quick-reference.md`.
 
 ## Agent routing
 
@@ -258,11 +261,11 @@ If `meta/quick-reference.md` routes you to a fresh instantiation on a returning 
 
 Context cost depends on whether the model is onboarding, resuming normally, or reopening the full governance stack. Use these rough planning numbers:
 
-| Session mode                  | Typical token cost | When to expect it |
-| ----------------------------- | ------------------ | ----------------- |
-| First-run onboarding bootstrap | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session     | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
-| Full bootstrap / periodic review | ~18,000–25,000  | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+| Session mode                     | Typical token cost | When to expect it                                                                                         |
+| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
+| Returning compact session        | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md`                     |
+| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 For models with smaller context windows, prefer the compact returning manifest in `meta/quick-reference.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 

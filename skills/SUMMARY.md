@@ -45,8 +45,9 @@ All skill files must include YAML frontmatter. See `meta/update-guidelines.md` �
 
 ## Usage patterns
 
-_No access data yet._ After aggregation, this section will contain:
-- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
-- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
-- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
-- **Retrieval trends** — frequency and helpfulness changes since last aggregation
+_Aggregation has not yet run._ Raw access data exists in `ACCESS.jsonl` (5 entries across 2 sessions as of 2026-03-17). Preliminary signals:
+
+- **Highest retrieval value:** `onboarding.md` — 2 retrievals, mean helpfulness 0.85. Retrieved for first-run bootstrap verification and onboarding flow audits.
+- **Session support skills:** `session-start.md` (0.7), `session-wrapup.md` (0.6), `session-sync.md` (0.5) — each retrieved once during a system review.
+
+This section will be replaced with full aggregation results when the ACCESS.jsonl entry count reaches the active trigger.

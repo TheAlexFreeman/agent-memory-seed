@@ -21,14 +21,14 @@ Use this file as the operational router for every session:
 
 Use this table to determine which files to read for each session type. Load files in the listed order. Files marked _(skip if empty)_ should be skipped when they contain only placeholder text.
 
-| Session type | Files to load |
-|---|---|
-| **First run** | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
-| **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
-| **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
-| **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
-| **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
-| **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
+| Session type           | Files to load                                                                                                                                                                                                                                                                                                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **First run**          | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`)                                                                                                                                           |
+| **Compact returning**  | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
+| **Full bootstrap**     | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md`                                                                                                                                                                                                                              |
+| **Periodic review**    | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md`                                                                                                                                                                                                          |
+| **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached)                                                                                                                                                                                                                                                 |
+| **Stage transition**   | Periodic review files + `meta/curation-algorithms.md`                                                                                                                                                                                                                                                                                       |
 
 **Do not load** `HUMANS/docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above). `meta/session-checklists.md` and `meta/scratchpad-guidelines.md` are also on-demand — load them only when you need detailed runbooks, session-end scratchpad review criteria, or extra protocol detail.
 
@@ -80,6 +80,8 @@ The agent should update this date when completing a full periodic review (same c
 
 ## Decision guide: trust decay
 
+Trust level sets the **decay threshold** (how long before action is taken). The **effective verification date** determines actual staleness. These are independent — a high-trust file can still be stale, and a low-trust file can be fresh. See `meta/curation-policy.md` § "Freshness vs. confidence" for the full rationale.
+
 ### `trust: low` file
 
 1. Has the effective verification date (`last_verified` if set, otherwise `created`) gone unupdated for more than **120 days**? → Archive to `knowledge/_archive/`, remove from SUMMARY.md, log as `[curation]` commit.
@@ -127,6 +129,24 @@ Aggregate when entries accumulated since last aggregation reach **15**. Aggregat
 
 **Entry counting rule:** Always count entries in the current `ACCESS.jsonl` file (not the archive). After each aggregation, `ACCESS.jsonl` is reset to empty, so all entries in it are by definition accumulated since the last aggregation. The archive is append-only and used only for historical staleness detection.
 
+**For the full aggregation procedure,** see `meta/curation-algorithms.md` § "Aggregation runbook."
+
+---
+
+## Helpfulness scoring guide
+
+`helpfulness` is the agent's judgment of whether a retrieval was useful to producing the session's responses, on a 0.0–1.0 scale:
+
+| Range   | Meaning                                                                          | Example                                                |
+| ------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 0.0–0.1 | **Wrong context.** Irrelevant or retrieved in error.                             | Retrieved "React patterns" for a React Native query    |
+| 0.2–0.4 | **Near-miss.** Right neighborhood but not incorporated.                          | Opened a related file but used a different one instead |
+| 0.5–0.6 | **Useful context.** Directly relevant, informed the response but wasn't central. | Provided background that shaped framing                |
+| 0.7–0.8 | **Highly relevant.** Shaped a key decision or was directly used.                 | File content was quoted or directly applied            |
+| 0.9–1.0 | **Critical.** Response would be significantly worse without this file.           | Core reference that the answer depended on             |
+
+Score what actually happened, not what should have happened. A high-quality file that wasn't needed for this particular task is a 0.2, not a 0.7.
+
 ---
 
 ## How to update this file
@@ -145,10 +165,10 @@ Stage parameter tables: see `meta/system-maturity.md` §§ "Stage 1: Exploration
 
 ## Context budget guideline
 
-| Session mode | Typical token cost | When |
-| --- | --- | --- |
-| First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in this file |
-| Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+| Session mode                     | Typical token cost | When                                                                                                      |
+| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
+| Returning compact session        | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in this file                                     |
+| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 For models with context windows under 32k, prefer the compact returning manifest in this file after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
