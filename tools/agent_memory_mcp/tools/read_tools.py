@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import sys
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -34,6 +35,10 @@ KNOWN_PREFIXES = {
 # Trust decay thresholds (days) — defaults; runtime reads from quick-reference.md
 _DEFAULT_LOW_THRESHOLD = 120
 _DEFAULT_MEDIUM_THRESHOLD = 180
+_IGNORED_NAMES = frozenset({
+    ".git", ".claude", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+})
+_HUMANS_DIRNAME = "HUMANS"
 
 
 def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
@@ -68,8 +73,19 @@ def _effective_date(fm: dict) -> date | None:
     return None
 
 
-def register(mcp: "FastMCP", get_repo, get_root) -> None:
-    """Register all Tier 0 read tools onto the mcp instance."""
+def _repo_relative(path: Path, root: Path) -> Path:
+    """Return a path relative to the repo root."""
+    return path.relative_to(root)
+
+
+def _is_humans_path(path: Path, root: Path) -> bool:
+    """Return True when a path is under HUMANS/."""
+    relative = _repo_relative(path, root)
+    return bool(relative.parts) and relative.parts[0] == _HUMANS_DIRNAME
+
+
+def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
+    """Register all Tier 0 read tools and return their callables."""
 
     # ------------------------------------------------------------------
     # memory_read_file
@@ -135,12 +151,15 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
     async def memory_list_folder(
         path: str = ".",
         include_hidden: bool = False,
+        include_humans: bool = False,
     ) -> str:
         """List the contents of a folder in the memory repository.
 
         Args:
             path:           Repo-relative folder path (default: repo root '.').
             include_hidden: Include dot-files/folders (default: False).
+            include_humans: Include the human-facing HUMANS/ tree when browsing
+                            broad scopes like '.' (default: False).
 
         Returns:
             Markdown-formatted directory listing with file sizes.
@@ -152,15 +171,32 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
         if not folder.is_dir():
             return f"Error: Not a directory: {path}"
 
+        explicit_humans_request = _is_humans_path(folder, root)
         lines = [f"# {path}/\n"]
         try:
-            entries = sorted(folder.iterdir(), key=lambda p: (p.is_file(), p.name))
+            all_entries = list(folder.iterdir())
         except PermissionError:
             return f"Error: Permission denied reading {path}"
 
-        for entry in entries:
+        def _keep(entry: Path) -> bool:
+            if entry.name in _IGNORED_NAMES:
+                return False
             if not include_hidden and entry.name.startswith("."):
-                continue
+                return False
+            if (
+                not explicit_humans_request
+                and not include_humans
+                and _is_humans_path(entry, root)
+            ):
+                return False
+            return True
+
+        entries = sorted(
+            [entry for entry in all_entries if _keep(entry)],
+            key=lambda p: (p.is_file(), p.name),
+        )
+
+        for entry in entries:
             rel = str(entry.relative_to(root))
             if entry.is_dir():
                 lines.append(f"📁 {entry.name}/")
@@ -191,6 +227,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
         glob_pattern: str = "**/*.md",
         case_sensitive: bool = False,
         max_results: int = 30,
+        include_humans: bool = False,
     ) -> str:
         """Search for a pattern across files in the memory repository.
 
@@ -200,6 +237,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             glob_pattern:   File filter (default: '**/*.md').
             case_sensitive: Case-sensitive match (default: False).
             max_results:    Max matching lines to return (default: 30, max 100).
+            include_humans: Include the human-facing HUMANS/ tree when searching
+                            broad scopes like '.' (default: False).
 
         Returns:
             Matching lines grouped by file with line numbers, or a not-found message.
@@ -218,9 +257,18 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
         max_results = min(max_results, 100)
         results: list[str] = []
         total_matches = 0
+        explicit_humans_search = _is_humans_path(search_root, root)
 
         for file_path in sorted(search_root.glob(glob_pattern)):
+            if any(part in _IGNORED_NAMES for part in file_path.parts):
+                continue
             if not file_path.is_file():
+                continue
+            if (
+                not explicit_humans_search
+                and not include_humans
+                and _is_humans_path(file_path, root)
+            ):
                 continue
             try:
                 text = file_path.read_text(encoding="utf-8", errors="replace")
@@ -236,7 +284,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
                         break
 
             if file_matches:
-                rel = str(file_path.relative_to(root))
+                rel = file_path.relative_to(root).as_posix()
                 results.append(f"\n**{rel}**")
                 results.extend(file_matches)
 
@@ -449,7 +497,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             return "Validator not found at HUMANS/tooling/scripts/validate_memory_repo.py"
         try:
             result = subprocess.run(
-                ["python3", str(validator_path)],
+                [sys.executable, str(validator_path), str(root)],
                 cwd=str(root),
                 capture_output=True,
                 text=True,
@@ -461,3 +509,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             return "Error: Validator timed out after 30 seconds."
         except Exception as e:
             return f"Error running validator: {e}"
+
+    return {
+        "memory_read_file": memory_read_file,
+        "memory_list_folder": memory_list_folder,
+        "memory_search": memory_search,
+        "memory_git_log": memory_git_log,
+        "memory_diff": memory_diff,
+        "memory_audit_trust": memory_audit_trust,
+        "memory_validate": memory_validate,
+    }

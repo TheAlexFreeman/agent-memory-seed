@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Phase 0 — implement git integration layer and version token model"
+next_action: "Phase 1 — finish cowork-permission handling for memory_delete and verify the write path in a live MCP client"
 ---
 
 # Implementation Plan: Enhanced Agent-Memory MCP
@@ -21,6 +21,10 @@ This plan extends the MCP with a two-tier write layer:
 - **Tier 2 — Low-level tools**: Raw file write/edit/delete/move, staged without auto-commit, plus an explicit `memory_commit`. Used only when no Tier 1 tool covers the operation, or when batching multiple changes into one commit.
 
 Both tiers use **version tokens** for optimistic locking and return structured state so the agent does not need to re-read after writing.
+
+## Current status
+
+The enhanced implementation now lives in `tools/agent_memory_mcp/` and is re-exported from `HUMANS/tooling/scripts/memory_mcp.py` so the canonical script path still works. The main remaining planned gap is the cowork-permission integration described for `memory_delete`.
 
 ---
 
@@ -571,37 +575,37 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 
 ## Phased build plan
 
-### Phase 0 — Foundation · ☐ 0/3 complete
+### Phase 0 — Foundation · ☑ 3/3 complete
 
-1. ☐ Git integration layer: `GitRepo` class wrapping subprocess git — `hash_object`, `add`, `commit`, `log`, `diff`, `mv`, `rm`; repo root resolution from env; error normalization to `StagingError`
-2. ☐ Version token model: `check_version_token(path, token)` helper; `MemoryWriteResult` dataclass; error taxonomy as typed exceptions
-3. ☐ Frontmatter utilities: `read_with_frontmatter`, `write_with_frontmatter`, `update_frontmatter_fields`; checkbox and counter regex helpers; SUMMARY.md section parser
+1. ☑ Git integration layer: `GitRepo` class wrapping subprocess git — `hash_object`, `add`, `commit`, `log`, `diff`, `mv`, `rm`; repo root resolution from env; error normalization to `StagingError`
+2. ☑ Version token model: `check_version_token(path, token)` helper; `MemoryWriteResult` dataclass; error taxonomy as typed exceptions
+3. ☑ Frontmatter utilities: `read_with_frontmatter`, `write_with_frontmatter`, `update_frontmatter_fields`; checkbox and counter regex helpers; SUMMARY.md section parser
 
-### Phase 1 — Tier 2 low-level tools · ☐ 0/5 complete
+### Phase 1 — Tier 2 low-level tools · ☐ 4/5 complete
 
-4. ☐ `memory_write` and `memory_edit`
+4. ☑ `memory_write` and `memory_edit`
 5. ☐ `memory_delete` (with cowork permission handling) and `memory_move`
-6. ☐ `memory_update_frontmatter`
-7. ☐ `memory_commit`
-8. ☐ `memory_diff` (extend existing read toolset)
+6. ☑ `memory_update_frontmatter`
+7. ☑ `memory_commit`
+8. ☑ `memory_diff` (extend existing read toolset)
 
-### Phase 2 — High-value semantic tools · ☐ 0/3 complete
+### Phase 2 — High-value semantic tools · ☑ 3/3 complete
 
-9. ☐ `memory_mark_plan_item_complete` — highest-frequency write operation once plan execution begins
-10. ☐ `memory_promote_knowledge` / `memory_demote_knowledge` / `memory_archive_knowledge`
-11. ☐ `memory_add_knowledge_file`
+9. ☑ `memory_mark_plan_item_complete` — highest-frequency write operation once plan execution begins
+10. ☑ `memory_promote_knowledge` / `memory_demote_knowledge` / `memory_archive_knowledge`
+11. ☑ `memory_add_knowledge_file`
 
-### Phase 3 — Remaining semantic tools · ☐ 0/4 complete
+### Phase 3 — Remaining semantic tools · ☑ 4/4 complete
 
-12. ☐ `memory_append_scratchpad`
-13. ☐ `memory_record_chat_summary`
-14. ☐ `memory_create_plan` / `memory_update_plan_next_action`
-15. ☐ `memory_update_identity_trait` / `memory_flag_for_review`
+12. ☑ `memory_append_scratchpad`
+13. ☑ `memory_record_chat_summary`
+14. ☑ `memory_create_plan` / `memory_update_plan_next_action`
+15. ☑ `memory_update_identity_trait` / `memory_flag_for_review`
 
-### Phase 4 — Enhanced read tools · ☐ 0/2 complete
+### Phase 4 — Enhanced read tools · ☑ 2/2 complete
 
-16. ☐ `memory_audit_trust` — trust decay audit against thresholds in `meta/quick-reference.md`
-17. ☐ `memory_git_log` and update `memory_read_file` to return `version_token` and parsed `frontmatter`
+16. ☑ `memory_audit_trust` — trust decay audit against thresholds in `meta/quick-reference.md`
+17. ☑ `memory_git_log` and update `memory_read_file` to return `version_token` and parsed `frontmatter`
 
 ---
 
@@ -616,7 +620,7 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 
 - **Multi-agent writes**: the version token model handles races between the agent and a linter/user. If a future use case involves two agent instances writing the same repo simultaneously (e.g., parallel research tasks), the version token model is still correct but the commit conflict rate will be higher. At that point, per-file lock files or a SQLite-backed locking layer would be worth considering. Not a concern for the current single-agent use case.
 
-- **`memory_audit_trust` threshold source**: the thresholds are currently hardcoded in `meta/quick-reference.md`. The audit tool should read them from that file at runtime rather than hardcoding them, so threshold changes during a stage transition are automatically picked up. This requires parsing the active thresholds table from the quick-reference file.
+- **Cowork permission handling**: `memory_delete` still enforces the directory restriction policy, but the automatic `allow_cowork_file_delete` grant described above is not wired because that capability is not yet available inside this package. Decide whether to add an integration hook or revise the deletion contract to match the runtime environment.
 
 ---
 
@@ -625,6 +629,7 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created from design discussion; two-tier architecture, version token model, and full tool inventory defined |
-| 2026-03-18 | `memory_delete` scoped: auto-calls `allow_cowork_file_delete` only for paths under `knowledge/`, `plans/`, `scratchpad/`; hard `PermissionError` for all other paths |
+| 2026-03-18 | `memory_delete` scope locked down to `knowledge/`, `plans/`, and `scratchpad/`; protected directories reject deletion before filesystem access. Automatic cowork permission handoff remains pending |
 | 2026-03-18 | Anchor design resolved and migration applied: BEGIN/END pairs in `plans/SUMMARY.md`; `<!-- section: {id} -->` anchors in `knowledge/SUMMARY.md` and `knowledge/_unverified/SUMMARY.md` |
 | 2026-03-18 | Commit message conventions expanded: verb vocabulary, Tier 1 templates, agent body format, granularity guidance, `memory_commit` validation behaviour |
+| 2026-03-18 | Reviewed implementation against repo state: 16/17 planned milestones are now coded; renamed the package to `tools/agent_memory_mcp/`, wired the shipped `memory_mcp.py` entrypoint to it, preserved HUMANS discovery guardrails, and added MCP integration coverage in CI |

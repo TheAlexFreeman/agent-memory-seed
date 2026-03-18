@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib.util
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -29,35 +30,25 @@ class MemoryMCPTests(unittest.TestCase):
         cls.module = load_memory_mcp_module()
 
     def test_root_listing_hides_humans_by_default(self) -> None:
-        output = asyncio.run(
-            self.module.memory_list_folder(self.module.ListFolderInput(path="."))
-        )
+        output = asyncio.run(self.module.memory_list_folder(path="."))
 
         self.assertNotIn("HUMANS/", output)
         self.assertIn("identity/", output)
 
     def test_root_listing_can_include_humans(self) -> None:
-        output = asyncio.run(
-            self.module.memory_list_folder(
-                self.module.ListFolderInput(path=".", include_humans=True)
-            )
-        )
+        output = asyncio.run(self.module.memory_list_folder(path=".", include_humans=True))
 
         self.assertIn("HUMANS/", output)
 
     def test_explicit_humans_listing_still_works(self) -> None:
-        output = asyncio.run(
-            self.module.memory_list_folder(self.module.ListFolderInput(path="HUMANS"))
-        )
+        output = asyncio.run(self.module.memory_list_folder(path="HUMANS"))
 
         self.assertIn("docs/", output)
         self.assertIn("tooling/", output)
 
     def test_search_hides_humans_by_default(self) -> None:
         output = asyncio.run(
-            self.module.memory_search(
-                self.module.SearchInput(query="Human-Focused Documentation", path=".")
-            )
+            self.module.memory_search(query="Human-Focused Documentation", path=".")
         )
 
         self.assertIn("No matches", output)
@@ -65,24 +56,37 @@ class MemoryMCPTests(unittest.TestCase):
     def test_search_can_include_humans(self) -> None:
         output = asyncio.run(
             self.module.memory_search(
-                self.module.SearchInput(
-                    query="Human-Focused Documentation",
-                    path=".",
-                    include_humans=True,
-                )
+                query="Human-Focused Documentation",
+                path=".",
+                include_humans=True,
             )
         )
 
         self.assertIn("HUMANS/README.md", output)
 
     def test_explicit_humans_read_still_works(self) -> None:
-        output = asyncio.run(
-            self.module.memory_read_file(
-                self.module.ReadFileInput(path="HUMANS/README.md")
-            )
-        )
+        raw = asyncio.run(self.module.memory_read_file(path="HUMANS/README.md"))
+        output = json.loads(raw)
 
-        self.assertIn("Human-Focused Documentation", output)
+        self.assertIn("Human-Focused Documentation", output["content"])
+        self.assertIn("version_token", output)
+
+    def test_read_file_returns_structured_payload(self) -> None:
+        raw = asyncio.run(self.module.memory_read_file(path="meta/quick-reference.md"))
+        payload = json.loads(raw)
+
+        self.assertIn("version_token", payload)
+        self.assertIsNone(payload["frontmatter"])
+        self.assertIn("Quick Reference", payload["content"])
+
+    def test_new_tools_are_exported(self) -> None:
+        for name in (
+            "memory_write",
+            "memory_commit",
+            "memory_git_log",
+            "memory_mark_plan_item_complete",
+        ):
+            self.assertTrue(callable(getattr(self.module, name)))
 
 
 if __name__ == "__main__":

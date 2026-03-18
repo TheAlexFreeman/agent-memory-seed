@@ -99,7 +99,7 @@ def _split_into_phases(lines: list[str]) -> list[tuple[int, int]]:
     end_line is exclusive (like Python slice indexing).
     """
     phase_starts = [
-        i for i, l in enumerate(lines) if _PHASE_HEADING_RE.match(l)
+        i for i, line in enumerate(lines) if _PHASE_HEADING_RE.match(line)
     ]
     bounds = []
     for idx, start in enumerate(phase_starts):

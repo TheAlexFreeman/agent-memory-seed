@@ -45,8 +45,8 @@ def _check_protected(rel_path: str, operation: str = "delete") -> None:
         )
 
 
-def register(mcp: "FastMCP", get_repo, get_root) -> None:
-    """Register all Tier 2 low-level write tools onto the mcp instance."""
+def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
+    """Register all Tier 2 low-level write tools and return their callables."""
 
     # ------------------------------------------------------------------
     # memory_write
@@ -458,3 +458,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             warnings=warnings,
         )
         return result.to_json()
+
+    return {
+        "memory_write": memory_write,
+        "memory_edit": memory_edit,
+        "memory_delete": memory_delete,
+        "memory_move": memory_move,
+        "memory_update_frontmatter": memory_update_frontmatter,
+        "memory_commit": memory_commit,
+    }
