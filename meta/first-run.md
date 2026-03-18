@@ -6,7 +6,7 @@ This document is an agent-facing streamlined flow for the very first session. It
 - `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
 - `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but onboarding has not yet run).
 
-If neither condition matches — a user portrait exists without the `template` marker, or chat history is present — the system has already been onboarded. Use the full bootstrap sequence in README.md instead.
+If neither condition matches — a user portrait exists without the `template` marker, or chat history is present — the system has already been onboarded. Return to `meta/quick-reference.md` and follow its routing instead.
 
 ---
 
@@ -38,4 +38,4 @@ At this point you have loaded: system architecture (README.md), evolution histor
 
 ## After first run
 
-From session two onward, use the full bootstrap sequence in README.md § "Bootstrap sequence" and the compact runbook in `meta/session-checklists.md`. See `meta/quick-reference.md` § "Context loading manifest" for the complete file-loading guide per session type.
+From session two onward, return to `meta/quick-reference.md` for live routing. Use the compact returning manifest there for normal sessions, the full bootstrap in `README.md` when `meta/quick-reference.md` routes you there, and `meta/session-checklists.md` only when you want detailed runbooks.

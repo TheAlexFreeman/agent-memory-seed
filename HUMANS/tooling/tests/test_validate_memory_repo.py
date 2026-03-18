@@ -10,15 +10,16 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 VALIDATOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
-ROUTED_PROMPT_LINE = (
-    "start with README.md and follow its routing rules"
+PROMPT_START_LINE = (
+    "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
 )
-ROUTED_SESSION_LINE = (
-    "Use meta/first-run.md for blank-slate onboarding, meta/session-checklists.md for returning sessions, and the full bootstrap only when README.md routes you there."
+PROMPT_ROUTE_LINE = (
+    "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
 )
 LIVE_CONFIG_LINE = (
     "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
 )
+ADAPTER_ROUTING_LINE = "follow the routing rules in `meta/quick-reference.md`"
 
 SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
 validator = importlib.util.module_from_spec(SPEC)
@@ -31,7 +32,38 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     """\
     # Quick Reference
 
+    **Read this file at the start of every session before applying any thresholds or curation rules.**
+
     This is the single authoritative source for active operational parameters.
+
+    ## Session routing
+
+    Use this file as the operational router for every session:
+
+    1. Start here.
+    2. If this is a fresh instantiation on a blank or template-backed repo, read `README.md` and then `meta/first-run.md`.
+    3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
+    4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
+
+    ## Context loading manifest
+
+    | Session type | Files to load |
+    |---|---|
+    | **First run** | `README.md` → `meta/first-run.md` |
+    | **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
+    | **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
+    | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
+    | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` |
+    | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
+
+    **Do not load** `HUMANS/docs/*`. `meta/session-checklists.md` and `meta/scratchpad-guidelines.md` are on-demand only.
+
+    ### Compact returning notes
+
+    - Run metadata-first maintenance probes before loading extra governance files.
+    - Check whether `meta/review-queue.md` still contains only its placeholder.
+    - Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger.
+    - `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
 
     ## Current active stage: Exploration
 
@@ -53,6 +85,14 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     ## Active task similarity method
 
     **Grouping precedence:** Group ACCESS entries by `session_id` when present, then fall back to `date`.
+
+    ## Context budget guideline
+
+    | Session mode | Typical token cost | When |
+    | --- | --- | --- |
+    | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
+    | Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in this file |
+    | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
     """
 )
 
@@ -65,13 +105,89 @@ def write(path: Path, content: str) -> None:
 def build_minimal_repo(root: Path) -> None:
     write(
         root / "README.md",
-        "# README\nRead `meta/quick-reference.md` for active thresholds.\n",
+        textwrap.dedent(
+            """\
+            # README
+
+            Start every session with `meta/quick-reference.md`.
+            Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review.
+            """
+        ),
     )
+    write(
+        root / "setup.sh",
+        textwrap.dedent(
+            """\
+            #!/usr/bin/env bash
+            set -euo pipefail
+            exec bash "$(pwd)/setup/setup.sh" "$@"
+            """
+        ),
+    )
+    write(
+        root / "setup.html",
+        '<!DOCTYPE html><html><body><a href="setup/setup.html">setup/setup.html</a></body></html>\n',
+    )
+    write(
+        root / "setup" / "setup.sh",
+        textwrap.dedent(
+            f"""\
+            #!/usr/bin/env bash
+            {PROMPT_START_LINE}
+            {PROMPT_ROUTE_LINE}
+            {LIVE_CONFIG_LINE}
+            """
+        ),
+    )
+    write(
+        root / "setup" / "setup.html",
+        textwrap.dedent(
+            f"""\
+            <!DOCTYPE html>
+            <html>
+            <body>
+            <p>{PROMPT_START_LINE}</p>
+            <p>{PROMPT_ROUTE_LINE}</p>
+            <p>{LIVE_CONFIG_LINE}</p>
+            git remote setup stays manual
+            </body>
+            </html>
+            """
+        ),
+    )
+    write(
+        root / "AGENTS.md",
+        f"# Agent Memory System\n\nThis repository is a persistent AI memory system. At the start of every session, {ADAPTER_ROUTING_LINE}. Do not duplicate the full rule list here — `README.md` and `meta/` are the single source of truth.\n",
+    )
+    write(root / "CLAUDE.md", (root / "AGENTS.md").read_text(encoding="utf-8"))
+    write(root / ".cursorrules", (root / "AGENTS.md").read_text(encoding="utf-8"))
+
     (root / "HUMANS" / "docs").mkdir(parents=True, exist_ok=True)
     write(
         root / "HUMANS" / "docs" / "QUICKSTART.md",
-        "# Quickstart\nOptional check: `python HUMANS/tooling/scripts/validate_memory_repo.py`\n",
+        textwrap.dedent(
+            f"""\
+            # Quickstart
+
+            ```bash
+            bash setup.sh
+            ```
+
+            Open `setup.html` in any browser. Git remote setup stays manual.
+
+            {PROMPT_START_LINE}
+            {PROMPT_ROUTE_LINE}
+            {LIVE_CONFIG_LINE}
+
+            | Session mode | Typical token cost | When |
+            | --- | --- | --- |
+            | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
+            | Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
+            | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+            """
+        ),
     )
+
     write(root / "meta" / "quick-reference.md", VALID_QUICK_REFERENCE)
     write(
         root / "meta" / "curation-policy.md",
@@ -83,12 +199,19 @@ def build_minimal_repo(root: Path) -> None:
     )
     write(
         root / "meta" / "session-checklists.md",
-        "# Session checklists\nBootstrap uses `meta/quick-reference.md`.\n",
+        "# Session checklists\nLoad this file on demand when you need more detail than the compact manifest in `meta/quick-reference.md`.\n",
     )
+    write(root / "meta" / "review-queue.md", "# Review Queue\n\n_No pending items._\n")
 
     for dirname in ("identity", "knowledge", "skills", "chats"):
         write(root / dirname / "SUMMARY.md", f"# {dirname} summary\n")
         write(root / dirname / "ACCESS.jsonl", "")
+
+    write(
+        root / "scratchpad" / "USER.md",
+        "# User notes\n\n_Nothing here yet. Add any context you'd like the agent to pick up at session start._\n",
+    )
+    write(root / "scratchpad" / "CURRENT.md", "# Agent working notes\n\n_No current notes._\n")
 
 
 class ValidateMemoryRepoTests(unittest.TestCase):
@@ -156,8 +279,6 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             self.assertTrue(any("invalid source" in error for error in result.errors))
 
     def test_template_source_passes(self) -> None:
-        # source: template is set by setup.sh when installing starter profiles;
-        # the validator must accept it so fresh template-installed repos pass CI.
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
@@ -400,36 +521,73 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 )
             )
 
-    def test_setup_copy_uses_readme_routing_language(self) -> None:
-        for path in (REPO_ROOT / "setup" / "setup.sh", REPO_ROOT / "setup" / "setup.html", REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md"):
+    def test_setup_copy_uses_quick_reference_routing_language(self) -> None:
+        for path in (
+            REPO_ROOT / "setup" / "setup.sh",
+            REPO_ROOT / "setup" / "setup.html",
+            REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md",
+        ):
             text = path.read_text(encoding="utf-8")
-            self.assertIn(ROUTED_PROMPT_LINE, text)
-            self.assertIn(ROUTED_SESSION_LINE, text)
+            self.assertIn(PROMPT_START_LINE, text)
+            self.assertIn(PROMPT_ROUTE_LINE, text)
             self.assertIn(LIVE_CONFIG_LINE, text)
 
         self.assertNotIn(
-            "At the start of this session:",
+            "start with README.md and follow its routing rules",
             (REPO_ROOT / "setup" / "setup.sh").read_text(encoding="utf-8"),
         )
         self.assertNotIn(
-            "At the start of this session:",
+            "start with README.md and follow its routing rules",
             (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8"),
         )
 
+    def test_adapter_files_point_to_quick_reference(self) -> None:
+        for path in (
+            REPO_ROOT / "AGENTS.md",
+            REPO_ROOT / "CLAUDE.md",
+            REPO_ROOT / ".cursorrules",
+        ):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("meta/quick-reference.md", text)
+            self.assertIn(ADAPTER_ROUTING_LINE, text)
+            self.assertNotIn("follow the bootstrap sequence and rules in README.md", text)
+
+    def test_root_setup_entrypoints_exist_and_target_canonical_impl(self) -> None:
+        wrapper = (REPO_ROOT / "setup.sh").read_text(encoding="utf-8")
+        wrapper_html = (REPO_ROOT / "setup.html").read_text(encoding="utf-8")
+
+        self.assertIn("setup/setup.sh", wrapper)
+        self.assertIn("setup/setup.html", wrapper_html)
+
     def test_browser_setup_copy_no_longer_claims_remote_parity(self) -> None:
-        quickstart = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(encoding="utf-8")
+        quickstart = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(
+            encoding="utf-8"
+        )
         setup_html = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
 
         self.assertIn("Git remote setup stays manual.", quickstart)
         self.assertIn("git remote setup stays manual", setup_html)
         self.assertNotIn("Either path walks you through three choices", quickstart)
 
+    def test_compact_manifest_excludes_readme_and_session_checklists(self) -> None:
+        quick_reference = (REPO_ROOT / "meta" / "quick-reference.md").read_text(
+            encoding="utf-8"
+        )
+        compact_row = validator.extract_manifest_row(quick_reference, "Compact returning")
+
+        assert compact_row is not None
+        self.assertNotIn("README.md", compact_row)
+        self.assertNotIn("session-checklists", compact_row)
+        self.assertIn("identity/SUMMARY.md", compact_row)
+        self.assertIn("chats/SUMMARY.md", compact_row)
+        self.assertIn("task-relevant `knowledge/SUMMARY.md`", compact_row)
+
     def test_context_budget_copy_uses_canonical_ranges(self) -> None:
         required_phrases = (
             "First-run onboarding bootstrap",
             "~15,000–20,000",
             "Returning compact session",
-            "~2,000–5,000",
+            "~3,000–6,000",
             "Full bootstrap / periodic review",
             "~18,000–25,000",
         )
@@ -441,6 +599,23 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             for phrase in required_phrases:
                 self.assertIn(phrase, text)
+
+    def test_seed_compact_context_budget_fits_published_upper_bound(self) -> None:
+        compact_paths = [
+            REPO_ROOT / "meta" / "quick-reference.md",
+            REPO_ROOT / "identity" / "SUMMARY.md",
+            REPO_ROOT / "scratchpad" / "USER.md",
+            REPO_ROOT / "scratchpad" / "CURRENT.md",
+        ]
+        chats_summary = REPO_ROOT / "chats" / "SUMMARY.md"
+        chats_text = chats_summary.read_text(encoding="utf-8")
+        if "*No conversations yet.*" not in chats_text:
+            compact_paths.append(chats_summary)
+
+        approx_tokens = round(
+            sum(len(path.read_text(encoding="utf-8")) for path in compact_paths) / 4.0
+        )
+        self.assertLessEqual(approx_tokens, 6000)
 
 
 if __name__ == "__main__":

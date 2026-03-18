@@ -1,6 +1,6 @@
 # Session checklists
 
-Compact runbooks for session start and end. **This file is loaded every session.** The full skill files (`skills/session-start.md`, `skills/session-sync.md`, `skills/session-wrapup.md`) are on-demand references — load them only on your first bootstrap or when uncertain about a protocol. The quality criteria and anti-patterns below are sufficient for normal operation.
+Compact runbooks for session start and end. **Load this file on demand** when you want more detail than the compact manifest in `meta/quick-reference.md`. The full skill files (`skills/session-start.md`, `skills/session-sync.md`, `skills/session-wrapup.md`) remain deeper references for uncertain cases.
 
 For a complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest".
 
@@ -10,12 +10,12 @@ If this is the very first session (no user profile, no chat history), follow `me
 
 ## Session start (returning sessions)
 
-This is the **compact path** for agents who have already completed the full bootstrap at least once. On first instantiation, follow the full bootstrap sequence in README.md instead.
+This expands the compact returning path for agents who have already completed the full bootstrap at least once. The operational load order lives in `meta/quick-reference.md`; use this runbook only when you want more protocol detail.
 
-1. Read `README.md`, `identity/SUMMARY.md`, and `meta/quick-reference.md`. Consult `meta/curation-policy.md` and `meta/update-guidelines.md` as-needed during the session — you do not need to re-read them in full.
+1. Follow the compact returning manifest in `meta/quick-reference.md`: `identity/SUMMARY.md`, non-placeholder `chats/SUMMARY.md`, and substantive scratchpad files first. Load `knowledge/SUMMARY.md` or `skills/SUMMARY.md` only when the current task or recent history makes them relevant.
 2. **Check write access.** If you cannot write to the repo, follow `meta/update-guidelines.md` § "Read-only operation" and prepare to output a deferred-action summary at session end. If this is your first read-only session, also load `meta/deferred-action-template.md`.
-3. Read `knowledge/SUMMARY.md`, `skills/SUMMARY.md`, and `chats/SUMMARY.md` for accumulated context. Skip any that are empty. Note pending items in `meta/review-queue.md` and whether any ACCESS.jsonl has reached the aggregation trigger — flag aggregation for session end if so.
-4. Read `scratchpad/USER.md` (skip if only placeholder). Treat its content as `trust: high` — if anything substantive is there, weave it into your greeting naturally rather than announcing it. Read `scratchpad/CURRENT.md` (skip if only placeholder) for your own working notes from prior sessions.
+3. Run metadata-first maintenance checks. If `meta/review-queue.md` has real entries, load it. If any `ACCESS.jsonl` non-empty line count has reached the aggregation trigger, flag aggregation for session end. Load `meta/curation-policy.md` or `meta/update-guidelines.md` only if the session actually needs them.
+4. Treat `scratchpad/USER.md` as `trust: high` and weave any substantive content into your greeting naturally rather than announcing it. Treat `scratchpad/CURRENT.md` as provisional working notes.
 5. Greet the user with continuity and ask if anything important has changed since the last session.
 
 **Start quality criteria:** The user should feel recognized — reference what they were working on last time. Keep the greeting to 2–3 sentences before letting the user speak. Mention pending items naturally, not as a status dump. If there's no prior history, say so honestly rather than fabricating continuity. Never narrate the bootstrap ("I read README.md, then...").
