@@ -17,6 +17,7 @@ Priority order for active work:
 7. `react-stack-research.md`
 8. `devops-docker-research.md`
 9. `philosophy-history-survey.md`
+10. `lesswrong-rationalist-community-research.md`
 
 ---
 
@@ -83,6 +84,17 @@ Broad survey of the history of philosophy — the overarching story of how ideas
 **Progress:** 0/26 files written (0/4 synthesis files)
 **Next action:** Begin Phase 1 — write `knowledge/_unverified/philosophy/history/ancient/pre-socratics.md`
 <!-- END: philosophy-history-survey -->
+
+---
+
+<!-- BEGIN: lesswrong-rationalist-community-research -->
+### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
+
+Narrative research plan for understanding LessWrong and the Rationalist community: Yudkowsky and the Sequences, heuristics-and-biases roots, Overcoming Bias, Scott Alexander, Gwern, and institutions such as MIRI and CFAR. Output goes to `knowledge/_unverified/rationalist-community/`.
+
+**Progress:** 0/11 files written
+**Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
+<!-- END: lesswrong-rationalist-community-research -->
 
 ---
 

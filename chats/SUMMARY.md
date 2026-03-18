@@ -4,7 +4,7 @@ This folder is the episodic memory — a chronological archive of conversations 
 
 ## Overall history
 
-**Three chat records logged (2026-03-18).** All from the first day; chat-001 spanned three context windows, chat-002 handled maintenance, and chat-003 focused on automation design.
+**Four chat records logged (2026-03-18).** All from the first day; chat-001 spanned three context windows, chat-002 handled maintenance, chat-003 focused on automation design, and chat-004 created a new research lane on LessWrong and the Rationalist community.
 
 ### chat-001 — Extended first session (3 context windows)
 
@@ -22,7 +22,11 @@ Delivered system review findings: updated CHANGELOG, chats/SUMMARY, chat-001 SUM
 
 Drafted four setup-ready Codex automations for this repo: `Memory Health`, `Aggregation Watcher`, `Unverified Triage`, and `Periodic Review`. Revised them to self-gate and archive clean runs, then recorded a provisional backlog of future candidates in scratchpad notes.
 
-See `2026/03/18/chat-001/`, `2026/03/18/chat-002/`, and `2026/03/18/chat-003/` for full session records.
+### chat-004 — LessWrong / rationalist community research planning
+
+Created `plans/lesswrong-rationalist-community-research.md`, an 11-file research program starting with Eliezer Yudkowsky and the Sequences, then expanding through heuristics-and-biases roots, Robin Hanson and Overcoming Bias, Scott Alexander, Gwern, MIRI, CFAR, and a final synthesis of the community's aims and tensions. Updated `plans/SUMMARY.md` and `plans/ACCESS.jsonl` accordingly.
+
+See `2026/03/18/chat-001/`, `2026/03/18/chat-002/`, `2026/03/18/chat-003/`, and `2026/03/18/chat-004/` for full session records.
 
 ## Structure
 
@@ -58,7 +62,7 @@ chats/
 
 ## Usage patterns
 
-_No access data yet._ After aggregation, this section will contain:
+_Early access data present, but no aggregation has run yet._ After aggregation, this section will contain:
 - **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
 - **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
 - **Co-retrieval clusters** — file sets accessed together across 3+ sessions
