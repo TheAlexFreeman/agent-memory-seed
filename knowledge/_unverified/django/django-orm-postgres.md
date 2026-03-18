@@ -23,7 +23,7 @@ orders = Order.objects.prefetch_related(
 )
 ```
 
-`select_related` hits one query; `prefetch_related` hits N+1 but avoids cartesian product on M2M.
+`select_related` uses SQL joins in one query. `prefetch_related` issues additional queries and joins in Python specifically to avoid the classic N+1 pattern on reverse relations and M2M data.
 
 ### only() and defer()
 ```python
@@ -135,6 +135,21 @@ Article.objects.annotate(
 ).filter(rank__gte=0.1).order_by("-rank")
 ```
 
+### Lexeme (new in Django 6.0)
+`Lexeme` gives safer full-text query composition, especially when terms come from untrusted input.
+
+```python
+from django.contrib.postgres.search import SearchQuery, SearchVector, Lexeme
+
+vector = SearchVector("title", weight="A") + SearchVector("body", weight="B")
+
+Article.objects.annotate(search=vector).filter(
+    search=SearchQuery(Lexeme("fruit") & Lexeme("dessert"))
+)
+```
+
+`Lexeme` supports `&`, `|`, `~`, prefix matching, and weighting.
+
 ### JSON field operations
 ```python
 # JSONField supports nested lookups natively:
@@ -195,6 +210,12 @@ class Article(Model):
             BrinIndex(fields=["created_at"]),  # for large append-only tables
         ]
 ```
+
+Also relevant for production Postgres work:
+
+- partial indexes for highly selective subsets
+- covering indexes via `Index(..., include=[...])` on PostgreSQL
+- concurrent index operations for large tables, using PostgreSQL-specific migration operations instead of blocking table writes
 
 ### Constraints
 ```python
@@ -257,6 +278,11 @@ OrderItem.objects.filter(pk=(order_id, product_id))
 OrderItem.objects.filter(pk__exact=(1, "A755H"))
 ```
 
+### PostgreSQL checks and extension hints
+
+- `django.contrib.postgres` fields, indexes, and constraints now include system checks to verify that `django.contrib.postgres` is installed.
+- `CreateExtension` and related PostgreSQL operations now accept `hints` for database-router scenarios.
+
 ---
 
 ## Performance patterns
@@ -284,6 +310,13 @@ print(Order.objects.filter(status="pending").explain(verbose=True, analyze=True)
 # Prints PostgreSQL EXPLAIN ANALYZE output
 ```
 
+## Production-sharp Postgres guidance
+
+- Use JSONB when the shape is genuinely flexible; do not hide relational structure in JSON because it is convenient in the API layer.
+- For high-write tables, be explicit about lock ordering and transaction scope to reduce deadlock risk.
+- For large-table index creation, prefer concurrent operations so writes are not blocked during rollout.
+- Reach for `select_for_update(skip_locked=True)` only when queue-like semantics are intentional and well understood.
+
 ---
 
 ## Migration best practices
@@ -292,5 +325,11 @@ print(Order.objects.filter(status="pending").explain(verbose=True, analyze=True)
 - Use `RunSQL` with `reverse_sql` for custom DB operations.
 - `SeparateDatabaseAndState` for zero-downtime column renames.
 - For large tables: add columns with `null=True` first, backfill, then add constraints.
+
+## Sources
+
+- Django 6.0 release notes: https://docs.djangoproject.com/en/6.0/releases/6.0/
+- PostgreSQL full-text search docs: https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/search/
+- `django.contrib.postgres` docs: https://docs.djangoproject.com/en/6.0/ref/contrib/postgres/
 
 Last updated: 2026-03-18

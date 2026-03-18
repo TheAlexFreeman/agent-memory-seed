@@ -8,115 +8,163 @@ trust: low
 
 # Django 6.0 Tasks Framework (`django.tasks`)
 
-Django 6.0 introduces a standardized background task API. This file covers it in depth because it directly intersects with Alex's Celery usage.
+Django 6.0 introduces a standardized background task API, but the official docs are careful about the boundary: Django handles task definition, validation, queuing, and result handling, not execution. The built-in backends are for development/testing only. For Alex's stack, that makes `django.tasks` an architectural standardization tool, not a Celery replacement.
 
-## What it is (and isn't)
+## What Django actually ships
 
-`django.tasks` provides:
-- A standard API for **defining** and **enqueueing** background tasks.
-- Built-in backends: `DatabaseBackend`, `ImmediateBackend`, `DummyBackend`.
+### Built-in backends
 
-`django.tasks` does **not** provide:
-- A worker process. You still need something external to execute tasks.
-- Scheduling / cron. No periodic tasks.
-- Task chaining, grouping, chords (no Canvas equivalent).
-- Retry logic with backoff.
-- Real-time monitoring (no Flower equivalent).
+Django 6.0 ships two built-in backends:
 
-The framework's explicit design goal is a **backend-agnostic standard API**, so third-party packages can implement Celery-backed or other backends against the same interface.
+- `ImmediateBackend` for local synchronous execution
+- `DummyBackend` for development/testing, storing results without executing work
+
+The official docs explicitly say the built-in backends are suitable for development and testing only. Production systems need a third-party backend that supplies both a worker process and a durable queue.
 
 ## Core API
 
 ```python
-# tasks.py
 from django.tasks import task
 
-@task()
+
+@task
 def send_welcome_email(user_id: int) -> None:
     user = User.objects.get(pk=user_id)
     send_email(user.email)
 
-# Enqueue from a view or anywhere:
+
 result = send_welcome_email.enqueue(user_id=42)
-
-# Check status later:
-task_result = send_welcome_email.get_result(result.task_id)
-print(task_result.status)  # PENDING, RUNNING, COMPLETE, FAILED
+retrieved = send_welcome_email.get_result(result.id)
+print(retrieved.status)
 ```
 
-Task functions must be importable at module level (same constraint as Celery).
+Important details from the docs:
 
-## Backends
+- tasks are defined on module-level functions
+- task arguments and return values must be JSON-serializable
+- arguments must survive a JSON round-trip without changing meaning
 
-### `DatabaseBackend` (production-viable)
-Stores tasks in your SQL database. Works with Django's existing DB (Postgres in Alex's case).
+That means model instances, `datetime`, `tuple`, and other richer objects should generally be converted to primitive IDs/strings before enqueueing.
+
+## Task features worth knowing
+
+### Task options
 
 ```python
-TASKS = {
-    "default": {
-        "BACKEND": "django.tasks.backends.database.DatabaseBackend",
-    }
-}
+from django.tasks import task
+
+
+@task(priority=2, queue_name="emails")
+def email_users(emails, subject, message):
+    return send_mail(subject=subject, message=message, from_email=None, recipient_list=emails)
 ```
 
-Key advantage: tasks can be enqueued **atomically within a database transaction** — no risk of enqueuing a task for work that then rolls back. This is one of Celery's most common footguns (task fires before transaction commits).
-
-Requires running migrations (`django_tasks_*` tables). Requires a separate worker process — Django doesn't ship one; you'll need to build or find a third-party worker.
-
-### `ImmediateBackend` (testing / dev)
-Executes tasks synchronously, in-process, at enqueue time. No worker needed.
+### Task context
 
 ```python
-TASKS = {
-    "default": {
-        "BACKEND": "django.tasks.backends.immediate.ImmediateBackend",
-    }
-}
+import logging
+from django.tasks import task
+
+logger = logging.getLogger(__name__)
+
+
+@task(takes_context=True)
+def email_users(context, emails, subject, message):
+    logger.debug(
+        "Attempt %s for result %s",
+        context.attempt,
+        context.task_result.id,
+    )
+    return send_mail(subject=subject, message=message, from_email=None, recipient_list=emails)
 ```
 
-### `DummyBackend` (testing)
-Accepts tasks but never executes them. Results stay in `READY` state forever. Useful for unit tests that just verify enqueuing happened.
+### Per-call overrides with `using()`
 
-## Architectural significance vs. Celery
+```python
+high_priority = email_users.using(priority=10, queue_name="vip-emails")
+high_priority.enqueue(emails=["user@example.com"], subject="Hello", message="Hi")
+```
+
+This is one of the cleaner design choices in `django.tasks`: the base task definition stays stable, and enqueue-time overrides produce a modified task instance instead of mutating the original.
+
+## Transactions: the most important caveat
+
+The task docs explicitly warn that most backends run tasks in another process on another database connection. If you enqueue inside a transaction, the worker may start before the transaction commits.
+
+```python
+from functools import partial
+from django.db import transaction
+
+
+@task
+def process_order(order_id):
+    Order.objects.get(pk=order_id)
+
+
+with transaction.atomic():
+    order = Order.objects.create(...)
+    transaction.on_commit(partial(process_order.enqueue, order_id=order.id))
+```
+
+This is the same race that Celery users solve with `transaction.on_commit(...)`. `django.tasks` does not remove that requirement in the general case.
+
+## What `django.tasks` does not include
+
+The official framework is intentionally smaller than Celery. Out of the box it does not provide:
+
+- a production worker implementation
+- scheduling / periodic jobs
+- workflow composition like chains, groups, or chords
+- retry/backoff orchestration comparable to Celery
+- mature monitoring comparable to Flower
+
+That keeps the API small, but it also means teams should resist reading more capability into it than the docs claim.
+
+## Decision boundary for Alex's stack
+
+### Strong fits for `django.tasks`
+
+- simple fire-and-forget jobs
+- apps that want a Django-native task API first and can choose a backend later
+- projects that want to standardize task definitions across teams or apps
+- test/dev workflows where `ImmediateBackend` is convenient
+
+### Strong fits for Celery
+
+- periodic work
+- retries with backoff/jitter
+- queue routing at scale
+- chains, groups, chords, fan-out/fan-in workflows
+- observability, worker tuning, and mature ecosystem tooling
+
+### Coexistence model
+
+The cleanest coexistence model is:
+
+- use `django.tasks` only if a backend in your stack actually benefits from the API standardization
+- keep Celery for operationally important background work
+- do not assume Django's built-in Tasks framework removes the need for worker design, idempotency, or transaction safety
+
+## Practical comparison with Celery
 
 | Capability | `django.tasks` | Celery |
 |---|---|---|
-| Standard API | ✅ | Celery-specific |
-| Worker included | ❌ | ✅ (celery worker) |
-| DB broker (atomic enqueue) | ✅ | Via django-celery-results / transaction.on_commit |
-| Redis/RabbitMQ broker | ❌ built-in | ✅ |
-| Scheduling / cron | ❌ | ✅ (Celery Beat) |
-| Task chains, groups, chords | ❌ | ✅ (Canvas) |
-| Retry with backoff | ❌ | ✅ |
-| Monitoring (Flower) | ❌ | ✅ |
-| Priority queues | ❌ built-in | ✅ |
+| Standard Django API | Yes | No |
+| Built-in production worker | No | Yes |
+| Built-in scheduling | No | Yes |
+| Built-in workflow composition | No | Yes |
+| Built-in retry/backoff model | No | Yes |
+| Built-in monitoring ecosystem | No | Yes |
+| Dev/test synchronous backend | Yes | Yes (`task_always_eager`) |
 
-**Bottom line for Alex's stack:** For projects already using Celery for anything beyond fire-and-forget emails, `django.tasks` is not a replacement. It's additive — useful for simpler jobs where you want atomic enqueuing without Celery overhead, or as a migration path to standardize task definitions across projects.
+## Bottom line
 
-The most interesting scenario: a future third-party package that implements a Celery backend for `django.tasks`. That would let you use the standard Django API while keeping Celery as the execution engine.
+`django.tasks` is best understood as a standard interface, not a complete job system. In Django 6.0, it is most valuable as a clean abstraction layer and a future integration point for third-party backends. For Alex's Django/Postgres/Redis/Celery stack, Celery remains the operationally complete choice for serious background processing.
 
-## Atomic task enqueuing (key pattern)
+## Sources
 
-The `DatabaseBackend` enables the cleanest solution to a classic problem:
-
-```python
-# Bad (classic Celery footgun):
-def create_order(user_id):
-    order = Order.objects.create(user_id=user_id)
-    send_confirmation.delay(order.id)  # fires BEFORE transaction commits
-    # if transaction rolls back, task already fired
-
-# With django.tasks DatabaseBackend, tasks enqueued in a transaction
-# are not visible to workers until the transaction commits — automatically.
-# No need for transaction.on_commit() wrappers.
-```
-
-With Celery, you'd use `transaction.on_commit(lambda: send_confirmation.delay(order.id))` to get the same safety. `django.tasks` makes this the default.
-
-## When to use django.tasks vs. Celery
-
-- **Use `django.tasks`** for: simple fire-and-forget jobs (email sends, webhook delivery), projects not already on Celery, or when you want atomic enqueue guarantees without the Celery broker layer.
-- **Keep Celery** for: periodic tasks, complex workflows (chains/chords/groups), retries with backoff, priority queues, large-scale distributed processing, monitoring.
-- **They can coexist** in the same project.
+- Django tasks topic guide: https://docs.djangoproject.com/en/6.0/topics/tasks/
+- Django tasks reference: https://docs.djangoproject.com/en/6.0/ref/tasks/
+- Django 6.0 release notes: https://docs.djangoproject.com/en/6.0/releases/6.0/
 
 Last updated: 2026-03-18

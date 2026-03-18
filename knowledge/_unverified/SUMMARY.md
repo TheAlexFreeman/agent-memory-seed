@@ -23,14 +23,15 @@ This quarantine zone ensures that **all externally sourced content is visible, l
 
 ### `django/` — Django 6.0 knowledge base (ingested 2026-03-18)
 
-Five files synthesized from web searches against the Django 6.0 docs (docs.djangoproject.com was blocked; content sourced via search results and third-party writeups). All carry `trust: low` pending Alex's review.
+Seven files synthesized from current Django, DRF, and Celery documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
 
-- **`django-6.0-whats-new.md`** — Full release overview: template partials, built-in tasks, CSP, modernized email API, ORM changes, breaking changes, deprecations, upgrade notes.
-- **`django-tasks-framework.md`** — Deep dive on `django.tasks`: API, backends, comparison to Celery, atomic enqueue pattern. Flags key Celery intersection points.
-- **`django-orm-postgres.md`** — Advanced ORM patterns (annotations, Q objects, F expressions, subqueries, bulk ops) + PostgreSQL-specific features (full-text search, ArrayField, JSONField, HStoreField, range fields, indexes, constraints, row-level locking).
-- **`django-caching-redis.md`** — Cache framework with django-redis: configuration, cache-aside pattern, stampede prevention, session backend, cache/Celery DB segregation strategy.
-- **`django-react-drf.md`** — DRF patterns for React frontends: serializers, ViewSets, JWT auth, CORS, versioning, file uploads, custom actions, error handling.
-- **`celery-advanced-patterns.md`** — Canvas (chain/group/chord), task routing, priority queues (Redis inversion), Celery Beat, `transaction.on_commit` safety, concurrency tuning, Docker Compose deployment, Flower monitoring.
+- **`django-6.0-whats-new.md`** — Django 6.0 release-line overview, including the base December 3, 2025 release and later 6.0.1 / 6.0.3 patch-line notes that matter for upgrade planning.
+- **`django-tasks-framework.md`** — Corrected deep dive on `django.tasks`: built-in `ImmediateBackend` / `DummyBackend`, JSON-serialization limits, transaction caveats, and the boundary between Django tasks and Celery.
+- **`django-orm-postgres.md`** — Advanced ORM patterns plus PostgreSQL-specific capabilities, including 6.0's `Lexeme`, indexing guidance, row-level locking, and production-sharp DB notes.
+- **`django-caching-redis.md`** — Redis cache guidance centered on Django's native `RedisCache`, replication/topology, key versioning, invalidation strategy, and workload separation from Celery.
+- **`django-react-drf.md`** — DRF guidance for React frontends: session-vs-JWT auth choice, CSRF/CORS rules, renderer defaults, filtering, pagination, throttling caveats, and error-shape design.
+- **`celery-advanced-patterns.md`** — Celery guidance focused on idempotency, acknowledgement strategy, retries, queue separation, result-storage discipline, and Celery's continued role beside `django.tasks`.
+- **`django-production-stack.md`** — Operational synthesis for Django + Postgres + Redis + Celery + Docker: service boundaries, migrations, startup ordering, storage, health checks, and observability.
 
 ### `philosophy/` — Intelligence, dynamical systems, consciousness (ingested 2026-03-18)
 

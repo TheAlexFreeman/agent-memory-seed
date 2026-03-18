@@ -6,11 +6,13 @@ last_verified: 2026-03-18
 trust: low
 ---
 
-# Celery Advanced Patterns
+# Celery advanced patterns
 
-Covers Celery beyond the basics: Canvas workflows, routing, retries, and deployment. Focused on the Redis broker / Django / Postgres / Docker stack.
+Celery remains the operationally complete background job system in this stack. The most important production lessons are not just chains and retries; they are idempotency, acknowledgement strategy, timeouts, queue isolation, and staying honest about which tasks should store results at all.
 
-## Setup (Django + Celery + Redis)
+## Django integration baseline
+
+Celery's current Django docs still recommend the familiar integration:
 
 ```python
 # myproject/celery.py
@@ -18,305 +20,166 @@ import os
 from celery import Celery
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
+
 app = Celery("myproject")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
-
-# settings.py
-CELERY_BROKER_URL = "redis://redis:6379/0"
-CELERY_RESULT_BACKEND = "redis://redis:6379/0"
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True  # required in Celery 6+
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TIMEZONE = "UTC"
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 300  # hard kill after 5 minutes
-CELERY_TASK_SOFT_TIME_LIMIT = 240  # raises SoftTimeLimitExceeded at 4 min
 ```
 
-## Defining tasks
+The `CELERY_` namespace is optional but recommended.
+
+For reusable Django apps, `@shared_task` remains the clean default:
 
 ```python
 from celery import shared_task
-from myproject.celery import app
 
-# With @shared_task (decoupled from app):
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def process_order(self, order_id: int) -> dict:
-    try:
-        order = Order.objects.get(pk=order_id)
-        result = run_processing(order)
-        return {"status": "ok", "order_id": order_id}
-    except TemporaryError as exc:
-        raise self.retry(exc=exc, countdown=2 ** self.request.retries * 10)
-    except Exception as exc:
-        raise  # don't retry; let Celery mark as FAILURE
 
-# Explicit app registration:
-@app.task(name="orders.process_order")
-def process_order(order_id: int) -> dict:
+@shared_task
+def send_email_task(user_id: int) -> None:
     ...
 ```
 
-**`bind=True`** gives access to `self` (the task instance), needed for `self.retry()`, `self.request.id`, etc.
+## Transaction safety first
 
-## Retries with exponential backoff
-
-```python
-@shared_task(bind=True)
-def call_external_api(self, payload: dict):
-    try:
-        return requests.post("https://api.example.com/", json=payload).json()
-    except requests.RequestException as exc:
-        # Exponential: 10s, 20s, 40s, 80s...
-        raise self.retry(exc=exc, countdown=10 * (2 ** self.request.retries))
-```
-
-Or use Celery's built-in autoretry:
-
-```python
-@shared_task(
-    autoretry_for=(requests.RequestException,),
-    retry_kwargs={"max_retries": 5},
-    retry_backoff=True,          # exponential
-    retry_backoff_max=600,       # cap at 10 minutes
-    retry_jitter=True,           # add randomness to prevent thundering herd
-)
-def call_external_api(payload: dict):
-    ...
-```
-
-## Canvas: complex workflows
-
-Celery Canvas is the workflow composition system. Three primitives:
-
-### chain (sequential)
-```python
-from celery import chain
-
-# Execute in order, passing result of each to next:
-result = chain(
-    fetch_data.s(user_id),
-    process_data.s(),
-    store_results.s(),
-).apply_async()
-```
-
-### group (parallel)
-```python
-from celery import group
-
-# Execute all in parallel, collect results:
-result = group(
-    process_item.s(item_id) for item_id in item_ids
-).apply_async()
-
-results = result.get()  # blocks until all complete
-```
-
-### chord (parallel → callback)
-```python
-from celery import chord
-
-# Run group in parallel, then call callback with all results:
-result = chord(
-    group(process_item.s(item_id) for item_id in item_ids),
-    aggregate_results.s()
-).apply_async()
-```
-
-**Redis broker note:** Chords require the result backend (Redis here). `CELERY_RESULT_BACKEND` must be set.
-
-**Redis priority note:** Redis broker sorts priorities **inversely** — 0 is highest priority, 9 is lowest. This is opposite to RabbitMQ.
-
-### map / starmap
-```python
-# Simpler parallel: like group but more concise for uniform tasks:
-process_item.map([1, 2, 3, 4]).apply_async()
-process_pair.starmap([(1, "a"), (2, "b")]).apply_async()
-```
-
-## Task routing
-
-Route different task types to different queues, then run specialized workers per queue:
-
-```python
-# settings.py
-CELERY_TASK_ROUTES = {
-    "myapp.tasks.send_email": {"queue": "email"},
-    "myapp.tasks.generate_report": {"queue": "reports"},
-    "myapp.tasks.scrape_*": {"queue": "scraping"},
-}
-
-CELERY_TASK_QUEUES = {
-    "celery": {"exchange": "celery", "routing_key": "celery"},
-    "email": {"exchange": "email", "routing_key": "email"},
-    "reports": {"exchange": "reports", "routing_key": "reports"},
-}
-```
-
-```bash
-# Run workers bound to specific queues:
-celery -A myproject worker -Q email --concurrency=4
-celery -A myproject worker -Q reports --concurrency=2
-celery -A myproject worker -Q celery,scraping --concurrency=8
-```
-
-## Priority queues (Redis)
-
-```python
-from kombu import Queue
-
-CELERY_TASK_QUEUES = [
-    Queue("default", routing_key="default", queue_arguments={"x-max-priority": 10}),
-]
-
-# Enqueue with priority (0 = highest in Redis):
-my_task.apply_async(priority=0)   # high
-my_task.apply_async(priority=5)   # medium
-my_task.apply_async(priority=9)   # low
-```
-
-## Celery Beat (periodic tasks)
-
-```python
-# settings.py
-from celery.schedules import crontab
-
-CELERY_BEAT_SCHEDULE = {
-    "cleanup-expired-sessions": {
-        "task": "myapp.tasks.cleanup_expired_sessions",
-        "schedule": crontab(hour=2, minute=0),  # daily at 2am
-    },
-    "sync-external-data": {
-        "task": "myapp.tasks.sync_external_data",
-        "schedule": 300.0,  # every 5 minutes
-    },
-}
-```
-
-```bash
-# Run beat scheduler (one instance only):
-celery -A myproject beat --scheduler django_celery_beat.schedulers:DatabaseScheduler
-```
-
-Use `django-celery-beat` for DB-driven schedules you can edit at runtime without redeployment.
-
-## Transaction safety (critical pattern)
-
-Tasks that depend on DB state must fire **after** the transaction commits:
+This is still the most important Django/Celery pattern:
 
 ```python
 from django.db import transaction
 
+
 def create_order(user_id):
     with transaction.atomic():
         order = Order.objects.create(user_id=user_id)
-        # Fires only after commit:
         transaction.on_commit(lambda: process_order.delay(order.id))
 ```
 
-Without `on_commit`, the task may run before the transaction commits and fail to find the order (race condition). This is the most common Celery + Django bug.
+Never enqueue work that depends on newly committed DB state before commit.
 
-Note: `django.tasks` `DatabaseBackend` solves this automatically.
+## Idempotency is not optional
 
-## Concurrency tuning
+Celery's task docs explicitly recommend that tasks be idempotent. This matters because delivery and worker-failure behavior can lead to re-execution.
 
-```bash
-# Prefork (default): CPU-bound work
-celery -A myproject worker --pool=prefork --concurrency=4
+Strong patterns:
 
-# Gevent: I/O-bound (HTTP calls, DB-heavy tasks)
-celery -A myproject worker --pool=gevent --concurrency=100
+- pass IDs, not model instances
+- make external side effects deduplicable
+- store provider correlation IDs for outbound calls
+- guard write-once actions with unique constraints or idempotency keys
 
-# Threads: mixed
-celery -A myproject worker --pool=threads --concurrency=20
-```
+If a task cannot be safely repeated, design work around that constraint before tuning workers.
 
-Rule of thumb:
-- CPU-bound: `--concurrency` = number of CPU cores
-- I/O-bound: `--concurrency` = 8–12× cores (with gevent)
+## Acknowledgements and worker-loss behavior
 
-## Docker Compose deployment
+Celery's task docs explain the core tradeoff:
 
-```yaml
-# docker-compose.yml
-services:
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
+- default behavior acknowledges a task before execution
+- `acks_late=True` acknowledges after the task returns
 
-  django:
-    build: .
-    depends_on: [redis, postgres]
+If the task is idempotent, `acks_late=True` can be useful. If it is not, early acknowledgement may be safer than duplicate execution. Celery also documents `task_reject_on_worker_lost` for cases where you want redelivery on worker loss.
 
-  celery_worker:
-    build: .
-    command: celery -A myproject worker --loglevel=info --concurrency=4
-    depends_on: [redis, postgres]
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
+## Timeouts and hanging I/O
 
-  celery_beat:
-    build: .
-    command: celery -A myproject beat --loglevel=info
-    depends_on: [redis, postgres]
-    # Only ever run ONE instance of beat
+Celery's docs are blunt here:
 
-  flower:
-    image: mher/flower
-    command: celery --broker=redis://redis:6379/0 flower
-    ports:
-      - "5555:5555"
-    depends_on: [redis]
-```
-
-## Monitoring with Flower
-
-Flower provides real-time monitoring: active tasks, worker status, task history, queue lengths.
-
-```bash
-pip install flower
-celery -A myproject flower --port=5555
-```
-
-In production, put Flower behind authentication and a reverse proxy.
-
-## Task result management
-
-Results stored in Redis expire by default. Configure:
+- add explicit network timeouts yourself
+- use time limits as a backstop, not as the primary control
 
 ```python
-CELERY_RESULT_EXPIRES = 3600  # 1 hour (default: 1 day)
-CELERY_TASK_IGNORE_RESULT = True  # for tasks where result doesn't matter (saves memory)
+import requests
+from celery import shared_task
+
+
+@shared_task(
+    autoretry_for=(requests.RequestException,),
+    retry_backoff=True,
+    retry_backoff_max=600,
+    retry_jitter=True,
+    retry_kwargs={"max_retries": 5},
+)
+def call_external_api(payload: dict):
+    response = requests.post(
+        "https://api.example.com/",
+        json=payload,
+        timeout=(5.0, 30.0),
+    )
+    response.raise_for_status()
+    return response.json()
 ```
 
-## Error handling patterns
+## Keep long and short tasks on different workers
+
+Celery recommends dedicated workers for different workload shapes. This is still good advice.
+
+- short latency-sensitive work on one queue
+- long-running work on another
+- CPU-heavy work separated from I/O-heavy work
+
+That matters more than clever global concurrency numbers.
+
+## Canvas still matters
+
+Celery's workflow primitives remain the main reason to stay on Celery instead of assuming `django.tasks` can replace it.
+
+- `chain` for sequential workflows
+- `group` for parallel fan-out
+- `chord` for fan-out/fan-in
+
+But Celery's own docs also caution against synchronous subtasks like `.delay(...).get()` inside tasks. That pattern can deadlock exhausted worker pools.
+
+## Results: store fewer than you think
+
+Celery's task docs explicitly say to ignore results you don't want because result storage costs time and resources.
 
 ```python
-@app.task(bind=True)
-def my_task(self, data):
+@shared_task(ignore_result=True)
+def send_webhook(event_id: int) -> None:
     ...
-
-# Override on_failure for alerting:
-@app.task(bind=True)
-def critical_task(self, data):
-    ...
-
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        # Send alert, log to Sentry, etc.
-        notify_team(f"Task {task_id} failed: {exc}")
 ```
 
-Or use Celery signals:
+For a lot of operational tasks, "fire, log, and monitor failures" is better than storing every result forever.
 
-```python
-from celery.signals import task_failure
+## Routing and queue design
 
-@task_failure.connect
-def handle_task_failure(sender=None, task_id=None, exception=None, **kwargs):
-    sentry_sdk.capture_exception(exception)
-```
+Use queue separation to reflect business boundaries, not just component boundaries.
+
+Useful queues:
+
+- `default`
+- `emails`
+- `webhooks`
+- `exports`
+- `reports`
+- `indexing`
+
+If one class of work can flood the broker, it deserves its own queue and likely its own worker pool.
+
+## Observability
+
+Flower is useful, but it is not a complete observability story.
+
+High-value signals:
+
+- task success/failure rate
+- retry count
+- queue depth
+- task runtime percentiles
+- worker restarts
+- broker connection issues
+
+Push real failures into Sentry/logging/metrics instead of relying only on Flower dashboards.
+
+## Celery vs Django tasks
+
+The clean distinction is:
+
+- use Celery when you need operational machinery
+- use `django.tasks` only when a standard Django task API brings real value and the backend story is clear
+
+Do not treat Django 6.0's task framework as a drop-in simplification of Celery for production workloads.
+
+## Sources
+
+- Celery tasks guide: https://docs.celeryq.dev/en/stable/userguide/tasks.html
+- Celery with Django: https://docs.celeryq.dev/en/latest/django/first-steps-with-django.html
 
 Last updated: 2026-03-18

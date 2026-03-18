@@ -8,7 +8,9 @@ trust: low
 
 # Django 6.0 — What's New
 
-Released December 3, 2025. Supports Python 3.12, 3.13, and 3.14 only (drops 3.10 and 3.11).
+Base Django 6.0 released on December 3, 2025. As of 2026-03-18, the 6.0 patch line has reached 6.0.3 (released March 3, 2026). Django 6.0 supports Python 3.12, 3.13, and 3.14.
+
+This file focuses on what changed in the 6.0 line and what matters most for Alex's stack, rather than treating every long-running migration concern as if it were a brand-new 6.0 feature.
 
 ## Four headline features
 
@@ -86,8 +88,8 @@ msg.attach(part)
 
 ## ORM and database changes
 
-- **`DEFAULT_AUTO_FIELD` changed to `BigAutoField`** — long-telegraphed since Django 3.2. If your project sets this explicitly, no change needed. New projects default to 64-bit PKs.
-  - **Watch out:** Switching this on existing projects triggers migrations that need careful handling for auto-created M2M through tables (requires manual `RunSQL` to handle existing tables).
+- **`DEFAULT_AUTO_FIELD` default is `BigAutoField`** in the 6.0 line. This is most important when auditing older projects that still depend on implicit defaults.
+  - **Watch out:** changing PK defaults in an existing project is a migration concern, not a casual settings cleanup.
 - **`RETURNING` clause optimization** — `GeneratedField` and expression-assigned fields are now refreshed via a single `RETURNING` query after `save()` on SQLite, PostgreSQL, and Oracle. Eliminates a separate `SELECT` after insert/update.
 - **`StringAgg` aggregate** now available on all backends (previously PostgreSQL-only).
 - **`AnyValue` aggregate** — returns an arbitrary non-null value from a group. Supported on SQLite, MySQL, Oracle, PostgreSQL 16+.
@@ -96,16 +98,18 @@ msg.attach(part)
 - **JSON field** now supports negative array indexing on SQLite.
 - **ORM expression `params`** must now be tuples, not lists. Breaking for custom expressions.
 - **`return_insert_columns` renamed to `returning_columns`** in the Database API.
-- **PostgreSQL `CreateExtension` and related operations** now support an optional `hints` parameter for database router hints.
+- **PostgreSQL `CreateExtension` and related operations** now support an optional `hints` parameter for database-router hints.
+- **`Lexeme`** for PostgreSQL full-text search gives safer composition of search terms, including prefix matching and weighting.
+- **`django.contrib.postgres` fields, indexes, and constraints** now include system checks to ensure the app is installed correctly.
 - **`BaseDatabaseSchemaEditor`** no longer uses `CASCADE` when dropping a column (more conservative and correct behavior).
 
 ---
 
 ## Async improvements
 
-- Async QuerySet methods now work natively without `sync_to_async()` wrappers in many more contexts.
-- `AsyncPaginator` and `AsyncPage` available for async views — no need to wrap pagination in `sync_to_async`.
-- Async views are now more production-ready; Django 6.0 is considered the version where async Django moves from experimental to mainstream.
+- `AsyncPaginator` and `AsyncPage` are new in 6.0.
+- Async support continues to get broader, but 6.0 should still be read as "more capable async Django," not "everything is transparently async now."
+- For mixed sync/async stacks, the operational question remains where async actually improves throughput versus where the ORM, cache, or task boundary is still doing the real work.
 
 ---
 
@@ -128,12 +132,23 @@ msg.attach(part)
 
 ---
 
+## Patch-line notes
+
+- Django 6.0.1 shipped on January 6, 2026 and fixed several regressions plus a PostgreSQL `bulk_create()` data-loss bug first introduced in Django 5.2.
+- Django 6.0.3 shipped on March 3, 2026 and included security fixes, including a moderate-severity `URLField` denial-of-service issue on Windows and a low-severity file-permission issue affecting file-based storage/cache creation.
+
 ## Upgrade notes
 
-- Run with `-Wall` on Django 5.2 first to surface all deprecations.
-- Check `DEFAULT_AUTO_FIELD` setting — if unset, add `DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"` explicitly to avoid silent migration changes.
+- Run with `-Wall` on Django 5.2 first to surface deprecations before upgrading.
 - Audit any custom ORM expressions that return `params` as lists.
 - If using `django-csp`, plan migration to built-in CSP.
 - If using `SafeMIMEText`/`SafeMIMEMultipart` directly, switch to Python's `email.message` API.
+- Treat PK default changes and large-schema migrations as rollout work, not just version-bump work.
+
+## Sources
+
+- Django 6.0 release notes: https://docs.djangoproject.com/en/6.0/releases/6.0/
+- Django 6.0.1 release notes: https://docs.djangoproject.com/en/6.0/releases/6.0.1/
+- Django 6.0.3 release notes: https://docs.djangoproject.com/en/6.0/releases/6.0.3/
 
 Last updated: 2026-03-18

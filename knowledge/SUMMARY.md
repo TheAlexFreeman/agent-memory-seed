@@ -17,15 +17,16 @@ Key files:
 
 ### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
 
-Six files covering Django 6.0, Celery, and the React/DRF stack. Sourced from web searches (docs.djangoproject.com was network-blocked during ingestion). Pending Alex's review for promotion.
+Seven files covering Django 6.0, Celery, Redis caching, production-stack operations, and the React/DRF boundary. The cluster was revised with current official Django, DRF, and Celery docs on 2026-03-18. Pending Alex's review for promotion.
 
 Key files:
-- `django-6.0-whats-new.md` — Release overview, breaking changes, deprecations, upgrade guide
-- `django-tasks-framework.md` — Built-in background tasks API; Celery comparison and intersection
-- `django-orm-postgres.md` — Advanced ORM patterns + all PostgreSQL-specific features
-- `django-caching-redis.md` — Redis cache configuration, patterns, Celery DB segregation
-- `celery-advanced-patterns.md` — Canvas, routing, priorities, Beat, transaction safety, Docker
-- `django-react-drf.md` — DRF serializers, ViewSets, JWT, CORS, file uploads, custom actions
+- `django-6.0-whats-new.md` — Django 6.0 release-line overview with 6.0.1/6.0.3 patch-line notes and stack-relevant upgrade concerns
+- `django-tasks-framework.md` — Corrected `django.tasks` model: built-in dev/test backends only, transaction caveats, and Celery decision boundary
+- `django-orm-postgres.md` — Advanced ORM patterns, Postgres features, `Lexeme`, indexing guidance, and production-oriented DB notes
+- `django-caching-redis.md` — Native Redis cache backend, replication/topology, versioning, invalidation, and operational separation from Celery
+- `celery-advanced-patterns.md` — Idempotency, ack strategy, retries, queue isolation, result-storage discipline, and Celery-vs-Django-tasks boundary
+- `django-react-drf.md` — React-facing API design with DRF: auth mode choices, CSRF/CORS, pagination, filtering, throttling, and error contracts
+- `django-production-stack.md` — Cross-cutting operational guidance for Django + Postgres + Redis + Celery + Docker
 
 ### `_unverified/react/` — React + Chakra frontend research (ingested 2026-03-18, trust: low)
 
