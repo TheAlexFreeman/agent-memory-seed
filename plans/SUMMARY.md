@@ -22,8 +22,8 @@ Broad survey of the history of philosophy — the overarching story of how ideas
 
 Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker stack. 10 files planned across 7 phases. Priority order: Celery Canvas in depth → Celery worker/beat ops → drf-spectacular → Django test data/factories → Django async → Django security → Django migrations advanced → gunicorn/uvicorn deployment → database connection pooling → django-storages. Output goes to `knowledge/_unverified/django/`.
 
-**Progress:** 1/10 files written
-**Next action:** Continue Phase 1 — write `knowledge/_unverified/django/celery-worker-beat-ops.md`
+**Progress:** 2/10 files written
+**Next action:** Begin Phase 2 — write `knowledge/_unverified/django/drf-spectacular.md`
 <!-- END: django-stack-research -->
 
 ---
