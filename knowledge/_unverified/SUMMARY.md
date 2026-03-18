@@ -34,7 +34,7 @@ Five files synthesized from web searches against the Django 6.0 docs (docs.djang
 
 ### `philosophy/` — Intelligence, dynamical systems, consciousness (ingested 2026-03-18)
 
-Six files synthesized from Alex's shared philosophical conversation and follow-up web research. All carry `trust: low` pending review.
+Seven files synthesized from Alex's shared philosophical conversation and follow-up web research. All carry `trust: low` pending review.
 
 - **`intelligence-dynamical-systems-conversation.md`** — Detailed notes from the Feb 28 conversation (https://claude.ai/share/3c3a22b3-946e-4a24-96df-2d812f159367). Cited by Alex as a philosophical foundation of the memory system project.
 - **`self-organized-criticality.md`** — Bak/Tang/Wiesenfeld SOC, Langton's edge of chaos, Kauffman's NK model, neural criticality hypothesis.
@@ -42,6 +42,7 @@ Six files synthesized from Alex's shared philosophical conversation and follow-u
 - **`free-energy-autopoiesis-cybernetics.md`** — Friston's free energy principle / active inference, Maturana/Varela autopoiesis, Wiener/Ashby cybernetics, Law of Requisite Variety.
 - **`emergence-consciousness-iit.md`** — Weak/strong emergence, downward causation (Ellis), IIT (Tononi/Φ), Global Workspace Theory, Hofstadter's strange loops, Chalmers' hard problem.
 - **`synthesis-intelligence-as-dynamical-regime.md`** — Unified synthesis: intelligence as a dynamical regime (bottom-up positive + top-down negative feedback at the edge of chaos), convergence across traditions, open questions.
+- **`llm-vs-human-mind-comparative-analysis.md`** — Full comparative analysis using the dynamical framework: three root divergences (passive vs. active, atemporal vs. temporal, disembodied vs. embodied), downstream strengths/weaknesses, framework map table, implications for agent memory design.
 
 ## Usage patterns
 
