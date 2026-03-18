@@ -252,7 +252,7 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 12. Read `chats/SUMMARY.md` to get historical context (skip if no chat folders exist).
 13. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
-**Note:** Do not load `docs/GLOSSARY.md` (human reference only), `meta/curation-algorithms.md` (needed only during aggregation or stage transitions), or `meta/deferred-action-template.md` (needed only on first read-only session). See the context loading manifest in `meta/quick-reference.md` for the complete file-loading guide.
+**Note:** Do not load `HUMANS/*` (human reference only), `meta/curation-algorithms.md` (needed only during aggregation or stage transitions), or `meta/deferred-action-template.md` (needed only on first read-only session). See the context loading manifest in `meta/quick-reference.md` for the complete file-loading guide.
 
 ### Context budget
 
