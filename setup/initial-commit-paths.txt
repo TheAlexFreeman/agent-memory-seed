@@ -15,13 +15,16 @@ HUMANS/docs/CORE.md
 HUMANS/docs/DESIGN.md
 HUMANS/docs/GLOSSARY.md
 HUMANS/docs/QUICKSTART.md
+HUMANS/tooling/agent-memory-capabilities.toml
 HUMANS/tooling/mcp-config-example.json
 HUMANS/tooling/onboard-export-template.md
 HUMANS/tooling/scripts/memory_mcp.py
 HUMANS/tooling/scripts/onboard-export.sh
+HUMANS/tooling/scripts/resolve_memory_capabilities.py
 HUMANS/tooling/scripts/resolve_bootstrap_manifest.py
 HUMANS/tooling/scripts/validate_memory_repo.py
 HUMANS/tooling/tests/test_bootstrap_resolver.py
+HUMANS/tooling/tests/test_memory_capabilities.py
 HUMANS/tooling/tests/__init__.py
 HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py
 HUMANS/tooling/tests/test_memory_mcp.py

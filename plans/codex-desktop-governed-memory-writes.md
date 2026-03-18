@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Phase 1 — define the semantic memory operation set and invariant ownership model"
+next_action: "Phase 2 — map automatic, proposed, and protected write classes onto the capability contract"
 ---
 
 # Implementation Plan: Codex Desktop Governed Memory Writes
@@ -62,24 +62,67 @@ That means correctness depends on the agent remembering repo-specific invariants
 
 ## Research and design phases
 
-### Phase 1 — Semantic write model · ☐ 0/3 complete
+### Phase 1 — Semantic write model · ☑ 3/3 complete
 
-1. ☐ Define the minimal semantic tool set
+1. ☑ Define the minimal semantic tool set
    - highest-frequency memory operations first
    - clear separation between semantic tools and raw fallback tools
    - repo-agnostic core plus repo-specific extensions
 
-2. ☐ Define invariant ownership per operation
+2. ☑ Define invariant ownership per operation
    - which tool updates frontmatter
    - which tool updates `SUMMARY.md`
    - which tool logs ACCESS or review-queue artifacts
 
-3. ☐ Define result and error taxonomy
+3. ☑ Define result and error taxonomy
    - conflict
    - validation failure
    - already-done
    - protected-change blocked
    - partial sync warning
+
+### Phase 1 decisions (2026-03-18)
+
+#### 1. Capability contract shape
+
+The governed-write layer should be declared as a machine-readable tooling contract, not inferred from prose alone. Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now records:
+
+- read-support tools
+- raw fallback tools
+- semantic extension tools
+- the shared `MemoryWriteResult` envelope
+- desktop-surface gaps that are still missing semantic coverage
+
+This keeps the semantic surface reviewable in git and gives the desktop layer a stable object to discover later.
+
+#### 2. Invariant ownership model
+
+Each semantic tool owns the full invariant set for its operation:
+
+- **Plan tools** own plan frontmatter plus `plans/SUMMARY.md` synchronization
+- **Knowledge tools** own trust/frontmatter transitions plus the relevant `SUMMARY.md` moves
+- **Identity tools** own `last_verified` updates and identity-churn guarding
+- **Chat tools** own per-session summary creation plus `chats/SUMMARY.md` indexing
+- **Governance tools** own `meta/review-queue.md` mutation directly
+
+Raw fallback tools remain intentionally non-semantic. They can write, move, delete, and commit, but they do not own repo invariants.
+
+#### 3. Result and error taxonomy
+
+The Phase 1 contract now treats `MemoryWriteResult` as the shared write envelope across semantic and raw tools:
+
+- `files_changed`
+- `commit_sha`
+- `commit_message`
+- `new_state`
+- `warnings`
+
+Error taxonomy is also explicit now. Current runtime support is:
+
+- implemented: `ConflictError`, `NotFoundError`, `ValidationError`, `StagingError`, `MemoryPermissionError`
+- defined but not yet emitted consistently: `AlreadyDoneError`
+
+Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now validates the capability contract against the MCP runtime and highlights declared desktop-surface gaps such as ACCESS appends and session reflections.
 
 ### Phase 2 — Governance and policy integration · ☐ 0/3 complete
 
@@ -145,6 +188,7 @@ That means correctness depends on the agent remembering repo-specific invariants
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created from identified Codex desktop gap: governed, invariant-aware memory writes |
+| 2026-03-18 | Added `HUMANS/tooling/agent-memory-capabilities.toml` plus a resolver and tests to define the semantic tool set, invariant ownership model, shared result envelope, and current desktop-surface gaps |
 
 ---
 

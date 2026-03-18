@@ -1,0 +1,313 @@
+version = 1
+kind = "agent-memory-capabilities"
+mcp_entrypoint = "HUMANS/tooling/scripts/memory_mcp.py"
+manifest_role = "Repo-side prototype for governed memory writes and capability discovery."
+shared_result_type = "MemoryWriteResult"
+
+[tool_sets]
+read_support = [
+  "memory_read_file",
+  "memory_list_folder",
+  "memory_search",
+  "memory_git_log",
+  "memory_diff",
+  "memory_audit_trust",
+  "memory_validate",
+]
+raw_fallback = [
+  "memory_write",
+  "memory_edit",
+  "memory_delete",
+  "memory_move",
+  "memory_update_frontmatter",
+  "memory_commit",
+]
+semantic_extensions = [
+  "memory_create_plan",
+  "memory_mark_plan_item_complete",
+  "memory_update_plan_next_action",
+  "memory_add_knowledge_file",
+  "memory_promote_knowledge",
+  "memory_demote_knowledge",
+  "memory_archive_knowledge",
+  "memory_append_scratchpad",
+  "memory_update_identity_trait",
+  "memory_record_chat_summary",
+  "memory_flag_for_review",
+]
+declared_gaps = [
+  "append_access_entry",
+  "record_session_reflection",
+]
+
+[shared_result]
+fields = [
+  "files_changed",
+  "commit_sha",
+  "commit_message",
+  "new_state",
+  "warnings",
+]
+raw_commit_model = "stage_then_memory_commit"
+semantic_commit_model = "auto_commit_on_success"
+
+[error_taxonomy.ConflictError]
+status = "implemented"
+meaning = "Version token mismatch while updating an existing file."
+recovery = "Re-read the file, obtain the current version token, and retry."
+
+[error_taxonomy.NotFoundError]
+status = "implemented"
+meaning = "Referenced file, plan, or section does not exist."
+recovery = "Refresh caller state and verify the target path or identifier."
+
+[error_taxonomy.ValidationError]
+status = "implemented"
+meaning = "Input, frontmatter, or invariant contract is invalid."
+recovery = "Fix the request shape or normalize content before retrying."
+
+[error_taxonomy.StagingError]
+status = "implemented"
+meaning = "git add, mv, rm, or commit failed while sealing the change."
+recovery = "Inspect git stderr, correct repo state, and retry."
+
+[error_taxonomy.MemoryPermissionError]
+status = "implemented"
+meaning = "Operation is blocked by protected-directory or delete-permission rules."
+recovery = "Choose a non-protected path or obtain explicit runtime permission."
+
+[error_taxonomy.AlreadyDoneError]
+status = "defined_not_currently_emitted"
+meaning = "Operation was already in the requested end state."
+recovery = "Treat as idempotent no-op and refresh caller state if needed."
+
+[desktop_operations.create_plan]
+status = "implemented"
+tool = "memory_create_plan"
+tier = "semantic"
+operation_group = "plan"
+
+[desktop_operations.mark_plan_item_complete]
+status = "implemented"
+tool = "memory_mark_plan_item_complete"
+tier = "semantic"
+operation_group = "plan"
+
+[desktop_operations.update_plan_next_action]
+status = "implemented"
+tool = "memory_update_plan_next_action"
+tier = "semantic"
+operation_group = "plan"
+
+[desktop_operations.add_knowledge_file]
+status = "implemented"
+tool = "memory_add_knowledge_file"
+tier = "semantic"
+operation_group = "knowledge"
+
+[desktop_operations.promote_knowledge]
+status = "implemented"
+tool = "memory_promote_knowledge"
+tier = "semantic"
+operation_group = "knowledge"
+
+[desktop_operations.demote_knowledge]
+status = "implemented"
+tool = "memory_demote_knowledge"
+tier = "semantic"
+operation_group = "knowledge"
+
+[desktop_operations.archive_knowledge]
+status = "implemented"
+tool = "memory_archive_knowledge"
+tier = "semantic"
+operation_group = "knowledge"
+
+[desktop_operations.append_scratchpad]
+status = "implemented"
+tool = "memory_append_scratchpad"
+tier = "semantic"
+operation_group = "scratchpad"
+
+[desktop_operations.update_identity_trait]
+status = "implemented"
+tool = "memory_update_identity_trait"
+tier = "semantic"
+operation_group = "identity"
+
+[desktop_operations.record_chat_summary]
+status = "implemented"
+tool = "memory_record_chat_summary"
+tier = "semantic"
+operation_group = "chat"
+
+[desktop_operations.flag_for_review]
+status = "implemented"
+tool = "memory_flag_for_review"
+tier = "semantic"
+operation_group = "governance"
+
+[desktop_operations.append_access_entry]
+status = "gap"
+notes = "No dedicated semantic ACCESS append tool exists yet; callers still need raw writes or repo-specific batching."
+
+[desktop_operations.record_session_reflection]
+status = "gap"
+notes = "Chat summary creation exists, but reflection artifacts are not yet a first-class semantic write."
+
+[operations.memory_create_plan]
+group = "plan"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
+owns_frontmatter = ["plans/{plan_id}.md"]
+owns_summaries = ["plans/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["plan_path", "status"]
+fallback_tools = ["memory_write", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_mark_plan_item_complete]
+group = "plan"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
+owns_frontmatter = ["plans/{plan_id}.md"]
+owns_summaries = ["plans/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["next_action", "phase_progress", "plan_progress", "status"]
+fallback_tools = ["memory_edit", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+
+[operations.memory_update_plan_next_action]
+group = "plan"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
+owns_frontmatter = ["plans/{plan_id}.md"]
+owns_summaries = ["plans/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["next_action"]
+fallback_tools = ["memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "StagingError"]
+
+[operations.memory_add_knowledge_file]
+group = "knowledge"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["knowledge/_unverified/**/{file}.md", "knowledge/_unverified/SUMMARY.md"]
+owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
+owns_summaries = ["knowledge/_unverified/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["version_token"]
+fallback_tools = ["memory_write", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_promote_knowledge]
+group = "knowledge"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = [
+  "knowledge/_unverified/**/{file}.md",
+  "knowledge/**/{file}.md",
+  "knowledge/_unverified/SUMMARY.md",
+  "knowledge/SUMMARY.md",
+]
+owns_frontmatter = ["knowledge/**/{file}.md"]
+owns_summaries = ["knowledge/_unverified/SUMMARY.md", "knowledge/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["new_path", "trust"]
+fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+
+[operations.memory_demote_knowledge]
+group = "knowledge"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = [
+  "knowledge/**/{file}.md",
+  "knowledge/_unverified/**/{file}.md",
+  "knowledge/SUMMARY.md",
+  "knowledge/_unverified/SUMMARY.md",
+]
+owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
+owns_summaries = ["knowledge/SUMMARY.md", "knowledge/_unverified/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["new_path", "trust"]
+fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+
+[operations.memory_archive_knowledge]
+group = "knowledge"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = [
+  "knowledge/**/{file}.md",
+  "knowledge/_archive/**/{file}.md",
+  "knowledge/SUMMARY.md",
+]
+owns_frontmatter = ["knowledge/_archive/**/{file}.md"]
+owns_summaries = ["knowledge/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["archive_path"]
+fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+
+[operations.memory_append_scratchpad]
+group = "scratchpad"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["scratchpad/USER.md", "scratchpad/CURRENT.md"]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["target"]
+fallback_tools = ["memory_edit", "memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_update_identity_trait]
+group = "identity"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["identity/{file}.md"]
+owns_frontmatter = ["identity/{file}.md"]
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["key", "mode", "identity_updates_this_session"]
+fallback_tools = ["memory_edit", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "ValidationError", "StagingError"]
+
+[operations.memory_record_chat_summary]
+group = "chat"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md", "chats/SUMMARY.md"]
+owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
+owns_summaries = ["chats/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["session_id"]
+fallback_tools = ["memory_write", "memory_commit"]
+error_kinds = ["StagingError"]
+
+[operations.memory_flag_for_review]
+group = "governance"
+tier = "semantic"
+commit_model = "auto_commit"
+writes = ["meta/review-queue.md"]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = ["meta/review-queue.md"]
+result_fields = ["flagged_path", "priority"]
+fallback_tools = ["memory_edit", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]

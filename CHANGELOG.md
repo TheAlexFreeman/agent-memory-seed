@@ -34,6 +34,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Governed memory capability contract prototype
+
+**Changed:**
+
+- **Added a machine-readable governed-write contract.** Created `HUMANS/tooling/agent-memory-capabilities.toml` to define the current read-support tools, raw fallback write tools, semantic extension tools, shared `MemoryWriteResult` envelope, error taxonomy, operation ownership model, and explicit desktop-surface gaps.
+
+- **Added capability resolution tooling.** Created `HUMANS/tooling/scripts/resolve_memory_capabilities.py`, which reads the contract and validates it against the live MCP runtime so the semantic write surface can be discovered and audited programmatically instead of inferred from code and prose separately.
+
+- **Added contract tests and seed parity.** Created `HUMANS/tooling/tests/test_memory_capabilities.py` and added the new manifest, script, and tests to `setup/initial-commit-paths.txt` so the prototype is exercised in CI and preserved in the canonical initial commit.
+
+- **Advanced the governed-writes product plan.** Updated `plans/codex-desktop-governed-memory-writes.md` and `plans/SUMMARY.md` to mark Phase 1 complete, document the invariant-ownership and result/error-taxonomy decisions, and move the next action to governance-class mapping.
+
+**Reasoning:** The governed-memory-writes plan had a clear target but no executable contract tying the desktop product idea to the repo's existing MCP surface. The new capability manifest closes that gap: it makes the semantic tool set explicit, records which invariants each semantic operation owns, and separates covered desktop operations from known gaps such as ACCESS appends and reflection writes. That improves consistency between plan and code, gives future desktop discovery a concrete substrate, and keeps context efficiency high by encoding the contract once instead of re-deriving it from large source files each session.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-18] Bootstrap manifest prototype and validator-backed preload contract
 
 **Changed:**

@@ -37,8 +37,8 @@ Implementation plan for memory-aware repo startup in Codex desktop. Focus: repo-
 
 Implementation plan for first-class governed memory operations in Codex desktop. Focus: semantic write tools, invariant ownership, governance enforcement, and MCP/app integration for structured memory writes.
 
-**Progress:** 0/11 tasks complete
-**Next action:** Phase 1 — define the semantic memory operation set and invariant ownership model
+**Progress:** 3/11 tasks complete
+**Next action:** Phase 2 — map automatic, proposed, and protected write classes onto the capability contract
 <!-- END: codex-desktop-governed-memory-writes -->
 
 ---
