@@ -4,7 +4,7 @@ This folder is the episodic memory — a chronological archive of conversations 
 
 ## Overall history
 
-**Four chat records logged (2026-03-18).** All from the first day; chat-001 spanned three context windows, chat-002 handled maintenance, chat-003 focused on automation design, and chat-004 created a new research lane on LessWrong and the Rationalist community.
+**Five chat records logged (2026-03-18).** All from the first day; chat-001 spanned three context windows, chat-002 handled maintenance, chat-003 focused on automation design, chat-004 created a new research lane on LessWrong and the Rationalist community, and chat-005 did the same for the genealogy of modern AI.
 
 ### chat-001 — Extended first session (3 context windows)
 
@@ -26,7 +26,11 @@ Drafted four setup-ready Codex automations for this repo: `Memory Health`, `Aggr
 
 Created `plans/lesswrong-rationalist-community-research.md`, an 11-file research program starting with Eliezer Yudkowsky and the Sequences, then expanding through heuristics-and-biases roots, Robin Hanson and Overcoming Bias, Scott Alexander, Gwern, MIRI, CFAR, and a final synthesis of the community's aims and tensions. Updated `plans/SUMMARY.md` and `plans/ACCESS.jsonl` accordingly.
 
-See `2026/03/18/chat-001/`, `2026/03/18/chat-002/`, `2026/03/18/chat-003/`, and `2026/03/18/chat-004/` for full session records.
+### chat-005 — AI paradigm genealogy research planning
+
+Created `plans/ai-paradigm-genealogy-research.md`, an 11-file research program telling the current AI paradigm as a cumulative technical story: perceptrons, symbolic detours, backpropagation, architectural inductive biases, GPUs and ImageNet, transformers, scaling laws, instruction tuning, and frontier LLM systems. Updated `plans/SUMMARY.md` and `plans/ACCESS.jsonl`.
+
+See `2026/03/18/chat-001/`, `2026/03/18/chat-002/`, `2026/03/18/chat-003/`, `2026/03/18/chat-004/`, and `2026/03/18/chat-005/` for full session records.
 
 ## Structure
 

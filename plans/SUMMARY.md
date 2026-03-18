@@ -18,6 +18,7 @@ Priority order for active work:
 8. `devops-docker-research.md`
 9. `philosophy-history-survey.md`
 10. `lesswrong-rationalist-community-research.md`
+11. `ai-paradigm-genealogy-research.md`
 
 ---
 
@@ -95,6 +96,17 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 **Progress:** 0/11 files written
 **Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
 <!-- END: lesswrong-rationalist-community-research -->
+
+---
+
+<!-- BEGIN: ai-paradigm-genealogy-research -->
+### `ai-paradigm-genealogy-research.md` · status: active · trust: medium
+
+Narrative research plan for understanding how the current AI paradigm formed: perceptrons, symbolic detours, backpropagation, deep learning, transformers, scaling, and frontier LLM systems. Output goes to `knowledge/_unverified/ai-history/`.
+
+**Progress:** 0/11 files written
+**Next action:** Begin Phase 1 — write `knowledge/_unverified/ai-history/origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md`
+<!-- END: ai-paradigm-genealogy-research -->
 
 ---
 
