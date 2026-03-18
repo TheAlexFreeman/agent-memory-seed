@@ -1,8 +1,15 @@
 # Agent Memory System
 
-You are reading a persistent memory system stored as a git repository. This file is your entry point. Read it fully before doing anything else.
+An adaptive, self-organizing, version-controlled memory layer for AI agents. Any capable model can read this repo and immediately know who you are, how you work, and what you've been doing — across sessions, platforms, and model versions.
 
-**If you are a human setting up this system for the first time**, see [QUICKSTART.md](QUICKSTART.md) for a step-by-step guide.
+**Setting up for the first time?** → See [docs/QUICKSTART.md](docs/QUICKSTART.md)
+**Exploring the design?** → See [docs/DESIGN.md](docs/DESIGN.md)
+
+---
+
+## Agent bootstrap
+
+You are an AI agent reading this repository. This file is your entry point. Read it fully before doing anything else.
 
 ## Purpose
 
