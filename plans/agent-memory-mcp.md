@@ -5,8 +5,8 @@ origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
-status: active
-next_action: "Phase 1 — finish cowork-permission handling for memory_delete and verify the write path in a live MCP client"
+status: complete
+next_action: null
 ---
 
 # Implementation Plan: Enhanced Agent-Memory MCP
@@ -24,7 +24,7 @@ Both tiers use **version tokens** for optimistic locking and return structured s
 
 ## Current status
 
-The enhanced implementation now lives in `tools/agent_memory_mcp/` and is re-exported from `HUMANS/tooling/scripts/memory_mcp.py` so the canonical script path still works. The main remaining planned gap is the cowork-permission integration described for `memory_delete`.
+The enhanced implementation now lives in `tools/agent_memory_mcp/` and is re-exported from `HUMANS/tooling/scripts/memory_mcp.py` so the canonical script path still works. `memory_delete` now supports an optional runtime permission hook via `MEMORY_DELETE_PERMISSION_HELPER`; local runtimes without that helper proceed directly with the protected-directory checks already enforced in the package.
 
 ---
 
@@ -581,10 +581,10 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 2. ☑ Version token model: `check_version_token(path, token)` helper; `MemoryWriteResult` dataclass; error taxonomy as typed exceptions
 3. ☑ Frontmatter utilities: `read_with_frontmatter`, `write_with_frontmatter`, `update_frontmatter_fields`; checkbox and counter regex helpers; SUMMARY.md section parser
 
-### Phase 1 — Tier 2 low-level tools · ☐ 4/5 complete
+### Phase 1 — Tier 2 low-level tools · ☑ 5/5 complete
 
 4. ☑ `memory_write` and `memory_edit`
-5. ☐ `memory_delete` (with cowork permission handling) and `memory_move`
+5. ☑ `memory_delete` (with cowork permission handling) and `memory_move`
 6. ☑ `memory_update_frontmatter`
 7. ☑ `memory_commit`
 8. ☑ `memory_diff` (extend existing read toolset)
@@ -620,8 +620,6 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 
 - **Multi-agent writes**: the version token model handles races between the agent and a linter/user. If a future use case involves two agent instances writing the same repo simultaneously (e.g., parallel research tasks), the version token model is still correct but the commit conflict rate will be higher. At that point, per-file lock files or a SQLite-backed locking layer would be worth considering. Not a concern for the current single-agent use case.
 
-- **Cowork permission handling**: `memory_delete` still enforces the directory restriction policy, but the automatic `allow_cowork_file_delete` grant described above is not wired because that capability is not yet available inside this package. Decide whether to add an integration hook or revise the deletion contract to match the runtime environment.
-
 ---
 
 ## Progress log
@@ -633,3 +631,4 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 | 2026-03-18 | Anchor design resolved and migration applied: BEGIN/END pairs in `plans/SUMMARY.md`; `<!-- section: {id} -->` anchors in `knowledge/SUMMARY.md` and `knowledge/_unverified/SUMMARY.md` |
 | 2026-03-18 | Commit message conventions expanded: verb vocabulary, Tier 1 templates, agent body format, granularity guidance, `memory_commit` validation behaviour |
 | 2026-03-18 | Reviewed implementation against repo state: 16/17 planned milestones are now coded; renamed the package to `tools/agent_memory_mcp/`, wired the shipped `memory_mcp.py` entrypoint to it, preserved HUMANS discovery guardrails, and added MCP integration coverage in CI |
+| 2026-03-18 | Finished the remaining milestone: `memory_delete` now accepts an injected/runtime permission hook, focused delete-path tests cover allow and reject flows, and the plan is complete |

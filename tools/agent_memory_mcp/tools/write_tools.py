@@ -5,6 +5,7 @@ These replace raw Edit/Write/Bash calls for memory writes. All tools:
   - Accept an optional version_token for optimistic locking
   - Stage changes but do NOT commit (call memory_commit when ready)
   - Return MemoryWriteResult JSON
+  - Support an optional delete-permission hook for runtimes that need it
 
 Directory restrictions:
   memory_delete and memory_move SOURCE paths may not target:
@@ -15,6 +16,7 @@ Directory restrictions:
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -45,7 +47,12 @@ def _check_protected(rel_path: str, operation: str = "delete") -> None:
         )
 
 
-def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
+def register(
+    mcp: "FastMCP",
+    get_repo,
+    get_root,
+    grant_delete_permission: Callable[[str], None] | None = None,
+) -> dict[str, object]:
     """Register all Tier 2 low-level write tools and return their callables."""
 
     # ------------------------------------------------------------------
@@ -209,6 +216,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         raise PermissionError immediately, before any filesystem access.
 
         The deletion is staged via 'git rm'. Call memory_commit to finalise.
+        When a delete-permission hook is configured by the runtime, it is
+        called automatically for allowed paths before the file is removed.
 
         Args:
             path:          Repo-relative path to delete. Must be under
@@ -232,15 +241,20 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo.check_version_token(path, version_token)
 
-        # Attempt git rm. If it fails due to OS permission issues, the caller
-        # should invoke allow_cowork_file_delete(path) and retry.
+        if grant_delete_permission is not None:
+            try:
+                grant_delete_permission(path)
+            except Exception as e:
+                raise MemoryPermissionError(
+                    f"Delete permission hook rejected '{path}': {e}",
+                    path=path,
+                ) from e
+
         try:
             repo.rm(path)
         except Exception as e:
             raise MemoryPermissionError(
-                f"Could not delete {path}: {e}. "
-                "If this is a permissions issue, call allow_cowork_file_delete "
-                f"with path='{path}' then retry memory_delete.",
+                f"Could not delete {path}: {e}.",
                 path=path,
             )
 

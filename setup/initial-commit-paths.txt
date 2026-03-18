@@ -19,6 +19,7 @@ HUMANS/tooling/scripts/memory_mcp.py
 HUMANS/tooling/scripts/onboard-export.sh
 HUMANS/tooling/scripts/validate_memory_repo.py
 HUMANS/tooling/tests/__init__.py
+HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py
 HUMANS/tooling/tests/test_memory_mcp.py
 HUMANS/tooling/tests/test_onboard_export.py
 HUMANS/tooling/tests/test_setup_flows.py

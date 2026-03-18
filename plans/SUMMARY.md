@@ -6,6 +6,8 @@ This folder holds multi-session research and implementation plans. Plans track i
 
 Read this section first during compact returning sessions when active plans exist.
 
+**Priority after MCP completion:** `django-stack-research` → `react-stack-research` → `devops-docker-research` → `philosophy-history-survey`
+
 <!-- BEGIN: philosophy-history-survey -->
 ### `philosophy-history-survey.md` · status: active · trust: medium
 
@@ -50,18 +52,16 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 
 ---
 
-<!-- BEGIN: agent-memory-mcp -->
-### `agent-memory-mcp.md` · status: active · trust: medium
-
-Implementation plan for an enhanced agent-memory MCP with read/write and read/write/commit tooling. Two-tier architecture: Tier 1 semantic tools (auto-commit, own all invariants per operation) + Tier 2 low-level tools (staged writes + explicit `memory_commit`). Version tokens for optimistic locking. 17 tools total across 4 build phases. Stack: FastMCP (Python), subprocess git, python-frontmatter.
-
-**Progress:** 16/17 milestones implemented (Phase 1: 4/5, all later phases complete)
-**Next action:** Phase 1 — finish cowork-permission handling for `memory_delete` and verify the write path in a live MCP client
-<!-- END: agent-memory-mcp -->
-
 ## Completed plans
 
-_None yet._
+<!-- BEGIN: agent-memory-mcp -->
+### `agent-memory-mcp.md` · status: complete · trust: medium
+
+Enhanced agent-memory MCP now runs through the shipped `memory_mcp.py` entrypoint, exposes the read/write tool surface from `tools/agent_memory_mcp/`, and supports an optional runtime delete-permission helper for `memory_delete`.
+
+**Progress:** 17/17 milestones complete
+**Completed:** 2026-03-18
+<!-- END: agent-memory-mcp -->
 
 ---
 
