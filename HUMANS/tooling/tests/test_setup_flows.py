@@ -128,13 +128,14 @@ class SetupFlowTests(unittest.TestCase):
                 "generic",
             )
 
-            head_branch = subprocess.run(
+            head_ref = subprocess.run(
                 ["git", "symbolic-ref", "--short", "HEAD"],
                 cwd=root,
                 check=True,
                 capture_output=True,
                 text=True,
-            ).stdout.strip()
+            )
+            head_branch = head_ref.stdout.strip()
 
             self.assertEqual("core", head_branch)
 

@@ -147,11 +147,14 @@ fi
 
 # 2. Initialize git if needed
 if [[ ! -d ".git" ]]; then
-    if ! git init --initial-branch=core >/dev/null 2>&1; then
+    if git init --initial-branch=core >/dev/null 2>&1; then
+        init_message="[ok] Initialized git repository on core branch"
+    else
         git init
         git symbolic-ref HEAD refs/heads/core
+        init_message="[ok] Initialized git repository on core branch (compatibility fallback)"
     fi
-    echo "[ok] Initialized git repository on core branch"
+    echo "$init_message"
 else
     echo "[skip] Git repository already initialized"
 fi
