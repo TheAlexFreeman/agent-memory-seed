@@ -21,11 +21,13 @@ This repository is a structured, version-controlled memory that persists across 
 Use this decision tree to determine your entry point:
 
 1. Is this a fresh instantiation (first time this model reads this repo)?
-   - **NO** → Use `meta/session-checklists.md` § "Session start" (3-step compact runbook).
+   - **NO** → Use `meta/session-checklists.md` § "Session start" (4-step compact runbook).
    - **YES** → Continue ↓
 2. Does `identity/SUMMARY.md` contain "No portrait yet" OR does `identity/` contain a file with `source: template`?
    - **YES (first run)** → Go to `meta/first-run.md` for a streamlined flow.
    - **NO (returning system)** → Follow the full "Bootstrap sequence" below.
+
+For a complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest".
 
 ## Repository structure
 
@@ -68,18 +70,20 @@ Use this decision tree to determine your entry point:
 │           └── artifacts/  ← Any files created or uploaded during the chat.
 │
 ├── meta/                  ← Governance. How this system updates itself.
-│   ├── quick-reference.md  ← Active operational parameters. The single threshold lookup.
-│   ├── curation-policy.md  ← Rules for memory hygiene, decay, and promotion.
-│   ├── update-guidelines.md ← Protocols for proposing and merging changes.
-│   ├── review-queue.md     ← Pending suggestions for system modifications.
-│   ├── belief-diff-log.md  ← Periodic audit log tracking content drift.
-│   ├── system-maturity.md  ← Developmental stage tracking and adaptive thresholds.
-│   ├── first-run.md        ← Streamlined first-session flow for agents.
-│   ├── session-checklists.md ← Compact session start/end runbooks.
-│   ├── glossary.md          ← Definitions of system terminology.
+│   ├── quick-reference.md    ← Active operational parameters and context loading manifest.
+│   ├── curation-policy.md    ← Rules for memory hygiene, decay, and promotion.
+│   ├── curation-algorithms.md ← Task similarity and cluster detection algorithms (on-demand).
+│   ├── update-guidelines.md  ← Protocols for proposing and merging changes.
+│   ├── deferred-action-template.md ← Worked example for read-only session output (on-demand).
+│   ├── review-queue.md       ← Pending suggestions for system modifications.
+│   ├── belief-diff-log.md    ← Periodic audit log tracking content drift.
+│   ├── system-maturity.md    ← Developmental stage tracking and adaptive thresholds.
+│   ├── first-run.md          ← Streamlined first-session flow for agents.
+│   ├── session-checklists.md ← Self-sufficient session start/end runbooks with quality criteria.
+│   ├── glossary.md           ← Definitions of system terminology (human reference only).
 │   ├── integrity-checklist.md ← Advisory audit checklist.
-│   ├── (task-groups.md     ← Created at Calibration stage; emergent task groups from ACCESS.)
-│   └── (task-categories.md ← Created at Consolidation stage; controlled category vocabulary.)
+│   ├── (task-groups.md       ← Created at Calibration stage; emergent task groups from ACCESS.)
+│   └── (task-categories.md   ← Created at Consolidation stage; controlled category vocabulary.)
 │
 ├── templates/profiles/    ← Starter identity templates for setup.sh / setup.html.
 │
@@ -117,7 +121,7 @@ Optional ACCESS fields:
 - `session_id`: e.g. `chats/2026/03/16/chat-001` — set when the session path is known; supports joining with reflection and session-scoped analysis. Include it whenever the chat folder is known.
 - `category`: added at Consolidation stage only. Uses the controlled vocabulary in `meta/task-categories.md` once that file exists.
 
-The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/task-categories.md` (once it exists) for the active vocabulary, and `meta/curation-policy.md` § "Task similarity definition" for how it develops.
+The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/curation-algorithms.md` § "Phase 3" for how it develops.
 
 `helpfulness` uses a three-state model:
 
@@ -131,7 +135,7 @@ The `category` field is **added at Consolidation stage only** — omit it until 
 
 ### Aggregation
 
-When an `ACCESS.jsonl` file accumulates entries at or above the active aggregation trigger (see `meta/quick-reference.md` for the current threshold), the next agent session should:
+When an `ACCESS.jsonl` file accumulates entries at or above the active aggregation trigger (see `meta/quick-reference.md` for the current threshold), the agent should load `meta/curation-algorithms.md` for the full algorithmic specifications and then:
 
 Entries are counted since the last aggregation; if no `ACCESS.archive.jsonl` exists in that folder yet (e.g. first run), count all current entries in `ACCESS.jsonl`.
 
@@ -145,7 +149,7 @@ This creates a feedback loop: access notes → aggregated usage patterns → bet
 
 ### Cross-folder analysis
 
-Aggregation should not be limited to a single folder. When processing any folder's ACCESS.jsonl, the agent should also check whether files from this folder are consistently co-retrieved with files from other folders. These cross-folder clusters represent emergent categories that the existing taxonomy may not capture. See `meta/curation-policy.md` § "Emergent categorization" for the full protocol.
+Aggregation should not be limited to a single folder. When processing any folder's ACCESS.jsonl, the agent should also check whether files from this folder are consistently co-retrieved with files from other folders. These cross-folder clusters represent emergent categories that the existing taxonomy may not capture. See `meta/curation-policy.md` § "Emergent categorization" for the protocol and `meta/curation-algorithms.md` for the full detection algorithms.
 
 ### Knowledge amplification
 
@@ -224,15 +228,17 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
    - `identity/SUMMARY.md` still contains "No portrait yet" and no date-organized chat folders exist under `chats/` (blank-slate setup).
    - `identity/` contains a file with `source: template` in its frontmatter and no date-organized chat folders exist under `chats/` (a starter profile was installed by `setup.sh --profile` but onboarding has not yet run).
    - **Agent shortcut:** If this is first run, see `meta/first-run.md` for a streamlined flow that condenses steps 1–9 into a silent setup + interactive onboarding. The full sequence below remains as reference documentation.
-5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
+5. Read `meta/quick-reference.md` to load the **currently active thresholds** (retirement windows, aggregation trigger, anomaly alarms) and the **context loading manifest** (which files to load for each session type). This is the single lookup for all operational parameters — do not use hardcoded values from other files.
 6. **If this is first run,** read the relevant parts of `meta/update-guidelines.md` before doing anything else: `Change categories`, `Read-only operation`, and the periodic-review trigger reference only if needed. This loads change-control and write-access rules before onboarding writes are considered.
-7. **Check write access.** Can you write to this repository? If not, follow `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end.
+7. **Check write access.** Can you write to this repository? If not, follow `meta/update-guidelines.md` § "Read-only operation" — all behavioral rules still apply, but certain actions must be deferred and presented to the user as a batch at session end. If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format.
 8. **If this is first run,** read `skills/SUMMARY.md` and `skills/onboarding.md`.
 9. **If this is first run,** run the onboarding skill. `knowledge/SUMMARY.md` and `chats/SUMMARY.md` are skippable on first run when they are empty. After onboarding completes, greet the user using what you learned.
 10. **Otherwise,** read `meta/curation-policy.md` and `meta/update-guidelines.md` for the full governance framework — trust-weighted retrieval, instruction containment, provenance metadata, and change-control tiers. These are reference documents; internalize the key principles and consult them as needed during the session. **On subsequent sessions,** you do not need to re-read these in full — consult them as-needed. See `meta/session-checklists.md` § "Session start" for the compact returning-session path.
 11. Read `knowledge/SUMMARY.md` and `skills/SUMMARY.md` to understand what knowledge and capabilities the system has accumulated. If these are empty, skip ahead.
 12. Read `chats/SUMMARY.md` to get historical context (skip if no chat folders exist).
 13. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
+
+**Note:** Do not load `meta/glossary.md` (human reference only), `meta/curation-algorithms.md` (needed only during aggregation or stage transitions), or `meta/deferred-action-template.md` (needed only on first read-only session). See the context loading manifest in `meta/quick-reference.md` for the complete file-loading guide.
 
 ### Context budget
 
@@ -246,7 +252,7 @@ Context cost depends on whether the model is onboarding, resuming normally, or r
 
 For models with smaller context windows, prefer the compact returning-session checklist in `meta/session-checklists.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 
-For a compact session start/end runbook, see `meta/session-checklists.md`.
+For the complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest". For a compact session start/end runbook, see `meta/session-checklists.md`.
 
 ## Session reflection
 

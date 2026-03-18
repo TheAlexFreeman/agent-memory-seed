@@ -28,6 +28,8 @@ Agent Memory Seed solves this by externalizing memory into a structured, version
 
 **7. Graceful degradation.** The system adapts to constraints rather than failing. Read-only platforms get deferred-action summaries. Models with small context windows get compressed summaries. Missing files don't break the bootstrap — the sequence has explicit skip conditions. The validator is optional. Every feature is designed so that its absence reduces functionality without breaking the system.
 
+**8. Context efficiency as a first-class concern.** Every governance file, every skill, every protocol competes for space in the agent's context window — and every token spent on governance is a token not spent on the user's actual task. The system manages this budget deliberately: a context loading manifest tells the agent exactly which files to load for each session type, governance files are split into always-load summaries and on-demand reference documents, and skip annotations prevent redundant reads across files. Context efficiency is not an optimization applied after the fact — it is a design constraint that shapes how every file is written, scoped, and cross-referenced. See "The dual-audience problem" below for a deeper treatment.
+
 ### The compression hierarchy
 
 One of the system's most distinctive architectural choices is its approach to information compression. Rather than storing everything at full fidelity or summarizing everything to the same level, the system uses a **progressive compression hierarchy**:
@@ -54,6 +56,40 @@ Each scale feeds into the next: retrieval data informs aggregation, aggregation 
 The system explicitly models its own developmental stage. A young system (Exploration) uses loose thresholds, captures aggressively, and tolerates ambiguity. A mature system (Consolidation) uses tight thresholds, captures selectively, and enforces order. The transition between stages is driven by quantitative signals (session count, retrieval success rate, confirmation ratio), not calendar time.
 
 This adaptive approach prevents a common failure mode in knowledge management systems: applying mature-system rules to a young system (creating bureaucratic overhead before there's enough data to justify it) or applying young-system rules to a mature system (allowing unchecked growth in a system that should be consolidating).
+
+### The dual-audience problem
+
+The memory system's documentation serves two audiences with fundamentally different needs. Human readers want self-contained, readable documents they can understand without cross-referencing six other files. Agent readers want minimal, non-redundant context that maximizes the token budget available for the user's actual task. These goals are in direct tension: what makes a governance file readable for a human (restating key concepts, providing worked examples, explaining rationale) is exactly what wastes an agent's context window through redundancy.
+
+This tension is not a problem to solve once — it is a permanent design constraint that every file in the system must navigate. The strategies that have emerged:
+
+**Role classification.** Every file in `meta/` falls into one of three roles: *always-load* (read every session — must be lean and non-redundant), *on-demand* (loaded only when a specific operation requires it — can be more detailed), or *human-only* (never loaded by agents — can be as expansive as needed). The context loading manifest in `meta/quick-reference.md` makes these roles explicit.
+
+- *Always-load:* `quick-reference.md`, `session-checklists.md`. These two files carry the full operational weight of a normal session. Together they should stay under ~2,000 words.
+- *On-demand:* `curation-policy.md`, `update-guidelines.md` (loaded on full bootstrap), `curation-algorithms.md` (loaded during aggregation or stage transitions), `deferred-action-template.md` (loaded on first read-only session), `system-maturity.md` (loaded during periodic review).
+- *Human-only:* `glossary.md`. Every term it defines is already introduced in context by the governance file that establishes it. It exists for humans browsing the repo, not for agents building context.
+
+**Denormalized lookup files.** `meta/quick-reference.md` is a deliberately denormalized document: it duplicates threshold values, decision guides, and operational parameters from across the governance layer into a single file the agent reads every session. The normative justification for each value lives in the source files (curation-policy, system-maturity), but the agent never needs to load those files just to look up a threshold. This is the database-design principle of trading storage redundancy for read performance, applied to context windows.
+
+**Skip annotations.** When a governance file restates information that already exists in quick-reference.md (trust-level behaviors, decay thresholds, anomaly signals), it includes a one-line annotation: *"If you've already loaded quick-reference.md, skip this section."* This preserves readability for humans browsing the file while giving agents an explicit exit ramp from redundant content.
+
+**Checklist-skill separation.** Session checklists (`meta/session-checklists.md`) are self-sufficient for normal operation — they include inline quality criteria and anti-patterns. The full skill files (`skills/session-start.md`, `skills/session-wrapup.md`) are on-demand references for first bootstrap or uncertainty. This avoids loading ~950 words of skill files every session when a ~600-word checklist covers the same ground.
+
+### Principles for dual-audience friendliness
+
+These principles apply to any file in the system — governance docs, skills, README sections, or future additions:
+
+**Write for the human first, annotate for the agent.** The primary text should be clear and self-contained for a human reader. Agent-specific routing ("skip this if you've loaded X") goes in annotations, not in the main prose. A human skimming the file shouldn't feel like they're reading machine instructions.
+
+**Justify once, reference everywhere.** The rationale for a rule (why this threshold, why this folder contract, why this trust level) should live in exactly one place — typically the governance file that establishes the rule. Every other file that applies the rule should reference that source, not re-derive the justification. This keeps the agent's context budget focused on *what to do*, not *why to do it* for the twentieth time.
+
+**Put operational content at the top, reference content at the bottom.** When an agent loads a file, the first few hundred tokens are the most valuable — they're read before the agent can decide whether the rest is needed. Decision guides, active thresholds, and executable procedures should come before rationale sections, worked examples, and edge-case discussions.
+
+**Make load boundaries explicit.** If a file should only be loaded under certain conditions, say so in the first line — not buried in a section heading or implied by the file's location. The pattern is a bolded header: *"Load this file only when running aggregation or a stage transition."* This costs one line of context and saves potentially thousands of tokens of unnecessary loading.
+
+**Separate stable reference from volatile state.** A file that mixes permanent rules with frequently updated state (dates, thresholds, assessment logs) forces the agent to re-read stable content every time it needs to check the volatile part. The quick-reference pattern — a lean, frequently-updated state file that points to stable reference documents for rationale — keeps the hot path short.
+
+**Measure what you mandate.** Every piece of bookkeeping the system asks the agent to perform (ACCESS logging, reflection notes, helpfulness scoring, aggregation, periodic review) has a cost in context and compliance. Before adding a new requirement, ask: does this feed a feedback loop that measurably improves the system? If the answer is "it might be useful someday," defer it. The system should have the minimum governance that produces the maximum self-organization — not the maximum governance that can be specified.
 
 ---
 
@@ -126,39 +162,41 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 
 **5. A `/health` diagnostic skill.** A skill the user can trigger to get a system health report: how many files, coverage percentage, retrieval success rate, stale content, pending review items, maturity stage assessment. Makes the system's self-organizing dynamics visible to the user on demand.
 
+**6. Context budget monitoring.** The system tracks retrieval helpfulness but not context cost. A lightweight mechanism — logging approximate token counts consumed by governance files at session start, or tracking how much of the context window is spent on system overhead vs. user work — would provide the data needed to evaluate whether governance files are earning their context budget. This would close the feedback loop on context efficiency the same way ACCESS.jsonl closes the feedback loop on retrieval quality.
+
 ### Medium-term (architectural extensions)
 
-**6. Multi-user support.** The current architecture assumes a single user. Supporting multiple users (e.g., a team repo) would require:
+**7. Multi-user support.** The current architecture assumes a single user. Supporting multiple users (e.g., a team repo) would require:
 - Per-user identity folders (or a shared identity with user-specific overlays).
 - Access control on identity files (Alice's preferences shouldn't be writable by Bob's agent).
 - Conflict resolution for concurrent writes to shared knowledge.
 - Git branch strategies for isolated experimentation vs. shared ground truth.
 
-**7. Semantic retrieval.** The current retrieval mechanism is SUMMARY.md-based: the agent reads summaries and decides what to fetch. This works well but becomes less effective as the system grows. Adding a local embedding index (e.g., using a lightweight model to embed all files and perform nearest-neighbor search) would dramatically improve retrieval precision at scale without changing the fundamental architecture. The embedding index would be a supplementary retrieval mechanism alongside SUMMARY-based navigation, not a replacement.
+**8. Semantic retrieval.** The current retrieval mechanism is SUMMARY.md-based: the agent reads summaries and decides what to fetch. This works well but becomes less effective as the system grows. Adding a local embedding index (e.g., using a lightweight model to embed all files and perform nearest-neighbor search) would dramatically improve retrieval precision at scale without changing the fundamental architecture. The embedding index would be a supplementary retrieval mechanism alongside SUMMARY-based navigation, not a replacement.
 
-**8. Real-time sync.** For users who switch between platforms within a single working session (e.g., Claude Code for coding, ChatGPT for brainstorming), the current per-session architecture means one platform's changes aren't visible to the other until the session ends. A lightweight sync mechanism (filesystem watcher + auto-commit, or a shared working directory) would enable mid-session handoffs.
+**9. Real-time sync.** For users who switch between platforms within a single working session (e.g., Claude Code for coding, ChatGPT for brainstorming), the current per-session architecture means one platform's changes aren't visible to the other until the session ends. A lightweight sync mechanism (filesystem watcher + auto-commit, or a shared working directory) would enable mid-session handoffs.
 
-**9. Memory visualization.** A web dashboard showing:
+**10. Memory visualization.** A web dashboard showing:
 - A knowledge graph of how files relate to each other (based on cross-references and co-retrieval patterns).
 - A heat map of retrieval frequency and helpfulness across the repo.
 - A timeline of how the user's profile has evolved.
 - Maturity stage tracking with historical trend.
 This would make the system's self-organizing dynamics visible and engaging, especially for users who are more visual than textual.
 
-**10. Skill marketplace.** Once multiple users have mature memory systems, commonly useful skills become shareable. A skill marketplace (a curated repository of skill files) would allow users to install pre-built workflows. The protected-tier security model already handles this: installed skills would arrive at `trust: low` and require user review before execution, the same way external knowledge is quarantined.
+**11. Skill marketplace.** Once multiple users have mature memory systems, commonly useful skills become shareable. A skill marketplace (a curated repository of skill files) would allow users to install pre-built workflows. The protected-tier security model already handles this: installed skills would arrive at `trust: low` and require user review before execution, the same way external knowledge is quarantined.
 
 ### Long-term (ecosystem evolution)
 
-**11. Federated memory.** A protocol for memory systems to share knowledge selectively — e.g., a team's shared knowledge repo that individual memory systems can subscribe to, receiving updates to knowledge files while maintaining their own identity and skills. This extends the git model naturally: shared knowledge is a remote repository; individual memory is a local fork.
+**12. Federated memory.** A protocol for memory systems to share knowledge selectively — e.g., a team's shared knowledge repo that individual memory systems can subscribe to, receiving updates to knowledge files while maintaining their own identity and skills. This extends the git model naturally: shared knowledge is a remote repository; individual memory is a local fork.
 
-**12. Agent-to-agent memory transfer.** When a user has multiple specialized agents (a coding agent, a research agent, a writing agent), they currently share a single memory repo. A more sophisticated architecture would allow agents to maintain separate working memories while sharing a common long-term memory layer — similar to how human working memory is task-specific but draws on shared long-term memory.
+**13. Agent-to-agent memory transfer.** When a user has multiple specialized agents (a coding agent, a research agent, a writing agent), they currently share a single memory repo. A more sophisticated architecture would allow agents to maintain separate working memories while sharing a common long-term memory layer — similar to how human working memory is task-specific but draws on shared long-term memory.
 
-**13. Temporal reasoning.** The system currently stores memory with timestamps but doesn't reason temporally in sophisticated ways. Future extensions could support:
+**14. Temporal reasoning.** The system currently stores memory with timestamps but doesn't reason temporally in sophisticated ways. Future extensions could support:
 - Automatic detection of time-dependent knowledge ("this API version is current as of March 2026" becoming stale).
 - Predictive retrieval based on temporal patterns ("the user usually asks about deployment on Fridays").
 - Narrative generation from the temporal stream ("here's how your understanding of distributed systems evolved over the past year").
 
-**14. Self-modifying governance.** The governance feedback mechanism already allows the agent to propose governance changes based on evidence. The long-term direction is a system where governance rules genuinely co-evolve with content — where thresholds, trust policies, and even folder structures adapt continuously rather than in discrete periodic reviews.
+**15. Self-modifying governance.** The governance feedback mechanism already allows the agent to propose governance changes based on evidence. The long-term direction is a system where governance rules genuinely co-evolve with content — where thresholds, trust policies, and even folder structures adapt continuously rather than in discrete periodic reviews.
 
 ---
 
@@ -173,7 +211,7 @@ This would make the system's self-organizing dynamics visible and engaging, espe
 - `log_access(file, task, helpfulness)` — append to ACCESS.jsonl.
 - `get_context(topic)` — return the most relevant files for a given topic, navigating the summary hierarchy automatically.
 
-This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursorrules) and make the memory system a first-class tool rather than a set of instructions the model must parse and follow.
+This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursorrules) and make the memory system a first-class tool rather than a set of instructions the model must parse and follow. It would also provide a natural enforcement point for context efficiency — the MCP server could implement the context loading manifest programmatically, serving only the files appropriate for the current session type rather than relying on the agent to follow loading instructions.
 
 **VS Code / IDE extension.** A lightweight extension that:
 - Shows the current user profile in a sidebar panel.
@@ -231,5 +269,7 @@ This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursor
 ## Summary
 
 Agent Memory Seed is a system built on the conviction that AI memory should be a user-owned, human-readable, model-portable artifact — not a platform feature that locks users in or an opaque embedding store that defies inspection. Its architecture draws from version control (git as the audit trail), information retrieval (progressive compression and trust-weighted retrieval), immune systems (quarantine, decay, anomaly detection), and developmental biology (maturity stages with adaptive parameters).
+
+The system serves two audiences — humans who read and edit the files, and agents who load them into finite context windows — and treats the tension between their needs as a permanent design constraint rather than a problem to solve once. Context efficiency is not an afterthought but a first-class architectural concern, shaping how files are scoped, split, annotated, and loaded.
 
 The system is currently a template — a seed, as the name suggests. Its value grows with use: each session adds signal, each aggregation sharpens retrieval, each review strengthens governance. The future directions outlined here extend that trajectory: from individual to team, from manual to automated, from single-platform to ecosystem-wide. But the core principle remains constant: **memory is yours, stored in files you control, in a format any model can read.**
