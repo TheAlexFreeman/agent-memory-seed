@@ -27,12 +27,15 @@ Key files:
 - `celery-advanced-patterns.md` — Canvas, routing, priorities, Beat, transaction safety, Docker
 - `django-react-drf.md` — DRF serializers, ViewSets, JWT, CORS, file uploads, custom actions
 
-### `_unverified/react/` — React 19 research (ingested 2026-03-18, trust: low)
+### `_unverified/react/` — React + Chakra frontend research (ingested 2026-03-18, trust: low)
 
-One file covering the React 19 release, upgrade path, and the most important 19.2 follow-on additions. Sourced from official React docs/blog pages.
+Four files covering React 19 and Chakra UI 3. Sourced from official React and Chakra docs/blog pages, with a focus on modern React frontends and design-system-driven styling.
 
 Key files:
 - `react-19-overview.md` — Stable release status, Actions/forms APIs, `use`, metadata/assets support, upgrade hazards, TS changes, and React 19.2 additions
+- `chakra-ui-3-overview.md` — Chakra 3 architecture, migration surface, state-machine components, performance changes, and ecosystem shifts from v2
+- `chakra-ui-3-styling-system.md` — `createSystem`, tokens, semantic tokens, recipes, slot recipes, virtual colors, cascade layers, and CLI typegen
+- `chakra-ui-3-react-frontend-patterns.md` — Practical synthesis for building consistent, accessible, responsive, and mode-aware React frontends with Chakra 3
 
 ## What belongs here
 

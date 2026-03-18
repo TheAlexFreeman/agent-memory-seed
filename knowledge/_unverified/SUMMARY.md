@@ -44,11 +44,14 @@ Seven files synthesized from Alex's shared philosophical conversation and follow
 - **`synthesis-intelligence-as-dynamical-regime.md`** — Unified synthesis: intelligence as a dynamical regime (bottom-up positive + top-down negative feedback at the edge of chaos), convergence across traditions, open questions.
 - **`llm-vs-human-mind-comparative-analysis.md`** — Full comparative analysis using the dynamical framework: three root divergences (passive vs. active, atemporal vs. temporal, disembodied vs. embodied), downstream strengths/weaknesses, framework map table, implications for agent memory design.
 
-### `react/` — React 19 release and upgrade research (ingested 2026-03-18)
+### `react/` — React 19 + Chakra UI 3 frontend research (ingested 2026-03-18)
 
-One file synthesized from official React documentation and blog posts. Carries `trust: low` pending review because it is externally sourced.
+Four files synthesized from official React and Chakra documentation/blog posts. All carry `trust: low` pending review because they are externally sourced.
 
 - **`react-19-overview.md`** — Release status, major 19.0 features, upgrade path and breaking changes, TypeScript migration notes, and the most important React 19.2 additions.
+- **`chakra-ui-3-overview.md`** — Chakra 3 release overview, architecture, migration surface, performance changes, and the main conceptual differences from Chakra 2.
+- **`chakra-ui-3-styling-system.md`** — Chakra 3's token/semantic-token/recipe system, virtual colors, cascade layers, reusable style compositions, and CLI-assisted type safety.
+- **`chakra-ui-3-react-frontend-patterns.md`** — Practical frontend-quality patterns around accessibility, responsiveness, color mode, motion, composition, and React server/client boundaries.
 
 ## Usage patterns
 
