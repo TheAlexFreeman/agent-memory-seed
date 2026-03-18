@@ -8,7 +8,7 @@ trust: high
 
 # Session Wrap-Up
 
-**Load this skill on your first bootstrap or when uncertain about the wrap-up protocol.** For normal sessions, the compact checklist in `meta/session-checklists.md` § "Session end" is sufficient — it includes the quality criteria and anti-patterns inline.
+**Load this skill on your first bootstrap or when uncertain about the wrap-up protocol.** Load `meta/session-checklists.md` only when you want the shorter session-end runbook there during normal sessions; it is an on-demand reference, not the live router.
 
 ## When to use this skill
 

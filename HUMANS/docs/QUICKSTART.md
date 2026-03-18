@@ -62,7 +62,7 @@ See [Platform setup](#platform-setup) below for your specific tool.
 Open a conversation with your AI in the repo directory. The agent will:
 
 1. Read `meta/quick-reference.md` and follow its routing.
-2. Detect that this is a fresh system (no user profile exists).
+2. Detect that this is a fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet).
 3. Read `README.md` only if `meta/quick-reference.md` routes it into first-run bootstrap, then run the onboarding skill.
 4. Propose an initial profile, ask you to confirm it, then write to `identity/` and record the session.
 
@@ -140,7 +140,7 @@ If your AI platform can't write files directly, the onboarding still works — y
 bash HUMANS/tooling/scripts/onboard-export.sh my-onboarding.md
 ```
 
-This writes your profile to `identity/`, recreates the first session's chat record in `chats/`, and commits everything. From the next session onward, the agent will recognize you.
+This writes your profile to `identity/`, recreates the first session's chat record in `chats/`, and then either auto-commits the imported files when git author identity is configured or stages them and prints the manual commit command. From the next session onward, the agent will recognize you.
 
 Use `--dry-run` to preview what would be written without making changes.
 
@@ -149,7 +149,7 @@ Use `--dry-run` to preview what would be written without making changes.
 The memory system is model-agnostic. To switch:
 
 1. Set up the new platform using the instructions above.
-2. The new model follows the bootstrap sequence — no repo changes needed.
+2. The new model follows the live routing from `meta/quick-reference.md` — no repo changes needed.
 3. The CHANGELOG.md should record model transitions as system events.
 
 All accumulated knowledge, skills, and identity information transfers automatically because it's stored in files, not in any model's context.

@@ -1,8 +1,11 @@
 # First-Run Flow
 
-This document is an agent-facing streamlined flow for the very first session. It condenses bootstrap steps 1–9 from README.md into a single checklist with clear silent/interactive annotations.
+This document is an agent-facing streamlined flow for the very first session. It condenses the README.md bootstrap into a single checklist with clear silent/interactive annotations.
+
+> **Authority:** This flow is reached via `meta/quick-reference.md` routing. It is subordinate to `meta/quick-reference.md` for active thresholds and session routing. When in doubt, defer to `meta/quick-reference.md`.
 
 **When to use:** No date-organized chat folders exist under `chats/`, AND either:
+
 - `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
 - `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but onboarding has not yet run).
 

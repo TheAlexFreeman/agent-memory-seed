@@ -13,7 +13,7 @@ Every content file in `identity/`, `knowledge/`, and `skills/` must include YAML
 source: user-stated | agent-inferred | external-research | skill-discovery | template | unknown
 origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
-last_verified: YYYY-MM-DD  # optional until a human confirms the content
+last_verified: YYYY-MM-DD # optional until a human confirms the content
 trust: high | medium | low
 ---
 ```
@@ -49,9 +49,38 @@ Trust may also be demoted: if a `high`-trust file is found to contain inaccuraci
 
 For new unverified files, omit `last_verified` rather than filling it with the creation date. Human confirmation during onboarding, review, or correction is what sets it.
 
+### Operational confirmation signals
+
+Multiple rules reference "user explicitly confirms" or "when user validates." These are the concrete signals that count as explicit confirmation:
+
+- **Explicit affirmation.** User says "yes," "that's right," "confirmed," or equivalent in response to a direct question about the content.
+- **Active correction that confirms the rest.** User corrects one detail but accepts the remainder — the uncorrected portions are confirmed.
+
+The following is an **implicit** signal only — it does not count as explicit confirmation and cannot by itself be used to update `last_verified` or promote trust. Treat it as a prompt to seek explicit confirmation instead:
+
+- **Incorporation without objection.** User builds on the content in their own workflow (e.g., references the information in a follow-up request) without challenging it.
+
+These signals do **not** count as confirmation:
+
+- **Silence or topic change.** The user simply moves on without acknowledging the content.
+- **Passive non-objection.** The content was loaded but never surfaced to or acknowledged by the user.
+- **Automated retrieval.** The file was retrieved by the agent but never discussed.
+
+When confirmation occurs, update `last_verified` to the current date and promote the trust level per the trust assignment rules above.
+
 ### Retroactive application
 
-Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, and `last_verified` set to the review date. That backfill review counts as the human verification event.
+Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown` and `trust: medium`. If the reviewer actually reads and verifies the content during backfill, set `last_verified` to the review date. If the backfill is mechanical (adding metadata without verifying content), omit `last_verified` and let `created` serve as the effective verification date — this prevents conflating "I added metadata" with "I verified this content." If the original creation date cannot be determined, use the backfill date as `created`.
+
+## Architectural standard for system changes
+
+When the agent is reviewing or modifying the memory system itself — governance docs, routing manifests, bootstrap/setup flows, validation rules, or other protected architecture — the proposal must address three fundamental considerations:
+
+- **Consistency.** `README.md`, `meta/quick-reference.md`, `meta/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
+- **User-friendliness.** Preserve progressive disclosure, comprehensible approval steps, readable setup copy, and maintenance workflows that a normal user can actually follow.
+- **Context efficiency.** Preserve the compact returning manifest, prefer metadata-first checks and on-demand loads, and justify any added bootstrap or periodic-review overhead.
+
+For system-level changes, the change summary is incomplete unless it explains the expected effect on all three dimensions, including any tradeoffs or follow-up alignment work.
 
 ## Change categories
 
@@ -76,6 +105,22 @@ Files that predate this schema should have frontmatter added during the next per
 
 For proposed changes: describe the change and reasoning to the user. If approved, apply and log in CHANGELOG.md. If the user is unavailable, add to `meta/review-queue.md`.
 
+### Approval workflow
+
+**For proposed changes:**
+
+1. Present a 2–3 sentence summary of the change and your reasoning.
+2. Wait for an explicit response (approval or rejection). Do not infer approval from silence or topic changes.
+3. If approved → apply the change and log in CHANGELOG.md.
+4. If rejected → acknowledge and do not proceed. Note the rejection context for future reference.
+5. If the user doesn't respond and the session continues on other topics → add to `meta/review-queue.md` as `type: proposed`.
+
+**For protected changes:**
+
+Same workflow, but with elevated formality: state explicitly that the change requires approval because it modifies a protected file (`skills/`, `meta/`, `README.md`). For system-level changes, include the expected impact on consistency, user-friendliness, and context efficiency. Use phrasing like: "This requires your explicit approval because it modifies [target]. Shall I proceed?"
+
+**What counts as approval:** An explicit affirmative response — "yes," "go ahead," "approved," "do it," or equivalent. Lack of objection, moving on to another topic, or ambiguous responses ("maybe," "I guess") are not approval. When in doubt, ask again clearly.
+
 ### Protected changes (require explicit approval)
 
 - Creating, modifying, or removing files in `skills/`.
@@ -86,10 +131,10 @@ For proposed changes: describe the change and reasoning to the user. If approved
 
 **Machine-generated state files in `meta/` (exempt from protected-change requirement):**
 
-| File                      | Generated by                                  | Why exempt                                                                                                 |
-| ------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `meta/task-groups.md`     | ACCESS.jsonl aggregation (Calibration stage+)  | Auto-generated data file, not a governance document                                                        |
-| `meta/task-categories.md` | Calibration → Consolidation transition         | Distilled from task-groups.md; initial creation requires protected approval, routine maintenance is automatic |
+| File                      | Generated by                                  | Why exempt                                                                                                    |
+| ------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `meta/task-groups.md`     | ACCESS.jsonl aggregation (Calibration stage+) | Auto-generated data file, not a governance document                                                           |
+| `meta/task-categories.md` | Calibration → Consolidation transition        | Distilled from task-groups.md; initial creation requires protected approval, routine maintenance is automatic |
 
 Protected changes must never be applied silently. Always present them to the user with full reasoning and wait for explicit confirmation.
 
@@ -117,15 +162,15 @@ All behavioral rules remain active regardless of write access: trust-weighted re
 
 ### What to defer
 
-| Action                            | Deferred behavior                                                                 |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| Appending to ACCESS.jsonl         | Compile entries mentally; present to user as a block to copy in                   |
-| Writing chat summaries            | Present the summary as output; user can paste it into the repo                    |
-| Updating SUMMARY.md files         | Note which summaries need updating and what changes are needed                    |
-| Writing to `meta/review-queue.md` | Surface the finding verbally and describe what entry would be written             |
-| Logging a maturity assessment     | Run the assessment, report the result, ask the user to commit it                  |
-| Periodic review curation actions  | Run through the checklist, report findings; user handles the commits              |
-| Writing session reflection notes  | Summarize the reflection verbally; user can paste it in                           |
+| Action                            | Deferred behavior                                                     |
+| --------------------------------- | --------------------------------------------------------------------- |
+| Appending to ACCESS.jsonl         | Compile entries mentally; present to user as a block to copy in       |
+| Writing chat summaries            | Present the summary as output; user can paste it into the repo        |
+| Updating SUMMARY.md files         | Note which summaries need updating and what changes are needed        |
+| Writing to `meta/review-queue.md` | Surface the finding verbally and describe what entry would be written |
+| Logging a maturity assessment     | Run the assessment, report the result, ask the user to commit it      |
+| Periodic review curation actions  | Run through the checklist, report findings; user handles the commits  |
+| Writing session reflection notes  | Summarize the reflection verbally; user can paste it in               |
 
 ### How to communicate deferred actions
 
@@ -164,7 +209,7 @@ During any session, if the agent notices it has been more than 30 days since the
 4. **Review queue.** Non-security entries in `meta/review-queue.md` awaiting approval?
 5. **Unhelpful memory.** Files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with knowledge amplification protocol.
 6. **Maturity assessment.** Assess developmental stage using `meta/system-maturity.md`. If changed, log transition and update `meta/quick-reference.md`.
-7. **Governance evaluation.** Are curation rules producing good outcomes? See `meta/curation-policy.md` § "Governance feedback".
+7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `meta/curation-policy.md` § "Governance feedback".
 8. **Folder structure.** Does it still make sense given actual usage?
 9. **Emergent categorization.** Cross-folder retrieval clusters? See `meta/curation-policy.md` § "Emergent categorization." (Most expensive step — do last.)
 10. **Session reflection themes.** Review recent reflection notes for recurring patterns. Address through summary updates or review-queue proposals.

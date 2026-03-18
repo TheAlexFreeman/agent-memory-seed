@@ -3,7 +3,8 @@
 An adaptive, self-organizing, version-controlled memory layer for AI agents. Any capable model can read this repo and immediately know who you are, how you work, and what you've been doing — across sessions, platforms, and model versions.
 
 **Setting up for the first time?** → See [HUMANS/docs/QUICKSTART.md](HUMANS/docs/QUICKSTART.md)
-**Exploring the design?** → See [HUMANS/docs/DESIGN.md](HUMANS/docs/DESIGN.md)
+**Need the fundamentals first?** → See [HUMANS/docs/CORE.md](HUMANS/docs/CORE.md)
+**Exploring the design deeply?** → See [HUMANS/docs/DESIGN.md](HUMANS/docs/DESIGN.md)
 
 ---
 
@@ -15,13 +16,26 @@ You are an AI agent reading this repository. Start every session with `meta/quic
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
 
+## Architectural guardrails for system changes
+
+When reviewing or modifying the memory system itself — governance rules, routing manifests, setup flows, validation tooling, or other agent-facing architecture — treat the following as first-order design constraints, not polish work:
+
+- **Consistency.** Keep the operational router, architecture reference, governance docs, templates, validators, and generated artifacts aligned. Prefer single authoritative sources over duplicated rules, and update dependent surfaces together when the contract changes.
+- **User-friendliness.** Preserve progressive disclosure, readable instructions, low-friction setup, and practical maintenance flows. A change that is theoretically cleaner but materially harder for the user to understand or operate is an architectural regression.
+- **Context efficiency.** Protect the compact returning path. Prefer summaries, metadata-first probes, and on-demand references over unconditional loading. Any increase to bootstrap or review overhead should be justified by clear operational value.
+
+Agents proposing or evaluating system-level changes should explain the impact on all three dimensions and call out explicit tradeoffs when one improves at another's expense.
+
 ## How to orient yourself
 
-1. **Read this file** to understand the system architecture.
-2. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
-3. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
-4. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
-5. **Log your access** using the access-note format described below.
+1. **Start with `meta/quick-reference.md`** — it routes you to the right files for your session type.
+2. **Read this file when routed here** — for first runs, full bootstraps, or periodic reviews.
+3. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
+4. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
+5. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
+6. **Log your access** using the access-note format described below.
+
+> **This README is the architectural reference.** It is not a sequential entry point. For session routing, always start from `meta/quick-reference.md`.
 
 ## Agent routing
 
@@ -100,6 +114,7 @@ For the complete mapping of which files to load per session type, see `meta/quic
 └── HUMANS/                ← Human-facing content. Never loaded by agents.
     ├── docs/              ← Documentation.
     │   ├── QUICKSTART.md  ← Setup guide. Start here if you're a person.
+    │   ├── CORE.md        ← Core design decisions, architecture, and guiding philosophy.
     │   ├── DESIGN.md      ← Design philosophy, use cases, and future directions.
     │   └── GLOSSARY.md    ← Definitions of system terminology (human reference only).
     └── tooling/           ← Maintenance tooling and tests.
@@ -137,11 +152,17 @@ Optional ACCESS fields:
 
 The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/curation-algorithms.md` § "Phase 3" for how it develops.
 
-`helpfulness` uses a three-state model:
+`helpfulness` is the agent's judgment of whether a retrieval was useful to producing the session's responses, on a 0.0–1.0 scale:
 
-- **0.0 – 0.1 (wrong context):** File was clearly irrelevant — retrieved in error or drawn by a false-positive attractor in SUMMARY.md. Note what attracted the retrieval so it can be corrected.
-- **0.2 – 0.4 (retrieved, not used):** File was in the right neighborhood but not incorporated in the response — a near-miss. May indicate the file needs better differentiation from similar files, or splitting.
-- **0.5 – 1.0 (used and helpful):** File materially influenced the response. Score higher when it was central to the answer, lower when it was peripheral context.
+| Range   | Meaning                                                                          | Example                                                |
+| ------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 0.0–0.1 | **Wrong context.** Irrelevant or retrieved in error.                             | Retrieved "React patterns" for a React Native query    |
+| 0.2–0.4 | **Near-miss.** Right neighborhood but not incorporated.                          | Opened a related file but used a different one instead |
+| 0.5–0.6 | **Useful context.** Directly relevant, informed the response but wasn't central. | Provided background that shaped framing                |
+| 0.7–0.8 | **Highly relevant.** Shaped a key decision or was directly used.                 | File content was quoted or directly applied            |
+| 0.9–1.0 | **Critical.** Response would be significantly worse without this file.           | Core reference that the answer depended on             |
+
+Score what actually happened, not what should have happened. A high-quality file that wasn't needed for this particular task is a 0.2, not a 0.7.
 
 `note` should be one sentence explaining relevance or lack thereof. Be honest — a 0.1 with a note like _"retrieved because of 'React' in title, query was actually about React Native"_ is more valuable to the feedback loop than a polite 0.7.
 
@@ -258,11 +279,11 @@ If `meta/quick-reference.md` routes you to a fresh instantiation on a returning 
 
 Context cost depends on whether the model is onboarding, resuming normally, or reopening the full governance stack. Use these rough planning numbers:
 
-| Session mode                  | Typical token cost | When to expect it |
-| ----------------------------- | ------------------ | ----------------- |
-| First-run onboarding bootstrap | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session     | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
-| Full bootstrap / periodic review | ~18,000–25,000  | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+| Session mode                     | Typical token cost | When to expect it                                                                                         |
+| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
+| Returning compact session        | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md`                     |
+| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 For models with smaller context windows, prefer the compact returning manifest in `meta/quick-reference.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 

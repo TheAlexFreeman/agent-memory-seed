@@ -20,6 +20,7 @@ LIVE_CONFIG_LINE = (
     "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
 )
 ADAPTER_ROUTING_LINE = "follow the routing rules in `meta/quick-reference.md`"
+SETUP_GUIDANCE_LINE = "live routing in `meta/quick-reference.md`"
 
 SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
 validator = importlib.util.module_from_spec(SPEC)
@@ -136,6 +137,7 @@ def build_minimal_repo(root: Path) -> None:
             {PROMPT_START_LINE}
             {PROMPT_ROUTE_LINE}
             {LIVE_CONFIG_LINE}
+            {SETUP_GUIDANCE_LINE}
             """
         ),
     )
@@ -178,12 +180,23 @@ def build_minimal_repo(root: Path) -> None:
             {PROMPT_START_LINE}
             {PROMPT_ROUTE_LINE}
             {LIVE_CONFIG_LINE}
+            {SETUP_GUIDANCE_LINE}
 
             | Session mode | Typical token cost | When |
             | --- | --- | --- |
             | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
             | Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
             | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+            """
+        ),
+    )
+    write(
+        root / "HUMANS" / "tooling" / "onboard-export-template.md",
+        textwrap.dedent(
+            """\
+            # Onboarding Export
+
+            Save it to a file and run `bash HUMANS/tooling/scripts/onboard-export.sh <file>`.
             """
         ),
     )
@@ -252,6 +265,35 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
+
+    def test_access_entry_with_malformed_session_id_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "example.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: unknown
+                    origin_session: unknown
+                    created: 2026-03-16
+                    trust: medium
+                    ---
+
+                    # Example
+                    """
+                ),
+            )
+            write(
+                root / "skills" / "ACCESS.jsonl",
+                '{"file":"skills/example.md","date":"2026-03-16","task":"test","helpfulness":0.8,"note":"used","session_id":"chat-001"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("session_id must match chats/YYYY/MM/DD/chat-NNN" in error for error in result.errors)
+            )
 
     def test_invalid_source_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -530,6 +572,8 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     trust: high
                     ---
 
+                    For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`. Load `meta/session-checklists.md` only when you want more detail than that compact path.
+
                     Run at the beginning of returning sessions after the compact returning manifest in `meta/quick-reference.md` has oriented the agent.
 
                     - Use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them.
@@ -539,6 +583,92 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
+
+    def test_session_wrapup_skill_with_stale_checklist_default_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "session-wrapup.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: manual
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    For normal sessions, the compact checklist in `meta/session-checklists.md` is sufficient.
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("forbidden wrapup-skill pattern" in error for error in result.errors)
+            )
+
+    def test_session_wrapup_skill_with_on_demand_guidance_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "session-wrapup.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: manual
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    Load `meta/session-checklists.md` only when you want the shorter session-end runbook there.
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+
+    def test_setup_guidance_with_bootstrap_sequence_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "setup" / "setup.sh",
+                textwrap.dedent(
+                    f"""\
+                    #!/usr/bin/env bash
+                    {PROMPT_START_LINE}
+                    {PROMPT_ROUTE_LINE}
+                    {LIVE_CONFIG_LINE}
+                    follow the bootstrap sequence
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("forbidden setup-guidance pattern" in error for error in result.errors)
+            )
+
+    def test_onboarding_export_template_with_stale_script_path_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "HUMANS" / "tooling" / "onboard-export-template.md",
+                "# Onboarding Export\n\nRun `bash scripts/onboard-export.sh <file>`.\n",
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("forbidden onboarding-export pattern" in error for error in result.errors)
+            )
 
     def test_quarantine_file_with_wrong_trust_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -643,6 +773,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             "start with README.md and follow its routing rules",
             (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8"),
         )
+        self.assertNotIn(
+            "follow the bootstrap sequence",
+            (REPO_ROOT / "setup" / "setup.sh").read_text(encoding="utf-8"),
+        )
 
     def test_adapter_files_point_to_quick_reference(self) -> None:
         for path in (
@@ -671,6 +805,62 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertIn("Git remote setup stays manual.", quickstart)
         self.assertIn("git remote setup stays manual", setup_html)
         self.assertNotIn("Either path walks you through three choices", quickstart)
+        self.assertNotIn("follow the bootstrap sequence", quickstart)
+
+    def test_onboarding_export_template_uses_canonical_import_command(self) -> None:
+        text = (REPO_ROOT / "HUMANS" / "tooling" / "onboard-export-template.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("bash HUMANS/tooling/scripts/onboard-export.sh <file>", text)
+        self.assertNotIn("bash scripts/onboard-export.sh <file>", text)
+
+    def test_session_start_skill_defaults_to_quick_reference_and_uses_checklists_on_demand(self) -> None:
+        text = (REPO_ROOT / "skills" / "session-start.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`.",
+            text,
+        )
+        self.assertIn(
+            "Load `meta/session-checklists.md` only when you want more detail",
+            text,
+        )
+        self.assertNotIn(
+            'For normal returning sessions, the compact checklist in `meta/session-checklists.md` is sufficient',
+            text,
+        )
+
+    def test_session_wrapup_skill_uses_on_demand_session_checklists_language(self) -> None:
+        text = (REPO_ROOT / "skills" / "session-wrapup.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Load `meta/session-checklists.md` only when you want",
+            text,
+        )
+        self.assertIn("session-end runbook", text)
+        self.assertNotIn(
+            'For normal sessions, the compact checklist in `meta/session-checklists.md` is sufficient',
+            text,
+        )
+
+    def test_quickstart_describes_template_backed_first_run_and_conditional_import_commit(self) -> None:
+        text = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn(
+            "fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet)",
+            text,
+        )
+        self.assertIn(
+            "auto-commits the imported files when git author identity is configured",
+            text,
+        )
+        self.assertIn(
+            "stages them and prints the manual commit command",
+            text,
+        )
 
     def test_compact_manifest_excludes_readme_and_session_checklists(self) -> None:
         quick_reference = (REPO_ROOT / "meta" / "quick-reference.md").read_text(

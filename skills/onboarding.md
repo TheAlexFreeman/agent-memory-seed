@@ -15,9 +15,9 @@ Activate this skill on the **first session only** — when no date-organized cha
 1. `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
 2. `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but has not yet been confirmed through onboarding).
 
-If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Skip this skill and proceed with the normal bootstrap sequence.
+If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Return to `meta/quick-reference.md` and follow its routing instead.
 
-Before using this skill, the agent should already have read `meta/quick-reference.md`, reviewed the relevant change-control and read-only sections of `meta/update-guidelines.md`, and checked write access per README.md's bootstrap sequence.
+Before using this skill, the agent should already have been routed here from `meta/quick-reference.md`, reviewed the relevant change-control and read-only sections of `meta/update-guidelines.md`, and checked write access per the first-run flow in `meta/first-run.md`.
 
 ## Steps
 

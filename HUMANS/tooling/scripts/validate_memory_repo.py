@@ -59,6 +59,17 @@ PROMPT_COPY_FILES = (
     Path("setup/setup.html"),
     Path("HUMANS/docs/QUICKSTART.md"),
 )
+SETUP_GUIDANCE_FILES = (
+    Path("setup/setup.sh"),
+    Path("HUMANS/docs/QUICKSTART.md"),
+)
+ONBOARDING_EXPORT_TEMPLATE_PATH = Path("HUMANS/tooling/onboard-export-template.md")
+ONBOARDING_EXPORT_REQUIRED_PHRASE = (
+    "bash HUMANS/tooling/scripts/onboard-export.sh <file>"
+)
+ONBOARDING_EXPORT_FORBIDDEN_PATTERNS = (
+    r"bash scripts/onboard-export\.sh(?: <file>)?",
+)
 ADAPTER_FILES = (Path("AGENTS.md"), Path("CLAUDE.md"), Path(".cursorrules"))
 ROOT_SETUP_TARGETS = {
     Path("setup.sh"): "setup/setup.sh",
@@ -84,15 +95,31 @@ QUICK_REFERENCE_ROUTER_PHRASE = (
     "Use this file as the operational router for every session:"
 )
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
+SETUP_GUIDANCE_REQUIRED_PATTERNS = (
+    r"live routing (?:in|from)\s+`?meta/quick-reference\.md`?",
+)
+SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (
+    r"follow the bootstrap sequence",
+)
 SESSION_START_SKILL_PATH = Path("skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
     "compact returning manifest in `meta/quick-reference.md`",
+    "Load `meta/session-checklists.md` only when you want more detail",
     "If `meta/review-queue.md` still contains only its placeholder, skip it.",
     "Load it only when there are real pending items or the user asks about them.",
 )
 SESSION_START_FORBIDDEN_PATTERNS = (
     r"after README\.md has been read",
     r"^- Read `meta/review-queue\.md`\.",
+    r"compact checklist in `meta/session-checklists\.md` is sufficient",
+)
+SESSION_WRAPUP_SKILL_PATH = Path("skills/session-wrapup.md")
+SESSION_WRAPUP_REQUIRED_PHRASES = (
+    "Load `meta/session-checklists.md` only when you want",
+    "session-end runbook",
+)
+SESSION_WRAPUP_FORBIDDEN_PATTERNS = (
+    r"compact checklist in `meta/session-checklists\.md` is sufficient",
 )
 
 FORBIDDEN_RUNTIME_PATTERNS = (
@@ -308,10 +335,16 @@ def validate_access_file(path: Path, result: ValidationResult) -> None:
                 f"{path}:{line_number}: helpfulness must be between 0.0 and 1.0"
             )
 
-        if "session_id" in payload and not isinstance(payload["session_id"], str):
-            result.error(
-                f"{path}:{line_number}: session_id must be a string when present"
-            )
+        if "session_id" in payload:
+            session_id = payload["session_id"]
+            if not isinstance(session_id, str):
+                result.error(
+                    f"{path}:{line_number}: session_id must be a string when present"
+                )
+            elif not CANONICAL_ORIGIN_SESSION_RE.fullmatch(session_id):
+                result.error(
+                    f"{path}:{line_number}: session_id must match chats/YYYY/MM/DD/chat-NNN when present, got {session_id!r}"
+                )
         if "category" in payload and not isinstance(payload["category"], str):
             result.error(
                 f"{path}:{line_number}: category must be a string when present"
@@ -447,6 +480,49 @@ def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
                 result.error(f"{path}: missing prompt-copy phrase {phrase!r}")
 
 
+def validate_setup_guidance(root: Path, result: ValidationResult) -> None:
+    for relative_path in SETUP_GUIDANCE_FILES:
+        path = root / relative_path
+        if not path.exists():
+            result.error(f"{path}: missing setup-guidance file")
+            continue
+        text = read_text(path, result)
+        if text is None:
+            continue
+        for pattern in SETUP_GUIDANCE_REQUIRED_PATTERNS:
+            if not re.search(pattern, text):
+                result.error(
+                    f"{path}: missing setup-guidance pattern {pattern!r}"
+                )
+        for pattern in SETUP_GUIDANCE_FORBIDDEN_PATTERNS:
+            if re.search(pattern, text):
+                result.error(
+                    f"{path}: contains forbidden setup-guidance pattern {pattern!r}"
+                )
+
+
+def validate_onboarding_export_template(root: Path, result: ValidationResult) -> None:
+    path = root / ONBOARDING_EXPORT_TEMPLATE_PATH
+    if not path.exists():
+        result.error(f"{path}: missing onboarding export template")
+        return
+
+    text = read_text(path, result)
+    if text is None:
+        return
+
+    if ONBOARDING_EXPORT_REQUIRED_PHRASE not in text:
+        result.error(
+            f"{path}: missing onboarding-export phrase {ONBOARDING_EXPORT_REQUIRED_PHRASE!r}"
+        )
+
+    for pattern in ONBOARDING_EXPORT_FORBIDDEN_PATTERNS:
+        if re.search(pattern, text):
+            result.error(
+                f"{path}: contains forbidden onboarding-export pattern {pattern!r}"
+            )
+
+
 def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
     readme = read_text(root / "README.md", result)
     if readme is not None:
@@ -472,6 +548,21 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
                 if re.search(pattern, text, re.MULTILINE):
                     result.error(
                         f"{session_start}: contains forbidden startup-skill pattern {pattern!r}"
+                    )
+
+    session_wrapup = root / SESSION_WRAPUP_SKILL_PATH
+    if session_wrapup.exists():
+        text = read_text(session_wrapup, result)
+        if text is not None:
+            for phrase in SESSION_WRAPUP_REQUIRED_PHRASES:
+                if phrase not in text:
+                    result.error(
+                        f"{session_wrapup}: missing wrapup-skill phrase {phrase!r}"
+                    )
+            for pattern in SESSION_WRAPUP_FORBIDDEN_PATTERNS:
+                if re.search(pattern, text, re.MULTILINE):
+                    result.error(
+                        f"{session_wrapup}: contains forbidden wrapup-skill pattern {pattern!r}"
                     )
 
 
@@ -512,6 +603,8 @@ def validate_repo(root: Path) -> ValidationResult:
     validate_setup_entrypoints(root, result)
     validate_adapter_routing(root, result)
     validate_prompt_copy(root, result)
+    validate_setup_guidance(root, result)
+    validate_onboarding_export_template(root, result)
     validate_contract_consistency(root, result)
     validate_quarantine(root, result)
 

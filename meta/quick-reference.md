@@ -4,6 +4,10 @@
 
 This is the single authoritative source for the system's currently active operational parameters. It is updated during each periodic review after a maturity assessment. All other threshold values in `curation-policy.md` and `README.md` are reference values shown for illustration — the values below are what actually governs the live system. `meta/system-maturity.md` is a reference used to assess maturity and choose the next parameter set; it is not the live runtime config.
 
+## Architectural guardrails for system changes
+
+When you are reviewing or modifying the system itself, treat **consistency**, **user-friendliness**, and **context efficiency** as architectural guardrails. Keep authority files aligned, preserve the compact returning path, and make tradeoffs explicit when a change helps one dimension at the expense of another.
+
 ---
 
 ## Session routing
@@ -80,6 +84,8 @@ The agent should update this date when completing a full periodic review (same c
 
 ## Decision guide: trust decay
 
+Trust level sets the **decay threshold** (how long before action is taken). The **effective verification date** determines actual staleness. These are independent — a high-trust file can still be stale, and a low-trust file can be fresh. See `meta/curation-policy.md` § "Freshness vs. confidence" for the full rationale.
+
 ### `trust: low` file
 
 1. Has the effective verification date (`last_verified` if set, otherwise `created`) gone unupdated for more than **120 days**? → Archive to `knowledge/_archive/`, remove from SUMMARY.md, log as `[curation]` commit.
@@ -100,7 +106,7 @@ The agent should update this date when completing a full periodic review (same c
 
 **Definition of "unverified":** Files with no `last_verified` yet are still unverified. Their decay clock starts at `created`. Any user interaction that confirms the content (explicit approval, correction, or re-confirmation) sets or updates `last_verified` and resets the clock.
 
-**Files without frontmatter:** Treated as `trust: medium` with `last_verified` set to the date frontmatter was retroactively added. This prevents mass archival of legacy content.
+**Files without frontmatter:** Treated as `trust: medium`. When adding frontmatter retroactively: if the backfill is mechanical (adding metadata without verifying content), omit `last_verified` — the decay clock runs from `created`. If the original creation date is unknown, use the backfill date as `created`. Only set `last_verified` to the backfill date if the reviewer actually reads and verifies the content during backfill. See `meta/update-guidelines.md` § "Retroactive application" for the full policy.
 
 ---
 
@@ -127,6 +133,24 @@ Aggregate when entries accumulated since last aggregation reach **15**. Aggregat
 
 **Entry counting rule:** Always count entries in the current `ACCESS.jsonl` file (not the archive). After each aggregation, `ACCESS.jsonl` is reset to empty, so all entries in it are by definition accumulated since the last aggregation. The archive is append-only and used only for historical staleness detection.
 
+**For the full aggregation procedure,** see `meta/curation-algorithms.md` § "Aggregation runbook."
+
+---
+
+## Helpfulness scoring guide
+
+`helpfulness` is the agent's judgment of whether a retrieval was useful to producing the session's responses, on a 0.0–1.0 scale:
+
+| Range   | Meaning                                                                          | Example                                                |
+| ------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 0.0–0.1 | **Wrong context.** Irrelevant or retrieved in error.                             | Retrieved "React patterns" for a React Native query    |
+| 0.2–0.4 | **Near-miss.** Right neighborhood but not incorporated.                          | Opened a related file but used a different one instead |
+| 0.5–0.6 | **Useful context.** Directly relevant, informed the response but wasn't central. | Provided background that shaped framing                |
+| 0.7–0.8 | **Highly relevant.** Shaped a key decision or was directly used.                 | File content was quoted or directly applied            |
+| 0.9–1.0 | **Critical.** Response would be significantly worse without this file.           | Core reference that the answer depended on             |
+
+Score what actually happened, not what should have happened. A high-quality file that wasn't needed for this particular task is a 0.2, not a 0.7.
+
 ---
 
 ## How to update this file
@@ -145,10 +169,10 @@ Stage parameter tables: see `meta/system-maturity.md` §§ "Stage 1: Exploration
 
 ## Context budget guideline
 
-| Session mode | Typical token cost | When |
-| --- | --- | --- |
-| First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session | ~3,000–6,000 | Normal day-to-day use via the compact returning manifest in this file |
-| Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+| Session mode                     | Typical token cost | When                                                                                                      |
+| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
+| Returning compact session        | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in this file                                     |
+| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 For models with context windows under 32k, prefer the compact returning manifest in this file after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.

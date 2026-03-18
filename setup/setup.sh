@@ -10,6 +10,9 @@ PLATFORM=""
 PROFILE=""
 USER_NAME=""
 USER_CONTEXT=""
+INITIAL_COMMIT_MANIFEST="setup/initial-commit-paths.txt"
+INITIAL_COMMIT_PATH_ARGS=""
+declare -a INITIAL_COMMIT_PATHS=()
 
 usage() {
     echo "Usage: setup.sh [OPTIONS]"
@@ -85,6 +88,49 @@ if [[ ! -f "README.md" ]] || [[ ! -d "meta" ]]; then
     echo "Error: setup.sh must be run from the root of the agent-memory-seed repository."
     exit 1
 fi
+
+load_initial_commit_paths() {
+    local path=""
+    local -a missing_paths=()
+    INITIAL_COMMIT_PATHS=()
+
+    if [[ ! -f "$INITIAL_COMMIT_MANIFEST" ]]; then
+        echo "[error] Missing initial commit manifest: $INITIAL_COMMIT_MANIFEST"
+        return 1
+    fi
+
+    while IFS= read -r path || [[ -n "$path" ]]; do
+        if [[ -z "$path" ]] || [[ "$path" == \#* ]]; then
+            continue
+        fi
+        if [[ -e "$path" ]] || [[ -L "$path" ]]; then
+            INITIAL_COMMIT_PATHS+=("$path")
+        else
+            missing_paths+=("$path")
+        fi
+    done < "$INITIAL_COMMIT_MANIFEST"
+
+    if [[ ${#INITIAL_COMMIT_PATHS[@]} -eq 0 ]]; then
+        echo "[error] Initial commit manifest did not resolve to any existing repo paths."
+        return 1
+    fi
+
+    if [[ ${#missing_paths[@]} -gt 0 ]]; then
+        echo "[warn] Initial commit allowlist references missing repo paths; skipping them:"
+        printf '       %s\n' "${missing_paths[@]}"
+    fi
+
+    printf -v INITIAL_COMMIT_PATH_ARGS '%q ' "${INITIAL_COMMIT_PATHS[@]}"
+    INITIAL_COMMIT_PATH_ARGS="${INITIAL_COMMIT_PATH_ARGS% }"
+}
+
+stage_initial_commit_paths() {
+    # Rebuild the unborn-branch index so the first commit contains only the allowlist.
+    if ! git read-tree --empty >/dev/null 2>&1; then
+        rm -f .git/index
+    fi
+    git add -- "${INITIAL_COMMIT_PATHS[@]}"
+}
 
 echo "=== Agent Memory System Setup ==="
 echo ""
@@ -203,8 +249,8 @@ print_platform_instructions() {
             echo ""
             echo "  cd $(pwd) && claude"
             echo ""
-            echo "Claude Code will read CLAUDE.md, follow the bootstrap sequence,"
-            echo "and run the onboarding skill to learn about you."
+            echo "Claude Code will read CLAUDE.md, which points it to the live routing in meta/quick-reference.md."
+            echo "From there it will run onboarding only if this is a fresh system."
             ;;
         cursor)
             echo "=== Cursor Setup ==="
@@ -213,8 +259,7 @@ print_platform_instructions() {
             echo "To start your first session:"
             echo ""
             echo "  1. Open this folder in Cursor."
-            echo "  2. Start a conversation — the agent will follow the bootstrap"
-            echo "     sequence and run onboarding automatically."
+            echo "  2. Start a conversation — the agent will follow the live routing in meta/quick-reference.md and run onboarding only if needed."
             ;;
         chatgpt)
             echo "=== ChatGPT Setup ==="
@@ -269,8 +314,7 @@ GENERIC_EOF
             echo "=== Next Steps ==="
             echo ""
             echo "  1. See HUMANS/docs/QUICKSTART.md for platform-specific setup instructions."
-            echo "  2. Start a session with your AI — it will run the onboarding skill"
-            echo "     and ask you a few questions to build your initial profile."
+            echo "  2. Start a session with your AI — it will follow the live routing in meta/quick-reference.md and ask onboarding questions if needed."
             echo "  3. Your memory system grows from there."
             ;;
     esac
@@ -301,21 +345,26 @@ fi
 
 # 7. Make initial commit if no commits exist
 if ! git rev-parse HEAD >/dev/null 2>&1; then
+    load_initial_commit_paths
+    stage_initial_commit_paths
+
     # Check git author identity before committing
     GIT_NAME=$(git config user.name 2>/dev/null || true)
     GIT_EMAIL=$(git config user.email 2>/dev/null || true)
     if [[ -z "$GIT_NAME" ]] || [[ -z "$GIT_EMAIL" ]]; then
         echo ""
         echo "[warn] Git author identity not configured (user.name / user.email unset)."
-        echo "       Skipping initial commit. Run these commands to configure, then commit manually:"
+        echo "       Allowlisted repo paths are staged and other local files are left unstaged."
+        echo "       Run these commands to configure, then commit the staged allowlist:"
         echo "         git config user.name  \"Your Name\""
         echo "         git config user.email \"you@example.com\""
-        echo "         git add -A && git commit -m '[system] Initialize agent memory system'"
+        echo "         git commit -m '[system] Initialize agent memory system' -m 'Created from agent-memory-seed template on $TODAY.'"
+        echo "       If you need to rebuild the same staged allowlist first, run:"
+        echo "         git add -- ${INITIAL_COMMIT_PATH_ARGS}"
+        echo "         git commit -m '[system] Initialize agent memory system' -m 'Created from agent-memory-seed template on $TODAY.'"
     else
-        git add -A
-        git commit -m "[system] Initialize agent memory system
-
-Created from agent-memory-seed template on $TODAY."
+        git commit -m "[system] Initialize agent memory system" \
+            -m "Created from agent-memory-seed template on $TODAY."
         echo "[ok] Created initial commit"
     fi
 else

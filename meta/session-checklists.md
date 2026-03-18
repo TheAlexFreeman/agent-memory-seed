@@ -2,6 +2,8 @@
 
 Compact runbooks for session start and end. **Load this file on demand** when you want more detail than the compact manifest in `meta/quick-reference.md`. The full skill files (`skills/session-start.md`, `skills/session-sync.md`, `skills/session-wrapup.md`) remain deeper references for uncertain cases.
 
+> **Authority:** These runbooks elaborate on the compact manifest in `meta/quick-reference.md`. For the authoritative routing decision and active thresholds, see that file first. When these runbooks and `meta/quick-reference.md` conflict, `meta/quick-reference.md` governs.
+
 For a complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest".
 
 ## First session
@@ -32,7 +34,7 @@ For the full workflow with detailed steps, see `skills/session-sync.md`.
 2. **Reflection note** — Write `reflection.md` in the chat folder. See README § "Session reflection" for the format. Be honest — low helpfulness scores and gap observations are more valuable than optimistic self-assessment.
 3. **Scratchpad review** — Review `scratchpad/CURRENT.md`. Promote any entry confirmed across 3+ sessions or validated by the user this session. Update the session link on entries you're keeping. Clear entries that are stale or disproved. Load `meta/scratchpad-guidelines.md` if you need the full decision criteria.
 4. **ACCESS.jsonl** — Append an entry for every content file you retrieved during this session. Include `session_id`. Don't inflate helpfulness scores — a file opened but not used in the response is 0.2–0.4, not 0.7.
-5. **Aggregation check** — If any ACCESS.jsonl has reached the active aggregation trigger (see `meta/quick-reference.md`), load `meta/curation-algorithms.md` and run aggregation.
+5. **Aggregation check** — If any ACCESS.jsonl has reached the active aggregation trigger (see `meta/quick-reference.md`), load `meta/curation-algorithms.md` and follow the aggregation runbook there.
 6. **Summary updates** — If this session produced significant new knowledge, identity changes, or skill refinements, update the relevant folder's SUMMARY.md. Ensure identity or meta changes were proposed and approved per `meta/update-guidelines.md`.
 7. **If read-only** — Produce a deferred-action summary per `meta/update-guidelines.md` § "How to communicate deferred actions" (worked example in `meta/deferred-action-template.md`). Make it comprehensive enough that the user can apply all changes without re-reading the session.
 8. **Sign off** — Brief, warm. Reference something specific from the session. Not a generic "have a great day."

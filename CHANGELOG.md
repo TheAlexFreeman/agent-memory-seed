@@ -16,6 +16,52 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Human-facing core architecture guide
+
+**Changed:**
+
+- **Added a middle-layer architecture guide for people.** Created `HUMANS/docs/CORE.md` to explain the system's core design decisions, architectural principles, tradeoffs, and guiding philosophy in plain language for readers with different technical backgrounds.
+
+- **Surfaced the new guide in the seed itself.** Updated `README.md` to point users to `CORE.md` alongside Quickstart and Design, expanded the repository structure listing to include it, and added the file to `setup/initial-commit-paths.txt` so it is part of the canonical first commit.
+
+**Reasoning:** The repo already had a setup guide, a deep design essay, and a glossary, but it lacked a clear "why this architecture exists and how to think about it" document for people who need fundamentals before implementation detail. Adding that middle layer improves user-friendliness without increasing agent startup context, and it makes the system's core philosophy easier to understand, review, and preserve as the project evolves.
+
+**Approved by:** user
+
+---
+
+## [2026-03-18] Setup commit allowlist, browser local dates, and wider contract enforcement
+
+**Changed:**
+
+- **Initial setup commit is now path-scoped.** Added `setup/initial-commit-paths.txt` as the canonical allowlist for the first setup commit, updated `setup/setup.sh` to stage only those repo-managed paths, and changed both the auto-commit and missing-git-identity guidance to use safe path-scoped commits instead of `git add -A`.
+
+- **Shell/browser setup date parity restored.** Updated `setup/setup.html` to generate `created` dates from local date components rather than UTC ISO timestamps, preventing browser-generated starter files from drifting by a day near local midnight.
+
+- **Operational wording and enforcement widened.** Updated the current setup, onboarding, wrap-up, and quickstart guidance to reinforce quick-reference-first routing rather than vague bootstrap language. The validator and tests are expanded to enforce this on the remaining high-value operational surfaces beyond `session-start`.
+
+**Reasoning:** The repo already had strong routing and setup contracts, but three gaps remained: initial setup could still scoop unrelated local files into the first commit, browser setup did not actually match shell provenance semantics near midnight, and some high-value operational surfaces could drift back toward stale bootstrap-era wording without CI catching it. These changes make first-run setup safer, shell/browser behavior truly consistent, and the contract-enforcement layer cover the operator-facing and wrap-up surfaces that matter most.
+
+**Approved by:** user
+
+---
+
+## [2026-03-18] Architectural guardrails for governance evolution
+
+**Changed:**
+
+- **System-change guardrails made explicit.** Added a new architectural guardrail section to `README.md` and a matching note to `meta/quick-reference.md` making consistency, user-friendliness, and context efficiency first-order considerations whenever agents review or modify the system itself.
+
+- **Governance review criteria tightened.** Updated `meta/curation-policy.md` and `meta/update-guidelines.md` so periodic reviews and system-level change proposals must explicitly evaluate these three dimensions rather than treating them as implicit quality concerns.
+
+- **Proposal and audit templates aligned.** Updated `meta/review-queue.md` and `meta/integrity-checklist.md` so governance proposals and integrity checks now capture architectural impact, operational drift, and context-budget regressions tied to those same guardrails.
+
+**Reasoning:** The repo already emphasized routing authority, progressive disclosure, and context budgets, but those concerns were distributed across documents rather than stated as a shared architectural standard for self-modification. Making them explicit at the governing control points reduces the chance of future drift where a technically sound local change degrades cross-doc consistency, user operability, or compact-session efficiency.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Optional verification dates, setup parity, and scoped onboarding commits
 
 **Changed:**

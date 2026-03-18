@@ -8,7 +8,7 @@ trust: high
 
 # Session Start
 
-**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, the compact checklist in `meta/session-checklists.md` § "Session start" is sufficient — it includes the quality criteria and anti-patterns inline.
+**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`. Load `meta/session-checklists.md` only when you want more detail than that compact path.
 
 ## When to use this skill
 

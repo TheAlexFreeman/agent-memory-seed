@@ -61,8 +61,18 @@ At the Exploration → Calibration transition, the agent normalizes all historic
 Once approved, ACCESS.jsonl entries gain a `category` field:
 
 ```json
-{"file": "...", "date": "...", "task": "...", "category": "react-performance", "helpfulness": 0.0, "note": "..."}
+{
+  "file": "...",
+  "date": "...",
+  "task": "...",
+  "category": "react-performance",
+  "helpfulness": 0.0,
+  "note": "..."
+}
 ```
+
+> **JSONL format note:** The multi-line format above is for documentation readability only. ACCESS.jsonl requires one JSON object per line. Write each entry as a single line when appending to the file:
+> `{"file": "...", "date": "...", "task": "...", "category": "react-performance", "helpfulness": 0.0, "note": "..."}`
 
 The `task` field is retained as human-readable context and raw input for vocabulary refinement. The `category` field is selected from `meta/task-categories.md` at write time. If no category fits (Jaccard similarity below 0.5), assign `uncategorized`.
 
@@ -84,10 +94,38 @@ At the Calibration → Consolidation transition, the agent backfills `category` 
 
 ## Cluster co-retrieval threshold by stage
 
-| Stage | Threshold | Rationale |
-|-------|-----------|-----------|
-| Exploration | 3 sessions | Low bar appropriate for small dataset and coarse similarity signal |
-| Calibration | 3 sessions | Same threshold, but finer task-group scoping reduces false positives |
-| Consolidation | 4 sessions | Higher bar appropriate for cleaner category-based signal |
+| Stage         | Threshold  | Rationale                                                            |
+| ------------- | ---------- | -------------------------------------------------------------------- |
+| Exploration   | 3 sessions | Low bar appropriate for small dataset and coarse similarity signal   |
+| Calibration   | 3 sessions | Same threshold, but finer task-group scoping reduces false positives |
+| Consolidation | 4 sessions | Higher bar appropriate for cleaner category-based signal             |
 
 The active threshold is recorded in `meta/quick-reference.md`.
+
+## Aggregation runbook
+
+Concrete steps for running ACCESS.jsonl aggregation. This procedure applies at any maturity stage — the task similarity method changes by stage, but the data pipeline is the same.
+
+### Prerequisites
+
+- At least one `ACCESS.jsonl` file has reached the active aggregation trigger (see `meta/quick-reference.md`).
+- You have loaded this file and `meta/quick-reference.md`.
+
+### Procedure
+
+1. **Collect entries.** Read all non-empty `ACCESS.jsonl` files from every folder (`identity/`, `knowledge/`, `knowledge/_unverified/`, `skills/`, `chats/`).
+2. **Merge into a working set.** Group entries by `session_id` when present; fall back to `date` for legacy entries without `session_id`.
+3. **Run task similarity analysis** using the phase appropriate to the current maturity stage (Phase 1 / 2 / 3 above). Record any new clusters or task groups.
+4. **Compute per-file statistics.** For each file appearing in the working set: total retrievals, mean helpfulness, sessions where retrieved, co-retrieved files.
+5. **Identify high-value files** (5+ retrievals, mean helpfulness ≥ 0.7). Enrich per `meta/curation-policy.md` § "Knowledge amplification."
+6. **Identify low-value files** (3+ retrievals, mean helpfulness ≤ 0.3). Investigate root cause and flag for retirement if appropriate.
+7. **Update SUMMARY.md files.** Refresh the "Usage patterns" section in each folder's SUMMARY.md with: high-value files, low-value files, co-retrieval clusters, and retrieval trends since last aggregation.
+8. **Update task-groups or task-categories.** At Calibration+: write or update `meta/task-groups.md`. At Consolidation: update `meta/task-categories.md`.
+9. **Archive entries.** Append the current contents of each `ACCESS.jsonl` to `ACCESS.archive.jsonl` in the same folder (create the archive file if it doesn't exist).
+10. **Reset ACCESS.jsonl files.** Clear each processed `ACCESS.jsonl` to empty.
+11. **Commit.** Log as a `[curation]` commit with a summary of findings (e.g., "Aggregation: 15 entries, 2 high-value files, 1 cluster detected").
+
+### Post-aggregation
+
+- If aggregation revealed files needing retirement, add entries to `meta/review-queue.md`.
+- If a maturity stage transition is indicated, follow the transition procedure in `meta/system-maturity.md` and update `meta/quick-reference.md`.

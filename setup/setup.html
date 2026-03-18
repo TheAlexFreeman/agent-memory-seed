@@ -284,16 +284,15 @@ button {
   var selectedPlatform = null;
   var generatedFiles   = [];
 
-  // ── Profile content (mirrors templates/profiles/*.md) ─────────────────────
+  // ── Profile content (mirrors templates/profiles/*.md — keep in sync) ─────────────────────
   var PROFILES = {
     'software-developer': {
       label: 'Software Developer',
+      // Keep in sync with setup/templates/profiles/software-developer.md
       body: [
         '# User Profile \u2014 Software Developer (Template)',
         '',
-        '> Traits marked `[template]` are common defaults. Confirm, adjust,',
-        '> or remove them during onboarding. Once confirmed, change tags to',
-        '> `[observed]`.',
+        '> This is a starter template. Traits marked `[template]` are common defaults \u2014 confirm, adjust, or remove them during onboarding. Once confirmed by the user, change tags to `[observed]` and update `trust: high` in the frontmatter.',
         '',
         '## Role and context',
         '',
@@ -305,28 +304,27 @@ button {
         '',
         '- **Detail level:** Concise by default. Show code first, explain after. [template]',
         '- **Tone:** Direct and technical. Skip the preamble. [template]',
-        '- **Format:** Code blocks with comments over prose. Bullet points over paragraphs. [template]',
-        '- **Anti-preferences:** Avoid restating the question. Don\u2019t hedge without giving a concrete recommendation. [template]',
+        '- **Format:** Code blocks with comments over prose explanations. Bullet points over paragraphs. [template]',
+        '- **Anti-preferences:** Avoid restating the question back. Don\u2019t hedge with "it depends" without then giving a concrete recommendation. [template]',
         '',
         '## Tools and environment',
         '',
-        '- **Languages:** _[To be filled during onboarding]_',
-        '- **Editor/IDE:** _[To be filled]_',
-        '- **Platforms:** _[To be filled]_',
+        '- **Languages:** _[To be filled during onboarding \u2014 e.g., TypeScript, Python, Rust]_',
+        '- **Editor/IDE:** _[To be filled \u2014 e.g., VS Code, Cursor, Neovim]_',
+        '- **Platforms:** _[To be filled \u2014 e.g., GitHub, AWS, Docker]_',
         '',
         '## Customize me',
         '',
-        'The traits above are starting points. During onboarding the agent will walk through each section and ask what fits, what doesn\u2019t, and what\u2019s missing.'
+        'The traits above are starting points. During onboarding, the agent will walk through each section and ask what fits, what doesn\u2019t, and what\u2019s missing. Blank fields will be filled from the conversation.'
       ].join('\n')
     },
     'researcher': {
       label: 'Researcher',
+      // Keep in sync with setup/templates/profiles/researcher.md
       body: [
         '# User Profile \u2014 Researcher (Template)',
         '',
-        '> Traits marked `[template]` are common defaults. Confirm, adjust,',
-        '> or remove them during onboarding. Once confirmed, change tags to',
-        '> `[observed]`.',
+        '> This is a starter template. Traits marked `[template]` are common defaults \u2014 confirm, adjust, or remove them during onboarding. Once confirmed by the user, change tags to `[observed]` and update `trust: high` in the frontmatter.',
         '',
         '## Role and context',
         '',
@@ -337,29 +335,29 @@ button {
         '## Communication preferences',
         '',
         '- **Detail level:** Thorough. Prefer comprehensive explanations with caveats and confidence levels. [template]',
-        '- **Tone:** Intellectually rigorous but accessible. [template]',
-        '- **Format:** Structured prose with clear section headings. Inline citations where applicable. [template]',
-        '- **Anti-preferences:** Don\u2019t oversimplify. Don\u2019t present uncertain claims as settled facts. [template]',
+        '- **Tone:** Intellectually rigorous but accessible. Avoid jargon unless the domain calls for it. [template]',
+        '- **Format:** Structured prose with clear section headings. Footnotes or inline citations where applicable. [template]',
+        '- **Anti-preferences:** Don\u2019t oversimplify complex topics. Don\u2019t present uncertain claims as settled facts. [template]',
         '',
         '## Tools and environment',
         '',
-        '- **Research domain:** _[To be filled during onboarding]_',
-        '- **Writing tools:** _[To be filled]_',
-        '- **Reference management:** _[To be filled]_',
+        '- **Research domain:** _[To be filled during onboarding \u2014 e.g., machine learning, biology, economics]_',
+        '- **Writing tools:** _[To be filled \u2014 e.g., LaTeX, Google Docs, Obsidian]_',
+        '- **Reference management:** _[To be filled \u2014 e.g., Zotero, Mendeley, plain BibTeX]_',
+        '- **Data tools:** _[To be filled \u2014 e.g., Python/Jupyter, R, SPSS]_',
         '',
         '## Customize me',
         '',
-        'The traits above are starting points. During onboarding the agent will walk through each section and ask what fits, what doesn\u2019t, and what\u2019s missing.'
+        'The traits above are starting points. During onboarding, the agent will walk through each section and ask what fits, what doesn\u2019t, and what\u2019s missing. Blank fields will be filled from the conversation.'
       ].join('\n')
     },
     'project-manager': {
       label: 'Project Manager',
+      // Keep in sync with setup/templates/profiles/project-manager.md
       body: [
         '# User Profile \u2014 Project Manager (Template)',
         '',
-        '> Traits marked `[template]` are common defaults. Confirm, adjust,',
-        '> or remove them during onboarding. Once confirmed, change tags to',
-        '> `[observed]`.',
+        '> This is a starter template. Traits marked `[template]` are common defaults \u2014 confirm, adjust, or remove them during onboarding. Once confirmed by the user, change tags to `[observed]` and update `trust: high` in the frontmatter.',
         '',
         '## Role and context',
         '',
@@ -372,17 +370,18 @@ button {
         '- **Detail level:** Concise and actionable. Lead with the bottom line, details on request. [template]',
         '- **Tone:** Professional but approachable. Suitable for sharing directly with stakeholders. [template]',
         '- **Format:** Bullet points, tables, and checklists. Status updates in a consistent structure. [template]',
-        '- **Anti-preferences:** Don\u2019t bury the conclusion. Avoid overly technical language for mixed audiences. [template]',
+        '- **Anti-preferences:** Don\u2019t bury the conclusion. Don\u2019t use overly technical language when the audience is mixed. [template]',
         '',
         '## Tools and environment',
         '',
-        '- **Project tools:** _[To be filled during onboarding]_',
-        '- **Communication:** _[To be filled]_',
-        '- **Domain:** _[To be filled]_',
+        '- **Project tools:** _[To be filled during onboarding \u2014 e.g., Jira, Linear, Asana, Notion]_',
+        '- **Communication:** _[To be filled \u2014 e.g., Slack, Teams, email]_',
+        '- **Documentation:** _[To be filled \u2014 e.g., Confluence, Google Docs, Notion]_',
+        '- **Domain:** _[To be filled \u2014 e.g., software development, marketing, operations]_',
         '',
         '## Customize me',
         '',
-        'The traits above are starting points. During onboarding the agent will walk through each section and ask what fits, what doesn\u2019t, and what\u2019s missing.'
+        'The traits above are starting points. During onboarding, the agent will walk through each section and ask what fits, what doesn\u2019t, and what\u2019s missing. Blank fields will be filled from the conversation.'
       ].join('\n')
     }
   };
@@ -421,7 +420,11 @@ button {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   function today() {
-    return new Date().toISOString().slice(0, 10);
+    var now = new Date();
+    var year = String(now.getFullYear());
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var day = String(now.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
   }
 
   function makeFrontmatter(source, trust) {
