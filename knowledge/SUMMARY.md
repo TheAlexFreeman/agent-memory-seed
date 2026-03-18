@@ -4,7 +4,17 @@ This folder contains structured information the user has accumulated or that the
 
 ## Current topics
 
-_No topics yet._ Knowledge files will be created as the user works on projects, explores ideas, or asks the agent to research and retain information.
+### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
+
+Six files covering Django 6.0, Celery, and the React/DRF stack. Sourced from web searches (docs.djangoproject.com was network-blocked during ingestion). Pending Alex's review for promotion.
+
+Key files:
+- `django-6.0-whats-new.md` — Release overview, breaking changes, deprecations, upgrade guide
+- `django-tasks-framework.md` — Built-in background tasks API; Celery comparison and intersection
+- `django-orm-postgres.md` — Advanced ORM patterns + all PostgreSQL-specific features
+- `django-caching-redis.md` — Redis cache configuration, patterns, Celery DB segregation
+- `celery-advanced-patterns.md` — Canvas, routing, priorities, Beat, transaction safety, Docker
+- `django-react-drf.md` — DRF serializers, ViewSets, JWT, CORS, file uploads, custom actions
 
 ## What belongs here
 
