@@ -71,6 +71,9 @@ Once approved, ACCESS.jsonl entries gain a `category` field:
 }
 ```
 
+> **JSONL format note:** The multi-line format above is for documentation readability only. ACCESS.jsonl requires one JSON object per line. Write each entry as a single line when appending to the file:
+> `{"file": "...", "date": "...", "task": "...", "category": "react-performance", "helpfulness": 0.0, "note": "..."}`
+
 The `task` field is retained as human-readable context and raw input for vocabulary refinement. The `category` field is selected from `meta/task-categories.md` at write time. If no category fits (Jaccard similarity below 0.5), assign `uncategorized`.
 
 ### Cluster detection (Consolidation)
@@ -97,7 +100,7 @@ At the Calibration → Consolidation transition, the agent backfills `category` 
 | Calibration   | 3 sessions | Same threshold, but finer task-group scoping reduces false positives |
 | Consolidation | 4 sessions | Higher bar appropriate for cleaner category-based signal             |
 
-## The active threshold is recorded in `meta/quick-reference.md`.
+The active threshold is recorded in `meta/quick-reference.md`.
 
 ## Aggregation runbook
 
