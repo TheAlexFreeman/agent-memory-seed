@@ -13,9 +13,7 @@ MCP tools, to avoid coupling).
 
 from __future__ import annotations
 
-import json
 import re
-from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,8 +28,8 @@ _IDENTITY_CHURN_LIMIT = 5
 _identity_updates_this_session: int = 0
 
 
-def register(mcp: "FastMCP", get_repo, get_root) -> None:
-    """Register all Tier 1 semantic tools onto the mcp instance."""
+def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
+    """Register all Tier 1 semantic tools and return their callables."""
 
     # ------------------------------------------------------------------
     # memory_mark_plan_item_complete
@@ -77,7 +75,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
               plan_progress  [done,total]
               status         (str)       'active' or 'complete'
         """
-        from ..errors import AlreadyDoneError, NotFoundError
+        from ..errors import NotFoundError
         from ..frontmatter_utils import (
             add_progress_log_row,
             build_plan_summary_block,
@@ -85,7 +83,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             read_with_frontmatter,
             replace_begin_end_block,
             today_str,
-            write_with_frontmatter,
         )
         from ..models import MemoryWriteResult
 
@@ -131,7 +128,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             fm_updates["status"] = "complete"
 
         # Re-read frontmatter from new_content and apply updates
-        import io
         import frontmatter as fmlib
         post = fmlib.loads(new_content)
         for k, v in fm_updates.items():
@@ -987,7 +983,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             # If session already mentioned, leave it (don't duplicate)
             if session_id not in chats_content:
                 # Add brief mention to "Overall history"
-                chat_name = session_id.split("/")[-1]
                 mention = f"\nSee `{session_id}/` for session recorded {today}.\n"
                 # Append before ## Structure
                 if "## Structure" in chats_content:
@@ -1291,3 +1286,17 @@ def register(mcp: "FastMCP", get_repo, get_root) -> None:
             new_state={"flagged_path": path, "priority": priority},
         )
         return result.to_json()
+
+    return {
+        "memory_mark_plan_item_complete": memory_mark_plan_item_complete,
+        "memory_promote_knowledge": memory_promote_knowledge,
+        "memory_demote_knowledge": memory_demote_knowledge,
+        "memory_archive_knowledge": memory_archive_knowledge,
+        "memory_add_knowledge_file": memory_add_knowledge_file,
+        "memory_append_scratchpad": memory_append_scratchpad,
+        "memory_update_identity_trait": memory_update_identity_trait,
+        "memory_record_chat_summary": memory_record_chat_summary,
+        "memory_create_plan": memory_create_plan,
+        "memory_update_plan_next_action": memory_update_plan_next_action,
+        "memory_flag_for_review": memory_flag_for_review,
+    }

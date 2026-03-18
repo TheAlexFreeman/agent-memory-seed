@@ -19,6 +19,7 @@ HUMANS/tooling/scripts/memory_mcp.py
 HUMANS/tooling/scripts/onboard-export.sh
 HUMANS/tooling/scripts/validate_memory_repo.py
 HUMANS/tooling/tests/__init__.py
+HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py
 HUMANS/tooling/tests/test_memory_mcp.py
 HUMANS/tooling/tests/test_onboard_export.py
 HUMANS/tooling/tests/test_setup_flows.py
@@ -26,6 +27,10 @@ HUMANS/tooling/tests/test_validate_memory_repo.py
 README.md
 chats/2026/03/18/chat-001/SUMMARY.md
 chats/2026/03/18/chat-001/reflection.md
+chats/2026/03/18/chat-002/SUMMARY.md
+chats/2026/03/18/chat-002/reflection.md
+chats/2026/03/18/chat-003/SUMMARY.md
+chats/2026/03/18/chat-003/reflection.md
 chats/ACCESS.jsonl
 chats/SUMMARY.md
 identity/ACCESS.jsonl
@@ -36,6 +41,7 @@ knowledge/SUMMARY.md
 knowledge/_unverified/ACCESS.jsonl
 knowledge/_unverified/SUMMARY.md
 knowledge/_unverified/django/celery-advanced-patterns.md
+knowledge/_unverified/django/celery-canvas-in-depth.md
 knowledge/_unverified/django/django-6.0-whats-new.md
 knowledge/_unverified/django/django-caching-redis.md
 knowledge/_unverified/django/django-observability-structlog-sentry.md
@@ -78,6 +84,7 @@ plans/django-stack-research.md
 plans/philosophy-history-survey.md
 plans/react-stack-research.md
 scratchpad/CURRENT.md
+scratchpad/2026-03-18-automation-backlog.md
 scratchpad/USER.md
 setup.html
 setup.sh
@@ -94,3 +101,14 @@ skills/onboarding.md
 skills/session-start.md
 skills/session-sync.md
 skills/session-wrapup.md
+tools/__init__.py
+tools/agent_memory_mcp/__init__.py
+tools/agent_memory_mcp/errors.py
+tools/agent_memory_mcp/frontmatter_utils.py
+tools/agent_memory_mcp/git_repo.py
+tools/agent_memory_mcp/models.py
+tools/agent_memory_mcp/server.py
+tools/agent_memory_mcp/tools/__init__.py
+tools/agent_memory_mcp/tools/read_tools.py
+tools/agent_memory_mcp/tools/semantic_tools.py
+tools/agent_memory_mcp/tools/write_tools.py

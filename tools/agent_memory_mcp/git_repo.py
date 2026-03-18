@@ -168,7 +168,7 @@ class GitRepo:
             sha = lines[0].strip()
             message = lines[1].strip()
             date = lines[2].strip()
-            files = [l.strip() for l in lines[3:] if l.strip()]
+            files = [line.strip() for line in lines[3:] if line.strip()]
             commits.append({
                 "sha": sha,
                 "message": message,
@@ -189,8 +189,8 @@ class GitRepo:
             ["git", "ls-files", "--others", "--exclude-standard"], check=False
         )
 
-        def _lines(r: subprocess.CompletedProcess) -> list[str]:
-            return [l for l in r.stdout.strip().splitlines() if l.strip()]
+        def _lines(result: subprocess.CompletedProcess) -> list[str]:
+            return [line for line in result.stdout.strip().splitlines() if line.strip()]
 
         return {
             "staged": _lines(staged_result),
