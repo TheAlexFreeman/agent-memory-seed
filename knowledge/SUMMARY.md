@@ -27,6 +27,13 @@ Key files:
 - `celery-advanced-patterns.md` — Canvas, routing, priorities, Beat, transaction safety, Docker
 - `django-react-drf.md` — DRF serializers, ViewSets, JWT, CORS, file uploads, custom actions
 
+### `_unverified/react/` — React 19 research (ingested 2026-03-18, trust: low)
+
+One file covering the React 19 release, upgrade path, and the most important 19.2 follow-on additions. Sourced from official React docs/blog pages.
+
+Key files:
+- `react-19-overview.md` — Stable release status, Actions/forms APIs, `use`, metadata/assets support, upgrade hazards, TS changes, and React 19.2 additions
+
 ## What belongs here
 
 - **Research notes and syntheses.** When the user asks the agent to research a topic deeply enough that the findings should persist, the results go here.

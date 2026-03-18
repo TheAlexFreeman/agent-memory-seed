@@ -44,6 +44,12 @@ Seven files synthesized from Alex's shared philosophical conversation and follow
 - **`synthesis-intelligence-as-dynamical-regime.md`** — Unified synthesis: intelligence as a dynamical regime (bottom-up positive + top-down negative feedback at the edge of chaos), convergence across traditions, open questions.
 - **`llm-vs-human-mind-comparative-analysis.md`** — Full comparative analysis using the dynamical framework: three root divergences (passive vs. active, atemporal vs. temporal, disembodied vs. embodied), downstream strengths/weaknesses, framework map table, implications for agent memory design.
 
+### `react/` — React 19 release and upgrade research (ingested 2026-03-18)
+
+One file synthesized from official React documentation and blog posts. Carries `trust: low` pending review because it is externally sourced.
+
+- **`react-19-overview.md`** — Release status, major 19.0 features, upgrade path and breaking changes, TypeScript migration notes, and the most important React 19.2 additions.
+
 ## Usage patterns
 
 _No access data yet._ After aggregation, this section will contain:
