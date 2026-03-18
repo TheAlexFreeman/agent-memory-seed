@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Design the startup panel
+next_action: Add branch/worktree warnings to startup
 origin_session: manual
 source: agent-generated
 status: active
@@ -220,9 +220,9 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
    - explicit "load summaries before transcripts" behavior
    - preserve an access trail for preloaded files
 
-### Phase 3 — Desktop UX · ☐ 0/3 complete
+### Phase 3 — Desktop UX · ☐ 1/3 complete
 
-7. ☐ Design the startup panel
+7. ☑ Design the startup panel
    - files loaded
    - mode selected
    - repo-declared next step
@@ -236,6 +236,32 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
    - "load full bootstrap"
    - "load compact startup only"
    - "skip repo manifest for this thread"
+
+### Phase 3 decisions (2026-03-18)
+
+#### 1. The startup panel should be a structured summary, not just a raw file trace
+
+The bootstrap runtime already knows enough to produce the core startup UI contract. The app should not reconstruct the panel ad hoc from loosely related fields. Instead, the startup resolution should include a dedicated panel object that directly answers the user-facing questions:
+
+- which startup mode was selected
+- whether startup is ready or needs attention
+- what files were loaded, skipped, or missing
+- what the repo-declared next step is
+
+Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now returns a `startup_panel` object alongside the lower-level startup trace.
+
+#### 2. The panel should anchor the next step to the repo router
+
+The most stable repo-declared next action is the router itself, not an inferred ad hoc message from the app. In this repo shape, the panel's primary action should point to `meta/quick-reference.md` as the canonical startup handoff for the selected mode. That keeps authority with the repo and gives the app a one-click action without inventing a second startup authority.
+
+#### 3. The panel status should be driven by real startup risk signals
+
+The panel should surface a compact status rather than making the user parse warnings manually:
+
+- `ready` when startup loaded cleanly with no warnings
+- `attention` when git/worktree warnings exist, required files are missing, or budget pressure changed what was preloaded
+
+Repo-side prototype: the runtime now derives `startup_panel.status`, file counts, warning count, budget health, and a panel-friendly file list from the same startup resolution used by the trace and warning system. `HUMANS/tooling/tests/test_bootstrap_resolver.py` validates both the ready and attention paths.
 
 ### Phase 4 — Validation and rollout · ☐ 0/2 complete
 
@@ -270,6 +296,8 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
 | 2026-03-18 | Added `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` plus tests as an executable runtime prototype for mode detection, git/worktree warnings, deterministic preload traces, and skip-reason reporting |
 | 2026-03-18 | Added budget-aware preload resolution to the bootstrap runtime prototype, including reserve-based optional-step skipping, transcript-heavy summary preference, explicit budget state, and trace-only preload auditing |
 | 2026-03-18 | Completed Add compact-context budgeting rules (codex-desktop-bootstrap-support 6/11) |
+| 2026-03-18 | Added a structured startup-panel contract to the bootstrap runtime prototype, with mode/status summary, panel-friendly file rows, router-anchored next step, and derived warning/budget state |
+| 2026-03-18 | Completed Design the startup panel (codex-desktop-bootstrap-support 7/11) |
 
 ---
 
