@@ -49,7 +49,7 @@ EXPECTED_QUICK_REFERENCE_PARAMETERS = (
 
 RUNTIME_GUIDANCE_FILES = (
     Path("README.md"),
-    Path("QUICKSTART.md"),
+    Path("docs/QUICKSTART.md"),
     Path("meta/quick-reference.md"),
     Path("meta/curation-policy.md"),
     Path("meta/update-guidelines.md"),

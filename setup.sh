@@ -228,7 +228,7 @@ GENERIC_EOF
         *)
             echo "=== Next Steps ==="
             echo ""
-            echo "  1. See QUICKSTART.md for platform-specific setup instructions."
+            echo "  1. See docs/QUICKSTART.md for platform-specific setup instructions."
             echo "  2. Start a session with your AI — it will run the onboarding skill"
             echo "     and ask you a few questions to build your initial profile."
             echo "  3. Your memory system grows from there."

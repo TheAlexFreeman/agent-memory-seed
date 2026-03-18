@@ -67,7 +67,7 @@ This tension is not a problem to solve once — it is a permanent design constra
 
 - *Always-load:* `quick-reference.md`, `session-checklists.md`. These two files carry the full operational weight of a normal session. Together they should stay under ~2,000 words.
 - *On-demand:* `curation-policy.md`, `update-guidelines.md` (loaded on full bootstrap), `curation-algorithms.md` (loaded during aggregation or stage transitions), `deferred-action-template.md` (loaded on first read-only session), `system-maturity.md` (loaded during periodic review).
-- *Human-only:* `glossary.md`. Every term it defines is already introduced in context by the governance file that establishes it. It exists for humans browsing the repo, not for agents building context.
+- *Human-only:* `docs/GLOSSARY.md`. Every term it defines is already introduced in context by the governance file that establishes it. It exists for humans browsing the repo, not for agents building context.
 
 **Denormalized lookup files.** `meta/quick-reference.md` is a deliberately denormalized document: it duplicates threshold values, decision guides, and operational parameters from across the governance layer into a single file the agent reads every session. The normative justification for each value lives in the source files (curation-policy, system-maturity), but the agent never needs to load those files just to look up a threshold. This is the database-design principle of trading storage redundancy for read performance, applied to context windows.
 

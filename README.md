@@ -97,8 +97,11 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 │   └── onboard-export-template.md ← Structured format for onboarding exports.
 │
 ├── tests/                 ← Test suite for the validator and import tooling.
-|
-└── docs/                  ← Project documentation for human users.
+│
+└── docs/                  ← Human-facing documentation. Never loaded by agents.
+    ├── QUICKSTART.md      ← Setup guide. Start here if you're a person.
+    ├── DESIGN.md          ← Design philosophy, use cases, and future directions.
+    └── GLOSSARY.md        ← Definitions of system terminology (human reference only).
 
 ```
 
@@ -245,7 +248,7 @@ If this is a fresh instantiation (the repo has just been cloned or linked for th
 12. Read `chats/SUMMARY.md` to get historical context (skip if no chat folders exist).
 13. Greet the user in a way that reflects what you've learned, and ask if anything important has changed since the last session.
 
-**Note:** Do not load `meta/glossary.md` (human reference only), `meta/curation-algorithms.md` (needed only during aggregation or stage transitions), or `meta/deferred-action-template.md` (needed only on first read-only session). See the context loading manifest in `meta/quick-reference.md` for the complete file-loading guide.
+**Note:** Do not load `docs/GLOSSARY.md` (human reference only), `meta/curation-algorithms.md` (needed only during aggregation or stage transitions), or `meta/deferred-action-template.md` (needed only on first read-only session). See the context loading manifest in `meta/quick-reference.md` for the complete file-loading guide.
 
 ### Context budget
 
