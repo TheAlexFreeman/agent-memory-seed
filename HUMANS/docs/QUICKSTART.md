@@ -62,7 +62,7 @@ See [Platform setup](#platform-setup) below for your specific tool.
 Open a conversation with your AI in the repo directory. The agent will:
 
 1. Read `meta/quick-reference.md` and follow its routing.
-2. Detect that this is a fresh system (no user profile exists).
+2. Detect that this is a fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet).
 3. Read `README.md` only if `meta/quick-reference.md` routes it into first-run bootstrap, then run the onboarding skill.
 4. Propose an initial profile, ask you to confirm it, then write to `identity/` and record the session.
 
@@ -140,7 +140,7 @@ If your AI platform can't write files directly, the onboarding still works — y
 bash HUMANS/tooling/scripts/onboard-export.sh my-onboarding.md
 ```
 
-This writes your profile to `identity/`, recreates the first session's chat record in `chats/`, and commits everything. From the next session onward, the agent will recognize you.
+This writes your profile to `identity/`, recreates the first session's chat record in `chats/`, and then either auto-commits the imported files when git author identity is configured or stages them and prints the manual commit command. From the next session onward, the agent will recognize you.
 
 Use `--dry-run` to preview what would be written without making changes.
 
