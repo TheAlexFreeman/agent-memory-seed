@@ -854,6 +854,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "rm -rf .git && git init && git symbolic-ref HEAD refs/heads/core",
+            text,
+        )
+        self.assertIn(
             "fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet)",
             text,
         )

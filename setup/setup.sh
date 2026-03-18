@@ -147,6 +147,7 @@ fi
 
 # 2. Initialize git if needed
 if [[ ! -d ".git" ]]; then
+    # `--initial-branch` is supported in Git 2.28+; older versions fall back to repointing HEAD.
     if git init --initial-branch=core >/dev/null 2>&1; then
         init_message="[ok] Initialized git repository on core branch"
     else

@@ -20,6 +20,12 @@ cd my-memory
 rm -rf .git && git init --initial-branch=core
 ```
 
+If your Git is older and does not support `--initial-branch`, use:
+
+```bash
+rm -rf .git && git init && git symbolic-ref HEAD refs/heads/core
+```
+
 ### 2. Run setup
 
 **Option A — Terminal** (recommended):
