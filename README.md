@@ -41,8 +41,6 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 ```
 /
 ├── README.md              ← You are here. System architecture and protocols.
-├── QUICKSTART.md          ← Human-facing setup guide. Start here if you're a person.
-├── DESIGN.md              ← Design philosophy, use cases, and future directions.
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
 ├── .cursorrules           ← Cursor platform adapter. Points to README.md.
 ├── setup.sh               ← Post-clone setup script (interactive or CLI flags).
@@ -87,7 +85,6 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 │   ├── system-maturity.md    ← Developmental stage tracking and adaptive thresholds.
 │   ├── first-run.md          ← Streamlined first-session flow for agents.
 │   ├── session-checklists.md ← Self-sufficient session start/end runbooks with quality criteria.
-│   ├── glossary.md           ← Definitions of system terminology (human reference only).
 │   ├── integrity-checklist.md ← Advisory audit checklist.
 │   ├── (task-groups.md       ← Created at Calibration stage; emergent task groups from ACCESS.)
 │   └── (task-categories.md   ← Created at Consolidation stage; controlled category vocabulary.)
@@ -99,7 +96,10 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 │   ├── onboard-export.sh       ← Import onboarding exports from read-only platforms.
 │   └── onboard-export-template.md ← Structured format for onboarding exports.
 │
-└── tests/                 ← Test suite for the validator and import tooling.
+├── tests/                 ← Test suite for the validator and import tooling.
+|
+└── docs/                  ← Project documentation for human users.
+
 ```
 
 ## Memory curation
