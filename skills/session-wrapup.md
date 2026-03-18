@@ -8,6 +8,8 @@ trust: high
 
 # Session Wrap-Up
 
+**Load this skill on your first bootstrap or when uncertain about the wrap-up protocol.** For normal sessions, the compact checklist in `meta/session-checklists.md` § "Session end" is sufficient — it includes the quality criteria and anti-patterns inline.
+
 ## When to use this skill
 
 Activate when:
@@ -43,7 +45,7 @@ If this session produced significant new knowledge, identity changes, or skill r
 
 ### 5. Check for system maintenance
 
-- If any ACCESS.jsonl has hit the aggregation trigger, run aggregation now or flag it for the next session start.
+- If any ACCESS.jsonl has hit the aggregation trigger (see `meta/quick-reference.md`), load `meta/curation-algorithms.md` and run aggregation now, or flag it for the next session start.
 - If periodic review is overdue, add a reminder to `meta/review-queue.md`.
 
 ### 6. Produce deferred actions (if read-only)
@@ -53,7 +55,7 @@ If write access is unavailable, produce a deferred-action summary listing:
 - All file writes (summaries, reflections, knowledge updates) that should be applied.
 - All review-queue items.
 
-Present this to the user in the deferred-action format defined in `meta/update-guidelines.md` § "How to communicate deferred actions" — a structured block the user can copy and paste or commit directly. (`scripts/onboard-export.sh` is for the first-session onboarding import only; it does not apply here.)
+Present this using the format in `meta/update-guidelines.md` § "How to communicate deferred actions". If this is your first read-only session, load `meta/deferred-action-template.md` for a worked example. (`scripts/onboard-export.sh` is for first-session onboarding only; it does not apply here.)
 
 ### 7. Sign off
 

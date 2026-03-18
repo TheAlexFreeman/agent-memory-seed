@@ -8,9 +8,11 @@ trust: high
 
 # Session Start
 
+**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, the compact checklist in `meta/session-checklists.md` § "Session start" is sufficient — it includes the quality criteria and anti-patterns inline.
+
 ## When to use this skill
 
-Run at the beginning of every session after the bootstrap sequence completes (i.e., after README.md has been read and the agent is oriented). This skill turns the session-start checklist into an executable workflow.
+Run at the beginning of every session after the bootstrap sequence completes (i.e., after README.md has been read and the agent is oriented). This skill expands the session-start checklist into a detailed workflow.
 
 Skip this skill on the very first session — use `meta/first-run.md` and the onboarding skill instead.
 
@@ -24,12 +26,12 @@ Skip this skill on the very first session — use `meta/first-run.md` and the on
 ### 2. Check pending items (silent)
 
 - Read `meta/review-queue.md`. Are there pending proposals the user hasn't reviewed?
-- Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag for aggregation during or after this session.
+- Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag for aggregation at session end — do not run aggregation now (it requires loading `meta/curation-algorithms.md` and is better deferred to wrap-up).
 - Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
 
 ### 3. Check write access (silent)
 
-- If running on a read-only platform, note this and prepare to produce deferred actions at session end per `meta/update-guidelines.md` § "Read-only operation".
+- If running on a read-only platform, note this and prepare to produce deferred actions at session end per `meta/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format.
 
 ### 4. Greet with continuity (interactive)
 
@@ -39,6 +41,14 @@ Greet the user in a way that reflects:
 - Any system maintenance due (aggregation, periodic review).
 
 Keep the greeting concise — 2–3 sentences. Then ask: "Has anything important changed since last time?"
+
+### Greeting examples
+
+**Good:** "Last time we were debugging that WebSocket connection issue in your dashboard — did you find the root cause? I also have a couple of review items queued up whenever you want to look at them."
+
+**Bad:** "Welcome back. Your profile indicates you are a software developer who prefers TypeScript. I have loaded your identity, knowledge, and skills summaries."
+
+The first demonstrates memory and invites continuation. The second recites data and narrates the bootstrap.
 
 ## Quality criteria
 

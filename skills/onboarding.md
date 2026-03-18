@@ -46,7 +46,7 @@ Keep it concise — one short paragraph, not a lecture.
 
 ### 2. Discover the user's role and context
 
-Ask about:
+Cover:
 
 - **Role and responsibilities.** What they do, what domain they work in.
 - **Key projects.** What they're actively working on or will be working on with AI assistance.
@@ -54,7 +54,7 @@ Ask about:
 
 ### 3. Discover communication preferences
 
-Ask about:
+Cover:
 
 - **Detail level.** Do they prefer concise answers or thorough explanations?
 - **Tone.** Casual, professional, direct, exploratory?
@@ -63,18 +63,20 @@ Ask about:
 
 ### 4. Discover tools and environment
 
-Ask about:
+Cover:
 
 - **Primary languages and frameworks** they work with.
 - **Editor/IDE** they use.
 - **Platforms and services** that come up regularly (cloud providers, CI/CD, etc.).
 - **Collaboration context.** Solo work, team, open source?
 
+**Pacing note for steps 2–4:** These categories guide *what* to cover, not the order of questions. Weave them naturally across 3–5 conversational turns rather than exhausting one category before starting the next. A question about their role might naturally lead to their tech stack, which leads to how they like code examples formatted. Follow the thread — the categories are a checklist to review afterward, not a script to follow linearly.
+
 ### 5. Open-ended capture
 
 Ask: _"Is there anything else you'd like me to remember going forward? Anything that would make our interactions more useful?"_
 
-This catches important context that structured questions miss.
+This catches important context that structured questions miss. Don't skip it — it consistently surfaces the most valuable information.
 
 ### 6. Propose and write the initial profile
 
@@ -105,7 +107,7 @@ Log this conversation following the standard chat archival structure:
 - Create the appropriate `chats/YYYY/MM/DD/chat-001/` folder.
 - Write `transcript.md`, `SUMMARY.md`, and `reflection.md`.
 - Append access notes to the relevant ACCESS.jsonl files for any content files you read. Include `session_id` whenever the chat folder is known.
-- If the repository is read-only, keep chat archival behavior aligned with the normal deferred-action rules rather than inventing a separate onboarding exception.
+- If read-only, keep chat archival in the onboarding export produced in step 6 — do not produce a separate deferred-action summary. The export format already covers session transcript, summary, and reflection.
 
 ## Quality criteria
 
@@ -117,10 +119,9 @@ Log this conversation following the standard chat archival structure:
 
 ## Anti-patterns
 
-- **Don't interrogate.** This should feel like a conversation, not a form. Weave questions naturally and let the user volunteer information at their own pace.
+- **Don't interrogate.** This should feel like a conversation, not a form.
 - **Don't over-collect.** 5–10 solid traits are better than 25 shallow ones. You'll learn more over time.
 - **Don't promise too much.** The memory system improves with use — don't set expectations for perfect recall from session one.
-- **Don't skip the open-ended question.** It consistently surfaces the most important context.
 - **Don't write memory optimistically.** Proposal first, confirmation second, write third.
 
 ## After first use
