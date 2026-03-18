@@ -12,13 +12,12 @@ Priority order for active work:
 2. `codex-desktop-governed-memory-writes.md`
 3. `codex-desktop-automation-continuity.md`
 4. `codex-desktop-github-network-ergonomics.md`
-5. `agent-memory-mcp.md`
-6. `django-stack-research.md`
-7. `react-stack-research.md`
-8. `devops-docker-research.md`
-9. `philosophy-history-survey.md`
-10. `lesswrong-rationalist-community-research.md`
-11. `ai-paradigm-genealogy-research.md`
+5. `django-stack-research.md`
+6. `react-stack-research.md`
+7. `devops-docker-research.md`
+8. `philosophy-history-survey.md`
+9. `lesswrong-rationalist-community-research.md`
+10. `ai-paradigm-genealogy-research.md`
 
 ---
 
@@ -27,8 +26,8 @@ Priority order for active work:
 
 Implementation plan for memory-aware repo startup in Codex desktop. Focus: repo-declared startup manifests, first-run vs. returning-session detection, compact preload ordering, and startup UI for branch/worktree/bootstrap state.
 
-**Progress:** 0/11 tasks complete
-**Next action:** Phase 1 — define the compact startup manifest contract and repo-declared bootstrap surface
+**Progress:** 3/11 tasks complete
+**Next action:** Phase 2 — implement startup mode detection and deterministic preload ordering
 <!-- END: codex-desktop-bootstrap-support -->
 
 ---
@@ -63,19 +62,6 @@ Implementation plan for earlier GitHub, network, and runtime blocker detection i
 **Progress:** 0/11 tasks complete
 **Next action:** Phase 1 — define preflight checks for GitHub auth, network reachability, and local tooling availability
 <!-- END: codex-desktop-github-network-ergonomics -->
-
----
-
-<!-- BEGIN: agent-memory-mcp -->
-### `agent-memory-mcp.md` · status: active · trust: medium
-
-Implementation plan for an enhanced agent-memory MCP with read/write and read/write/commit tooling. Two-tier architecture: Tier 1 semantic tools (auto-commit, own all invariants per operation) + Tier 2 low-level tools (staged writes + explicit `memory_commit`). Version tokens for optimistic locking. 17 tools total across 4 build phases. Stack: FastMCP (Python), subprocess git, python-frontmatter.
-
-**Progress:** 0/17 tools built (Phase 0: 0/3)
-**Next action:** Phase 0 — implement git integration layer and version token model
-<!-- END: agent-memory-mcp -->
-
----
 
 <!-- BEGIN: philosophy-history-survey -->
 ### `philosophy-history-survey.md` · status: active · trust: medium
