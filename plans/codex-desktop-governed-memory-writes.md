@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Decide integration boundary
+next_action: Define repo capability discovery
 origin_session: manual
 source: agent-generated
 status: active
@@ -198,9 +198,9 @@ The governed-write contract now distinguishes four fallback scenarios instead of
 
 Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares these fallback profiles directly, gap operations point to the `semantic_gap` profile, and `HUMANS/tooling/scripts/resolve_memory_capabilities.py` plus `HUMANS/tooling/tests/test_memory_capabilities.py` validate the profile contract. This keeps raw fallback narrow, auditable, and distinct from contract-preserving defer paths.
 
-### Phase 3 — Desktop and MCP integration · ☐ 0/3 complete
+### Phase 3 — Desktop and MCP integration · ☐ 1/3 complete
 
-7. ☐ Decide integration boundary
+7. ☑ Decide integration boundary
    - Codex-native semantic tools
    - MCP-discovered semantic tools
    - hybrid model
@@ -214,6 +214,35 @@ Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declare
    - operation preview
    - changed-file summary
    - resulting next action or plan state
+
+### Phase 3 decisions (2026-03-18)
+
+#### 1. The integration boundary should be hybrid, with repo-local MCP as the semantic authority
+
+Codex desktop should not hardcode repo-specific semantic write behavior as its default path. The app should prefer repo-local MCP semantic tools whenever a repo declares them, because those tools own the repo's invariants and can evolve in git with the repo itself. The desktop layer still remains responsible for the user-facing write experience.
+
+Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares an explicit `integration_boundary` section with:
+
+- `model = "hybrid"`
+- preference for `repo_local_semantic_mcp`
+- native semantic scope limited to generic behavior
+- an explicit degradation order from repo-local semantics to desktop preview/policy handling to raw fallback or defer
+
+#### 2. Responsibility split should be explicit
+
+The boundary is only useful if ownership is unambiguous:
+
+- **Desktop owns** approval UX, change-class enforcement, capability discovery, preview rendering, result presentation, and fallback selection
+- **Repo-local MCP owns** semantic execution, repo-specific invariants, schema validation, the authoritative mutation itself, and structured post-write state
+- **Codex-native fallback** remains narrow: generic preview support, raw-tool orchestration, and deferred-action summaries when no repo-local semantic path exists
+
+This keeps product UX consistent without moving repo-specific correctness logic into the app.
+
+#### 3. Native semantics should stay generic unless a repo contract exists
+
+The prototype now makes a stricter claim: Codex desktop may ship generic governed-write behavior, but it should not invent repo-specific semantic mutations unless the repo exposes a contract for them. That avoids silent schema drift and keeps the repo contract auditable instead of prompt-derived.
+
+Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` and `HUMANS/tooling/tests/test_memory_capabilities.py` now validate the hybrid boundary and its required ownership markers.
 
 ### Phase 4 — Hardening and evaluation · ☐ 0/2 complete
 
@@ -232,7 +261,6 @@ Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declare
 
 ## Open questions
 
-- Should the app own the semantic operations directly, or should it always delegate to repo-local MCP tools when present?
 - How should protected-change approvals appear in Codex desktop without interrupting flow too aggressively?
 - Should semantic writes auto-commit, stage only, or support both modes?
 - How much repo-specific schema knowledge should Codex ship with vs. discover dynamically?
@@ -248,6 +276,8 @@ Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declare
 | 2026-03-18 | Extended the capability contract with `automatic` / `proposed` / `protected` change classes, read-only deferred behavior, raw-fallback inheritance rules, and validator coverage for operation-to-class mapping |
 | 2026-03-18 | Completed Design approval and confirmation UX (codex-desktop-governed-memory-writes 5/11) |
 | 2026-03-18 | Defined explicit fallback profiles for semantic gaps, uninterpretable targets, preview-only runs, and read-only contexts; completed Phase 2 (codex-desktop-governed-memory-writes 6/11) |
+| 2026-03-18 | Chose a hybrid integration boundary: repo-local MCP remains the semantic authority, Codex desktop owns UX/policy/discovery, and native semantics stay generic unless the repo declares a contract |
+| 2026-03-18 | Completed Decide integration boundary (codex-desktop-governed-memory-writes 7/11) |
 
 ---
 
