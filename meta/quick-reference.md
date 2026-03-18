@@ -19,7 +19,7 @@ Use this table to determine which files to read for each session type. Load file
 | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
 
-**Do not load** `docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above). `meta/scratchpad-guidelines.md` is also on-demand — load it only when writing to `scratchpad/` or reviewing scratchpad lifecycle; reading `scratchpad/USER.md` or `scratchpad/CURRENT.md` does not require loading the guidelines.
+**Do not load** `HUMANS/docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above). `meta/scratchpad-guidelines.md` is also on-demand — load it only when writing to `scratchpad/` or reviewing scratchpad lifecycle; reading `scratchpad/USER.md` or `scratchpad/CURRENT.md` does not require loading the guidelines.
 
 ---
 

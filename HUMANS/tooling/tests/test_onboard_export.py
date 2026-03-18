@@ -10,8 +10,8 @@ from datetime import date
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "scripts" / "onboard-export.sh"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SCRIPT_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "onboard-export.sh"
 
 
 def find_bash() -> str | None:

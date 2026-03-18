@@ -135,7 +135,7 @@ If your AI platform can't write files directly, the onboarding still works — y
 4. Run the import script:
 
 ```bash
-bash scripts/onboard-export.sh my-onboarding.md
+bash HUMANS/tooling/scripts/onboard-export.sh my-onboarding.md
 ```
 
 This writes your profile to `identity/`, recreates the first session's chat record in `chats/`, and commits everything. From the next session onward, the agent will recognize you.
@@ -170,14 +170,14 @@ Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.
 
 The `meta/` folder includes a **context loading manifest** (`meta/quick-reference.md`) that tells the agent exactly which files to load for each type of session — keeping token costs low while ensuring the right governance docs are available when needed. Some governance files (like `meta/curation-algorithms.md`) are loaded on-demand only during specific operations, not every session.
 
-For the full architecture, read [README.md](../README.md). For governance details, see the files in `meta/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
+For the full architecture, read [README.md](../../README.md). For governance details, see the files in `meta/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
 
 ### Optional maintenance check
 
 After editing governance docs or memory files, you can run:
 
 ```bash
-python scripts/validate_memory_repo.py
+python HUMANS/tooling/scripts/validate_memory_repo.py
 ```
 
 This optional check validates frontmatter, ACCESS.jsonl structure, and runtime-guidance consistency. The repository still works even if you never run it.

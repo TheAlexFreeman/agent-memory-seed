@@ -2,8 +2,8 @@
 
 An adaptive, self-organizing, version-controlled memory layer for AI agents. Any capable model can read this repo and immediately know who you are, how you work, and what you've been doing — across sessions, platforms, and model versions.
 
-**Setting up for the first time?** → See [docs/QUICKSTART.md](docs/QUICKSTART.md)
-**Exploring the design?** → See [docs/DESIGN.md](docs/DESIGN.md)
+**Setting up for the first time?** → See [HUMANS/docs/QUICKSTART.md](HUMANS/docs/QUICKSTART.md)
+**Exploring the design?** → See [HUMANS/docs/DESIGN.md](HUMANS/docs/DESIGN.md)
 
 ---
 
@@ -43,8 +43,10 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 ├── README.md              ← You are here. System architecture and protocols.
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
 ├── .cursorrules           ← Cursor platform adapter. Points to README.md.
-├── setup.sh               ← Post-clone setup script (interactive or CLI flags).
-├── setup.html             ← Browser-based starter-file generator (no terminal required).
+├── setup/                 ← Setup tooling. Run setup.sh or open setup.html to get started.
+│   ├── setup.sh           ← Post-clone setup script (interactive or CLI flags).
+│   ├── setup.html         ← Browser-based starter-file generator (no terminal required).
+│   └── templates/profiles/ ← Starter identity templates.
 │
 ├── identity/              ← Who the user is. Personality, preferences, values.
 │   ├── SUMMARY.md         ← Start here. High-level portrait of the user.
@@ -95,19 +97,15 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 │   ├── CURRENT.md         ← Agent working notes. Trust: medium. Promoted or cleared each session.
 │   └── (dated working files and _archive/ created by agent as needed)
 │
-├── templates/profiles/    ← Starter identity templates for setup.sh / setup.html.
-│
-├── scripts/               ← Maintenance and import tooling.
-│   ├── validate_memory_repo.py ← Optional structural validator.
-│   ├── onboard-export.sh       ← Import onboarding exports from read-only platforms.
-│   └── onboard-export-template.md ← Structured format for onboarding exports.
-│
-├── tests/                 ← Test suite for the validator and import tooling.
-│
-└── docs/                  ← Human-facing documentation. Never loaded by agents.
-    ├── QUICKSTART.md      ← Setup guide. Start here if you're a person.
-    ├── DESIGN.md          ← Design philosophy, use cases, and future directions.
-    └── GLOSSARY.md        ← Definitions of system terminology (human reference only).
+└── HUMANS/                ← Human-facing content. Never loaded by agents.
+    ├── docs/              ← Documentation.
+    │   ├── QUICKSTART.md  ← Setup guide. Start here if you're a person.
+    │   ├── DESIGN.md      ← Design philosophy, use cases, and future directions.
+    │   └── GLOSSARY.md    ← Definitions of system terminology (human reference only).
+    └── tooling/           ← Maintenance tooling and tests.
+        ├── onboard-export-template.md ← Structured format for onboarding exports.
+        ├── scripts/       ← validate_memory_repo.py, onboard-export.sh.
+        └── tests/         ← Test suite for the validator and import tooling.
 
 ```
 

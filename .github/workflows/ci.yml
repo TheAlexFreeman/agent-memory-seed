@@ -22,15 +22,15 @@ jobs:
         run: pip install pytest ruff
 
       - name: Lint Python
-        run: ruff check scripts/ tests/
+        run: ruff check HUMANS/tooling/scripts/ HUMANS/tooling/tests/
 
       - name: Run validator
-        run: python scripts/validate_memory_repo.py
+        run: python HUMANS/tooling/scripts/validate_memory_repo.py
 
       - name: Run tests
-        run: python -m pytest tests/ -v
+        run: python -m pytest HUMANS/tooling/tests/ -v
 
       - name: Lint shell scripts
         run: |
           sudo apt-get install -y shellcheck
-          shellcheck setup.sh scripts/onboard-export.sh
+          shellcheck setup/setup.sh HUMANS/tooling/scripts/onboard-export.sh

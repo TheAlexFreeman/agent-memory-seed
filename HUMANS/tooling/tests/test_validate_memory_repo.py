@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-VALIDATOR_PATH = REPO_ROOT / "scripts" / "validate_memory_repo.py"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+VALIDATOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
 ROUTED_PROMPT_LINE = (
     "start with README.md and follow its routing rules"
 )
@@ -67,10 +67,10 @@ def build_minimal_repo(root: Path) -> None:
         root / "README.md",
         "# README\nRead `meta/quick-reference.md` for active thresholds.\n",
     )
-    (root / "docs").mkdir(exist_ok=True)
+    (root / "HUMANS" / "docs").mkdir(parents=True, exist_ok=True)
     write(
-        root / "docs" / "QUICKSTART.md",
-        "# Quickstart\nOptional check: `python scripts/validate_memory_repo.py`\n",
+        root / "HUMANS" / "docs" / "QUICKSTART.md",
+        "# Quickstart\nOptional check: `python HUMANS/tooling/scripts/validate_memory_repo.py`\n",
     )
     write(root / "meta" / "quick-reference.md", VALID_QUICK_REFERENCE)
     write(
@@ -401,7 +401,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
     def test_setup_copy_uses_readme_routing_language(self) -> None:
-        for path in (REPO_ROOT / "setup.sh", REPO_ROOT / "setup.html", REPO_ROOT / "docs" / "QUICKSTART.md"):
+        for path in (REPO_ROOT / "setup" / "setup.sh", REPO_ROOT / "setup" / "setup.html", REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md"):
             text = path.read_text(encoding="utf-8")
             self.assertIn(ROUTED_PROMPT_LINE, text)
             self.assertIn(ROUTED_SESSION_LINE, text)
@@ -409,16 +409,16 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
         self.assertNotIn(
             "At the start of this session:",
-            (REPO_ROOT / "setup.sh").read_text(encoding="utf-8"),
+            (REPO_ROOT / "setup" / "setup.sh").read_text(encoding="utf-8"),
         )
         self.assertNotIn(
             "At the start of this session:",
-            (REPO_ROOT / "setup.html").read_text(encoding="utf-8"),
+            (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8"),
         )
 
     def test_browser_setup_copy_no_longer_claims_remote_parity(self) -> None:
-        quickstart = (REPO_ROOT / "docs" / "QUICKSTART.md").read_text(encoding="utf-8")
-        setup_html = (REPO_ROOT / "setup.html").read_text(encoding="utf-8")
+        quickstart = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(encoding="utf-8")
+        setup_html = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
 
         self.assertIn("Git remote setup stays manual.", quickstart)
         self.assertIn("git remote setup stays manual", setup_html)
@@ -435,7 +435,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
         for path in (
             REPO_ROOT / "README.md",
-            REPO_ROOT / "docs" / "QUICKSTART.md",
+            REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md",
             REPO_ROOT / "meta" / "quick-reference.md",
         ):
             text = path.read_text(encoding="utf-8")

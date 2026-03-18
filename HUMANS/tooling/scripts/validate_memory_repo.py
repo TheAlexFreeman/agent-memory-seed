@@ -49,7 +49,7 @@ EXPECTED_QUICK_REFERENCE_PARAMETERS = (
 
 RUNTIME_GUIDANCE_FILES = (
     Path("README.md"),
-    Path("docs/QUICKSTART.md"),
+    Path("HUMANS/docs/QUICKSTART.md"),
     Path("meta/quick-reference.md"),
     Path("meta/curation-policy.md"),
     Path("meta/update-guidelines.md"),
@@ -82,7 +82,7 @@ class ValidationResult:
 def repo_root_from_argv(argv: list[str]) -> Path:
     if len(argv) > 1:
         return Path(argv[1]).resolve()
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[3]
 
 
 def read_text(path: Path, result: ValidationResult) -> str | None:

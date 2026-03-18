@@ -111,7 +111,7 @@ fi
 # 4. Choose a starter profile
 install_profile() {
     local profile_name="$1"
-    local template_file="templates/profiles/${profile_name}.md"
+    local template_file="setup/templates/profiles/${profile_name}.md"
     if [[ ! -f "$template_file" ]]; then
         echo "[error] Profile template not found: $template_file"
         return 1
@@ -228,7 +228,7 @@ GENERIC_EOF
         *)
             echo "=== Next Steps ==="
             echo ""
-            echo "  1. See docs/QUICKSTART.md for platform-specific setup instructions."
+            echo "  1. See HUMANS/docs/QUICKSTART.md for platform-specific setup instructions."
             echo "  2. Start a session with your AI — it will run the onboarding skill"
             echo "     and ask you a few questions to build your initial profile."
             echo "  3. Your memory system grows from there."

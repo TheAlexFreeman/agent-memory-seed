@@ -32,7 +32,7 @@ At this point you have loaded: system architecture (README.md), evolution histor
 - `chats/SUMMARY.md` — empty on first run.
 - `meta/curation-policy.md` and the full `meta/update-guidelines.md` — you loaded the essential sections in step 3. Read the full governance docs from session two onward.
 - `meta/curation-algorithms.md` — only needed during aggregation or stage transitions.
-- `docs/*` — human reference only; never needs to be loaded by agents.
+- `HUMANS/docs/*` — human reference only; never needs to be loaded by agents.
 
 ---
 

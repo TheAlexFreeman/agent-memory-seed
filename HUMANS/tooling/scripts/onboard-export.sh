@@ -5,11 +5,11 @@ set -euo pipefail
 # Imports a structured onboarding export file into the memory repo.
 #
 # Usage:
-#   bash scripts/onboard-export.sh <export-file>
-#   bash scripts/onboard-export.sh < export-file
-#   <agent output> | bash scripts/onboard-export.sh
+#   bash HUMANS/tooling/scripts/onboard-export.sh <export-file>
+#   bash HUMANS/tooling/scripts/onboard-export.sh < export-file
+#   <agent output> | bash HUMANS/tooling/scripts/onboard-export.sh
 #
-# The export file should follow the format in scripts/onboard-export-template.md,
+# The export file should follow the format in HUMANS/tooling/onboard-export-template.md,
 # with top-level session metadata and four sections: "## Identity Profile",
 # "## Session Transcript", "## Session Summary", and "## Session Reflection".
 
@@ -18,7 +18,7 @@ usage() {
     echo ""
     echo "Imports an onboarding export into the memory repo."
     echo ""
-    echo "The export file follows the template in scripts/onboard-export-template.md."
+    echo "The export file follows the template in HUMANS/tooling/onboard-export-template.md."
     echo "If no file is given, reads from stdin."
     echo ""
     echo "Options:"
@@ -149,7 +149,7 @@ fi
 # Validate we got something
 if [[ -z "$IDENTITY_CONTENT" ]]; then
     echo "Error: No content found in '## Identity Profile' section."
-    echo "Make sure the export file follows the template in scripts/onboard-export-template.md."
+    echo "Make sure the export file follows the template in HUMANS/tooling/onboard-export-template.md."
     exit 1
 fi
 
