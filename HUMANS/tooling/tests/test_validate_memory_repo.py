@@ -51,7 +51,7 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     | Session type | Files to load |
     |---|---|
     | **First run** | `README.md` → `meta/first-run.md` |
-    | **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
+    | **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty)_ → `plans/SUMMARY.md` _(skip if no active plans)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
     | **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
     | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
     | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` |
@@ -216,7 +216,7 @@ def build_minimal_repo(root: Path) -> None:
     )
     write(root / "meta" / "review-queue.md", "# Review Queue\n\n_No pending items._\n")
 
-    for dirname in ("identity", "knowledge", "skills", "chats"):
+    for dirname in ("identity", "knowledge", "skills", "plans", "chats"):
         write(root / dirname / "SUMMARY.md", f"# {dirname} summary\n")
         write(root / dirname / "ACCESS.jsonl", "")
 
@@ -342,6 +342,59 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
+
+    def test_agent_generated_plan_with_required_fields_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "plans" / "roadmap.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: agent-generated
+                    type: implementation-plan
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: medium
+                    status: active
+                    next_action: "Implement phase 1"
+                    ---
+
+                    # Roadmap
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+
+    def test_plan_missing_status_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "plans" / "roadmap.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: agent-generated
+                    type: implementation-plan
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: medium
+                    next_action: "Implement phase 1"
+                    ---
+
+                    # Roadmap
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(any("plan files must define frontmatter key 'status'" in error for error in result.errors))
 
     def test_missing_optional_last_verified_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -699,6 +752,35 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 )
             )
 
+    def test_quarantine_file_with_last_verified_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "knowledge" / "_unverified" / "suspect.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: external-research
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: low
+                    ---
+
+                    # Suspect
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "quarantine file must omit last_verified" in error
+                    for error in result.errors
+                )
+            )
+
     def test_quarantine_file_with_correct_trust_and_source_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -711,7 +793,6 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     source: external-research
                     origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
-                    last_verified: 2026-03-16
                     trust: low
                     ---
 
@@ -736,7 +817,6 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     source: agent-inferred
                     origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
-                    last_verified: 2026-03-16
                     trust: low
                     ---
 
@@ -873,6 +953,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertNotIn("session-checklists", compact_row)
         self.assertIn("identity/SUMMARY.md", compact_row)
         self.assertIn("chats/SUMMARY.md", compact_row)
+        self.assertIn("plans/SUMMARY.md", compact_row)
         self.assertIn("task-relevant `knowledge/SUMMARY.md`", compact_row)
 
     def test_context_budget_copy_uses_canonical_ranges(self) -> None:
@@ -897,6 +978,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         compact_paths = [
             REPO_ROOT / "meta" / "quick-reference.md",
             REPO_ROOT / "identity" / "SUMMARY.md",
+            REPO_ROOT / "plans" / "SUMMARY.md",
             REPO_ROOT / "scratchpad" / "USER.md",
             REPO_ROOT / "scratchpad" / "CURRENT.md",
         ]

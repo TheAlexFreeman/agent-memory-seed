@@ -6,7 +6,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Session** — One chat folder under `chats/YYYY/MM/DD/` (e.g. `chat-001`). One conversation corresponds to one session. See README § "Memory curation".
 
-- **Retrieval** — Opening a specific content file (in `identity/`, `knowledge/`, `skills/`, or `chats/`) in response to a user query. Retrievals are logged in ACCESS.jsonl; SUMMARY.md and `meta/` reads are not. See README § "Memory curation".
+- **Retrieval** — Opening a specific content file (in `identity/`, `knowledge/`, `skills/`, `plans/`, or `chats/`) in response to a user query. Retrievals are logged in ACCESS.jsonl; SUMMARY.md and `meta/` reads are not. See README § "Memory curation".
 
 - **Aggregation** — Processing an ACCESS.jsonl file when it reaches the active aggregation trigger: analyzing patterns, updating SUMMARY.md usage sections, archiving entries to ACCESS.archive.jsonl, and resetting ACCESS.jsonl. See README § "Aggregation" and `meta/quick-reference.md` § "ACCESS.jsonl aggregation".
 
@@ -16,11 +16,13 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Protected change** — Modifications that require explicit user approval and (where applicable) a CHANGELOG entry: `skills/`, `meta/` (except machine-generated state files), README.md, CHANGELOG structure, bulk operations. See `meta/update-guidelines.md` § "Change categories".
 
-- **Proposed change** — Modifications that require user awareness but not necessarily explicit approval before applying: new knowledge files, identity changes, promotion from quarantine, restructuring, retirement. See `meta/update-guidelines.md` § "Change categories".
+- **Proposed change** — Modifications that require user awareness but not necessarily explicit approval before applying: new knowledge files, identity changes, promotion from quarantine, plan creation or scope changes, restructuring, retirement. See `meta/update-guidelines.md` § "Change categories".
 
 - **Quarantine** — `knowledge/_unverified/`. Staging area for externally sourced content; all such content lands here at `trust: low`. Promotion to `knowledge/` requires user review. See README § "Security model" and `meta/curation-policy.md`.
 
 - **Provenance** — Origin and verification metadata (source, origin_session, created, optional `last_verified`, trust) in YAML frontmatter on content files. See `meta/update-guidelines.md` § "Provenance metadata".
+
+- **Plan** — Persistent multi-session roadmap stored in `plans/`. Plans can contain task-local sequencing for that specific investigation, plus execution state such as `status` and `next_action`.
 
 - **Belief diff** — Periodic summary of content changes since the last review. Recorded in `meta/belief-diff-log.md`. See `meta/update-guidelines.md` § "Belief diff".
 
@@ -28,7 +30,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Helpfulness score** — 0.0–1.0 rating in ACCESS.jsonl entries. See README § "Memory curation".
 
-- **Instruction containment** — Structural rule: only `skills/` and `meta/` may contain procedural instructions. See `meta/curation-policy.md` § "Instruction containment".
+- **Instruction containment** — Structural rule: only `skills/` and `meta/` may contain general procedural instructions; `plans/` may contain task-local sequencing for the specific plan only. See `meta/curation-policy.md` § "Instruction containment".
 
 - **Temporal decay** — Automatic retirement or flagging based on the effective verification date: `last_verified` when present, otherwise `created`. See `meta/quick-reference.md` § "Decision guide: trust decay".
 

@@ -19,12 +19,16 @@ A session where the agent retrieved three knowledge files and noticed a boundary
 [identity/ACCESS.jsonl]
 {"file": "identity/communication-preferences.md", "date": "2026-03-17", "task": "calibrate response style", "helpfulness": 0.9, "note": "shaped concise code-first response format", "session_id": "chats/2026/03/17/chat-002"}
 
+[plans/ACCESS.jsonl]
+{"file": "plans/performance-investigation.md", "date": "2026-03-17", "task": "resume multi-session performance investigation", "helpfulness": 0.8, "note": "provided the active checklist and next step for the session", "session_id": "chats/2026/03/17/chat-002"}
+
 ### Review-queue entries
 [meta/review-queue.md]
 - type: boundary-violation, file: knowledge/react-performance-patterns.md, pattern: "always use React.memo for list items" — imperative instruction detected; candidate for reclassification to skills/
 
 ### Other
 - SUMMARY.md for knowledge/ needs "Usage patterns" updated: react-performance-patterns.md is high-value (6 retrievals, mean helpfulness 0.82)
+- plans/SUMMARY.md needs progress refreshed: performance-investigation.md advanced to Phase 2
 - Chat summary and reflection note for chats/2026/03/17/chat-002/ need to be written
 ```
 

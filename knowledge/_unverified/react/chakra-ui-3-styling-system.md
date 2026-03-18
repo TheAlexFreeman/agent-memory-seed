@@ -2,7 +2,6 @@
 source: external-research
 origin_session: unknown
 created: 2026-03-18
-last_verified: 2026-03-18
 trust: low
 ---
 

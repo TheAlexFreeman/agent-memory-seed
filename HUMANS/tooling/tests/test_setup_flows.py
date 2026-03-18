@@ -43,6 +43,7 @@ def build_setup_repo(root: Path) -> None:
         "AGENTS.md",
         "CLAUDE.md",
         ".cursorrules",
+        ".gitattributes",
         ".gitignore",
     ):
         shutil.copy2(REPO_ROOT / filename, root / filename)
@@ -55,6 +56,7 @@ def build_setup_repo(root: Path) -> None:
         "identity",
         "chats",
         "knowledge",
+        "plans",
         "skills",
         "scratchpad",
     ):
@@ -239,6 +241,7 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertIn("setup/initial-commit-paths.txt", head_files)
             self.assertIn("README.md", head_files)
+            self.assertIn("plans/SUMMARY.md", head_files)
             self.assertNotIn("notes.txt", head_files)
             self.assertNotIn("system-prompt.txt", head_files)
 
@@ -310,6 +313,7 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertIn("README.md", staged_files)
             self.assertIn("setup/initial-commit-paths.txt", staged_files)
+            self.assertIn("plans/SUMMARY.md", staged_files)
             self.assertNotIn("notes.txt", staged_files)
             self.assertNotIn("system-prompt.txt", staged_files)
 

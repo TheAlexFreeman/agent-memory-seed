@@ -100,6 +100,7 @@ load_initial_commit_paths() {
     fi
 
     while IFS= read -r path || [[ -n "$path" ]]; do
+        path="${path%$'\r'}"
         if [[ -z "$path" ]] || [[ "$path" == \#* ]]; then
             continue
         fi
@@ -293,7 +294,7 @@ CHATGPT_EOF
             echo ""
             # Generate the system prompt file
             cat > system-prompt.txt << 'GENERIC_EOF'
-You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), chats/ (conversation history), and meta/ (governance rules).
+You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), plans/ (multi-session roadmaps), chats/ (conversation history), and meta/ (governance rules).
 
 Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
 Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.

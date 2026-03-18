@@ -105,8 +105,8 @@ Not every file is allowed to tell an agent what to do.
 
 The system distinguishes between:
 
-- Informational memory: identity, knowledge, chats.
-- Procedural authority: `skills/`, `meta/`, and core governance references.
+- Informational memory: identity, knowledge, plans, chats.
+- Procedural authority: `skills/`, `meta/`, and task-local sequencing inside the currently relevant file in `plans/`.
 
 This matters for safety. A knowledge file might contain useful facts, but it should not be able to smuggle in behavioral instructions that quietly change how the agent operates.
 

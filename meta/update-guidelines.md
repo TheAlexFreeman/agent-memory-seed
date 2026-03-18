@@ -4,13 +4,13 @@ This document defines how changes to the memory system are proposed, evaluated, 
 
 ## Provenance metadata
 
-Every content file in `identity/`, `knowledge/`, and `skills/` must include YAML frontmatter tracking its origin and trust level. Files in `meta/` and `chats/` are exempt — governance docs are protected by change-control tiers, and chat transcripts are read-only archives.
+Every content file in `identity/`, `knowledge/`, `skills/`, and `plans/` must include YAML frontmatter tracking its origin and trust level. Files in `meta/` and `chats/` are exempt — governance docs are protected by change-control tiers, and chat transcripts are read-only archives.
 
 ### Required frontmatter schema
 
 ```yaml
 ---
-source: user-stated | agent-inferred | external-research | skill-discovery | template | unknown
+source: user-stated | agent-inferred | agent-generated | external-research | skill-discovery | template | unknown
 origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD # optional until a human confirms the content
@@ -25,6 +25,7 @@ trust: high | medium | low
 - **source** — How this information entered the system.
   - `user-stated`: The user directly provided or dictated this content.
   - `agent-inferred`: The agent synthesized this from patterns across interactions.
+  - `agent-generated`: The agent deliberately authored this artifact, such as a plan or roadmap.
   - `external-research`: Content from web searches, uploaded documents, or any source outside direct user conversation.
   - `skill-discovery`: A procedural pattern the agent identified from user corrections or repeated workflows.
   - `unknown`: Reserved for legacy backfill or genuinely unrecoverable origin. Do not use for new content when a concrete source can be identified.
@@ -32,6 +33,7 @@ trust: high | medium | low
 - **origin_session** — The canonical session path (e.g. `chats/YYYY/MM/DD/chat-NNN`), or `setup` for starter templates, or `manual` for hand-authored content, or `unknown` for files predating this schema.
 - **created** — Date the file was first written.
 - **last_verified** — Optional date a human last reviewed or confirmed the content. Omit it for newly created content that has not yet been human-verified.
+- **Plans special case.** For files in `plans/`, `last_verified` is the date the plan state was last reviewed or advanced in-session. It is a freshness marker for plan state, not a claim that every sentence in the plan has been externally verified.
 - **trust** — The current trust classification (see `meta/curation-policy.md` for retrieval behavior at each level).
 
 ### Trust assignment rules
@@ -40,6 +42,7 @@ trust: high | medium | low
 | ------------------- | ------------- | ------------------------------------------------------------------- |
 | `user-stated`       | `high`        | Already at highest level                                            |
 | `agent-inferred`    | `medium`      | → `high` when user explicitly confirms                              |
+| `agent-generated`   | `medium`      | → `high` when user explicitly endorses the plan or artifact         |
 | `skill-discovery`   | `medium`      | → `high` after user approval + successful use                       |
 | `external-research` | `low`         | → `medium` after user review; → `high` after user confirms accuracy |
 | `template`          | `medium`      | → `high` after user confirms during onboarding                      |
@@ -90,6 +93,7 @@ For system-level changes, the change summary is incomplete unless it explains th
 - Writing chat transcripts and chat-level summaries to `chats/`.
 - Writing external-research results to `knowledge/_unverified/` (never directly to `knowledge/`).
 - Updating "Usage patterns" sections in SUMMARY.md files based on access aggregation.
+- Routine progress updates in `plans/`: `status`, `next_action`, progress text, `last_verified`, and `plans/SUMMARY.md` coverage refreshes.
 - Updating `meta/task-groups.md` during ACCESS.jsonl aggregation (Calibration stage and beyond).
 - Routine summary refreshes at any level.
 
@@ -98,6 +102,8 @@ For system-level changes, the change summary is incomplete unless it explains th
 - Adding new knowledge files to `knowledge/` (i.e., outside `_unverified/`).
 - Creating meta-knowledge files (emergent abstractions) — propose to user, do not create silently.
 - Adding, modifying, or removing files in `identity/`.
+- Creating a new plan in `plans/`.
+- Archiving, retiring, or materially changing the scope of a plan in `plans/`.
 - Promoting files from `knowledge/_unverified/` to `knowledge/`.
 - Restructuring folders (renaming, splitting, merging).
 - Retiring or archiving memory files.

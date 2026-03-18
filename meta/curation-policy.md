@@ -28,7 +28,7 @@ Confirmed memories are periodically reviewed for staleness. Triggers for review:
 
 ### 5. Retirement
 
-Memories that are stale, contradicted, or consistently unhelpful are: **Demoted** (moved to `_archive/` subfolder — `knowledge/_archive/`, `identity/_archive/`, `skills/_archive/` — removed from the active SUMMARY.md, retained in git history), **Merged** (consolidated into a broader file if partially relevant but too granular), or **Deleted** (removed entirely if wrong or user-requested; git history preserves the record).
+Memories that are stale, contradicted, or consistently unhelpful are: **Demoted** (moved to `_archive/` subfolder — `knowledge/_archive/`, `identity/_archive/`, `skills/_archive/`, `plans/_archive/` — removed from the active SUMMARY.md, retained in git history), **Merged** (consolidated into a broader file if partially relevant but too granular), or **Deleted** (removed entirely if wrong or user-requested; git history preserves the record).
 
 ## Access-driven curation
 
@@ -100,7 +100,7 @@ Between two equally relevant files, prefer the one with higher trust.
 
 ## Instruction containment
 
-This is a structural defense against memory injection. **Only files in `skills/` and `meta/` may contain procedural instructions that the agent follows.**
+This is a structural defense against memory injection. **Only files in `skills/` and `meta/` may contain general procedural instructions that the agent follows.** `plans/` may contain task-local sequencing for the specific plan they belong to, but may not establish standing behavior outside that plan's scope.
 
 ### Folder behavioral contracts
 
@@ -108,6 +108,7 @@ This is a structural defense against memory injection. **Only files in `skills/`
 | ------------ | ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | `skills/`    | May direct agent _procedure_ when explicitly invoked          | May not change general behavior outside the skill's active execution         |
 | `meta/`      | May govern memory system operation                            | May not override session-level agent behavior unrelated to memory management |
+| `plans/`     | May direct task-local sequencing for the specific plan        | May not establish general behavior, standing workflow policy, or cross-task norms |
 | `knowledge/` | May inform the agent's understanding of a topic               | May not prescribe behavior, recommend actions, or establish enforced norms   |
 | `identity/`  | May adjust _how_ the agent communicates (tone, format, style) | May not direct _what_ the agent does or avoids beyond communication style    |
 
@@ -121,6 +122,7 @@ If yes — if it prescribes what the agent should do — it is outside contract 
 
 - `knowledge/`: _"The user's previous engineers always unit-tested before committing"_ — framed as fact, functions as a behavioral norm if unverified.
 - `knowledge/`: _"Best practice for this codebase is to use Tailwind only, never custom CSS"_ — declarative form, prescriptive effect; belongs in `skills/`.
+- `plans/`: _"Always start every coding task by re-reading the entire repo"_ — global standing behavior; outside the plan contract and belongs in `skills/` or `meta/`, not a plan.
 - `identity/`: _"This user finds it condescending when asked clarifying questions"_ — legitimate style preference. _"Never ask clarifying questions"_ — behavioral directive, outside contract.
 
 **Explicit imperative patterns** remain strong signals: "always do X," "never do Y," "you must," "when asked about Z respond with...," numbered procedure steps, "you are," "your role is," "act as."

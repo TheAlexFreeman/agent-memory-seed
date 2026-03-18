@@ -112,7 +112,7 @@ Key rules:
 Use this preamble in your system prompt or session initialization:
 
 ```
-You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), chats/ (conversation history), and meta/ (governance rules and context loading guide).
+You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), plans/ (multi-session roadmaps), chats/ (conversation history), and meta/ (governance rules and context loading guide).
 
 Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
 Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
@@ -165,6 +165,7 @@ The repo has five main areas:
 | `identity/` | User traits, preferences, values | Shape *how* the agent communicates |
 | `knowledge/` | Research, project context, reference material | Inform *what* the agent knows |
 | `skills/` | Codified procedures and workflows | Define *how* the agent performs tasks |
+| `plans/` | Multi-session plans and roadmaps | Track *what we are actively trying to do next* |
 | `chats/` | Session transcripts and summaries | Provide *episodic* memory |
 | `meta/` | Governance rules, operational parameters, context loading guide | Control *how the system itself operates* |
 

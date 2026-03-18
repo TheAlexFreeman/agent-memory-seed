@@ -38,6 +38,7 @@ The `scratchpad/` folder is a staging area that sits between ephemeral session c
 | Confirmed user preference or trait | `identity/` — propose via normal governance |
 | Verified factual knowledge | `knowledge/` — propose via normal governance |
 | Confirmed skill or repeatable workflow | `skills/` — propose, protected-tier |
+| Multi-session roadmap or investigation plan | `plans/` — progress updates automatic; create/archive/scope changes proposed |
 | Governance or process change | `meta/review-queue.md` |
 | Temporary user context (hours to days) | `scratchpad/USER.md` |
 | Unconfirmed observation worth tracking across sessions | `scratchpad/CURRENT.md` |

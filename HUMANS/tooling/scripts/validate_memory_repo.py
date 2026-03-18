@@ -9,8 +9,8 @@ from datetime import date
 from pathlib import Path
 
 
-CONTENT_DIRS = ("identity", "knowledge", "skills")
-ACCESS_DIRS = ("identity", "knowledge", "skills", "chats")
+CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
+ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "chats")
 IGNORED_DIR_NAMES = {".git", ".claude", "__pycache__", ".pytest_cache"}
 
 REQUIRED_FRONTMATTER_KEYS = (
@@ -22,12 +22,14 @@ REQUIRED_FRONTMATTER_KEYS = (
 ALLOWED_SOURCE_VALUES = {
     "user-stated",
     "agent-inferred",
+    "agent-generated",
     "external-research",
     "skill-discovery",
     "template",
     "unknown",
 }
 ALLOWED_TRUST_VALUES = {"high", "medium", "low"}
+ALLOWED_PLAN_STATUS_VALUES = {"active", "paused", "complete"}
 CANONICAL_ORIGIN_SESSION_RE = re.compile(r"^chats/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
 LEGACY_ORIGIN_SESSION_RE = re.compile(r"^chat-\d{3}$")
 SPECIAL_ORIGIN_SESSION_VALUES = {"setup", "manual", "unknown"}
@@ -251,7 +253,7 @@ def validate_iso_date(
         )
 
 
-def validate_frontmatter(path: Path, result: ValidationResult) -> None:
+def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> None:
     text = read_text(path, result)
     if text is None:
         return
@@ -280,17 +282,37 @@ def validate_frontmatter(path: Path, result: ValidationResult) -> None:
 
     origin_session = frontmatter["origin_session"]
     if origin_session in SPECIAL_ORIGIN_SESSION_VALUES:
-        return
-    if CANONICAL_ORIGIN_SESSION_RE.fullmatch(origin_session):
-        return
-    if LEGACY_ORIGIN_SESSION_RE.fullmatch(origin_session):
+        pass
+    elif CANONICAL_ORIGIN_SESSION_RE.fullmatch(origin_session):
+        pass
+    elif LEGACY_ORIGIN_SESSION_RE.fullmatch(origin_session):
         result.warn(
             f"{path}: legacy origin_session {origin_session!r}; prefer chats/YYYY/MM/DD/chat-NNN"
         )
-        return
-    result.error(
-        f"{path}: origin_session must be chats/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
-    )
+    else:
+        result.error(
+            f"{path}: origin_session must be chats/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
+        )
+
+    relative_path = path.relative_to(root)
+    if relative_path.parts[0] == "plans":
+        plan_type = frontmatter.get("type")
+        if not plan_type:
+            result.error(f"{path}: plan files must define frontmatter key 'type'")
+        elif not plan_type.endswith("-plan"):
+            result.error(f"{path}: plan type must end with '-plan', got {plan_type!r}")
+
+        status = frontmatter.get("status")
+        if not status:
+            result.error(f"{path}: plan files must define frontmatter key 'status'")
+        elif status not in ALLOWED_PLAN_STATUS_VALUES:
+            result.error(
+                f"{path}: plan status must be one of {sorted(ALLOWED_PLAN_STATUS_VALUES)!r}, got {status!r}"
+            )
+
+        next_action = frontmatter.get("next_action")
+        if not next_action:
+            result.error(f"{path}: plan files must define non-empty frontmatter key 'next_action'")
 
 
 def validate_access_file(path: Path, result: ValidationResult) -> None:
@@ -401,6 +423,7 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
     required_compact_markers = (
         "identity/SUMMARY.md",
         "chats/SUMMARY.md",
+        "plans/SUMMARY.md",
         "scratchpad/USER.md",
         "scratchpad/CURRENT.md",
         "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",
@@ -594,6 +617,11 @@ def validate_quarantine(root: Path, result: ValidationResult) -> None:
                 f"{path}: quarantine file expected source: external-research, got {source!r}"
             )
 
+        if "last_verified" in frontmatter:
+            result.error(
+                f"{path}: quarantine file must omit last_verified until explicitly reviewed and promoted"
+            )
+
 
 def validate_repo(root: Path) -> ValidationResult:
     result = ValidationResult()
@@ -609,7 +637,7 @@ def validate_repo(root: Path) -> ValidationResult:
     validate_quarantine(root, result)
 
     for path in iter_content_files(root):
-        validate_frontmatter(path, result)
+        validate_frontmatter(path, root, result)
 
     for path in iter_access_files(root):
         validate_access_file(path, result)

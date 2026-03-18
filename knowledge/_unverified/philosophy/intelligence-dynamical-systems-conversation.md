@@ -2,7 +2,6 @@
 source: external-research
 origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-last_verified: 2026-03-18
 trust: low
 reference_url: https://claude.ai/share/3c3a22b3-946e-4a24-96df-2d812f159367
 ---

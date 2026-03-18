@@ -31,13 +31,11 @@ Priority:
 
 from __future__ import annotations
 
-import json
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field
@@ -67,6 +65,7 @@ VALIDATOR_PATH: Path = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_
 IGNORED_NAMES: frozenset[str] = frozenset({
     ".git", ".claude", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
 })
+HUMANS_DIRNAME = "HUMANS"
 
 
 # ── Server ─────────────────────────────────────────────────────────────────────
@@ -87,6 +86,17 @@ def _safe_resolve(rel_path: str) -> Path:
             "Use paths relative to the repo root (e.g., 'identity/SUMMARY.md')."
         )
     return resolved
+
+
+def _repo_relative(path: Path) -> Path:
+    """Return a path relative to the repo root."""
+    return path.relative_to(REPO_ROOT)
+
+
+def _is_humans_path(path: Path) -> bool:
+    """Return True when a path is under HUMANS/."""
+    relative = _repo_relative(path)
+    return bool(relative.parts) and relative.parts[0] == HUMANS_DIRNAME
 
 
 def _format_size(n: int) -> str:
@@ -124,6 +134,10 @@ class ListFolderInput(BaseModel):
         default=False,
         description="Include dot-files and dot-folders (e.g. .github, .gitignore).",
     )
+    include_humans: bool = Field(
+        default=False,
+        description="Include the human-facing HUMANS/ tree in ambient folder discovery.",
+    )
 
 
 class SearchInput(BaseModel):
@@ -159,6 +173,10 @@ class SearchInput(BaseModel):
         ge=1,
         le=100,
     )
+    include_humans: bool = Field(
+        default=False,
+        description="Include the human-facing HUMANS/ tree when searching broad scopes like '.'.",
+    )
 
 
 # ── Tools ──────────────────────────────────────────────────────────────────────
@@ -177,8 +195,10 @@ async def memory_read_file(params: ReadFileInput) -> str:
     """Read the full contents of a file in the agent memory repository.
 
     Use this to load identity profiles, knowledge entries, skill definitions,
-    session summaries, governance docs, or scratchpad files. Always read
-    a folder's SUMMARY.md first to orient before retrieving specific files.
+    plan files, session summaries, governance docs, or scratchpad files.
+    Always read a folder's SUMMARY.md first to orient before retrieving
+    specific files. `HUMANS/` reads are allowed only through explicit paths;
+    that tree is intentionally excluded from default discovery tooling.
 
     Args:
         params (ReadFileInput):
@@ -251,6 +271,7 @@ async def memory_list_folder(params: ListFolderInput) -> str:
         - Browse identity files -> memory_list_folder path='identity'
         - Inspect governance docs -> memory_list_folder path='meta'
         - List chat history structure -> memory_list_folder path='chats'
+        - Include the human docs tree explicitly -> memory_list_folder path='.' include_humans=True
     """
     try:
         resolved = _safe_resolve(params.path)
@@ -270,10 +291,14 @@ async def memory_list_folder(params: ListFolderInput) -> str:
     except OSError as e:
         return f"Error listing '{params.path}': {e}"
 
+    explicit_humans_request = _is_humans_path(resolved)
+
     def _keep(entry: Path) -> bool:
         if entry.name in IGNORED_NAMES:
             return False
         if not params.include_hidden and entry.name.startswith("."):
+            return False
+        if not explicit_humans_request and not params.include_humans and _is_humans_path(entry):
             return False
         return True
 
@@ -318,7 +343,8 @@ async def memory_search(params: SearchInput) -> str:
 
     Use this to locate a specific topic, trait, preference, or keyword without
     loading each file individually. Supports Python regex patterns. Useful when
-    you need to find where a particular concept is documented.
+    you need to find where a particular concept is documented. `HUMANS/` is
+    excluded from ambient searches unless explicitly opted in or searched directly.
 
     Args:
         params (SearchInput):
@@ -336,6 +362,7 @@ async def memory_search(params: SearchInput) -> str:
         - "Find all high-trust entries" -> query='trust: high', glob_pattern='**/*.md'
         - "Search ACCESS logs for a topic" -> query='topic', glob_pattern='**/ACCESS.jsonl'
         - "Locate a specific skill step" -> query='onboard', path='skills'
+        - "Search the human docs tree intentionally" -> query='routing', path='.' include_humans=True
 
     Error cases:
         - Invalid regex: reports the pattern error with the offending expression
@@ -359,11 +386,18 @@ async def memory_search(params: SearchInput) -> str:
     total_matches = 0
     files_searched = 0
     results_remaining = params.max_results
+    explicit_humans_search = _is_humans_path(search_root)
 
     for file_path in sorted(search_root.rglob(params.glob_pattern)):
         if any(part in IGNORED_NAMES for part in file_path.parts):
             continue
         if not file_path.is_file():
+            continue
+        if (
+            not explicit_humans_search
+            and not params.include_humans
+            and _is_humans_path(file_path)
+        ):
             continue
 
         files_searched += 1
@@ -381,7 +415,7 @@ async def memory_search(params: SearchInput) -> str:
                     results_remaining -= 1
 
         if file_hits:
-            rel = file_path.relative_to(REPO_ROOT)
+            rel = _repo_relative(file_path).as_posix()
             output_blocks.append(f"### {rel}\n" + "\n".join(file_hits))
 
     if not output_blocks:
