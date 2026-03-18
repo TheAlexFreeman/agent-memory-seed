@@ -4,7 +4,7 @@ This folder is the episodic memory — a chronological archive of conversations 
 
 ## Overall history
 
-**Two chat records logged (2026-03-18).** Both from the first day; chat-001 spanned three context windows, chat-002 is a short maintenance session.
+**Three chat records logged (2026-03-18).** All from the first day; chat-001 spanned three context windows, chat-002 handled maintenance, and chat-003 focused on automation design.
 
 ### chat-001 — Extended first session (3 context windows)
 
@@ -18,7 +18,11 @@ This folder is the episodic memory — a chronological archive of conversations 
 
 Delivered system review findings: updated CHANGELOG, chats/SUMMARY, chat-001 SUMMARY, fixed `memory_move` source restriction gap in MCP plan, created this chat-002 record.
 
-See `2026/03/18/chat-001/` and `2026/03/18/chat-002/` for full session records.
+### chat-003 — Automation planning and wrap-up
+
+Drafted four setup-ready Codex automations for this repo: `Memory Health`, `Aggregation Watcher`, `Unverified Triage`, and `Periodic Review`. Revised them to self-gate and archive clean runs, then recorded a provisional backlog of future candidates in scratchpad notes.
+
+See `2026/03/18/chat-001/`, `2026/03/18/chat-002/`, and `2026/03/18/chat-003/` for full session records.
 
 ## Structure
 
