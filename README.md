@@ -17,11 +17,14 @@ This repository is a structured, version-controlled memory that persists across 
 
 ## How to orient yourself
 
-1. **Read this file** to understand the system architecture.
-2. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
-3. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
-4. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
-5. **Log your access** using the access-note format described below.
+1. **Start with `meta/quick-reference.md`** — it routes you to the right files for your session type.
+2. **Read this file when routed here** — for first runs, full bootstraps, or periodic reviews.
+3. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
+4. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
+5. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
+6. **Log your access** using the access-note format described below.
+
+> **This README is the architectural reference.** It is not a sequential entry point. For session routing, always start from `meta/quick-reference.md`.
 
 ## Agent routing
 
@@ -137,11 +140,17 @@ Optional ACCESS fields:
 
 The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/curation-algorithms.md` § "Phase 3" for how it develops.
 
-`helpfulness` uses a three-state model:
+`helpfulness` is the agent's judgment of whether a retrieval was useful to producing the session's responses, on a 0.0–1.0 scale:
 
-- **0.0 – 0.1 (wrong context):** File was clearly irrelevant — retrieved in error or drawn by a false-positive attractor in SUMMARY.md. Note what attracted the retrieval so it can be corrected.
-- **0.2 – 0.4 (retrieved, not used):** File was in the right neighborhood but not incorporated in the response — a near-miss. May indicate the file needs better differentiation from similar files, or splitting.
-- **0.5 – 1.0 (used and helpful):** File materially influenced the response. Score higher when it was central to the answer, lower when it was peripheral context.
+| Range   | Meaning                                                                          | Example                                                |
+| ------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 0.0–0.1 | **Wrong context.** Irrelevant or retrieved in error.                             | Retrieved "React patterns" for a React Native query    |
+| 0.2–0.4 | **Near-miss.** Right neighborhood but not incorporated.                          | Opened a related file but used a different one instead |
+| 0.5–0.6 | **Useful context.** Directly relevant, informed the response but wasn't central. | Provided background that shaped framing                |
+| 0.7–0.8 | **Highly relevant.** Shaped a key decision or was directly used.                 | File content was quoted or directly applied            |
+| 0.9–1.0 | **Critical.** Response would be significantly worse without this file.           | Core reference that the answer depended on             |
+
+Score what actually happened, not what should have happened. A high-quality file that wasn't needed for this particular task is a 0.2, not a 0.7.
 
 `note` should be one sentence explaining relevance or lack thereof. Be honest — a 0.1 with a note like _"retrieved because of 'React' in title, query was actually about React Native"_ is more valuable to the feedback loop than a polite 0.7.
 
@@ -258,11 +267,11 @@ If `meta/quick-reference.md` routes you to a fresh instantiation on a returning 
 
 Context cost depends on whether the model is onboarding, resuming normally, or reopening the full governance stack. Use these rough planning numbers:
 
-| Session mode                  | Typical token cost | When to expect it |
-| ----------------------------- | ------------------ | ----------------- |
-| First-run onboarding bootstrap | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session     | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md` |
-| Full bootstrap / periodic review | ~18,000–25,000  | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+| Session mode                     | Typical token cost | When to expect it                                                                                         |
+| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
+| Returning compact session        | ~3,000–6,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md`                     |
+| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
 For models with smaller context windows, prefer the compact returning manifest in `meta/quick-reference.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 
