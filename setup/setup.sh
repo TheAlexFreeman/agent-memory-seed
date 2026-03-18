@@ -8,6 +8,8 @@ INTERACTIVE=true
 REMOTE=""
 PLATFORM=""
 PROFILE=""
+USER_NAME=""
+USER_CONTEXT=""
 
 usage() {
     echo "Usage: setup.sh [OPTIONS]"
@@ -19,6 +21,8 @@ usage() {
     echo "  --remote <url>       Set the git remote origin"
     echo "  --platform <name>    AI platform: claude-code, cursor, chatgpt, generic"
     echo "  --profile <name>     Starter profile: software-developer, researcher, project-manager"
+    echo "  --user-name <name>   Optional name for template-backed starter summaries"
+    echo "  --user-context <text> Optional AI-use context for template-backed starter summaries"
     echo "  -h, --help           Show this help message"
 }
 
@@ -43,6 +47,18 @@ while [[ $# -gt 0 ]]; do
                 usage; exit 1
             fi
             PROFILE="$2"; shift 2 ;;
+        --user-name)
+            if [[ $# -lt 2 ]] || [[ -z "${2-}" ]]; then
+                echo "Error: --user-name requires a value."
+                usage; exit 1
+            fi
+            USER_NAME="$2"; shift 2 ;;
+        --user-context)
+            if [[ $# -lt 2 ]] || [[ -z "${2-}" ]]; then
+                echo "Error: --user-context requires a value."
+                usage; exit 1
+            fi
+            USER_CONTEXT="$2"; shift 2 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $1"; usage; exit 1 ;;
     esac
@@ -108,7 +124,39 @@ elif [[ "$INTERACTIVE" == true ]]; then
     fi
 fi
 
-# 4. Choose a starter profile
+# 4. Optional personalization for template-backed starter files
+if [[ "$INTERACTIVE" == true ]]; then
+    if [[ -z "$USER_NAME" ]]; then
+        echo ""
+        read -rp "Your name (leave blank to skip): " USER_NAME
+    fi
+    if [[ -z "$USER_CONTEXT" ]]; then
+        read -rp "What do you use AI for? (leave blank to skip): " USER_CONTEXT
+    fi
+fi
+
+# 5. Choose a starter profile
+write_identity_summary() {
+    {
+        echo "# Identity Summary"
+        echo
+        echo "Template-based profile — pending onboarding confirmation."
+        echo
+        echo "A starter profile has been installed from a template. During the first"
+        echo "session, the onboarding skill will walk through the template traits and"
+        echo "confirm, adjust, or remove them."
+        echo
+        echo "See [profile.md](profile.md) for the current profile."
+        if [[ -n "$USER_NAME" ]]; then
+            echo
+            echo "**User:** $USER_NAME"
+        fi
+        if [[ -n "$USER_CONTEXT" ]]; then
+            echo "**Uses AI for:** $USER_CONTEXT"
+        fi
+    } > identity/SUMMARY.md
+}
+
 install_profile() {
     local profile_name="$1"
     local template_file="setup/templates/profiles/${profile_name}.md"
@@ -118,16 +166,7 @@ install_profile() {
     fi
     local dest="identity/profile.md"
     sed "s/YYYY-MM-DD/$TODAY/g" "$template_file" > "$dest"
-    # Update identity/SUMMARY.md to reference the template
-    cat > identity/SUMMARY.md << 'IDENTITY_EOF'
-# Identity Summary
-
-Template-based profile — pending onboarding confirmation.
-
-A starter profile has been installed from a template. During the first session, the onboarding skill will walk through the template traits and confirm, adjust, or remove them.
-
-See [profile.md](profile.md) for the current profile.
-IDENTITY_EOF
+    write_identity_summary
     echo "[ok] Installed starter profile: $profile_name"
 }
 
@@ -151,7 +190,7 @@ elif [[ "$INTERACTIVE" == true ]]; then
     esac
 fi
 
-# 5. Choose AI platform
+# 6. Choose AI platform
 print_platform_instructions() {
     local platform="$1"
     echo ""
@@ -260,7 +299,7 @@ else
     print_platform_instructions "${PLATFORM:-other}"
 fi
 
-# 6. Make initial commit if no commits exist
+# 7. Make initial commit if no commits exist
 if ! git rev-parse HEAD >/dev/null 2>&1; then
     # Check git author identity before committing
     GIT_NAME=$(git config user.name 2>/dev/null || true)

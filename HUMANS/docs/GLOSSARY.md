@@ -20,7 +20,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Quarantine** — `knowledge/_unverified/`. Staging area for externally sourced content; all such content lands here at `trust: low`. Promotion to `knowledge/` requires user review. See README § "Security model" and `meta/curation-policy.md`.
 
-- **Provenance** — Origin and verification metadata (source, origin_session, created, last_verified, trust) in YAML frontmatter on content files. See `meta/update-guidelines.md` § "Provenance metadata".
+- **Provenance** — Origin and verification metadata (source, origin_session, created, optional `last_verified`, trust) in YAML frontmatter on content files. See `meta/update-guidelines.md` § "Provenance metadata".
 
 - **Belief diff** — Periodic summary of content changes since the last review. Recorded in `meta/belief-diff-log.md`. See `meta/update-guidelines.md` § "Belief diff".
 
@@ -30,7 +30,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Instruction containment** — Structural rule: only `skills/` and `meta/` may contain procedural instructions. See `meta/curation-policy.md` § "Instruction containment".
 
-- **Temporal decay** — Automatic retirement or flagging of files whose `last_verified` exceeds the active threshold. See `meta/quick-reference.md` § "Decision guide: trust decay".
+- **Temporal decay** — Automatic retirement or flagging based on the effective verification date: `last_verified` when present, otherwise `created`. See `meta/quick-reference.md` § "Decision guide: trust decay".
 
 - **Read-only operation** — Degraded mode where behavioral rules apply but writes are deferred. See `meta/update-guidelines.md` § "Read-only operation".
 

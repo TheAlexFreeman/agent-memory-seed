@@ -216,6 +216,110 @@ class OnboardExportTests(unittest.TestCase):
             self.assertIn(expected_chat_dir, stdout)
             self.assertNotIn("transcript.md", stdout)
 
+    def test_auto_commit_excludes_unrelated_pre_staged_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root)
+            bash = find_bash()
+            if bash is None:
+                self.skipTest("bash is not available in this environment")
+
+            env = isolated_env(root / ".home")
+            subprocess.run(
+                ["git", "init"],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "Test User"],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "test@example.com"],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            write(root / "notes.txt", "keep staged\n")
+            subprocess.run(
+                ["git", "add", "notes.txt"],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            export = textwrap.dedent(
+                """\
+                ---
+                session_id: chats/2026/03/12/chat-001
+                session_date: 2026-03-12
+                ---
+
+                ## Identity Profile
+
+                - **Primary role:** Engineer. [observed]
+
+                ## Session Transcript
+
+                User: Hello
+                Agent: Hi there
+
+                ## Session Summary
+
+                First session onboarding summary.
+
+                ## Session Reflection
+
+                **Outcome quality:** Good.
+                """
+            )
+            export_path = root / "export.md"
+            export_path.write_text(export, encoding="utf-8")
+
+            subprocess.run(
+                [bash, str(SCRIPT_PATH), str(export_path)],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            head_files = subprocess.run(
+                ["git", "show", "--name-only", "--pretty=", "HEAD"],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+            staged_files = subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=root,
+                env=env,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.splitlines()
+
+            self.assertIn("identity/profile.md", head_files)
+            self.assertIn("identity/SUMMARY.md", head_files)
+            self.assertIn("chats/2026/03/12/chat-001/SUMMARY.md", head_files)
+            self.assertNotIn("notes.txt", head_files)
+            self.assertIn("notes.txt", staged_files)
+
 
 if __name__ == "__main__":
     unittest.main()

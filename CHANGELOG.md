@@ -16,6 +16,28 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Optional verification dates, setup parity, and scoped onboarding commits
+
+**Changed:**
+
+- **Provenance contract updated.** Reworked `meta/update-guidelines.md`, `meta/curation-policy.md`, `meta/quick-reference.md`, `meta/integrity-checklist.md`, and `HUMANS/docs/GLOSSARY.md` so `last_verified` is now optional until a human actually confirms the content. Decay and freshness guidance now use the effective verification date (`last_verified` when present, otherwise `created`).
+
+- **Template setup no longer self-verifies content.** Removed `last_verified` from the starter profile templates and the browser-generated template frontmatter. Updated `setup/templates/profiles/README.md` to document that onboarding is the point where template-backed content becomes human-verified.
+
+- **Shell/browser setup parity restored.** Extended `setup/setup.sh` with `--user-name` and `--user-context` plus matching interactive prompts, and changed its generated `identity/SUMMARY.md` to include the same personalization markers and copy used by `setup/setup.html`. Updated `HUMANS/docs/QUICKSTART.md` to document the new flags and parity.
+
+- **Returning-session startup contract aligned.** Rewrote `skills/session-start.md` so it expands the compact returning manifest from `meta/quick-reference.md` rather than assuming a README-first bootstrap, and switched its review-queue guidance to the metadata-first rule.
+
+- **Validator and tests hardened.** Relaxed `HUMANS/tooling/scripts/validate_memory_repo.py` to accept missing `last_verified`, added startup-skill contract checks, expanded validator tests for optional verification dates, added shell/browser setup parity tests, and added an onboarding import regression test for dirty worktrees.
+
+- **Onboarding import commits scoped to written paths.** Updated `HUMANS/tooling/scripts/onboard-export.sh` so it stages only files written by the current import and uses a path-scoped commit, preventing unrelated pre-staged changes from being swept into the onboarding commit. Manual commit instructions now use the same safe path-scoped form.
+
+**Reasoning:** The previous implementation had drifted in four connected ways: it could not represent genuinely unverified content despite the trust model depending on that state, template setup flows were marking content as verified before any human confirmation, the detailed session-start skill still pulled agents toward the deprecated README-heavy path, and onboarding imports could accidentally commit unrelated staged work. These changes make the provenance model, setup flows, startup guidance, import behavior, validator, and tests agree on one safer operational contract.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-17] Quick-reference routing, root setup wrappers, and contract enforcement
 
 **Changed:**

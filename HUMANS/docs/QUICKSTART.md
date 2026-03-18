@@ -35,9 +35,10 @@ Open `setup.html` in any browser. It redirects to the local starter-file generat
 ---
 
 `setup.sh` can:
-1. **Git remote** — optionally configure where to push your memory repo.
-2. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank.
-3. **AI platform** — generate or point you to the right startup instructions.
+1. **About you** — optional name and AI-use context for template-backed starter files.
+2. **Git remote** — optionally configure where to push your memory repo.
+3. **Starter profile** — pick Software Developer, Researcher, or Project Manager to pre-fill common preferences, or start blank.
+4. **AI platform** — generate or point you to the right startup instructions.
 
 `setup.html` covers:
 1. **About you** — optional personal context for starter files.
@@ -49,7 +50,7 @@ If you use the browser path and want a git remote, add it manually after downloa
 For automated/CI environments: `bash setup.sh --non-interactive`. You can also pass flags directly:
 
 ```bash
-bash setup.sh --platform claude-code --profile software-developer --remote https://github.com/you/my-memory.git
+bash setup.sh --platform claude-code --profile software-developer --user-name Alex --user-context "Writing code and debugging" --remote https://github.com/you/my-memory.git
 ```
 
 ### 3. Connect your AI platform

@@ -17,7 +17,6 @@ REQUIRED_FRONTMATTER_KEYS = (
     "source",
     "origin_session",
     "created",
-    "last_verified",
     "trust",
 )
 ALLOWED_SOURCE_VALUES = {
@@ -85,6 +84,16 @@ QUICK_REFERENCE_ROUTER_PHRASE = (
     "Use this file as the operational router for every session:"
 )
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
+SESSION_START_SKILL_PATH = Path("skills/session-start.md")
+SESSION_START_REQUIRED_PHRASES = (
+    "compact returning manifest in `meta/quick-reference.md`",
+    "If `meta/review-queue.md` still contains only its placeholder, skip it.",
+    "Load it only when there are real pending items or the user asks about them.",
+)
+SESSION_START_FORBIDDEN_PATTERNS = (
+    r"after README\.md has been read",
+    r"^- Read `meta/review-queue\.md`\.",
+)
 
 FORBIDDEN_RUNTIME_PATTERNS = (
     r"Check the current maturity stage in `meta/system-maturity\.md`",
@@ -239,7 +248,8 @@ def validate_frontmatter(path: Path, result: ValidationResult) -> None:
         result.error(f"{path}: invalid trust {trust!r}")
 
     validate_iso_date(frontmatter["created"], path, "created", result)
-    validate_iso_date(frontmatter["last_verified"], path, "last_verified", result)
+    if "last_verified" in frontmatter:
+        validate_iso_date(frontmatter["last_verified"], path, "last_verified", result)
 
     origin_session = frontmatter["origin_session"]
     if origin_session in SPECIAL_ORIGIN_SESSION_VALUES:
@@ -450,6 +460,19 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
             result.error(
                 f"{root / 'meta' / 'session-checklists.md'}: missing on-demand guidance"
             )
+
+    session_start = root / SESSION_START_SKILL_PATH
+    if session_start.exists():
+        text = read_text(session_start, result)
+        if text is not None:
+            for phrase in SESSION_START_REQUIRED_PHRASES:
+                if phrase not in text:
+                    result.error(f"{session_start}: missing startup-skill phrase {phrase!r}")
+            for pattern in SESSION_START_FORBIDDEN_PATTERNS:
+                if re.search(pattern, text, re.MULTILINE):
+                    result.error(
+                        f"{session_start}: contains forbidden startup-skill pattern {pattern!r}"
+                    )
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:
