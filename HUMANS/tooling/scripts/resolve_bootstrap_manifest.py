@@ -13,7 +13,7 @@ import json
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 try:
@@ -35,6 +35,13 @@ EXPECTED_MODES = (
     "periodic_review",
     "automation",
 )
+COST_TOKEN_ESTIMATES = {
+    "light": 500,
+    "medium": 2500,
+    "heavy": 7000,
+}
+MIN_BUDGET_RESERVE = 500
+DEFAULT_COST_ESTIMATE = COST_TOKEN_ESTIMATES["medium"]
 
 
 @dataclass(frozen=True)
@@ -52,12 +59,23 @@ class StartupWarning:
 
 
 @dataclass(frozen=True)
+class StartupBudget:
+    limit: int
+    reserve: int
+    estimated_used: int
+    estimated_remaining: int
+    pressure: bool
+
+
+@dataclass(frozen=True)
 class StartupTraceStep:
     path: str
     role: str
     status: str
     required: bool
     cost: str
+    estimated_tokens: int
+    budget_after: int
     reason: str | None = None
 
 
@@ -70,6 +88,8 @@ class StartupResolution:
     prefer_summaries: bool
     on_demand: list[str]
     maintenance_probes: list[str]
+    preload_access_mode: str
+    budget: StartupBudget
     git_state: GitState
     warnings: list[StartupWarning]
     trace: list[StartupTraceStep]
@@ -255,18 +275,50 @@ def resolve_skip_reason(path: Path, skip_if: str | None) -> str | None:
     return None
 
 
+def compute_budget_reserve(token_budget: int) -> int:
+    return max(MIN_BUDGET_RESERVE, token_budget // 7)
+
+
+def is_transcript_path(normalized_path: str) -> bool:
+    return PurePosixPath(normalized_path).name.lower() == "transcript.md"
+
+
+def estimate_tokens_for_step(
+    normalized_path: str,
+    cost: str,
+    *,
+    prefer_summaries: bool,
+) -> int:
+    estimate = COST_TOKEN_ESTIMATES.get(cost, DEFAULT_COST_ESTIMATE)
+    if prefer_summaries and is_transcript_path(normalized_path):
+        return max(estimate, COST_TOKEN_ESTIMATES["heavy"])
+    return estimate
+
+
 def resolve_trace(
     repo_root: Path,
     steps: list[dict[str, Any]],
-) -> list[StartupTraceStep]:
+    *,
+    token_budget: int,
+    prefer_summaries: bool,
+) -> tuple[list[StartupTraceStep], StartupBudget]:
     trace: list[StartupTraceStep] = []
     seen_paths: set[str] = set()
+    reserve = compute_budget_reserve(token_budget)
+    estimated_used = 0
+    budget_pressure = False
 
     for step in steps:
         normalized_path = normalize_manifest_path(str(step["path"]))
         role = str(step["role"])
         required = bool(step["required"])
         cost = str(step["cost"])
+        estimated_tokens = estimate_tokens_for_step(
+            normalized_path,
+            cost,
+            prefer_summaries=prefer_summaries,
+        )
+        budget_after = token_budget - estimated_used
 
         if normalized_path in seen_paths:
             trace.append(
@@ -276,6 +328,8 @@ def resolve_trace(
                     status="skipped",
                     required=required,
                     cost=cost,
+                    estimated_tokens=estimated_tokens,
+                    budget_after=budget_after,
                     reason="duplicate_path",
                 )
             )
@@ -291,6 +345,8 @@ def resolve_trace(
                     status="missing",
                     required=required,
                     cost=cost,
+                    estimated_tokens=estimated_tokens,
+                    budget_after=budget_after,
                 )
             )
             continue
@@ -304,10 +360,34 @@ def resolve_trace(
                     status="skipped",
                     required=required,
                     cost=cost,
+                    estimated_tokens=estimated_tokens,
+                    budget_after=budget_after,
                     reason=skip_reason,
                 )
             )
             continue
+
+        remaining_after_load = token_budget - (estimated_used + estimated_tokens)
+        if not required and remaining_after_load < reserve:
+            budget_pressure = True
+            trace.append(
+                StartupTraceStep(
+                    path=normalized_path,
+                    role=role,
+                    status="skipped",
+                    required=required,
+                    cost=cost,
+                    estimated_tokens=estimated_tokens,
+                    budget_after=budget_after,
+                    reason="budget_pressure",
+                )
+            )
+            continue
+
+        estimated_used += estimated_tokens
+        budget_after = token_budget - estimated_used
+        if budget_after < reserve:
+            budget_pressure = True
 
         trace.append(
             StartupTraceStep(
@@ -316,16 +396,25 @@ def resolve_trace(
                 status="loaded",
                 required=required,
                 cost=cost,
+                estimated_tokens=estimated_tokens,
+                budget_after=budget_after,
             )
         )
 
-    return trace
+    return trace, StartupBudget(
+        limit=token_budget,
+        reserve=reserve,
+        estimated_used=estimated_used,
+        estimated_remaining=token_budget - estimated_used,
+        pressure=budget_pressure,
+    )
 
 
 def resolve_warnings(
     git_state: GitState,
     mode_detection: dict[str, Any],
     *,
+    budget: StartupBudget | None = None,
     expected_branch: str | None = None,
 ) -> list[StartupWarning]:
     warnings: list[StartupWarning] = []
@@ -357,6 +446,17 @@ def resolve_warnings(
             StartupWarning(
                 code="branch_checked_out_elsewhere",
                 message=f"Branch {target} is already checked out in another worktree.",
+            )
+        )
+
+    if budget is not None and budget.pressure:
+        warnings.append(
+            StartupWarning(
+                code="budget_pressure",
+                message=(
+                    "Startup preload hit budget pressure; optional higher-cost files were"
+                    " skipped to preserve compact context."
+                ),
             )
         )
 
@@ -392,6 +492,12 @@ def resolve_startup(
     current_git_state = git_state or detect_git_state(
         repo_root, expected_branch=expected_branch
     )
+    trace, budget = resolve_trace(
+        repo_root,
+        list(mode_config["steps"]),
+        token_budget=int(mode_config["token_budget"]),
+        prefer_summaries=bool(mode_config["prefer_summaries"]),
+    )
     return StartupResolution(
         router=str(manifest["router"]),
         mode=mode,
@@ -402,13 +508,16 @@ def resolve_startup(
         maintenance_probes=[
             str(item) for item in mode_config.get("maintenance_probes", [])
         ],
+        preload_access_mode="startup_trace_only",
+        budget=budget,
         git_state=current_git_state,
         warnings=resolve_warnings(
             current_git_state,
             manifest.get("mode_detection", {}),
+            budget=budget,
             expected_branch=expected_branch,
         ),
-        trace=resolve_trace(repo_root, list(mode_config["steps"])),
+        trace=trace,
     )
 
 

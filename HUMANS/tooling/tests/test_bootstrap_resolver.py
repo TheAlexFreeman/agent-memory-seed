@@ -190,6 +190,66 @@ class BootstrapResolverTests(unittest.TestCase):
             ],
         )
 
+    def test_budget_pressure_skips_optional_step_and_updates_budget_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root, placeholder_scratchpad=False)
+            write(
+                root / "agent-bootstrap.toml",
+                BOOTSTRAP_MANIFEST.replace(
+                    '[modes.returning]\ntoken_budget = 7000',
+                    '[modes.returning]\ntoken_budget = 1500',
+                    1,
+                ).replace(
+                    '[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "docs/heavy-context.md"\nrole = "heavy-context"\nrequired = false\ncost = "medium"\n\n[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    1,
+                ),
+            )
+            write(root / "docs" / "heavy-context.md", "# Heavy context\n")
+
+            resolution = resolver.resolve_startup(root, requested_mode="returning")
+            trace_by_role = {step.role: step for step in resolution.trace}
+
+            self.assertEqual(trace_by_role["heavy-context"].status, "skipped")
+            self.assertEqual(trace_by_role["heavy-context"].reason, "budget_pressure")
+            self.assertEqual(trace_by_role["heavy-context"].budget_after, 500)
+            self.assertTrue(resolution.budget.pressure)
+            self.assertEqual(resolution.budget.limit, 1500)
+            self.assertEqual(resolution.budget.reserve, 500)
+            self.assertEqual(resolution.budget.estimated_used, 1000)
+            self.assertEqual(resolution.budget.estimated_remaining, 500)
+            self.assertIn("budget_pressure", [warning.code for warning in resolution.warnings])
+
+    def test_prefer_summaries_skips_transcript_under_budget_pressure(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root, placeholder_scratchpad=True)
+            write(root / "docs" / "topic" / "transcript.md", "# Transcript\n")
+            write(root / "docs" / "topic" / "SUMMARY.md", "# Summary\n")
+            write(
+                root / "agent-bootstrap.toml",
+                BOOTSTRAP_MANIFEST.replace(
+                    '[modes.returning]\ntoken_budget = 7000',
+                    '[modes.returning]\ntoken_budget = 2500',
+                    1,
+                ).replace(
+                    '[[modes.returning.steps]]\npath = "plans/SUMMARY.md"\nrole = "plan-summary"\nrequired = false\nskip_if = "no_active_plans"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "plans/SUMMARY.md"\nrole = "plan-summary"\nrequired = false\nskip_if = "no_active_plans"\ncost = "light"',
+                    1,
+                ),
+            )
+
+            resolution = resolver.resolve_startup(root, requested_mode="returning")
+            trace_by_role = {step.role: step for step in resolution.trace}
+
+            self.assertEqual(trace_by_role["topic-transcript"].status, "skipped")
+            self.assertEqual(trace_by_role["topic-transcript"].reason, "budget_pressure")
+            self.assertEqual(trace_by_role["topic-transcript"].estimated_tokens, 7000)
+            self.assertEqual(trace_by_role["topic-summary"].status, "loaded")
+            self.assertEqual(trace_by_role["topic-summary"].estimated_tokens, 500)
+            self.assertEqual(resolution.preload_access_mode, "startup_trace_only")
+
 
 if __name__ == "__main__":
     unittest.main()
