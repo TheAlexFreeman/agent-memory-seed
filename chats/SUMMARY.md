@@ -4,14 +4,21 @@ This folder is the episodic memory — a chronological archive of conversations 
 
 ## Overall history
 
-**One session logged (2026-03-18).** First-session onboarding with Alex Freeman.
-Confirmed identity profile from the software developer template. Established
-communication preferences (concise, code-first, criticism > validation) and a
-knowledge-building goal around Celery + Redis + Docker in Django/Postgres stacks.
-Philosophical curiosity (self-organizing dynamics, cognitive science) also noted
-as a recurring interest.
+**Two chat records logged (2026-03-18).** Both from the first day; chat-001 spanned three context windows, chat-002 is a short maintenance session.
 
-See `2026/03/18/chat-001/` for the full session record.
+### chat-001 — Extended first session (3 context windows)
+
+**Part 1 — Onboarding.** Identity profile confirmed (source upgraded from template to user-stated, trust: high). Django 6.0 knowledge base built (9 files). React 19 + Chakra UI 3 research added (4 files). Knowledge-building goal established: Celery expertise over time.
+
+**Part 2 — Philosophy research.** Extensive `knowledge/_unverified/philosophy/` folder built: self-organizing dynamical systems, LLMs vs human minds, narrative cognition, cognitive linguistics (Lakoff, Fauconnier, Sweetser). History-of-philosophy research plan launched. Alex noted personal connection to Eve Sweetser (Berkeley, ~10 years ago).
+
+**Part 3 — Engineering stack planning and MCP design.** Four research plans created: `django-stack-research.md`, `react-stack-research.md` (TanStack Router replacing React Router), `devops-docker-research.md`, `agent-memory-mcp.md`. Upstream core branch (76 files) integrated. Commit conventions and SUMMARY anchor scheme designed. Two commits made.
+
+### chat-002 — System review and maintenance
+
+Delivered system review findings: updated CHANGELOG, chats/SUMMARY, chat-001 SUMMARY, fixed `memory_move` source restriction gap in MCP plan, created this chat-002 record.
+
+See `2026/03/18/chat-001/` and `2026/03/18/chat-002/` for full session records.
 
 ## Structure
 

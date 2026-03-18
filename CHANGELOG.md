@@ -62,6 +62,40 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Research plans architecture, SUMMARY anchors, MCP design, and commit conventions
+
+**Changed:**
+
+- **Four research plans created.** Added `plans/django-stack-research.md` (10 files across 7 phases: Celery Canvas, worker/beat ops, drf-spectacular, test factories, async, security, migrations), `plans/react-stack-research.md` (9 files across 8 phases: TanStack Query, react-hook-form+zod, TanStack Router, TypeScript patterns, Vitest/RTL/MSW, auth, performance, Vite build), `plans/devops-docker-research.md` (10 files across 9 phases: local compose, multi-worker celery, nginx, production config, CI/CD, zero-downtime deploys, secrets, Flower monitoring, database ops, dev tooling), and `plans/agent-memory-mcp.md` (the MCP enhancement plan — see separate changelog entry). `plans/SUMMARY.md` updated with BEGIN/END anchor blocks for each plan.
+
+- **TanStack Router replacing React Router.** After creating the react-stack-research plan, all React Router references were updated to TanStack Router throughout the plan: Phase 2 tool description, prefetching note, auth protected routes, testing routing, performance code splitting, error boundaries, and the Notes section. Key topics: `validateSearch` + zod, `routerContext` + QueryClient, `beforeLoad` + `redirect()`, `lazyRouteComponent`.
+
+- **SUMMARY.md machine-readable section anchors.** Applied `<!-- section: {id} -->` single anchors above each subject heading in `knowledge/SUMMARY.md` and `knowledge/_unverified/SUMMARY.md` to enable surgical section-level writes without full file replacement. Chose single-anchor scheme (not BEGIN/END pairs) for knowledge SUMMARY files since insert-at-section is sufficient; plans/ uses BEGIN/END pairs for full block replacement.
+
+- **Commit message conventions expanded.** Added a comprehensive commit conventions section to `plans/agent-memory-mcp.md` covering: format (`[{category}] {Verb} {≤60 chars}`), a verb vocabulary table per category, deterministic Tier 1 tool commit message templates, optional structured body fields (`Session:`, `Plan:`, `Sources:`), and granularity rules (one logical unit per commit; not per-file-write, not end-of-session dump). `memory_commit` warns (not errors) on unrecognised prefix.
+
+**Reasoning:** The system's first full working session established the knowledge-building roadmap and the tooling needed to maintain the memory system at scale. Research plans give the agent persistent, structured work queues that survive context resets. The SUMMARY anchors enable atomic targeted updates without read-modify-write overhead on full files. The commit conventions make agent-generated git history meaningful and reviewable rather than opaque.
+
+**Approved by:** user
+
+---
+
+## [2026-03-18] Agent-memory MCP — enhanced read/write/commit layer plan
+
+**Changed:**
+
+- **`plans/agent-memory-mcp.md` created.** Full design plan for a two-tier MCP write layer. Tier 1 semantic tools (5 planned: `memory_mark_plan_item_complete`, `memory_promote_knowledge`, `memory_add_knowledge`, `memory_update_identity`, `memory_add_access_entry`) own all invariants and auto-commit. Tier 2 low-level tools (`memory_write`, `memory_edit`, `memory_delete`, `memory_move`, `memory_update_frontmatter`, `memory_commit`, `memory_diff`) are staged without auto-commit for batching. All tools use version tokens (git hash-object) for optimistic locking and return a `MemoryWriteResult` dataclass.
+
+- **`memory_delete` directory restriction designed.** Hard `PermissionError` before any filesystem access for paths outside `knowledge/`, `plans/`, `scratchpad/`. Within allowed directories, the tool auto-calls `allow_cowork_file_delete` on the caller's behalf. `identity/`, `meta/`, `chats/`, and `skills/` are protected.
+
+- **Error taxonomy defined.** `ConflictError` (version mismatch), `NotFoundError`, `ValidationError`, `AlreadyDoneError` (idempotency — distinct from success), `StagingError`, `PermissionError`. `AlreadyDoneError` is intentional: callers need to distinguish "I just did it" from "it was already done."
+
+**Reasoning:** All memory writes currently go through raw Edit/Write/Bash tools with no knowledge of the system's invariants. The MCP layer moves correctness obligations (frontmatter updates, SUMMARY.md sync, ACCESS.jsonl entries, commit format) from the agent's attention to the tool implementation, making memory writes reliably correct instead of fragile by convention.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Optional verification dates, setup parity, and scoped onboarding commits
 
 **Changed:**

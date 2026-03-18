@@ -202,6 +202,8 @@ def memory_move(
 
 Renames/moves a file. Stages both the deletion of source and creation of dest as a git rename (`git mv`) so history is preserved. `new_state` contains `new_version_token` for the destination path.
 
+**Source path restrictions**: identical to `memory_delete` — moves out of `identity/`, `meta/`, `chats/`, and `skills/` are blocked with `PermissionError` before any filesystem access. This prevents a file from being relocated out of a protected directory as a way to work around the delete restriction. Destination paths are unrestricted (the caller can move a file *into* any folder, including protected ones, since that is additive).
+
 ---
 
 #### `memory_update_frontmatter`

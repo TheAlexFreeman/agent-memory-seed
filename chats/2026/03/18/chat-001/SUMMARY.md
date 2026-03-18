@@ -52,6 +52,25 @@ Alex requested a broad survey of the history of philosophy: the overarching stor
 - Criticism > validation; praise is a strong signal.
 - Personal connection to Eve Sweetser (took Metaphor and Linguistic Analysis of Literature at Berkeley, ~10 years ago).
 
+## Part 3: Engineering stack research and MCP design (continued after second context compaction)
+
+Second context compaction. Four research plans created, MCP write-layer designed.
+
+### Research plans created
+- `plans/django-stack-research.md` — 10 files across 7 phases (Celery Canvas → Celery ops → drf-spectacular → test factories → async → security → migrations)
+- `plans/react-stack-research.md` — 9 files across 8 phases; TanStack Router chosen over React Router (fully type-safe, `validateSearch`+zod, `beforeLoad`+`redirect()`, `lazyRouteComponent`)
+- `plans/devops-docker-research.md` — 10 files across 9 phases (local compose → multi-worker Celery → nginx → production config → CI/CD → zero-downtime → secrets → Flower → DB ops → dev tooling)
+- `plans/agent-memory-mcp.md` — detailed implementation plan for a two-tier MCP write layer (Tier 1 semantic auto-commit tools + Tier 2 low-level staged tools + version tokens + `MemoryWriteResult` + error taxonomy + commit conventions)
+
+### Key design decisions
+- `memory_delete` directory restriction: hard PermissionError for `identity/`, `meta/`, `chats/`, `skills/`; auto-calls `allow_cowork_file_delete` within `knowledge/`, `plans/`, `scratchpad/`
+- SUMMARY.md anchors: BEGIN/END pairs in `plans/SUMMARY.md`; single `<!-- section: id -->` anchors in knowledge SUMMARY files
+- Commit conventions: `[{category}] {Verb} {≤60 chars}` format with verb vocabulary per category, deterministic Tier 1 templates, optional `Session:`/`Plan:`/`Sources:` body fields
+- Upstream core branch integrated (76 files): architectural guardrails, session-start refinement, curation policy improvements, setup tooling updates
+
+### System review findings (delivered in chat-002)
+CHANGELOG, chats/SUMMARY.md, and reflection.md were outdated (covered only onboarding); `memory_move` source restriction gap identified in MCP plan; `react-auth-patterns.md` TanStack Router terminology noted for future correction.
+
 ## Action items for future sessions
 - Build Celery knowledge base incrementally as relevant tasks arise.
 - Alex indicated he'll review Django knowledge files "soon" for potential promotion from `_unverified/`.
