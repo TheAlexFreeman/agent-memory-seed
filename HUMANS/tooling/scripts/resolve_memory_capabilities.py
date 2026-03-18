@@ -34,6 +34,7 @@ REQUIRED_OPERATION_KEYS = (
     "tier",
     "change_class",
     "commit_model",
+    "commit_category_hint",
     "writes",
     "owns_frontmatter",
     "owns_summaries",
@@ -49,6 +50,36 @@ REQUIRED_RAW_FALLBACK_POLICY_KEYS = (
     "preview_required_for",
     "read_only_mode",
 )
+REQUIRED_APPROVAL_PREVIEW_KEYS = (
+    "required_for",
+    "sections",
+    "show_resulting_state",
+    "show_warnings",
+)
+REQUIRED_APPROVAL_FLOW_KEYS = (
+    "trigger",
+    "primary_action",
+    "secondary_actions",
+    "deferred_outcome",
+    "copy_style",
+)
+REQUIRED_APPROVAL_PREVIEW_SECTIONS = (
+    "summary",
+    "reasoning",
+    "target_files",
+    "invariant_effects",
+    "commit_suggestion",
+    "fallback_behavior",
+)
+ALLOWED_COMMIT_CATEGORY_HINTS = {
+    "chat",
+    "curation",
+    "identity",
+    "knowledge",
+    "plan",
+    "scratchpad",
+    "system",
+}
 
 
 def load_manifest(repo_root: Path) -> dict[str, Any]:
@@ -71,6 +102,13 @@ def _ensure_string_list(
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         errors.append(f"{label} must be an array of strings")
         return []
+    return value
+
+
+def _ensure_bool(errors: list[str], label: str, value: Any) -> bool:
+    if not isinstance(value, bool):
+        errors.append(f"{label} must be a boolean")
+        return False
     return value
 
 
@@ -174,6 +212,88 @@ def resolve_capabilities(
             f"{MANIFEST_PATH}: raw_fallback_policy.read_only_mode must be a string"
         )
 
+    approval_ux = manifest.get("approval_ux")
+    if not isinstance(approval_ux, dict):
+        errors.append(f"{MANIFEST_PATH}: approval_ux must be a TOML table")
+        approval_ux = {}
+
+    preview = approval_ux.get("preview")
+    if not isinstance(preview, dict):
+        errors.append(f"{MANIFEST_PATH}: approval_ux.preview must be a TOML table")
+        preview = {}
+    for key in REQUIRED_APPROVAL_PREVIEW_KEYS:
+        if key not in preview:
+            errors.append(f"{MANIFEST_PATH}: approval_ux.preview missing {key}")
+    preview_required_for = _ensure_string_list(
+        errors,
+        "approval_ux.preview.required_for",
+        preview.get("required_for"),
+    )
+    for class_name in preview_required_for:
+        if class_name not in change_classes:
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.preview.required_for references unknown class {class_name!r}"
+            )
+    for class_name in ("proposed", "protected"):
+        if class_name not in preview_required_for:
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.preview.required_for must include {class_name!r}"
+            )
+    preview_sections = _ensure_string_list(
+        errors,
+        "approval_ux.preview.sections",
+        preview.get("sections"),
+    )
+    for section_name in REQUIRED_APPROVAL_PREVIEW_SECTIONS:
+        if section_name not in preview_sections:
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.preview.sections must include {section_name!r}"
+            )
+    _ensure_bool(
+        errors,
+        "approval_ux.preview.show_resulting_state",
+        preview.get("show_resulting_state"),
+    )
+    _ensure_bool(
+        errors,
+        "approval_ux.preview.show_warnings",
+        preview.get("show_warnings"),
+    )
+
+    approval_flows: dict[str, dict[str, Any]] = {}
+    for class_name in ("proposed", "protected"):
+        flow = approval_ux.get(class_name)
+        if not isinstance(flow, dict):
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.{class_name} must be a TOML table"
+            )
+            flow = {}
+        approval_flows[class_name] = flow
+        for key in REQUIRED_APPROVAL_FLOW_KEYS:
+            if key not in flow:
+                errors.append(f"{MANIFEST_PATH}: approval_ux.{class_name} missing {key}")
+        if not isinstance(flow.get("trigger"), str):
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.{class_name}.trigger must be a string"
+            )
+        if not isinstance(flow.get("primary_action"), str):
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.{class_name}.primary_action must be a string"
+            )
+        _ensure_string_list(
+            errors,
+            f"approval_ux.{class_name}.secondary_actions",
+            flow.get("secondary_actions"),
+        )
+        if not isinstance(flow.get("deferred_outcome"), str):
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.{class_name}.deferred_outcome must be a string"
+            )
+        if not isinstance(flow.get("copy_style"), str):
+            errors.append(
+                f"{MANIFEST_PATH}: approval_ux.{class_name}.copy_style must be a string"
+            )
+
     error_taxonomy = manifest.get("error_taxonomy")
     if not isinstance(error_taxonomy, dict):
         errors.append(f"{MANIFEST_PATH}: error_taxonomy must be a TOML table")
@@ -194,6 +314,11 @@ def resolve_capabilities(
                 errors.append(f"{MANIFEST_PATH}: operations.{tool_name} missing {key}")
         if op.get("tier") != "semantic":
             errors.append(f"{MANIFEST_PATH}: operations.{tool_name}.tier must be 'semantic'")
+        commit_category_hint = op.get("commit_category_hint")
+        if commit_category_hint not in ALLOWED_COMMIT_CATEGORY_HINTS:
+            errors.append(
+                f"{MANIFEST_PATH}: operations.{tool_name}.commit_category_hint must be one of {sorted(ALLOWED_COMMIT_CATEGORY_HINTS)!r}"
+            )
         change_class = op.get("change_class")
         if change_class not in change_classes:
             errors.append(
@@ -285,6 +410,11 @@ def resolve_capabilities(
             "declared_gaps": sorted(declared_gaps),
         },
         "raw_fallback_policy": raw_fallback_policy,
+        "approval_ux": {
+            "preview": preview,
+            "proposed": approval_flows.get("proposed", {}),
+            "protected": approval_flows.get("protected", {}),
+        },
         "implemented_desktop_operations": implemented_desktop_ops,
         "gap_operations": sorted(gap_ops),
         "operation_change_classes": {
@@ -292,6 +422,12 @@ def resolve_capabilities(
             for tool_name in sorted(semantic_extensions)
             if isinstance(operations.get(tool_name), dict)
             and "change_class" in operations[tool_name]
+        },
+        "operation_commit_categories": {
+            tool_name: operations[tool_name]["commit_category_hint"]
+            for tool_name in sorted(semantic_extensions)
+            if isinstance(operations.get(tool_name), dict)
+            and "commit_category_hint" in operations[tool_name]
         },
         "runtime_tools": sorted(runtime_tool_names),
         "errors": errors,

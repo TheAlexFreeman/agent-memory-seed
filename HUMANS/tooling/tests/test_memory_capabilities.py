@@ -90,6 +90,41 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ["proposed", "protected"],
         )
 
+    def test_manifest_declares_approval_preview_and_confirmation_flows(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        approval_ux = manifest["approval_ux"]
+
+        self.assertEqual(
+            approval_ux["preview"]["required_for"],
+            ["proposed", "protected"],
+        )
+        self.assertEqual(
+            approval_ux["preview"]["sections"],
+            [
+                "summary",
+                "reasoning",
+                "target_files",
+                "invariant_effects",
+                "commit_suggestion",
+                "fallback_behavior",
+            ],
+        )
+        self.assertTrue(approval_ux["preview"]["show_resulting_state"])
+        self.assertTrue(approval_ux["preview"]["show_warnings"])
+        self.assertEqual(approval_ux["proposed"]["trigger"], "before_write")
+        self.assertEqual(
+            approval_ux["proposed"]["primary_action"],
+            "apply_after_confirmation",
+        )
+        self.assertEqual(
+            approval_ux["protected"]["primary_action"],
+            "approve_and_apply",
+        )
+        self.assertEqual(
+            approval_ux["protected"]["secondary_actions"],
+            ["open_files", "defer", "cancel"],
+        )
+
     def test_desktop_operation_change_classes_match_semantic_tools(self) -> None:
         manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
         desktop_operations = manifest["desktop_operations"]
@@ -118,6 +153,31 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(
             desktop_operations["flag_for_review"]["change_class"],
             operations["memory_flag_for_review"]["change_class"],
+        )
+
+    def test_semantic_operations_declare_commit_category_hints(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        operations = manifest["operations"]
+
+        self.assertEqual(
+            operations["memory_create_plan"]["commit_category_hint"],
+            "plan",
+        )
+        self.assertEqual(
+            operations["memory_add_knowledge_file"]["commit_category_hint"],
+            "knowledge",
+        )
+        self.assertEqual(
+            operations["memory_update_identity_trait"]["commit_category_hint"],
+            "identity",
+        )
+        self.assertEqual(
+            operations["memory_record_chat_summary"]["commit_category_hint"],
+            "chat",
+        )
+        self.assertEqual(
+            operations["memory_flag_for_review"]["commit_category_hint"],
+            "curation",
         )
 
     def test_error_taxonomy_marks_already_done_as_declared_but_not_emitted(self) -> None:

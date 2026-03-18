@@ -78,6 +78,33 @@ requires_change_class = true
 preview_required_for = ["proposed", "protected"]
 read_only_mode = "emit_deferred_action_summary"
 
+[approval_ux.preview]
+required_for = ["proposed", "protected"]
+sections = [
+  "summary",
+  "reasoning",
+  "target_files",
+  "invariant_effects",
+  "commit_suggestion",
+  "fallback_behavior",
+]
+show_resulting_state = true
+show_warnings = true
+
+[approval_ux.proposed]
+trigger = "before_write"
+primary_action = "apply_after_confirmation"
+secondary_actions = ["open_files", "defer"]
+deferred_outcome = "queue_review_or_summary"
+copy_style = "brief_reasoned_summary"
+
+[approval_ux.protected]
+trigger = "before_write"
+primary_action = "approve_and_apply"
+secondary_actions = ["open_files", "defer", "cancel"]
+deferred_outcome = "report_blocked"
+copy_style = "explicit_protected_warning"
+
 [error_taxonomy.ConflictError]
 status = "implemented"
 meaning = "Version token mismatch while updating an existing file."
@@ -201,6 +228,7 @@ group = "plan"
 tier = "semantic"
 change_class = "proposed"
 commit_model = "auto_commit"
+commit_category_hint = "plan"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
 owns_frontmatter = ["plans/{plan_id}.md"]
 owns_summaries = ["plans/SUMMARY.md"]
@@ -215,6 +243,7 @@ group = "plan"
 tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
+commit_category_hint = "plan"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
 owns_frontmatter = ["plans/{plan_id}.md"]
 owns_summaries = ["plans/SUMMARY.md"]
@@ -229,6 +258,7 @@ group = "plan"
 tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
+commit_category_hint = "plan"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
 owns_frontmatter = ["plans/{plan_id}.md"]
 owns_summaries = ["plans/SUMMARY.md"]
@@ -243,6 +273,7 @@ group = "knowledge"
 tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
+commit_category_hint = "knowledge"
 writes = ["knowledge/_unverified/**/{file}.md", "knowledge/_unverified/SUMMARY.md"]
 owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
 owns_summaries = ["knowledge/_unverified/SUMMARY.md"]
@@ -257,6 +288,7 @@ group = "knowledge"
 tier = "semantic"
 change_class = "proposed"
 commit_model = "auto_commit"
+commit_category_hint = "knowledge"
 writes = [
   "knowledge/_unverified/**/{file}.md",
   "knowledge/**/{file}.md",
@@ -276,6 +308,7 @@ group = "knowledge"
 tier = "semantic"
 change_class = "proposed"
 commit_model = "auto_commit"
+commit_category_hint = "knowledge"
 writes = [
   "knowledge/**/{file}.md",
   "knowledge/_unverified/**/{file}.md",
@@ -295,6 +328,7 @@ group = "knowledge"
 tier = "semantic"
 change_class = "proposed"
 commit_model = "auto_commit"
+commit_category_hint = "knowledge"
 writes = [
   "knowledge/**/{file}.md",
   "knowledge/_archive/**/{file}.md",
@@ -313,6 +347,7 @@ group = "scratchpad"
 tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
+commit_category_hint = "scratchpad"
 writes = ["scratchpad/USER.md", "scratchpad/CURRENT.md"]
 owns_frontmatter = []
 owns_summaries = []
@@ -327,6 +362,7 @@ group = "identity"
 tier = "semantic"
 change_class = "proposed"
 commit_model = "auto_commit"
+commit_category_hint = "identity"
 writes = ["identity/{file}.md"]
 owns_frontmatter = ["identity/{file}.md"]
 owns_summaries = []
@@ -341,6 +377,7 @@ group = "chat"
 tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
+commit_category_hint = "chat"
 writes = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md", "chats/SUMMARY.md"]
 owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
 owns_summaries = ["chats/SUMMARY.md"]
@@ -355,6 +392,7 @@ group = "governance"
 tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
+commit_category_hint = "curation"
 writes = ["meta/review-queue.md"]
 owns_frontmatter = []
 owns_summaries = []

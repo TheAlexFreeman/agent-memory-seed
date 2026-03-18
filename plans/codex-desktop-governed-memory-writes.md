@@ -1,12 +1,12 @@
 ---
-source: agent-generated
-type: implementation-plan
-origin_session: manual
 created: 2026-03-18
-last_verified: 2026-03-18
-trust: medium
+last_verified: '2026-03-18'
+next_action: Define fallback behavior
+origin_session: manual
+source: agent-generated
 status: active
-next_action: "Phase 2 — design approval and confirmation UX for proposed and protected writes"
+trust: medium
+type: implementation-plan
 ---
 
 # Implementation Plan: Codex Desktop Governed Memory Writes
@@ -124,7 +124,7 @@ Error taxonomy is also explicit now. Current runtime support is:
 
 Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now validates the capability contract against the MCP runtime and highlights declared desktop-surface gaps such as ACCESS appends and session reflections.
 
-### Phase 2 — Governance and policy integration · ☐ 1/3 complete
+### Phase 2 — Governance and policy integration · ☐ 2/3 complete
 
 4. ☑ Map repo governance to app-side affordances
    - automatic changes
@@ -132,7 +132,7 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now
    - protected changes
    - read-only/deferred action mode
 
-5. ☐ Design approval and confirmation UX
+5. ☑ Design approval and confirmation UX
    - semantic preview before protected writes
    - clear explanation of what files and invariants will change
    - explicit commit-category suggestions where applicable
@@ -168,6 +168,24 @@ The notable edge case is `memory_flag_for_review`: it targets `meta/review-queue
 #### 3. Raw fallback tools inherit, not redefine, governance class
 
 The prototype contract now states that raw write/edit/move/delete tools do not get their own independent approval tier. They inherit the change class of the semantic operation or caller intent, require preview for `proposed` and `protected` work, and fall back to deferred-action summaries in read-only contexts.
+
+#### 4. Approval UX should be contract-driven, not prompt-only
+
+The repo-side prototype now declares an explicit `approval_ux` contract for `proposed` and `protected` writes so the desktop layer can render the same preview shape consistently across semantic operations and raw fallbacks. The preview must include:
+
+- concise change summary
+- reasoning for the write
+- target files
+- invariant effects
+- commit-category suggestion
+- fallback behavior when the app must defer or drop to raw tools
+
+The prototype also now distinguishes the two confirmation flows:
+
+- **Proposed writes** use a lightweight preview with explicit confirmation before apply, plus `open_files` and `defer` actions
+- **Protected writes** use a higher-friction approval step with explicit protected-change framing, `open_files` / `defer` / `cancel` actions, and a blocked outcome until the user approves
+
+To support preview fidelity, each semantic operation now carries a `commit_category_hint`, and the capability resolver validates both the approval UX contract and those hints.
 
 ### Phase 3 — Desktop and MCP integration · ☐ 0/3 complete
 
@@ -217,6 +235,7 @@ The prototype contract now states that raw write/edit/move/delete tools do not g
 | 2026-03-18 | Plan created from identified Codex desktop gap: governed, invariant-aware memory writes |
 | 2026-03-18 | Added `HUMANS/tooling/agent-memory-capabilities.toml` plus a resolver and tests to define the semantic tool set, invariant ownership model, shared result envelope, and current desktop-surface gaps |
 | 2026-03-18 | Extended the capability contract with `automatic` / `proposed` / `protected` change classes, read-only deferred behavior, raw-fallback inheritance rules, and validator coverage for operation-to-class mapping |
+| 2026-03-18 | Completed Design approval and confirmation UX (codex-desktop-governed-memory-writes 5/11) |
 
 ---
 
