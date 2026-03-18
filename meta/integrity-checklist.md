@@ -8,4 +8,6 @@ Advisory checklist for humans or agents to run periodically (e.g. during or befo
 
 3. **Commit signatures (optional)** — Run `git log --show-signature` on protected paths (`meta/`, `skills/`, `README.md`). Flag unsigned commits on these paths as a security concern; record in `meta/review-queue.md` if the protocol in `meta/update-guidelines.md` § "Commit integrity" is adopted.
 
+4. **System-change architecture fit** — For recent edits to `meta/`, `README.md`, `skills/`, setup flows, or validator contracts, confirm the operating contract is still consistent across docs and tooling, the user-facing workflow remains understandable and low-friction, and the compact returning path plus context-budget guidance have not regressed. Flag duplicated rules, confusing approval flows, or new mandatory reads without clear benefit.
+
 This checklist is advisory. The repository owner decides whether and how often to run it; the agent may run it as part of periodic review and report findings without automatically applying changes.

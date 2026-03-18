@@ -13,6 +13,8 @@ Pending suggestions for system modifications that the agent could not present to
 **Status:** pending | approved | rejected | superseded
 ```
 
+If a `proposed` or `protected` item changes system architecture (`meta/`, `README.md`, routing/setup prompts, validators, or skills that alter agent operating procedure), include a brief note on its impact to **consistency**, **user-friendliness**, and **context efficiency**.
+
 ### Governance proposals
 
 Governance proposals are generated when the agent's periodic review identifies evidence that a governance rule is producing suboptimal outcomes (see `meta/curation-policy.md` § "Governance feedback"). These are always protected-tier changes — the system generates the insight, but the human approves.
@@ -24,6 +26,7 @@ Governance proposals are generated when the agent's periodic review identifies e
 **Evidence:** Quantitative data supporting the change — access patterns, false positive rates, threshold violation counts, re-retrieval rates after archival, etc.
 **Current behavior:** What the rule currently does.
 **Proposed change:** What the agent recommends instead.
+**Architectural impact:** Effect on consistency, user-friendliness, and context efficiency.
 **Expected impact:** How this change would improve system behavior.
 **Status:** pending | approved | rejected | superseded
 ```

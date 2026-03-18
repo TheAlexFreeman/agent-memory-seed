@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Architectural guardrails for governance evolution
+
+**Changed:**
+
+- **System-change guardrails made explicit.** Added a new architectural guardrail section to `README.md` and a matching note to `meta/quick-reference.md` making consistency, user-friendliness, and context efficiency first-order considerations whenever agents review or modify the system itself.
+
+- **Governance review criteria tightened.** Updated `meta/curation-policy.md` and `meta/update-guidelines.md` so periodic reviews and system-level change proposals must explicitly evaluate these three dimensions rather than treating them as implicit quality concerns.
+
+- **Proposal and audit templates aligned.** Updated `meta/review-queue.md` and `meta/integrity-checklist.md` so governance proposals and integrity checks now capture architectural impact, operational drift, and context-budget regressions tied to those same guardrails.
+
+**Reasoning:** The repo already emphasized routing authority, progressive disclosure, and context budgets, but those concerns were distributed across documents rather than stated as a shared architectural standard for self-modification. Making them explicit at the governing control points reduces the chance of future drift where a technically sound local change degrades cross-doc consistency, user operability, or compact-session efficiency.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Optional verification dates, setup parity, and scoped onboarding commits
 
 **Changed:**

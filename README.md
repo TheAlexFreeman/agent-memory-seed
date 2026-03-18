@@ -15,6 +15,16 @@ You are an AI agent reading this repository. Start every session with `meta/quic
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
 
+## Architectural guardrails for system changes
+
+When reviewing or modifying the memory system itself — governance rules, routing manifests, setup flows, validation tooling, or other agent-facing architecture — treat the following as first-order design constraints, not polish work:
+
+- **Consistency.** Keep the operational router, architecture reference, governance docs, templates, validators, and generated artifacts aligned. Prefer single authoritative sources over duplicated rules, and update dependent surfaces together when the contract changes.
+- **User-friendliness.** Preserve progressive disclosure, readable instructions, low-friction setup, and practical maintenance flows. A change that is theoretically cleaner but materially harder for the user to understand or operate is an architectural regression.
+- **Context efficiency.** Protect the compact returning path. Prefer summaries, metadata-first probes, and on-demand references over unconditional loading. Any increase to bootstrap or review overhead should be justified by clear operational value.
+
+Agents proposing or evaluating system-level changes should explain the impact on all three dimensions and call out explicit tradeoffs when one improves at another's expense.
+
 ## How to orient yourself
 
 1. **Start with `meta/quick-reference.md`** — it routes you to the right files for your session type.

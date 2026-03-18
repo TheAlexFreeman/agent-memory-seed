@@ -192,9 +192,15 @@ The governance rules in `meta/` are not exempt from evolutionary pressure. Rules
 
 **Principle:** Top-down constraints must be shaped by bottom-up evidence. A rule that consistently causes friction — archiving files that get re-retrieved, flagging patterns that are always false positives — needs revision. The system generates the insight; the human approves the change.
 
+When the system reviews or modifies itself, three architectural considerations are fundamental:
+
+- **Consistency.** Routing, governance docs, validators, setup surfaces, and generated artifacts should express one coherent contract.
+- **User-friendliness.** Governance should stay understandable and usable for the human running the repo; friction is a real failure mode, not cosmetic debt.
+- **Context efficiency.** Governance should preserve compact returning sessions, metadata-first checks, and low-overhead review flows; unnecessary context growth is an architectural cost.
+
 ### Governance evaluation protocol
 
-During periodic review: (1) **Threshold effectiveness** — are decay thresholds causing premature archival? Check re-retrieval of archived files. (2) **Signal quality** — are anomaly signals producing useful flags or mostly false positives? Check resolved/false-positive ratio in review-queue. (3) **Process friction** — are requirements slowing legitimate work without catching problems? (4) **Missing coverage** — are there failure modes no existing rule addresses?
+During periodic review: (1) **Threshold effectiveness** — are decay thresholds causing premature archival? Check re-retrieval of archived files. (2) **Signal quality** — are anomaly signals producing useful flags or mostly false positives? Check resolved/false-positive ratio in review-queue. (3) **Consistency** — do `README.md`, `meta/quick-reference.md`, `meta/update-guidelines.md`, related templates/checklists, validators, and generated prompts still agree on the operating contract? (4) **User-friendliness** — are setup, approval, and maintenance flows still understandable and low-friction for the user? (5) **Context efficiency** — does the current design still protect the compact returning path, metadata-first checks, and reasonable context budgets? (6) **Missing coverage** — are there failure modes no existing rule addresses?
 
 ### Proposing governance changes
 

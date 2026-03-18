@@ -4,6 +4,10 @@
 
 This is the single authoritative source for the system's currently active operational parameters. It is updated during each periodic review after a maturity assessment. All other threshold values in `curation-policy.md` and `README.md` are reference values shown for illustration — the values below are what actually governs the live system. `meta/system-maturity.md` is a reference used to assess maturity and choose the next parameter set; it is not the live runtime config.
 
+## Architectural guardrails for system changes
+
+When you are reviewing or modifying the system itself, treat **consistency**, **user-friendliness**, and **context efficiency** as architectural guardrails. Keep authority files aligned, preserve the compact returning path, and make tradeoffs explicit when a change helps one dimension at the expense of another.
+
 ---
 
 ## Session routing

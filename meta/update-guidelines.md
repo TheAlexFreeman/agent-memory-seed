@@ -72,6 +72,16 @@ When confirmation occurs, update `last_verified` to the current date and promote
 
 Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown` and `trust: medium`. If the reviewer actually reads and verifies the content during backfill, set `last_verified` to the review date. If the backfill is mechanical (adding metadata without verifying content), omit `last_verified` and let `created` serve as the effective verification date — this prevents conflating "I added metadata" with "I verified this content." If the original creation date cannot be determined, use the backfill date as `created`.
 
+## Architectural standard for system changes
+
+When the agent is reviewing or modifying the memory system itself — governance docs, routing manifests, bootstrap/setup flows, validation rules, or other protected architecture — the proposal must address three fundamental considerations:
+
+- **Consistency.** `README.md`, `meta/quick-reference.md`, `meta/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
+- **User-friendliness.** Preserve progressive disclosure, comprehensible approval steps, readable setup copy, and maintenance workflows that a normal user can actually follow.
+- **Context efficiency.** Preserve the compact returning manifest, prefer metadata-first checks and on-demand loads, and justify any added bootstrap or periodic-review overhead.
+
+For system-level changes, the change summary is incomplete unless it explains the expected effect on all three dimensions, including any tradeoffs or follow-up alignment work.
+
 ## Change categories
 
 ### Automatic changes (no approval needed)
@@ -107,7 +117,7 @@ For proposed changes: describe the change and reasoning to the user. If approved
 
 **For protected changes:**
 
-Same workflow, but with elevated formality: state explicitly that the change requires approval because it modifies a protected file (`skills/`, `meta/`, `README.md`). Use phrasing like: "This requires your explicit approval because it modifies [target]. Shall I proceed?"
+Same workflow, but with elevated formality: state explicitly that the change requires approval because it modifies a protected file (`skills/`, `meta/`, `README.md`). For system-level changes, include the expected impact on consistency, user-friendliness, and context efficiency. Use phrasing like: "This requires your explicit approval because it modifies [target]. Shall I proceed?"
 
 **What counts as approval:** An explicit affirmative response — "yes," "go ahead," "approved," "do it," or equivalent. Lack of objection, moving on to another topic, or ambiguous responses ("maybe," "I guess") are not approval. When in doubt, ask again clearly.
 
@@ -199,7 +209,7 @@ During any session, if the agent notices it has been more than 30 days since the
 4. **Review queue.** Non-security entries in `meta/review-queue.md` awaiting approval?
 5. **Unhelpful memory.** Files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with knowledge amplification protocol.
 6. **Maturity assessment.** Assess developmental stage using `meta/system-maturity.md`. If changed, log transition and update `meta/quick-reference.md`.
-7. **Governance evaluation.** Are curation rules producing good outcomes? See `meta/curation-policy.md` § "Governance feedback".
+7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `meta/curation-policy.md` § "Governance feedback".
 8. **Folder structure.** Does it still make sense given actual usage?
 9. **Emergent categorization.** Cross-folder retrieval clusters? See `meta/curation-policy.md` § "Emergent categorization." (Most expensive step — do last.)
 10. **Session reflection themes.** Review recent reflection notes for recurring patterns. Address through summary updates or review-queue proposals.
