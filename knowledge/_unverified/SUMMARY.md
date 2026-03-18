@@ -21,6 +21,7 @@ This quarantine zone ensures that **all externally sourced content is visible, l
 
 ## Current contents
 
+<!-- section: django -->
 ### `django/` — Django 6.0 knowledge base (ingested 2026-03-18)
 
 Nine files synthesized from current Django, DRF, Celery, pytest-django, structlog, Sentry, and related ecosystem documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
@@ -35,6 +36,7 @@ Nine files synthesized from current Django, DRF, Celery, pytest-django, structlo
 - **`drf-testing-pytest-django-perf-rec.md`** — DRF testing/API-contract guidance plus pytest-django fixture/database patterns and django-perf-rec's current maintenance-mode role for query/cache regression checks.
 - **`django-observability-structlog-sentry.md`** — Observability guidance for this stack: structlog contextvars and Celery logging patterns, plus Sentry tracing, sampling, spans, and cache monitoring.
 
+<!-- section: philosophy -->
 ### `philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18)
 
 Ten files synthesized from Alex's shared philosophical conversation and follow-up web research. All carry `trust: low` pending review. (The history of philosophy research plan has been promoted to `plans/philosophy-history-survey.md`.)
@@ -50,6 +52,7 @@ Ten files synthesized from Alex's shared philosophical conversation and follow-u
 - **`cognitive-linguistics-metaphor-blending.md`** — Deep dive into three foundational cognitive linguistics programs: Lakoff & Johnson's Conceptual Metaphor Theory (primary metaphors, embodied grounding, radial categories, basic-level categories); Fauconnier & Turner's Conceptual Blending Theory (mental spaces, four network types, vital relations, compression, optimality principles); Sweetser's polysemy and viewpoint work (three-domain model for modality/conjunctions/perception verbs, frame semantics, fictive motion, subjectivity, gesture). Includes synthesis of how all three connect to the dynamical systems framework and LLM implications.
 - **`blending-compression-coupling-construal.md`** — Focused synthesis on three themes and their convergence in narrative world-understanding: (1) blending-as-compression — the AIT/MDL parallel, the key divergence (observer-relative vs. objective), and how blending optimality maps onto narrative aesthetics; (2) structural coupling and metaphor — primary metaphors as coupling deposits, languaging as intersubjective coupling, narrative as transmission of coupling history, and the asymmetry problem; (3) subjective construal — Langacker's spectrum, subjectification, narrative focalization as multi-perspective blending, the immersion/distance dual-mode. Synthesis: narrative as cognitive triangulation (compression + coupling + construal), with the dark side.
 
+<!-- section: react -->
 ### `react/` — React 19 + Chakra UI 3 frontend research (ingested 2026-03-18)
 
 Four files synthesized from official React and Chakra documentation/blog posts. All carry `trust: low` pending review because they are externally sourced.

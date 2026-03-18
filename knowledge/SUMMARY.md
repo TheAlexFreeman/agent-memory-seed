@@ -4,6 +4,7 @@ This folder contains structured information the user has accumulated or that the
 
 ## Current topics
 
+<!-- section: philosophy -->
 ### `_unverified/philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18, trust: low)
 
 Ten files on the philosophy and science of self-organizing intelligence, seeded from a philosophical conversation Alex shared and extended through follow-up research. The synthesis file is the entry point. Output files for the history of philosophy survey will land in `_unverified/philosophy/history/` — see `plans/philosophy-history-survey.md` for the research plan.
@@ -19,6 +20,7 @@ Key files:
 - `cognitive-linguistics-metaphor-blending.md` — Lakoff & Johnson's CMT, Fauconnier & Turner's blending theory, Sweetser's polysemy and viewpoint work. Synthesis with dynamical systems framework and LLM implications.
 - `blending-compression-coupling-construal.md` — Focused synthesis: blending-as-compression, structural coupling and metaphor, subjective construal and narrative viewpoint. Narrative as cognitive triangulation.
 
+<!-- section: django -->
 ### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
 
 Nine files covering Django 6.0, DRF API design/testing, pytest performance testing, structlog/Sentry observability, Celery, Redis caching, and production-stack operations. The cluster was revised with current official Django, DRF, Celery, pytest-django, structlog, and Sentry docs on 2026-03-18. Pending Alex's review for promotion.
@@ -34,6 +36,7 @@ Key files:
 - `drf-testing-pytest-django-perf-rec.md` — DRF contract/testing patterns plus `pytest-django` and `django-perf-rec` guidance for API teams
 - `django-observability-structlog-sentry.md` — Structured logging and monitoring patterns for Django/Celery stacks using structlog and Sentry
 
+<!-- section: react -->
 ### `_unverified/react/` — React + Chakra frontend research (ingested 2026-03-18, trust: low)
 
 Four files covering React 19 and Chakra UI 3. Sourced from official React and Chakra docs/blog pages, with a focus on modern React frontends and design-system-driven styling.
