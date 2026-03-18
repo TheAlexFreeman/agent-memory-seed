@@ -850,6 +850,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
 
         self.assertIn(
+            "rm -rf .git && git init --initial-branch=core",
+            text,
+        )
+        self.assertIn(
             "fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet)",
             text,
         )

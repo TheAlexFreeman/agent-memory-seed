@@ -17,7 +17,7 @@ Click **"Use this template"** on the GitHub repo page to create your own copy.
 ```bash
 git clone https://github.com/TheAlexFreeman/agent-memory-seed.git my-memory
 cd my-memory
-rm -rf .git && git init
+rm -rf .git && git init --initial-branch=core
 ```
 
 ### 2. Run setup
