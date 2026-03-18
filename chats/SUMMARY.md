@@ -4,7 +4,14 @@ This folder is the episodic memory — a chronological archive of conversations 
 
 ## Overall history
 
-*No conversations yet.* This section will develop into a high-level narrative of the user's journey with the agent: major projects undertaken, how interests evolved, pivotal decisions, and recurring themes.
+**One session logged (2026-03-18).** First-session onboarding with Alex Freeman.
+Confirmed identity profile from the software developer template. Established
+communication preferences (concise, code-first, criticism > validation) and a
+knowledge-building goal around Celery + Redis + Docker in Django/Postgres stacks.
+Philosophical curiosity (self-organizing dynamics, cognitive science) also noted
+as a recurring interest.
+
+See `2026/03/18/chat-001/` for the full session record.
 
 ## Structure
 
