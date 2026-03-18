@@ -51,10 +51,13 @@ For new unverified files, omit `last_verified` rather than filling it with the c
 
 ### Operational confirmation signals
 
-Multiple rules reference "user explicitly confirms" or "when user validates." These are the concrete signals that count as confirmation:
+Multiple rules reference "user explicitly confirms" or "when user validates." These are the concrete signals that count as explicit confirmation:
 
 - **Explicit affirmation.** User says "yes," "that's right," "confirmed," or equivalent in response to a direct question about the content.
 - **Active correction that confirms the rest.** User corrects one detail but accepts the remainder — the uncorrected portions are confirmed.
+
+The following is an **implicit** signal only — it does not count as explicit confirmation and cannot by itself be used to update `last_verified` or promote trust. Treat it as a prompt to seek explicit confirmation instead:
+
 - **Incorporation without objection.** User builds on the content in their own workflow (e.g., references the information in a follow-up request) without challenging it.
 
 These signals do **not** count as confirmation:
@@ -67,7 +70,7 @@ When confirmation occurs, update `last_verified` to the current date and promote
 
 ### Retroactive application
 
-Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown` and `trust: medium`. If the reviewer actually reads and verifies the content during backfill, set `last_verified` to the review date. If the backfill is mechanical (adding metadata without verifying content), omit `last_verified` and let `created` serve as the effective verification date. This prevents conflating "I added metadata" with "I verified this content."
+Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown` and `trust: medium`. If the reviewer actually reads and verifies the content during backfill, set `last_verified` to the review date. If the backfill is mechanical (adding metadata without verifying content), omit `last_verified` and let `created` serve as the effective verification date — this prevents conflating "I added metadata" with "I verified this content." If the original creation date cannot be determined, use the backfill date as `created`.
 
 ## Change categories
 

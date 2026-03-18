@@ -140,11 +140,17 @@ Optional ACCESS fields:
 
 The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/curation-algorithms.md` § "Phase 3" for how it develops.
 
-`helpfulness` uses a three-state model:
+`helpfulness` is the agent's judgment of whether a retrieval was useful to producing the session's responses, on a 0.0–1.0 scale:
 
-- **0.0 – 0.1 (wrong context):** File was clearly irrelevant — retrieved in error or drawn by a false-positive attractor in SUMMARY.md. Note what attracted the retrieval so it can be corrected.
-- **0.2 – 0.4 (retrieved, not used):** File was in the right neighborhood but not incorporated in the response — a near-miss. May indicate the file needs better differentiation from similar files, or splitting.
-- **0.5 – 1.0 (used and helpful):** File materially influenced the response. Score higher when it was central to the answer, lower when it was peripheral context.
+| Range   | Meaning                                                                          | Example                                                |
+| ------- | -------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| 0.0–0.1 | **Wrong context.** Irrelevant or retrieved in error.                             | Retrieved "React patterns" for a React Native query    |
+| 0.2–0.4 | **Near-miss.** Right neighborhood but not incorporated.                          | Opened a related file but used a different one instead |
+| 0.5–0.6 | **Useful context.** Directly relevant, informed the response but wasn't central. | Provided background that shaped framing                |
+| 0.7–0.8 | **Highly relevant.** Shaped a key decision or was directly used.                 | File content was quoted or directly applied            |
+| 0.9–1.0 | **Critical.** Response would be significantly worse without this file.           | Core reference that the answer depended on             |
+
+Score what actually happened, not what should have happened. A high-quality file that wasn't needed for this particular task is a 0.2, not a 0.7.
 
 `note` should be one sentence explaining relevance or lack thereof. Be honest — a 0.1 with a note like _"retrieved because of 'React' in title, query was actually about React Native"_ is more valuable to the feedback loop than a polite 0.7.
 
