@@ -4,6 +4,17 @@ This folder contains structured information the user has accumulated or that the
 
 ## Current topics
 
+### `_unverified/philosophy/` — Intelligence, dynamical systems, consciousness (ingested 2026-03-18, trust: low)
+
+Six files on the philosophy and science of self-organizing intelligence, seeded from a philosophical conversation Alex shared. The synthesis file is the entry point.
+
+Key files:
+- `synthesis-intelligence-as-dynamical-regime.md` — **Start here.** Unified thesis: intelligence as edge-of-chaos dynamical regime; convergence table across traditions; open questions.
+- `self-organized-criticality.md` — SOC, edge of chaos (Langton), Kauffman NK model, neural criticality
+- `compression-intelligence-ait.md` — Kolmogorov complexity, Solomonoff induction, Bateson, AIXI
+- `free-energy-autopoiesis-cybernetics.md` — Friston FEP, Maturana/Varela, Wiener/Ashby
+- `emergence-consciousness-iit.md` — Strong emergence, downward causation, IIT, GWT, Chalmers
+
 ### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
 
 Six files covering Django 6.0, Celery, and the React/DRF stack. Sourced from web searches (docs.djangoproject.com was network-blocked during ingestion). Pending Alex's review for promotion.
