@@ -85,9 +85,15 @@ For a complete mapping of which files to load per session type, see `meta/quick-
 │   ├── system-maturity.md    ← Developmental stage tracking and adaptive thresholds.
 │   ├── first-run.md          ← Streamlined first-session flow for agents.
 │   ├── session-checklists.md ← Self-sufficient session start/end runbooks with quality criteria.
+│   ├── scratchpad-guidelines.md ← On-demand governance for scratchpad/ use and lifecycle.
 │   ├── integrity-checklist.md ← Advisory audit checklist.
 │   ├── (task-groups.md       ← Created at Calibration stage; emergent task groups from ACCESS.)
 │   └── (task-categories.md   ← Created at Consolidation stage; controlled category vocabulary.)
+│
+├── scratchpad/            ← Sub-governance staging area. Both files read every session.
+│   ├── USER.md            ← User-authored context for the agent. Trust: high. Edit freely.
+│   ├── CURRENT.md         ← Agent working notes. Trust: medium. Promoted or cleared each session.
+│   └── (dated working files and _archive/ created by agent as needed)
 │
 ├── templates/profiles/    ← Starter identity templates for setup.sh / setup.html.
 │

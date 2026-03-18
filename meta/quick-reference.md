@@ -13,13 +13,13 @@ Use this table to determine which files to read for each session type. Load file
 | Session type | Files to load |
 |---|---|
 | **First run** | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
-| **Compact returning** | `README.md`, `identity/SUMMARY.md`, this file → `knowledge/SUMMARY.md` _(skip if empty)_, `skills/SUMMARY.md` _(skip if empty)_, `chats/SUMMARY.md` _(skip if empty)_ |
+| **Compact returning** | `README.md`, `identity/SUMMARY.md`, this file → `knowledge/SUMMARY.md` _(skip if empty)_, `skills/SUMMARY.md` _(skip if empty)_, `chats/SUMMARY.md` _(skip if empty)_, `scratchpad/USER.md` _(skip if only placeholder)_, `scratchpad/CURRENT.md` _(skip if only placeholder)_ |
 | **Full bootstrap** | Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
 | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
 | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
 
-**Do not load** `docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above).
+**Do not load** `docs/*` (human reference only) or `meta/curation-algorithms.md` (on-demand only — see above). `meta/scratchpad-guidelines.md` is also on-demand — load it only when writing to `scratchpad/` or reviewing scratchpad lifecycle; reading `scratchpad/USER.md` or `scratchpad/CURRENT.md` does not require loading the guidelines.
 
 ---
 
