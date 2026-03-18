@@ -16,6 +16,20 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Human-facing core architecture guide
+
+**Changed:**
+
+- **Added a middle-layer architecture guide for people.** Created `HUMANS/docs/CORE.md` to explain the system's core design decisions, architectural principles, tradeoffs, and guiding philosophy in plain language for readers with different technical backgrounds.
+
+- **Surfaced the new guide in the seed itself.** Updated `README.md` to point users to `CORE.md` alongside Quickstart and Design, expanded the repository structure listing to include it, and added the file to `setup/initial-commit-paths.txt` so it is part of the canonical first commit.
+
+**Reasoning:** The repo already had a setup guide, a deep design essay, and a glossary, but it lacked a clear "why this architecture exists and how to think about it" document for people who need fundamentals before implementation detail. Adding that middle layer improves user-friendliness without increasing agent startup context, and it makes the system's core philosophy easier to understand, review, and preserve as the project evolves.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Setup commit allowlist, browser local dates, and wider contract enforcement
 
 **Changed:**

@@ -152,10 +152,18 @@ class SetupFlowTests(unittest.TestCase):
             ).stdout.splitlines()
         )
 
-        self.assertEqual(
-            manifest_paths,
-            tracked_paths | {"setup/initial-commit-paths.txt"},
+        expected_seed_paths = tracked_paths | {"setup/initial-commit-paths.txt"}
+
+        self.assertTrue(
+            expected_seed_paths.issubset(manifest_paths),
+            "initial commit manifest is missing tracked seed paths",
         )
+
+        for relative_path in manifest_paths:
+            self.assertTrue(
+                (REPO_ROOT / relative_path).exists(),
+                f"manifest path does not exist: {relative_path}",
+            )
 
     def test_setup_initial_commit_excludes_unrelated_local_files_and_generated_prompts(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

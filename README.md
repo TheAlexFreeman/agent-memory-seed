@@ -3,7 +3,8 @@
 An adaptive, self-organizing, version-controlled memory layer for AI agents. Any capable model can read this repo and immediately know who you are, how you work, and what you've been doing — across sessions, platforms, and model versions.
 
 **Setting up for the first time?** → See [HUMANS/docs/QUICKSTART.md](HUMANS/docs/QUICKSTART.md)
-**Exploring the design?** → See [HUMANS/docs/DESIGN.md](HUMANS/docs/DESIGN.md)
+**Need the fundamentals first?** → See [HUMANS/docs/CORE.md](HUMANS/docs/CORE.md)
+**Exploring the design deeply?** → See [HUMANS/docs/DESIGN.md](HUMANS/docs/DESIGN.md)
 
 ---
 
@@ -113,6 +114,7 @@ For the complete mapping of which files to load per session type, see `meta/quic
 └── HUMANS/                ← Human-facing content. Never loaded by agents.
     ├── docs/              ← Documentation.
     │   ├── QUICKSTART.md  ← Setup guide. Start here if you're a person.
+    │   ├── CORE.md        ← Core design decisions, architecture, and guiding philosophy.
     │   ├── DESIGN.md      ← Design philosophy, use cases, and future directions.
     │   └── GLOSSARY.md    ← Definitions of system terminology (human reference only).
     └── tooling/           ← Maintenance tooling and tests.
