@@ -102,7 +102,7 @@ Trust level sets the **decay threshold** (how long before action is taken). The 
 
 **Definition of "unverified":** Files with no `last_verified` yet are still unverified. Their decay clock starts at `created`. Any user interaction that confirms the content (explicit approval, correction, or re-confirmation) sets or updates `last_verified` and resets the clock.
 
-**Files without frontmatter:** Treated as `trust: medium` with `last_verified` set to the date frontmatter was retroactively added. This prevents mass archival of legacy content.
+**Files without frontmatter:** Treated as `trust: medium`. When adding frontmatter retroactively: if the backfill is mechanical (adding metadata without verifying content), omit `last_verified` — the decay clock runs from `created`. If the original creation date is unknown, use the backfill date as `created`. Only set `last_verified` to the backfill date if the reviewer actually reads and verifies the content during backfill. See `meta/update-guidelines.md` § "Retroactive application" for the full policy.
 
 ---
 
