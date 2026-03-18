@@ -23,8 +23,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
 ### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
-**Progress:** 7/11 items complete
-**Next action:** Add branch/worktree warnings to startup
+**Progress:** 8/11 items complete
+**Next action:** Add manual override controls
 <!-- END: codex-desktop-bootstrap-support -->
 
 ---

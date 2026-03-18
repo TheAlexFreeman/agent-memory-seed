@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Add branch/worktree warnings to startup
+next_action: Add manual override controls
 origin_session: manual
 source: agent-generated
 status: active
@@ -220,14 +220,14 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
    - explicit "load summaries before transcripts" behavior
    - preserve an access trail for preloaded files
 
-### Phase 3 — Desktop UX · ☐ 1/3 complete
+### Phase 3 — Desktop UX · ☐ 2/3 complete
 
 7. ☑ Design the startup panel
    - files loaded
    - mode selected
    - repo-declared next step
 
-8. ☐ Add branch/worktree warnings to startup
+8. ☑ Add branch/worktree warnings to startup
    - detached HEAD
    - worktree not aligned with requested branch
    - branch already checked out in another worktree
@@ -262,6 +262,18 @@ The panel should surface a compact status rather than making the user parse warn
 - `attention` when git/worktree warnings exist, required files are missing, or budget pressure changed what was preloaded
 
 Repo-side prototype: the runtime now derives `startup_panel.status`, file counts, warning count, budget health, and a panel-friendly file list from the same startup resolution used by the trace and warning system. `HUMANS/tooling/tests/test_bootstrap_resolver.py` validates both the ready and attention paths.
+
+#### 4. Branch and worktree warnings should be first-class panel content
+
+Changing the panel status to `attention` is not enough. The startup panel should carry structured warning rows for the three git/worktree hazards the plan calls out:
+
+- detached HEAD
+- current worktree not aligned with the requested branch
+- target branch already checked out in another worktree
+
+Those warnings should remain explicit in the panel even though the lower-level startup resolution already has a generic warning list. The UI contract needs titles, source classification, and stable codes so the app can render them directly instead of reinterpreting raw warning text.
+
+Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now maps startup warnings into `startup_panel.warnings`, with explicit git-sourced warning entries for detached HEAD, branch drift, and branch-checked-out-elsewhere. `HUMANS/tooling/tests/test_bootstrap_resolver.py` validates both single-warning and all-warning panel states.
 
 ### Phase 4 — Validation and rollout · ☐ 0/2 complete
 
@@ -298,6 +310,8 @@ Repo-side prototype: the runtime now derives `startup_panel.status`, file counts
 | 2026-03-18 | Completed Add compact-context budgeting rules (codex-desktop-bootstrap-support 6/11) |
 | 2026-03-18 | Added a structured startup-panel contract to the bootstrap runtime prototype, with mode/status summary, panel-friendly file rows, router-anchored next step, and derived warning/budget state |
 | 2026-03-18 | Completed Design the startup panel (codex-desktop-bootstrap-support 7/11) |
+| 2026-03-18 | Added structured branch/worktree warning rows to the startup panel contract, covering detached HEAD, branch drift, and branch-checked-out-elsewhere states |
+| 2026-03-18 | Completed Add branch/worktree warnings to startup (codex-desktop-bootstrap-support 8/11) |
 
 ---
 
