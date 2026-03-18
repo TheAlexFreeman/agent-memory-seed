@@ -147,8 +147,18 @@ fi
 
 # 2. Initialize git if needed
 if [[ ! -d ".git" ]]; then
-    git init
-    echo "[ok] Initialized git repository"
+    # `--initial-branch` is supported in Git 2.28+; older versions fall back to repointing HEAD.
+    if init_output=$(git init --initial-branch=core 2>&1); then
+        echo "[ok] Initialized git repository on core branch"
+    elif grep -qiE 'unknown option|unrecognized option' <<<"$init_output"; then
+        echo "[info] Git does not support --initial-branch; using compatibility fallback"
+        git init
+        git symbolic-ref HEAD refs/heads/core
+        echo "[ok] Initialized git repository on core branch (compatibility fallback)"
+    else
+        printf '%s\n' "$init_output" >&2
+        exit 1
+    fi
 else
     echo "[skip] Git repository already initialized"
 fi
