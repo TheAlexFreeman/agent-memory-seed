@@ -116,6 +116,31 @@ class SetupFlowTests(unittest.TestCase):
             self.assertNotIn("last_verified:", profile)
             self.assertIn("created:", profile)
 
+    def test_setup_initializes_new_repo_on_core_branch(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_setup_repo(root)
+
+            self.run_setup(
+                root,
+                "--non-interactive",
+                "--profile",
+                "software-developer",
+                "--platform",
+                "generic",
+            )
+
+            head_result = subprocess.run(
+                ["git", "symbolic-ref", "--short", "HEAD"],
+                cwd=root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            head_branch = head_result.stdout.strip()
+
+            self.assertEqual("core", head_branch)
+
     def test_shell_and_browser_setup_sources_keep_profile_summary_copy_aligned(self) -> None:
         shell_text = (REPO_ROOT / "setup" / "setup.sh").read_text(encoding="utf-8")
         browser_text = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
@@ -238,7 +263,6 @@ class SetupFlowTests(unittest.TestCase):
                     text=True,
                 ).stdout.splitlines()
             )
-
             self.assertIn("setup/initial-commit-paths.txt", head_files)
             self.assertIn("README.md", head_files)
             self.assertIn("plans/SUMMARY.md", head_files)
