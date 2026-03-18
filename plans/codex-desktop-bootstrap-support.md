@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Phase 2 — translate the manifest-backed prototype into app-side detection, dedup, and preload telemetry behavior"
+next_action: "Phase 2 — add compact-context budgeting rules and budget-pressure trace behavior to the runtime prototype"
 ---
 
 # Implementation Plan: Codex Desktop Bootstrap Support
@@ -195,14 +195,14 @@ Use per-mode token ceilings as hints, not hard failures:
 
 When the budget is tight, summaries beat transcripts and metadata probes beat deeper governance files. Preloaded files should be visible in the startup trace, but they should **not** automatically become ACCESS retrievals by default; explicit file opens remain the auditable retrieval boundary for this repo unless a repo opts into preload logging.
 
-### Phase 2 — Startup runtime and detection logic · ☐ 0/3 complete
+### Phase 2 — Startup runtime and detection logic · ☑ 2/3 complete
 
-4. ☐ Implement startup mode detection
+4. ☑ Implement startup mode detection
    - first-run vs. returning-session checks
    - branch/worktree state checks
    - automation run detection from thread metadata
 
-5. ☐ Implement deterministic preload ordering
+5. ☑ Implement deterministic preload ordering
    - preserve repo-declared order
    - deduplicate equivalent files
    - mark skipped files and the reason they were skipped
@@ -259,6 +259,7 @@ When the budget is tight, summaries beat transcripts and metadata probes beat de
 | 2026-03-18 | Plan created from identified Codex desktop gap: memory-aware repo startup and bootstrap loading |
 | 2026-03-18 | Completed Phase 1 contract definition: chose a repo-owned `agent-bootstrap.toml`, defined fallback and conflict rules, and formalized adapter-file precedence |
 | 2026-03-18 | Added a repo-local `agent-bootstrap.toml` prototype plus validator-backed checks, and defined mode detection precedence, dedup semantics, budget hints, and preload-audit defaults for Phase 2 |
+| 2026-03-18 | Added `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` plus tests as an executable runtime prototype for mode detection, git/worktree warnings, deterministic preload traces, and skip-reason reporting |
 
 ---
 

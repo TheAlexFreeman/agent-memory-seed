@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Executable bootstrap resolver prototype
+
+**Changed:**
+
+- **Added a runtime bootstrap resolver prototype.** Created `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py`, a repo-side tool that turns `agent-bootstrap.toml` into a concrete startup resolution with mode selection, ordered preload traces, skip reasons, and startup warnings for detached HEAD, branch drift, and branch collisions across worktrees.
+
+- **Added test coverage for Phase 2 behavior.** Created `HUMANS/tooling/tests/test_bootstrap_resolver.py` to exercise mode-detection precedence, first-run heuristics, placeholder and inactive-plan skipping, duplicate-path deduplication, and warning generation.
+
+- **Advanced the bootstrap implementation plan and reprioritized the queue.** Updated `plans/codex-desktop-bootstrap-support.md` and `plans/SUMMARY.md` to count startup-mode detection and deterministic preload ordering as completed prototype tasks, set the next bootstrap step to budgeting behavior, and move `codex-desktop-governed-memory-writes.md` into the top priority slot for the next plan.
+
+- **Kept setup parity intact.** Added the new resolver script and test file to `setup/initial-commit-paths.txt` so fresh seed installs include the executable bootstrap prototype in the canonical initial commit.
+
+**Reasoning:** The bootstrap-support plan had already progressed from prose into a manifest and validator-backed contract, but it still lacked an executable runtime model. Adding a resolver prototype makes the next layer of startup behavior concrete: the repo can now simulate mode detection, preload order, dedup semantics, and warning emission instead of describing them abstractly. That improves consistency between plan and tooling, preserves user-friendliness by making startup behavior inspectable, and protects context efficiency by keeping skip logic and summary-first loading visible in a trace rather than buried in agent convention.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-18] Bootstrap manifest prototype and validator-backed preload contract
 
 **Changed:**
