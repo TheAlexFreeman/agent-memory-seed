@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Setup commit allowlist, browser local dates, and wider contract enforcement
+
+**Changed:**
+
+- **Initial setup commit is now path-scoped.** Added `setup/initial-commit-paths.txt` as the canonical allowlist for the first setup commit, updated `setup/setup.sh` to stage only those repo-managed paths, and changed both the auto-commit and missing-git-identity guidance to use safe path-scoped commits instead of `git add -A`.
+
+- **Shell/browser setup date parity restored.** Updated `setup/setup.html` to generate `created` dates from local date components rather than UTC ISO timestamps, preventing browser-generated starter files from drifting by a day near local midnight.
+
+- **Operational wording and enforcement widened.** Updated the current setup, onboarding, wrap-up, and quickstart guidance to reinforce quick-reference-first routing rather than vague bootstrap language. The validator and tests are expanded to enforce this on the remaining high-value operational surfaces beyond `session-start`.
+
+**Reasoning:** The repo already had strong routing and setup contracts, but three gaps remained: initial setup could still scoop unrelated local files into the first commit, browser setup did not actually match shell provenance semantics near midnight, and some high-value operational surfaces could drift back toward stale bootstrap-era wording without CI catching it. These changes make first-run setup safer, shell/browser behavior truly consistent, and the contract-enforcement layer cover the operator-facing and wrap-up surfaces that matter most.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Architectural guardrails for governance evolution
 
 **Changed:**

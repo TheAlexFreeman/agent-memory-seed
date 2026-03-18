@@ -149,7 +149,7 @@ Use `--dry-run` to preview what would be written without making changes.
 The memory system is model-agnostic. To switch:
 
 1. Set up the new platform using the instructions above.
-2. The new model follows the bootstrap sequence — no repo changes needed.
+2. The new model follows the live routing from `meta/quick-reference.md` — no repo changes needed.
 3. The CHANGELOG.md should record model transitions as system events.
 
 All accumulated knowledge, skills, and identity information transfers automatically because it's stored in files, not in any model's context.
