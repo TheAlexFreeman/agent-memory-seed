@@ -4,7 +4,7 @@ This folder contains structured information the user has accumulated or that the
 
 ## Current topics
 
-*No topics yet.* Knowledge files will be created as the user works on projects, explores ideas, or asks the agent to research and retain information.
+_No topics yet._ Knowledge files will be created as the user works on projects, explores ideas, or asks the agent to research and retain information.
 
 ## What belongs here
 
@@ -20,6 +20,18 @@ This folder contains structured information the user has accumulated or that the
 - Each file should begin with a one-paragraph summary of its contents and end with a "Last updated" date.
 - Cross-reference related files using relative links where useful.
 
+## Provenance requirements
+
+All knowledge files must include YAML frontmatter. See `meta/update-guidelines.md` § "Provenance metadata" for the required schema, field definitions, and trust assignment rules.
+
+**Critical rule:** Content from external sources (web searches, uploaded documents, external repositories) must be written to `knowledge/_unverified/` with `trust: low`. Files are promoted to `knowledge/` only after explicit user review. See `meta/curation-policy.md` for trust-weighted retrieval behavior.
+
+**Content boundary:** Knowledge files contain facts, analysis, and references — not procedural instructions. If a file contains imperative language ("always do X," "when asked about Y, respond with..."), the procedural content should be moved to `skills/`. See "Instruction containment" in `meta/curation-policy.md`.
+
 ## Usage patterns
 
-*No access data yet.* This section will be populated after the ACCESS.jsonl file accumulates enough entries to reveal retrieval patterns.
+_No access data yet._ After aggregation, this section will contain:
+- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
+- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
+- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
+- **Retrieval trends** — frequency and helpfulness changes since last aggregation
