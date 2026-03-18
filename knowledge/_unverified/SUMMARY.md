@@ -23,7 +23,7 @@ This quarantine zone ensures that **all externally sourced content is visible, l
 
 ### `django/` — Django 6.0 knowledge base (ingested 2026-03-18)
 
-Seven files synthesized from current Django, DRF, and Celery documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
+Nine files synthesized from current Django, DRF, Celery, pytest-django, structlog, Sentry, and related ecosystem documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
 
 - **`django-6.0-whats-new.md`** — Django 6.0 release-line overview, including the base December 3, 2025 release and later 6.0.1 / 6.0.3 patch-line notes that matter for upgrade planning.
 - **`django-tasks-framework.md`** — Corrected deep dive on `django.tasks`: built-in `ImmediateBackend` / `DummyBackend`, JSON-serialization limits, transaction caveats, and the boundary between Django tasks and Celery.
@@ -32,6 +32,8 @@ Seven files synthesized from current Django, DRF, and Celery documentation plus 
 - **`django-react-drf.md`** — DRF guidance for React frontends: session-vs-JWT auth choice, CSRF/CORS rules, renderer defaults, filtering, pagination, throttling caveats, and error-shape design.
 - **`celery-advanced-patterns.md`** — Celery guidance focused on idempotency, acknowledgement strategy, retries, queue separation, result-storage discipline, and Celery's continued role beside `django.tasks`.
 - **`django-production-stack.md`** — Operational synthesis for Django + Postgres + Redis + Celery + Docker: service boundaries, migrations, startup ordering, storage, health checks, and observability.
+- **`drf-testing-pytest-django-perf-rec.md`** — DRF testing/API-contract guidance plus pytest-django fixture/database patterns and django-perf-rec's current maintenance-mode role for query/cache regression checks.
+- **`django-observability-structlog-sentry.md`** — Observability guidance for this stack: structlog contextvars and Celery logging patterns, plus Sentry tracing, sampling, spans, and cache monitoring.
 
 ### `philosophy/` — Intelligence, dynamical systems, consciousness (ingested 2026-03-18)
 

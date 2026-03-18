@@ -17,7 +17,7 @@ Key files:
 
 ### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
 
-Seven files covering Django 6.0, Celery, Redis caching, production-stack operations, and the React/DRF boundary. The cluster was revised with current official Django, DRF, and Celery docs on 2026-03-18. Pending Alex's review for promotion.
+Nine files covering Django 6.0, DRF API design/testing, pytest performance testing, structlog/Sentry observability, Celery, Redis caching, and production-stack operations. The cluster was revised with current official Django, DRF, Celery, pytest-django, structlog, and Sentry docs on 2026-03-18. Pending Alex's review for promotion.
 
 Key files:
 - `django-6.0-whats-new.md` — Django 6.0 release-line overview with 6.0.1/6.0.3 patch-line notes and stack-relevant upgrade concerns
@@ -27,6 +27,8 @@ Key files:
 - `celery-advanced-patterns.md` — Idempotency, ack strategy, retries, queue isolation, result-storage discipline, and Celery-vs-Django-tasks boundary
 - `django-react-drf.md` — React-facing API design with DRF: auth mode choices, CSRF/CORS, pagination, filtering, throttling, and error contracts
 - `django-production-stack.md` — Cross-cutting operational guidance for Django + Postgres + Redis + Celery + Docker
+- `drf-testing-pytest-django-perf-rec.md` — DRF contract/testing patterns plus `pytest-django` and `django-perf-rec` guidance for API teams
+- `django-observability-structlog-sentry.md` — Structured logging and monitoring patterns for Django/Celery stacks using structlog and Sentry
 
 ### `_unverified/react/` — React + Chakra frontend research (ingested 2026-03-18, trust: low)
 
