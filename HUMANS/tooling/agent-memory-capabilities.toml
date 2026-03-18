@@ -51,6 +51,33 @@ fields = [
 raw_commit_model = "stage_then_memory_commit"
 semantic_commit_model = "auto_commit_on_success"
 
+[change_classes.automatic]
+approval = "none"
+user_awareness = "not_required"
+ui_affordance = "apply_and_report"
+read_only_behavior = "defer_and_emit_summary"
+notes = "Routine, bounded writes that the repo allows without a separate approval step."
+
+[change_classes.proposed]
+approval = "explicit_user_awareness"
+user_awareness = "required_before_write"
+ui_affordance = "preview_and_wait"
+read_only_behavior = "defer_and_queue_review_or_summary"
+notes = "Meaningful durable-memory changes that should be surfaced to the user before execution."
+
+[change_classes.protected]
+approval = "explicit_user_approval"
+user_awareness = "required_before_write"
+ui_affordance = "block_until_approved"
+read_only_behavior = "defer_and_report_blocked"
+notes = "Protected-target writes such as README.md, most meta/ files, and skills/ changes."
+
+[raw_fallback_policy]
+policy = "inherit_operation_change_class"
+requires_change_class = true
+preview_required_for = ["proposed", "protected"]
+read_only_mode = "emit_deferred_action_summary"
+
 [error_taxonomy.ConflictError]
 status = "implemented"
 meaning = "Version token mismatch while updating an existing file."
@@ -86,78 +113,93 @@ status = "implemented"
 tool = "memory_create_plan"
 tier = "semantic"
 operation_group = "plan"
+change_class = "proposed"
 
 [desktop_operations.mark_plan_item_complete]
 status = "implemented"
 tool = "memory_mark_plan_item_complete"
 tier = "semantic"
 operation_group = "plan"
+change_class = "automatic"
 
 [desktop_operations.update_plan_next_action]
 status = "implemented"
 tool = "memory_update_plan_next_action"
 tier = "semantic"
 operation_group = "plan"
+change_class = "automatic"
 
 [desktop_operations.add_knowledge_file]
 status = "implemented"
 tool = "memory_add_knowledge_file"
 tier = "semantic"
 operation_group = "knowledge"
+change_class = "automatic"
 
 [desktop_operations.promote_knowledge]
 status = "implemented"
 tool = "memory_promote_knowledge"
 tier = "semantic"
 operation_group = "knowledge"
+change_class = "proposed"
 
 [desktop_operations.demote_knowledge]
 status = "implemented"
 tool = "memory_demote_knowledge"
 tier = "semantic"
 operation_group = "knowledge"
+change_class = "proposed"
 
 [desktop_operations.archive_knowledge]
 status = "implemented"
 tool = "memory_archive_knowledge"
 tier = "semantic"
 operation_group = "knowledge"
+change_class = "proposed"
 
 [desktop_operations.append_scratchpad]
 status = "implemented"
 tool = "memory_append_scratchpad"
 tier = "semantic"
 operation_group = "scratchpad"
+change_class = "automatic"
 
 [desktop_operations.update_identity_trait]
 status = "implemented"
 tool = "memory_update_identity_trait"
 tier = "semantic"
 operation_group = "identity"
+change_class = "proposed"
 
 [desktop_operations.record_chat_summary]
 status = "implemented"
 tool = "memory_record_chat_summary"
 tier = "semantic"
 operation_group = "chat"
+change_class = "automatic"
 
 [desktop_operations.flag_for_review]
 status = "implemented"
 tool = "memory_flag_for_review"
 tier = "semantic"
 operation_group = "governance"
+change_class = "automatic"
+notes = "Narrow machine-generated governance append; not a general protected meta edit."
 
 [desktop_operations.append_access_entry]
 status = "gap"
+change_class = "automatic"
 notes = "No dedicated semantic ACCESS append tool exists yet; callers still need raw writes or repo-specific batching."
 
 [desktop_operations.record_session_reflection]
 status = "gap"
+change_class = "automatic"
 notes = "Chat summary creation exists, but reflection artifacts are not yet a first-class semantic write."
 
 [operations.memory_create_plan]
 group = "plan"
 tier = "semantic"
+change_class = "proposed"
 commit_model = "auto_commit"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
 owns_frontmatter = ["plans/{plan_id}.md"]
@@ -171,6 +213,7 @@ error_kinds = ["ValidationError", "StagingError"]
 [operations.memory_mark_plan_item_complete]
 group = "plan"
 tier = "semantic"
+change_class = "automatic"
 commit_model = "auto_commit"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
 owns_frontmatter = ["plans/{plan_id}.md"]
@@ -184,6 +227,7 @@ error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingErro
 [operations.memory_update_plan_next_action]
 group = "plan"
 tier = "semantic"
+change_class = "automatic"
 commit_model = "auto_commit"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
 owns_frontmatter = ["plans/{plan_id}.md"]
@@ -197,6 +241,7 @@ error_kinds = ["ConflictError", "NotFoundError", "StagingError"]
 [operations.memory_add_knowledge_file]
 group = "knowledge"
 tier = "semantic"
+change_class = "automatic"
 commit_model = "auto_commit"
 writes = ["knowledge/_unverified/**/{file}.md", "knowledge/_unverified/SUMMARY.md"]
 owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
@@ -210,6 +255,7 @@ error_kinds = ["ValidationError", "StagingError"]
 [operations.memory_promote_knowledge]
 group = "knowledge"
 tier = "semantic"
+change_class = "proposed"
 commit_model = "auto_commit"
 writes = [
   "knowledge/_unverified/**/{file}.md",
@@ -228,6 +274,7 @@ error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingErro
 [operations.memory_demote_knowledge]
 group = "knowledge"
 tier = "semantic"
+change_class = "proposed"
 commit_model = "auto_commit"
 writes = [
   "knowledge/**/{file}.md",
@@ -246,6 +293,7 @@ error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingErro
 [operations.memory_archive_knowledge]
 group = "knowledge"
 tier = "semantic"
+change_class = "proposed"
 commit_model = "auto_commit"
 writes = [
   "knowledge/**/{file}.md",
@@ -263,6 +311,7 @@ error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingErro
 [operations.memory_append_scratchpad]
 group = "scratchpad"
 tier = "semantic"
+change_class = "automatic"
 commit_model = "auto_commit"
 writes = ["scratchpad/USER.md", "scratchpad/CURRENT.md"]
 owns_frontmatter = []
@@ -276,6 +325,7 @@ error_kinds = ["ValidationError", "StagingError"]
 [operations.memory_update_identity_trait]
 group = "identity"
 tier = "semantic"
+change_class = "proposed"
 commit_model = "auto_commit"
 writes = ["identity/{file}.md"]
 owns_frontmatter = ["identity/{file}.md"]
@@ -289,6 +339,7 @@ error_kinds = ["ConflictError", "ValidationError", "StagingError"]
 [operations.memory_record_chat_summary]
 group = "chat"
 tier = "semantic"
+change_class = "automatic"
 commit_model = "auto_commit"
 writes = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md", "chats/SUMMARY.md"]
 owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
@@ -302,6 +353,7 @@ error_kinds = ["StagingError"]
 [operations.memory_flag_for_review]
 group = "governance"
 tier = "semantic"
+change_class = "automatic"
 commit_model = "auto_commit"
 writes = ["meta/review-queue.md"]
 owns_frontmatter = []

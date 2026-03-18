@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Phase 2 — map automatic, proposed, and protected write classes onto the capability contract"
+next_action: "Phase 2 — design approval and confirmation UX for proposed and protected writes"
 ---
 
 # Implementation Plan: Codex Desktop Governed Memory Writes
@@ -124,9 +124,9 @@ Error taxonomy is also explicit now. Current runtime support is:
 
 Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now validates the capability contract against the MCP runtime and highlights declared desktop-surface gaps such as ACCESS appends and session reflections.
 
-### Phase 2 — Governance and policy integration · ☐ 0/3 complete
+### Phase 2 — Governance and policy integration · ☐ 1/3 complete
 
-4. ☐ Map repo governance to app-side affordances
+4. ☑ Map repo governance to app-side affordances
    - automatic changes
    - proposed changes
    - protected changes
@@ -141,6 +141,33 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now
    - use raw edit tools only when no semantic tool exists
    - preserve repo contract when the semantic layer cannot interpret a file
    - support dry-run / preview mode
+
+### Phase 2 decisions (2026-03-18)
+
+#### 1. Change classes belong in the capability contract
+
+The repo-side capability manifest should declare the same three change classes used by `README.md` and `meta/update-guidelines.md`: `automatic`, `proposed`, and `protected`. Each class now carries explicit app-facing metadata:
+
+- approval rule
+- user-awareness requirement
+- expected UI affordance
+- read-only/deferred behavior
+
+This makes governance discoverable by the app instead of forcing Codex to reconstruct it from prose during each write.
+
+#### 2. Semantic operations now map cleanly onto repo change policy
+
+Current mapping in the prototype:
+
+- **Automatic**: routine plan progression, `_unverified/` knowledge-file creation, scratchpad appends, chat-summary writes, and review-queue flagging
+- **Proposed**: plan creation, identity updates, and knowledge promotion / demotion / archival
+- **Protected**: no current repo-local semantic tool yet; protected paths still require a higher-friction approval path or future dedicated operations
+
+The notable edge case is `memory_flag_for_review`: it targets `meta/review-queue.md`, but the operation is intentionally narrow and machine-generated, so the contract treats it as an automatic governance exception rather than as a general protected meta edit.
+
+#### 3. Raw fallback tools inherit, not redefine, governance class
+
+The prototype contract now states that raw write/edit/move/delete tools do not get their own independent approval tier. They inherit the change class of the semantic operation or caller intent, require preview for `proposed` and `protected` work, and fall back to deferred-action summaries in read-only contexts.
 
 ### Phase 3 — Desktop and MCP integration · ☐ 0/3 complete
 
@@ -189,6 +216,7 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` now
 |---|---|
 | 2026-03-18 | Plan created from identified Codex desktop gap: governed, invariant-aware memory writes |
 | 2026-03-18 | Added `HUMANS/tooling/agent-memory-capabilities.toml` plus a resolver and tests to define the semantic tool set, invariant ownership model, shared result envelope, and current desktop-surface gaps |
+| 2026-03-18 | Extended the capability contract with `automatic` / `proposed` / `protected` change classes, read-only deferred behavior, raw-fallback inheritance rules, and validator coverage for operation-to-class mapping |
 
 ---
 

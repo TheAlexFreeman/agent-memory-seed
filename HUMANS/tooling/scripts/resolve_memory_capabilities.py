@@ -22,9 +22,17 @@ REQUIRED_TOOL_SET_KEYS = (
     "semantic_extensions",
     "declared_gaps",
 )
+REQUIRED_CHANGE_CLASS_KEYS = (
+    "approval",
+    "user_awareness",
+    "ui_affordance",
+    "read_only_behavior",
+    "notes",
+)
 REQUIRED_OPERATION_KEYS = (
     "group",
     "tier",
+    "change_class",
     "commit_model",
     "writes",
     "owns_frontmatter",
@@ -34,6 +42,12 @@ REQUIRED_OPERATION_KEYS = (
     "result_fields",
     "fallback_tools",
     "error_kinds",
+)
+REQUIRED_RAW_FALLBACK_POLICY_KEYS = (
+    "policy",
+    "requires_change_class",
+    "preview_required_for",
+    "read_only_mode",
 )
 
 
@@ -114,6 +128,52 @@ def resolve_capabilities(
             f"{MANIFEST_PATH}: shared_result.fields must match the MemoryWriteResult contract"
         )
 
+    change_classes = manifest.get("change_classes")
+    if not isinstance(change_classes, dict):
+        errors.append(f"{MANIFEST_PATH}: change_classes must be a TOML table")
+        change_classes = {}
+    for class_name, config in change_classes.items():
+        if not isinstance(config, dict):
+            errors.append(
+                f"{MANIFEST_PATH}: change_classes.{class_name} must be a TOML table"
+            )
+            continue
+        for key in REQUIRED_CHANGE_CLASS_KEYS:
+            if not isinstance(config.get(key), str):
+                errors.append(
+                    f"{MANIFEST_PATH}: change_classes.{class_name}.{key} must be a string"
+                )
+
+    raw_fallback_policy = manifest.get("raw_fallback_policy")
+    if not isinstance(raw_fallback_policy, dict):
+        errors.append(f"{MANIFEST_PATH}: raw_fallback_policy must be a TOML table")
+        raw_fallback_policy = {}
+    for key in REQUIRED_RAW_FALLBACK_POLICY_KEYS:
+        if key not in raw_fallback_policy:
+            errors.append(f"{MANIFEST_PATH}: raw_fallback_policy missing {key}")
+    if raw_fallback_policy.get("policy") != "inherit_operation_change_class":
+        errors.append(
+            f"{MANIFEST_PATH}: raw_fallback_policy.policy must be 'inherit_operation_change_class'"
+        )
+    if raw_fallback_policy.get("requires_change_class") is not True:
+        errors.append(
+            f"{MANIFEST_PATH}: raw_fallback_policy.requires_change_class must be true"
+        )
+    preview_required_for = _ensure_string_list(
+        errors,
+        "raw_fallback_policy.preview_required_for",
+        raw_fallback_policy.get("preview_required_for"),
+    )
+    for class_name in preview_required_for:
+        if class_name not in change_classes:
+            errors.append(
+                f"{MANIFEST_PATH}: raw_fallback_policy.preview_required_for references unknown class {class_name!r}"
+            )
+    if not isinstance(raw_fallback_policy.get("read_only_mode"), str):
+        errors.append(
+            f"{MANIFEST_PATH}: raw_fallback_policy.read_only_mode must be a string"
+        )
+
     error_taxonomy = manifest.get("error_taxonomy")
     if not isinstance(error_taxonomy, dict):
         errors.append(f"{MANIFEST_PATH}: error_taxonomy must be a TOML table")
@@ -134,6 +194,11 @@ def resolve_capabilities(
                 errors.append(f"{MANIFEST_PATH}: operations.{tool_name} missing {key}")
         if op.get("tier") != "semantic":
             errors.append(f"{MANIFEST_PATH}: operations.{tool_name}.tier must be 'semantic'")
+        change_class = op.get("change_class")
+        if change_class not in change_classes:
+            errors.append(
+                f"{MANIFEST_PATH}: operations.{tool_name}.change_class references unknown class {change_class!r}"
+            )
         fallback_tools = _ensure_string_list(
             errors,
             f"operations.{tool_name}.fallback_tools",
@@ -169,6 +234,11 @@ def resolve_capabilities(
             )
             continue
         status = config.get("status")
+        change_class = config.get("change_class")
+        if change_class not in change_classes:
+            errors.append(
+                f"{MANIFEST_PATH}: desktop_operations.{operation_name}.change_class references unknown class {change_class!r}"
+            )
         if status == "implemented":
             tool_name = config.get("tool")
             if not isinstance(tool_name, str):
@@ -179,6 +249,10 @@ def resolve_capabilities(
             if tool_name not in semantic_extensions:
                 errors.append(
                     f"{MANIFEST_PATH}: desktop_operations.{operation_name} references non-semantic tool {tool_name!r}"
+                )
+            if operations.get(tool_name, {}).get("change_class") != change_class:
+                errors.append(
+                    f"{MANIFEST_PATH}: desktop_operations.{operation_name}.change_class must match operations.{tool_name}.change_class"
                 )
             implemented_desktop_ops[operation_name] = tool_name
         elif status == "gap":
@@ -203,14 +277,22 @@ def resolve_capabilities(
 
     return {
         "manifest_path": str(repo_root / MANIFEST_PATH),
+        "change_classes": change_classes,
         "tool_sets": {
             "read_support": sorted(read_support),
             "raw_fallback": sorted(raw_fallback),
             "semantic_extensions": sorted(semantic_extensions),
             "declared_gaps": sorted(declared_gaps),
         },
+        "raw_fallback_policy": raw_fallback_policy,
         "implemented_desktop_operations": implemented_desktop_ops,
         "gap_operations": sorted(gap_ops),
+        "operation_change_classes": {
+            tool_name: operations[tool_name]["change_class"]
+            for tool_name in sorted(semantic_extensions)
+            if isinstance(operations.get(tool_name), dict)
+            and "change_class" in operations[tool_name]
+        },
         "runtime_tools": sorted(runtime_tool_names),
         "errors": errors,
         "warnings": warnings,
