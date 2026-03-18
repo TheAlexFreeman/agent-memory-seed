@@ -17,10 +17,13 @@ Activate when:
 - The session is clearly concluding (final thanks, sign-off language).
 - Context window is running low and the session should be archived before context is lost.
 
+When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 ## Steps
 
 ### 1. Write the chat summary
 
+- Prefer local agent-memory MCP write tools when they can perform the needed write cleanly; otherwise use direct file writes.
 Create the session's chat folder if it doesn't exist: `chats/YYYY/MM/DD/chat-NNN/`.
 
 Write `SUMMARY.md` following the compression hierarchy in README.md § "Summaries":

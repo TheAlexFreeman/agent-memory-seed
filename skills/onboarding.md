@@ -19,6 +19,8 @@ If neither condition matches — a confirmed user portrait exists, or chat histo
 
 Before using this skill, the agent should already have been routed here from `meta/quick-reference.md`, reviewed the relevant change-control and read-only sections of `meta/update-guidelines.md`, and checked write access per the first-run flow in `meta/first-run.md`.
 
+When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during onboarding; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 ## Steps
 
 ### 0. Check for a starter profile template

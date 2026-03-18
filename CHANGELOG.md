@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] MCP-preference contract aligned across entrypoints and setup
+
+**Changed:**
+
+- **Made MCP preference explicit in the agent entrypoints and governance docs.** Updated `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `README.md`, `meta/quick-reference.md`, `meta/update-guidelines.md`, `meta/curation-policy.md`, `meta/first-run.md`, and `meta/session-checklists.md` so the live contract now says: when local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes, with raw file access as a fallback when the MCP surface is missing or incomplete.
+
+- **Extended the same contract into protected skill execution.** Updated `skills/SUMMARY.md`, `skills/onboarding.md`, `skills/session-start.md`, `skills/session-sync.md`, and `skills/session-wrapup.md` so both onboarding and returning-session procedures explicitly prefer the local memory MCP surface before falling back to direct file operations.
+
+- **Aligned human setup surfaces with the same rule.** Updated `HUMANS/docs/QUICKSTART.md`, `setup/setup.sh`, and `setup/setup.html` to mention Codex desktop, describe the project-scoped `.codex/config.toml`, and add the same MCP-preference sentence to generated ChatGPT and generic prompt text.
+
+- **Kept repo and validator surfaces in sync.** Added `.codex/config.toml` to `setup/initial-commit-paths.txt` and updated `HUMANS/tooling/scripts/validate_memory_repo.py` so adapter files, prompt-copy surfaces, governance runbooks, and the protected skill layer must all retain the MCP-preference contract.
+
+**Reasoning:** The repo already shipped a local memory MCP and now includes a project-scoped Codex config, but the authoritative instruction surfaces still described startup and governance as if raw file access were the default interface. Making MCP preference explicit closes that gap. It improves consistency by aligning the adapters, governance docs, protected skill procedures, setup copy, and validator with the actual tool surface; improves user-friendliness by documenting Codex desktop behavior directly instead of leaving it implicit; and improves context efficiency by steering compatible agents toward the narrower memory-specific tool surface before they fall back to broader file operations.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Executable bootstrap resolver prototype
 
 **Changed:**

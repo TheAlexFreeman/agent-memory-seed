@@ -4,6 +4,8 @@ Compact runbooks for session start and end. **Load this file on demand** when yo
 
 > **Authority:** These runbooks elaborate on the compact manifest in `meta/quick-reference.md`. For the authoritative routing decision and active thresholds, see that file first. When these runbooks and `meta/quick-reference.md` conflict, `meta/quick-reference.md` governs.
 
+When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 For a complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest".
 
 ## First session

@@ -17,6 +17,8 @@ Activate when:
 - A long session has produced significant decisions or context that would be costly to lose.
 - The agent judges that enough has happened to warrant a checkpoint (use judgment — don't checkpoint after trivial exchanges).
 
+When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 ## Steps
 
 ### 1. Summarize progress so far
@@ -29,6 +31,7 @@ Write a brief checkpoint note capturing:
 ### 2. Persist the checkpoint
 
 If write access is available:
+- Prefer local agent-memory MCP write tools when they can perform the checkpoint write cleanly; otherwise use direct file writes.
 - Create or update the current session's chat folder (`chats/YYYY/MM/DD/chat-NNN/`).
 - Write a `checkpoint.md` file in the chat folder with the summary above. If multiple syncs happen in one session, append to the same file with timestamps.
 - Stage any pending knowledge or identity updates that were discussed and approved.

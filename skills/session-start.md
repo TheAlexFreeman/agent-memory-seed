@@ -16,10 +16,13 @@ Run at the beginning of returning sessions after the compact returning manifest 
 
 Skip this skill on the very first session — use `meta/first-run.md` and the onboarding skill instead.
 
+When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 ## Steps
 
 ### 1. Load recent context (silent)
 
+- When available, prefer local agent-memory MCP read/search tools for locating and opening the relevant summary files.
 - Read the most recent chat summary (`chats/SUMMARY.md` → latest date folder → latest chat `SUMMARY.md`).
 - Note what the user was working on, any open threads, and any action items from the previous session.
 

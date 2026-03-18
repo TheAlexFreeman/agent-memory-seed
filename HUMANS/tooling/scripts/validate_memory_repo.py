@@ -163,16 +163,40 @@ PROMPT_START_LINE = (
 PROMPT_ROUTE_LINE = (
     "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
 )
+PROMPT_MCP_LINE = (
+    "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+)
 LIVE_CONFIG_LINE = (
     "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
 )
 ADAPTER_ROUTING_PHRASE = "follow the routing rules in `meta/quick-reference.md`"
+ADAPTER_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes"
 README_START_PHRASE = "Start every session with `meta/quick-reference.md`."
 README_ARCHITECTURE_PHRASE = (
     "Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review"
 )
+README_MCP_PHRASE = (
+    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+)
 QUICK_REFERENCE_ROUTER_PHRASE = (
     "Use this file as the operational router for every session:"
+)
+FIRST_RUN_MCP_PHRASE = README_MCP_PHRASE
+SESSION_CHECKLISTS_MCP_PHRASE = README_MCP_PHRASE
+SKILLS_SUMMARY_MCP_PHRASE = (
+    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes while executing these skills; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+)
+ONBOARDING_SKILL_MCP_PHRASE = (
+    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during onboarding; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+)
+SESSION_START_SKILL_MCP_PHRASE = (
+    "When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+)
+SESSION_SYNC_SKILL_MCP_PHRASE = (
+    "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+)
+SESSION_WRAPUP_SKILL_MCP_PHRASE = (
+    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 )
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
 SETUP_GUIDANCE_REQUIRED_PATTERNS = (
@@ -187,6 +211,7 @@ SESSION_START_REQUIRED_PHRASES = (
     "Load `meta/session-checklists.md` only when you want more detail",
     "If `meta/review-queue.md` still contains only its placeholder, skip it.",
     "Load it only when there are real pending items or the user asks about them.",
+    SESSION_START_SKILL_MCP_PHRASE,
 )
 SESSION_START_FORBIDDEN_PATTERNS = (
     r"after README\.md has been read",
@@ -197,10 +222,14 @@ SESSION_WRAPUP_SKILL_PATH = Path("skills/session-wrapup.md")
 SESSION_WRAPUP_REQUIRED_PHRASES = (
     "Load `meta/session-checklists.md` only when you want",
     "session-end runbook",
+    SESSION_WRAPUP_SKILL_MCP_PHRASE,
 )
 SESSION_WRAPUP_FORBIDDEN_PATTERNS = (
     r"compact checklist in `meta/session-checklists\.md` is sufficient",
 )
+SKILLS_SUMMARY_PATH = Path("skills/SUMMARY.md")
+ONBOARDING_SKILL_PATH = Path("skills/onboarding.md")
+SESSION_SYNC_SKILL_PATH = Path("skills/session-sync.md")
 
 FORBIDDEN_RUNTIME_PATTERNS = (
     r"Check the current maturity stage in `meta/system-maturity\.md`",
@@ -725,6 +754,8 @@ def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
             result.error(f"{path}: must point agents to meta/quick-reference.md")
         if ADAPTER_ROUTING_PHRASE not in text:
             result.error(f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}")
+        if ADAPTER_MCP_PHRASE not in text:
+            result.error(f"{path}: missing MCP preference phrase {ADAPTER_MCP_PHRASE!r}")
 
 
 def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
@@ -736,7 +767,7 @@ def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
         text = read_text(path, result)
         if text is None:
             continue
-        for phrase in (PROMPT_START_LINE, PROMPT_ROUTE_LINE, LIVE_CONFIG_LINE):
+        for phrase in (PROMPT_START_LINE, PROMPT_ROUTE_LINE, PROMPT_MCP_LINE, LIVE_CONFIG_LINE):
             if phrase not in text:
                 result.error(f"{path}: missing prompt-copy phrase {phrase!r}")
 
@@ -787,7 +818,7 @@ def validate_onboarding_export_template(root: Path, result: ValidationResult) ->
 def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
     readme = read_text(root / "README.md", result)
     if readme is not None:
-        for phrase in (README_START_PHRASE, README_ARCHITECTURE_PHRASE):
+        for phrase in (README_START_PHRASE, README_ARCHITECTURE_PHRASE, README_MCP_PHRASE):
             if phrase not in readme:
                 result.error(f"{root / 'README.md'}: missing contract phrase {phrase!r}")
 
@@ -797,6 +828,16 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
             result.error(
                 f"{root / 'meta' / 'session-checklists.md'}: missing on-demand guidance"
             )
+        if SESSION_CHECKLISTS_MCP_PHRASE not in session_checklists:
+            result.error(
+                f"{root / 'meta' / 'session-checklists.md'}: missing MCP preference guidance"
+            )
+
+    first_run = read_text(root / "meta" / "first-run.md", result)
+    if first_run is not None and FIRST_RUN_MCP_PHRASE not in first_run:
+        result.error(
+            f"{root / 'meta' / 'first-run.md'}: missing MCP preference guidance"
+        )
 
     session_start = root / SESSION_START_SKILL_PATH
     if session_start.exists():
@@ -825,6 +866,27 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
                     result.error(
                         f"{session_wrapup}: contains forbidden wrapup-skill pattern {pattern!r}"
                     )
+
+    skills_summary = read_text(root / SKILLS_SUMMARY_PATH, result)
+    if skills_summary is not None and SKILLS_SUMMARY_MCP_PHRASE not in skills_summary:
+        result.error(
+            f"{root / SKILLS_SUMMARY_PATH}: missing MCP preference guidance"
+        )
+
+    onboarding_skill = read_text(root / ONBOARDING_SKILL_PATH, result)
+    if (
+        onboarding_skill is not None
+        and ONBOARDING_SKILL_MCP_PHRASE not in onboarding_skill
+    ):
+        result.error(
+            f"{root / ONBOARDING_SKILL_PATH}: missing MCP preference guidance"
+        )
+
+    session_sync = read_text(root / SESSION_SYNC_SKILL_PATH, result)
+    if session_sync is not None and SESSION_SYNC_SKILL_MCP_PHRASE not in session_sync:
+        result.error(
+            f"{root / SESSION_SYNC_SKILL_PATH}: missing MCP preference guidance"
+        )
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:

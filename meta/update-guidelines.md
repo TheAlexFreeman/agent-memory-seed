@@ -85,6 +85,16 @@ When the agent is reviewing or modifying the memory system itself — governance
 
 For system-level changes, the change summary is incomplete unless it explains the expected effect on all three dimensions, including any tradeoffs or follow-up alignment work.
 
+## Preferred memory tool surface
+
+When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
+This preference affects the interface, not the authority chain:
+
+- `meta/quick-reference.md`, `README.md`, and the folder summaries still govern what to load and why.
+- MCP preference does not bypass trust-weighted retrieval, instruction containment, or protected-change approvals.
+- Raw file edits remain the fallback for operations the MCP surface does not yet cover.
+
 ## Change categories
 
 ### Automatic changes (no approval needed)

@@ -14,6 +14,8 @@ You are an AI agent reading this repository. Start every session with `meta/quic
 
 Compatible tooling may also read `agent-bootstrap.toml`, the machine-readable preload contract for this repo. Treat it as the tool-facing companion to `meta/quick-reference.md`, not a replacement for that Markdown router.
 
+When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 ## Purpose
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
@@ -54,6 +56,8 @@ For the complete mapping of which files to load per session type, see `meta/quic
 
 ```
 /
+├── .codex/               ← Project-scoped Codex config preferring the local agent-memory MCP.
+│   └── config.toml       ← Launches `HUMANS/tooling/scripts/memory_mcp.py` against this repo.
 ├── agent-bootstrap.toml   ← Repo-declared startup manifest for compatible tooling.
 ├── setup.sh               ← Repo-root compatibility wrapper for `setup/setup.sh`.
 ├── setup.html             ← Repo-root compatibility wrapper for `setup/setup.html`.

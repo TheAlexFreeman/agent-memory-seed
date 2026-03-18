@@ -4,6 +4,8 @@ This document is an agent-facing streamlined flow for the very first session. It
 
 > **Authority:** This flow is reached via `meta/quick-reference.md` routing. It is subordinate to `meta/quick-reference.md` for active thresholds and session routing. When in doubt, defer to `meta/quick-reference.md`.
 
+When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 **When to use:** No date-organized chat folders exist under `chats/`, AND either:
 
 - `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR

@@ -1,6 +1,7 @@
 # Canonical allowlist for the first setup commit.
 # Generated repo-local files such as chatgpt-instructions.txt and system-prompt.txt
 # are intentionally excluded so they remain local artifacts.
+.codex/config.toml
 .cursorrules
 .gitattributes
 .github/workflows/ci.yml
