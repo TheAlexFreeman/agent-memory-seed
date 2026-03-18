@@ -193,6 +193,16 @@ class BootstrapResolverTests(unittest.TestCase):
                 "branch_checked_out_elsewhere",
             ],
         )
+        panel_warnings = [resolver.build_panel_warning(warning) for warning in warnings]
+        self.assertEqual(
+            [warning.title for warning in panel_warnings],
+            [
+                "Detached HEAD",
+                "Branch Drift",
+                "Branch In Another Worktree",
+            ],
+        )
+        self.assertTrue(all(warning.source == "git" for warning in panel_warnings))
 
     def test_budget_pressure_skips_optional_step_and_updates_budget_state(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -276,6 +286,19 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(resolution.startup_panel.title, "Returning Startup")
             self.assertEqual(resolution.startup_panel.status, "attention")
             self.assertEqual(resolution.startup_panel.warning_count, 1)
+            self.assertEqual(len(resolution.startup_panel.warnings), 1)
+            self.assertEqual(
+                resolution.startup_panel.warnings[0].code,
+                "worktree_branch_drift",
+            )
+            self.assertEqual(
+                resolution.startup_panel.warnings[0].title,
+                "Branch Drift",
+            )
+            self.assertEqual(
+                resolution.startup_panel.warnings[0].source,
+                "git",
+            )
             self.assertEqual(
                 resolution.startup_panel.repo_next_step.reason,
                 "Repo-declared router for Returning mode.",
@@ -283,6 +306,43 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(
                 resolution.startup_panel.files[0].path,
                 "meta/quick-reference.md",
+            )
+
+    def test_startup_panel_surfaces_all_branch_and_worktree_warnings(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root, placeholder_scratchpad=False)
+
+            resolution = resolver.resolve_startup(
+                root,
+                requested_mode="returning",
+                expected_branch="main",
+                git_state=resolver.GitState(
+                    current_branch=None,
+                    detached_head=True,
+                    worktree_branch_drift=True,
+                    branch_checked_out_elsewhere=True,
+                ),
+            )
+
+            self.assertEqual(
+                [warning.code for warning in resolution.startup_panel.warnings],
+                [
+                    "detached_head",
+                    "worktree_branch_drift",
+                    "branch_checked_out_elsewhere",
+                ],
+            )
+            self.assertEqual(
+                [warning.title for warning in resolution.startup_panel.warnings],
+                [
+                    "Detached HEAD",
+                    "Branch Drift",
+                    "Branch In Another Worktree",
+                ],
+            )
+            self.assertTrue(
+                all(warning.severity == "warning" for warning in resolution.startup_panel.warnings)
             )
 
 

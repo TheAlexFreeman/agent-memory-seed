@@ -96,6 +96,15 @@ class StartupPanelAction:
 
 
 @dataclass(frozen=True)
+class StartupPanelWarning:
+    code: str
+    title: str
+    message: str
+    severity: str
+    source: str
+
+
+@dataclass(frozen=True)
 class StartupPanel:
     title: str
     status: str
@@ -103,6 +112,7 @@ class StartupPanel:
     mode_source: str
     repo_next_step: StartupPanelAction
     files: list[StartupPanelFile]
+    warnings: list[StartupPanelWarning]
     loaded_count: int
     skipped_count: int
     missing_count: int
@@ -516,6 +526,28 @@ def budget_status_from_budget(budget: StartupBudget) -> str:
     return "healthy"
 
 
+def build_panel_warning(warning: StartupWarning) -> StartupPanelWarning:
+    titles = {
+        "detached_head": "Detached HEAD",
+        "worktree_branch_drift": "Branch Drift",
+        "branch_checked_out_elsewhere": "Branch In Another Worktree",
+        "budget_pressure": "Budget Pressure",
+    }
+    sources = {
+        "detached_head": "git",
+        "worktree_branch_drift": "git",
+        "branch_checked_out_elsewhere": "git",
+        "budget_pressure": "budget",
+    }
+    return StartupPanelWarning(
+        code=warning.code,
+        title=titles.get(warning.code, warning.code.replace("_", " ").title()),
+        message=warning.message,
+        severity="warning",
+        source=sources.get(warning.code, "startup"),
+    )
+
+
 def build_startup_panel(
     *,
     router: str,
@@ -545,6 +577,7 @@ def build_startup_panel(
             )
             for step in trace
         ],
+        warnings=[build_panel_warning(warning) for warning in warnings],
         loaded_count=sum(1 for step in trace if step.status == "loaded"),
         skipped_count=sum(1 for step in trace if step.status == "skipped"),
         missing_count=sum(1 for step in trace if step.status == "missing"),
