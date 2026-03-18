@@ -1,12 +1,12 @@
 ---
-source: agent-generated
-type: implementation-plan
-origin_session: manual
 created: 2026-03-18
-last_verified: 2026-03-18
-trust: medium
+last_verified: '2026-03-18'
+next_action: Design the startup panel
+origin_session: manual
+source: agent-generated
 status: active
-next_action: "Phase 2 — add compact-context budgeting rules and budget-pressure trace behavior to the runtime prototype"
+trust: medium
+type: implementation-plan
 ---
 
 # Implementation Plan: Codex Desktop Bootstrap Support
@@ -195,7 +195,15 @@ Use per-mode token ceilings as hints, not hard failures:
 
 When the budget is tight, summaries beat transcripts and metadata probes beat deeper governance files. Preloaded files should be visible in the startup trace, but they should **not** automatically become ACCESS retrievals by default; explicit file opens remain the auditable retrieval boundary for this repo unless a repo opts into preload logging.
 
-### Phase 2 — Startup runtime and detection logic · ☑ 2/3 complete
+Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now models compact-context pressure directly instead of treating token budgets as inert metadata. The runtime prototype now:
+
+- estimates preload cost from each step's declared `cost`
+- reserves a slice of the mode budget so optional higher-cost files can be skipped before compact context is exhausted
+- marks skipped optional steps with `reason = "budget_pressure"` in the startup trace
+- treats transcript files as heavy when `prefer_summaries = true`, so summaries win under tight budgets without requiring the repo to hand-tune every transcript cost
+- returns explicit budget state (`limit`, `reserve`, `estimated_used`, `estimated_remaining`, `pressure`) plus `preload_access_mode = "startup_trace_only"` so preload auditing stays separate from ACCESS retrieval logs
+
+### Phase 2 — Startup runtime and detection logic · ☑ 3/3 complete
 
 4. ☑ Implement startup mode detection
    - first-run vs. returning-session checks
@@ -207,7 +215,7 @@ When the budget is tight, summaries beat transcripts and metadata probes beat de
    - deduplicate equivalent files
    - mark skipped files and the reason they were skipped
 
-6. ☐ Add compact-context budgeting rules
+6. ☑ Add compact-context budgeting rules
    - max file count / token budget hints
    - explicit "load summaries before transcripts" behavior
    - preserve an access trail for preloaded files
@@ -260,6 +268,8 @@ When the budget is tight, summaries beat transcripts and metadata probes beat de
 | 2026-03-18 | Completed Phase 1 contract definition: chose a repo-owned `agent-bootstrap.toml`, defined fallback and conflict rules, and formalized adapter-file precedence |
 | 2026-03-18 | Added a repo-local `agent-bootstrap.toml` prototype plus validator-backed checks, and defined mode detection precedence, dedup semantics, budget hints, and preload-audit defaults for Phase 2 |
 | 2026-03-18 | Added `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` plus tests as an executable runtime prototype for mode detection, git/worktree warnings, deterministic preload traces, and skip-reason reporting |
+| 2026-03-18 | Added budget-aware preload resolution to the bootstrap runtime prototype, including reserve-based optional-step skipping, transcript-heavy summary preference, explicit budget state, and trace-only preload auditing |
+| 2026-03-18 | Completed Add compact-context budgeting rules (codex-desktop-bootstrap-support 6/11) |
 
 ---
 

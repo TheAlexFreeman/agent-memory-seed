@@ -23,11 +23,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
 ### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
-
-Implementation plan for memory-aware repo startup in Codex desktop. Focus: repo-declared startup manifests, first-run vs. returning-session detection, compact preload ordering, and startup UI for branch/worktree/bootstrap state.
-
-**Progress:** 5/11 tasks complete
-**Next action:** Phase 2 — add compact-context budgeting rules and budget-pressure trace behavior to the runtime prototype
+**Progress:** 6/11 items complete
+**Next action:** Design the startup panel
 <!-- END: codex-desktop-bootstrap-support -->
 
 ---
