@@ -427,7 +427,7 @@ button {
   function makeFrontmatter(source, trust) {
     var d = today();
     return '---\nsource: ' + source + '\norigin_session: setup\ncreated: ' + d +
-           '\nlast_verified: ' + d + '\ntrust: ' + trust + '\n---\n\n';
+           '\ntrust: ' + trust + '\n---\n\n';
   }
 
   // Create an element with optional text content and CSS classes
@@ -478,7 +478,6 @@ button {
   // ── File generation ───────────────────────────────────────────────────────
   window.generateOutput = function () {
     generatedFiles = [];
-    var d          = today();
     var userName   = document.getElementById('user-name').value.trim();
     var userCtx    = document.getElementById('user-context').value.trim();
 

@@ -233,7 +233,6 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     source: unknown
                     origin_session: unknown
                     created: 2026-03-16
-                    last_verified: 2026-03-16
                     trust: medium
                     ---
 
@@ -302,6 +301,56 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
 
+    def test_missing_optional_last_verified_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+
+    def test_invalid_optional_last_verified_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    last_verified: not-a-date
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("last_verified must be a valid YYYY-MM-DD date" in error for error in result.errors)
+            )
+
     def test_malformed_access_jsonl_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -326,7 +375,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     source: user-stated
                     origin_session: chats/2026/03/16/chat-001
                     created: 2026-03-16
-                    trust: high
+                    last_verified: 2026-03-16
                     ---
 
                     # Example
@@ -436,6 +485,60 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     for error in result.errors
                 )
             )
+
+    def test_session_start_skill_with_readme_bootstrap_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "session-start.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: manual
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    Run at the beginning of every session after the bootstrap sequence completes (i.e., after README.md has been read and the agent is oriented).
+
+                    - Read `meta/review-queue.md`. Are there pending proposals the user hasn't reviewed?
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("forbidden startup-skill pattern" in error for error in result.errors)
+            )
+
+    def test_session_start_skill_with_compact_manifest_guidance_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "session-start.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: user-stated
+                    origin_session: manual
+                    created: 2026-03-16
+                    last_verified: 2026-03-16
+                    trust: high
+                    ---
+
+                    Run at the beginning of returning sessions after the compact returning manifest in `meta/quick-reference.md` has oriented the agent.
+
+                    - Use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them.
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
 
     def test_quarantine_file_with_wrong_trust_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

@@ -205,6 +205,8 @@ CHAT_NAME="${CHAT_DIR##*/}"
 echo "=== Onboarding Export ==="
 echo ""
 
+WRITTEN_PATHS=()
+
 # 1. Write identity/profile.md
 PROFILE_FILE="identity/profile.md"
 PROFILE_CONTENT="---
@@ -311,10 +313,12 @@ fi
 
 # Write identity profile
 printf '%s\n' "$PROFILE_CONTENT" > "$PROFILE_FILE"
+WRITTEN_PATHS+=("$PROFILE_FILE")
 echo "[ok] Wrote $PROFILE_FILE"
 
 # Write identity summary
 printf '%s\n' "$SUMMARY_CONTENT" > "identity/SUMMARY.md"
+WRITTEN_PATHS+=("identity/SUMMARY.md")
 echo "[ok] Updated identity/SUMMARY.md"
 
 # Write chat record
@@ -322,14 +326,17 @@ if [[ -n "$SESSION_SUMMARY" ]]; then
     mkdir -p "$CHAT_DIR"
     if [[ -n "$SESSION_TRANSCRIPT" ]]; then
         printf '%s\n' "$TRANSCRIPT_CONTENT" > "${CHAT_DIR}/transcript.md"
+        WRITTEN_PATHS+=("${CHAT_DIR}/transcript.md")
         echo "[ok] Wrote ${CHAT_DIR}/transcript.md"
     fi
 
     printf '%s\n' "$CHAT_SUMMARY_CONTENT" > "${CHAT_DIR}/SUMMARY.md"
+    WRITTEN_PATHS+=("${CHAT_DIR}/SUMMARY.md")
     echo "[ok] Wrote ${CHAT_DIR}/SUMMARY.md"
 
     if [[ -n "$SESSION_REFLECTION" ]]; then
         printf '%s\n' "$REFLECTION_CONTENT" > "${CHAT_DIR}/reflection.md"
+        WRITTEN_PATHS+=("${CHAT_DIR}/reflection.md")
         echo "[ok] Wrote ${CHAT_DIR}/reflection.md"
     fi
 fi
@@ -341,22 +348,25 @@ if chats_summary_has_history; then
     echo "         First recorded conversation on ${SESSION_DATE}: **${CHAT_NAME}** — onboarding and initial user profile creation."
 else
     printf '%s\n' "$CHATS_SUMMARY_CONTENT" > "chats/SUMMARY.md"
+    WRITTEN_PATHS+=("chats/SUMMARY.md")
     echo "[ok] Updated chats/SUMMARY.md"
 fi
 
 # Stage and commit
 echo ""
-git add identity/ chats/
+git add -- "${WRITTEN_PATHS[@]}"
 GIT_NAME=$(git config user.name 2>/dev/null || true)
 GIT_EMAIL=$(git config user.email 2>/dev/null || true)
+printf -v WRITTEN_PATH_ARGS '%q ' "${WRITTEN_PATHS[@]}"
+WRITTEN_PATH_ARGS="${WRITTEN_PATH_ARGS% }"
 if [[ -z "$GIT_NAME" ]] || [[ -z "$GIT_EMAIL" ]]; then
     echo "[warn] Git author identity not configured. Files are staged but not committed."
-    echo "       Run: git commit -m '[system] Import onboarding profile'"
+    echo "       Run: git commit --only -m '[system] Import onboarding profile' -- ${WRITTEN_PATH_ARGS}"
 else
-    git commit -m "[system] Import onboarding profile
+    git commit --only -m "[system] Import onboarding profile
 
 Onboarding conducted on a read-only platform. Profile and session
-record imported via onboard-export.sh on ${IMPORT_DATE}."
+record imported via onboard-export.sh on ${IMPORT_DATE}." -- "${WRITTEN_PATHS[@]}"
     echo "[ok] Committed onboarding import"
 fi
 

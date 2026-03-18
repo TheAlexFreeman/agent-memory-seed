@@ -82,21 +82,23 @@ The agent should update this date when completing a full periodic review (same c
 
 ### `trust: low` file
 
-1. Has `last_verified` gone unupdated for more than **120 days**? → Archive to `knowledge/_archive/`, remove from SUMMARY.md, log as `[curation]` commit.
+1. Has the effective verification date (`last_verified` if set, otherwise `created`) gone unupdated for more than **120 days**? → Archive to `knowledge/_archive/`, remove from SUMMARY.md, log as `[curation]` commit.
 2. Otherwise → retain.
 
 ### `trust: medium` file
 
-1. Has `last_verified` gone unupdated for more than **180 days**? → Flag in `meta/review-queue.md` for re-verification or demotion.
+1. Has the effective verification date (`last_verified` if set, otherwise `created`) gone unupdated for more than **180 days**? → Flag in `meta/review-queue.md` for re-verification or demotion.
 2. If demoted to `low` → the 120-day low-trust retirement clock starts from the demotion date.
 3. Otherwise → retain.
 
 ### `trust: high` file
 
-1. Is `last_verified` older than **365 days**? → Mention in periodic review for a freshness check (informational — no automatic action).
+1. Is the effective verification date (`last_verified` if set, otherwise `created`) older than **365 days**? → Mention in periodic review for a freshness check (informational — no automatic action).
 2. Otherwise → no action needed.
 
-**Definition of "unverified":** `last_verified` has not been updated since the decay clock started. Any user interaction that confirms the content (explicit approval, correction, or re-confirmation) resets the clock.
+**Effective verification date:** Use `last_verified` when present; otherwise use `created`.
+
+**Definition of "unverified":** Files with no `last_verified` yet are still unverified. Their decay clock starts at `created`. Any user interaction that confirms the content (explicit approval, correction, or re-confirmation) sets or updates `last_verified` and resets the clock.
 
 **Files without frontmatter:** Treated as `trust: medium` with `last_verified` set to the date frontmatter was retroactively added. This prevents mass archival of legacy content.
 

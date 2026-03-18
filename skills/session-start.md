@@ -12,7 +12,7 @@ trust: high
 
 ## When to use this skill
 
-Run at the beginning of every session after the bootstrap sequence completes (i.e., after README.md has been read and the agent is oriented). This skill expands the session-start checklist into a detailed workflow.
+Run at the beginning of returning sessions after the compact returning manifest in `meta/quick-reference.md` has oriented the agent. This skill expands that compact path into a detailed workflow.
 
 Skip this skill on the very first session — use `meta/first-run.md` and the onboarding skill instead.
 
@@ -25,7 +25,7 @@ Skip this skill on the very first session — use `meta/first-run.md` and the on
 
 ### 2. Check pending items (silent)
 
-- Read `meta/review-queue.md`. Are there pending proposals the user hasn't reviewed?
+- Use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them.
 - Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag for aggregation at session end — do not run aggregation now (it requires loading `meta/curation-algorithms.md` and is better deferred to wrap-up).
 - Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
 

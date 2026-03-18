@@ -2,7 +2,6 @@
 source: template
 origin_session: setup
 created: YYYY-MM-DD
-last_verified: YYYY-MM-DD
 trust: medium
 ---
 

@@ -13,10 +13,12 @@ Every content file in `identity/`, `knowledge/`, and `skills/` must include YAML
 source: user-stated | agent-inferred | external-research | skill-discovery | template | unknown
 origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
-last_verified: YYYY-MM-DD
+last_verified: YYYY-MM-DD  # optional until a human confirms the content
 trust: high | medium | low
 ---
 ```
+
+`last_verified` is omitted until a human explicitly reviews or confirms the content. When it is absent, `created` is the effective verification date for decay and freshness calculations.
 
 ### Field definitions
 
@@ -29,7 +31,7 @@ trust: high | medium | low
   - `template`: Content pre-populated from a starter profile template installed by `setup.sh --profile`. Replaced with a concrete source (typically `user-stated`) after onboarding confirmation.
 - **origin_session** — The canonical session path (e.g. `chats/YYYY/MM/DD/chat-NNN`), or `setup` for starter templates, or `manual` for hand-authored content, or `unknown` for files predating this schema.
 - **created** — Date the file was first written.
-- **last_verified** — Date a human last reviewed or confirmed the content.
+- **last_verified** — Optional date a human last reviewed or confirmed the content. Omit it for newly created content that has not yet been human-verified.
 - **trust** — The current trust classification (see `meta/curation-policy.md` for retrieval behavior at each level).
 
 ### Trust assignment rules
@@ -45,9 +47,11 @@ trust: high | medium | low
 
 Trust may also be demoted: if a `high`-trust file is found to contain inaccuracies or the user expresses doubt, downgrade to `medium` and update `last_verified`.
 
+For new unverified files, omit `last_verified` rather than filling it with the creation date. Human confirmation during onboarding, review, or correction is what sets it.
+
 ### Retroactive application
 
-Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, and `last_verified` set to the review date.
+Files that predate this schema should have frontmatter added during the next periodic review, using `source: unknown`, `trust: medium`, and `last_verified` set to the review date. That backfill review counts as the human verification event.
 
 ## Change categories
 

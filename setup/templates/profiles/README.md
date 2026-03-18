@@ -17,12 +17,11 @@ These templates are installed by `setup/setup.sh --profile <name>` or by the `se
    source: template
    origin_session: setup
    created: YYYY-MM-DD
-   last_verified: YYYY-MM-DD
    trust: medium
    ---
    ```
-   `setup.sh` replaces `YYYY-MM-DD` with today's date at install time.
+   `setup.sh` replaces `YYYY-MM-DD` with today's date at install time. Do not add `last_verified` here — onboarding writes that only after the user confirms the template.
 3. Use `[template]` tags on every pre-filled trait. The onboarding skill walks through each `[template]` trait and asks the user to confirm, adjust, or remove it.
 4. Leave fields that vary too much to guess as `_[To be filled during onboarding]_`.
 5. Include a `## Customize me` section at the end explaining that traits are starting points.
-6. Add the new template name to the interactive menu in `setup/setup.sh` (section 4) and to the cards in `setup/setup.html`. Also update the `VALID_PROFILES` list near the top of `setup/setup.sh`.
+6. Add the new template name to the interactive menu in `setup/setup.sh` and to the cards in `setup/setup.html`. Also update the profile validation case in `setup/setup.sh`.
