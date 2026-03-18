@@ -133,6 +133,10 @@ class BootstrapResolverTests(unittest.TestCase):
             trace_by_path = {step.path: step for step in resolution.trace}
 
             self.assertEqual(trace_by_path["meta/quick-reference.md"].status, "loaded")
+            self.assertEqual(resolution.startup_panel.mode_label, "Returning")
+            self.assertEqual(resolution.startup_panel.repo_next_step.path, "meta/quick-reference.md")
+            self.assertEqual(resolution.startup_panel.loaded_count, 3)
+            self.assertEqual(resolution.startup_panel.skipped_count, 3)
             self.assertEqual(trace_by_path["plans/SUMMARY.md"].status, "skipped")
             self.assertEqual(trace_by_path["plans/SUMMARY.md"].reason, "no_active_plans")
             self.assertEqual(trace_by_path["scratchpad/USER.md"].status, "skipped")
@@ -249,6 +253,37 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(trace_by_role["topic-summary"].status, "loaded")
             self.assertEqual(trace_by_role["topic-summary"].estimated_tokens, 500)
             self.assertEqual(resolution.preload_access_mode, "startup_trace_only")
+            self.assertEqual(resolution.startup_panel.budget_status, "tight")
+            self.assertEqual(resolution.startup_panel.status, "attention")
+
+    def test_startup_panel_surfaces_git_and_budget_attention(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root, placeholder_scratchpad=False)
+
+            resolution = resolver.resolve_startup(
+                root,
+                requested_mode="returning",
+                expected_branch="main",
+                git_state=resolver.GitState(
+                    current_branch="feature/runtime",
+                    detached_head=False,
+                    worktree_branch_drift=True,
+                    branch_checked_out_elsewhere=False,
+                ),
+            )
+
+            self.assertEqual(resolution.startup_panel.title, "Returning Startup")
+            self.assertEqual(resolution.startup_panel.status, "attention")
+            self.assertEqual(resolution.startup_panel.warning_count, 1)
+            self.assertEqual(
+                resolution.startup_panel.repo_next_step.reason,
+                "Repo-declared router for Returning mode.",
+            )
+            self.assertEqual(
+                resolution.startup_panel.files[0].path,
+                "meta/quick-reference.md",
+            )
 
 
 if __name__ == "__main__":

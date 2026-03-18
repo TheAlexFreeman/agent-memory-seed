@@ -80,6 +80,37 @@ class StartupTraceStep:
 
 
 @dataclass(frozen=True)
+class StartupPanelFile:
+    path: str
+    role: str
+    status: str
+    reason: str | None
+    required: bool
+
+
+@dataclass(frozen=True)
+class StartupPanelAction:
+    label: str
+    path: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class StartupPanel:
+    title: str
+    status: str
+    mode_label: str
+    mode_source: str
+    repo_next_step: StartupPanelAction
+    files: list[StartupPanelFile]
+    loaded_count: int
+    skipped_count: int
+    missing_count: int
+    warning_count: int
+    budget_status: str
+
+
+@dataclass(frozen=True)
 class StartupResolution:
     router: str
     mode: str
@@ -93,6 +124,7 @@ class StartupResolution:
     git_state: GitState
     warnings: list[StartupWarning]
     trace: list[StartupTraceStep]
+    startup_panel: StartupPanel
 
 
 def normalize_manifest_path(raw_path: str) -> str:
@@ -463,6 +495,64 @@ def resolve_warnings(
     return warnings
 
 
+def format_mode_label(mode: str) -> str:
+    return mode.replace("_", " ").title()
+
+
+def panel_status_from_resolution(
+    trace: list[StartupTraceStep],
+    warnings: list[StartupWarning],
+) -> str:
+    if warnings:
+        return "attention"
+    if any(step.status == "missing" and step.required for step in trace):
+        return "attention"
+    return "ready"
+
+
+def budget_status_from_budget(budget: StartupBudget) -> str:
+    if budget.pressure:
+        return "tight"
+    return "healthy"
+
+
+def build_startup_panel(
+    *,
+    router: str,
+    mode: str,
+    mode_source: str,
+    trace: list[StartupTraceStep],
+    warnings: list[StartupWarning],
+    budget: StartupBudget,
+) -> StartupPanel:
+    return StartupPanel(
+        title=f"{format_mode_label(mode)} Startup",
+        status=panel_status_from_resolution(trace, warnings),
+        mode_label=format_mode_label(mode),
+        mode_source=mode_source,
+        repo_next_step=StartupPanelAction(
+            label="Open Router",
+            path=router,
+            reason=f"Repo-declared router for {format_mode_label(mode)} mode.",
+        ),
+        files=[
+            StartupPanelFile(
+                path=step.path,
+                role=step.role,
+                status=step.status,
+                reason=step.reason,
+                required=step.required,
+            )
+            for step in trace
+        ],
+        loaded_count=sum(1 for step in trace if step.status == "loaded"),
+        skipped_count=sum(1 for step in trace if step.status == "skipped"),
+        missing_count=sum(1 for step in trace if step.status == "missing"),
+        warning_count=len(warnings),
+        budget_status=budget_status_from_budget(budget),
+    )
+
+
 def resolve_startup(
     repo_root: Path,
     *,
@@ -498,6 +588,12 @@ def resolve_startup(
         token_budget=int(mode_config["token_budget"]),
         prefer_summaries=bool(mode_config["prefer_summaries"]),
     )
+    warnings = resolve_warnings(
+        current_git_state,
+        manifest.get("mode_detection", {}),
+        budget=budget,
+        expected_branch=expected_branch,
+    )
     return StartupResolution(
         router=str(manifest["router"]),
         mode=mode,
@@ -511,13 +607,16 @@ def resolve_startup(
         preload_access_mode="startup_trace_only",
         budget=budget,
         git_state=current_git_state,
-        warnings=resolve_warnings(
-            current_git_state,
-            manifest.get("mode_detection", {}),
-            budget=budget,
-            expected_branch=expected_branch,
-        ),
+        warnings=warnings,
         trace=trace,
+        startup_panel=build_startup_panel(
+            router=str(manifest["router"]),
+            mode=mode,
+            mode_source=mode_source,
+            trace=trace,
+            warnings=warnings,
+            budget=budget,
+        ),
     )
 
 
