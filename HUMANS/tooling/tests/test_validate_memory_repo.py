@@ -94,6 +94,302 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     """
 )
 
+VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
+    """\
+    version = 1
+    router = "meta/quick-reference.md"
+    default_mode = "returning"
+    adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]
+
+    [mode_detection]
+    automation = "scheduled_or_recurring_run"
+    periodic_review = "explicit_or_scheduled_governance_review"
+    first_run = "blank_or_template_backed_repo"
+    full_bootstrap = "fresh_instantiation_on_returning_repo"
+    returning = "default_existing_repo_session"
+    warn_on_detached_head = true
+    warn_on_worktree_branch_drift = true
+    warn_on_branch_checked_out_elsewhere = true
+
+    [modes.first_run]
+    token_budget = 20000
+    prefer_summaries = false
+
+    [[modes.first_run.steps]]
+    path = "meta/quick-reference.md"
+    role = "router"
+    required = true
+    cost = "light"
+
+    [[modes.first_run.steps]]
+    path = "README.md"
+    role = "architecture-reference"
+    required = true
+    cost = "medium"
+
+    [[modes.first_run.steps]]
+    path = "meta/first-run.md"
+    role = "first-run-manifest"
+    required = true
+    cost = "light"
+
+    [modes.returning]
+    token_budget = 7000
+    prefer_summaries = true
+    maintenance_probes = [
+      "meta/review-queue.md:load_only_when_non_placeholder",
+      "ACCESS.jsonl:count_non_empty_lines",
+    ]
+    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+
+    [[modes.returning.steps]]
+    path = "meta/quick-reference.md"
+    role = "router"
+    required = true
+    cost = "light"
+
+    [[modes.returning.steps]]
+    path = "identity/SUMMARY.md"
+    role = "identity-summary"
+    required = true
+    cost = "light"
+
+    [[modes.returning.steps]]
+    path = "chats/SUMMARY.md"
+    role = "chat-summary"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.returning.steps]]
+    path = "plans/SUMMARY.md"
+    role = "plan-summary"
+    required = false
+    skip_if = "no_active_plans"
+    cost = "light"
+
+    [[modes.returning.steps]]
+    path = "scratchpad/USER.md"
+    role = "scratchpad-user"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.returning.steps]]
+    path = "scratchpad/CURRENT.md"
+    role = "scratchpad-current"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [modes.full_bootstrap]
+    token_budget = 25000
+    prefer_summaries = true
+    maintenance_probes = [
+      "meta/review-queue.md:load_only_when_non_placeholder",
+      "ACCESS.jsonl:count_non_empty_lines",
+    ]
+    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+
+    [[modes.full_bootstrap.steps]]
+    path = "meta/quick-reference.md"
+    role = "router"
+    required = true
+    cost = "light"
+
+    [[modes.full_bootstrap.steps]]
+    path = "README.md"
+    role = "architecture-reference"
+    required = true
+    cost = "medium"
+
+    [[modes.full_bootstrap.steps]]
+    path = "identity/SUMMARY.md"
+    role = "identity-summary"
+    required = true
+    cost = "light"
+
+    [[modes.full_bootstrap.steps]]
+    path = "chats/SUMMARY.md"
+    role = "chat-summary"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.full_bootstrap.steps]]
+    path = "plans/SUMMARY.md"
+    role = "plan-summary"
+    required = false
+    skip_if = "no_active_plans"
+    cost = "light"
+
+    [[modes.full_bootstrap.steps]]
+    path = "scratchpad/USER.md"
+    role = "scratchpad-user"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.full_bootstrap.steps]]
+    path = "scratchpad/CURRENT.md"
+    role = "scratchpad-current"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.full_bootstrap.steps]]
+    path = "CHANGELOG.md"
+    role = "system-history"
+    required = true
+    cost = "medium"
+
+    [[modes.full_bootstrap.steps]]
+    path = "meta/curation-policy.md"
+    role = "governance-reference"
+    required = true
+    cost = "medium"
+
+    [[modes.full_bootstrap.steps]]
+    path = "meta/update-guidelines.md"
+    role = "change-control"
+    required = true
+    cost = "medium"
+
+    [modes.periodic_review]
+    token_budget = 25000
+    prefer_summaries = true
+    maintenance_probes = [
+      "meta/review-queue.md:load_only_when_non_placeholder",
+      "ACCESS.jsonl:count_non_empty_lines",
+    ]
+    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+
+    [[modes.periodic_review.steps]]
+    path = "meta/quick-reference.md"
+    role = "router"
+    required = true
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "README.md"
+    role = "architecture-reference"
+    required = true
+    cost = "medium"
+
+    [[modes.periodic_review.steps]]
+    path = "identity/SUMMARY.md"
+    role = "identity-summary"
+    required = true
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "chats/SUMMARY.md"
+    role = "chat-summary"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "plans/SUMMARY.md"
+    role = "plan-summary"
+    required = false
+    skip_if = "no_active_plans"
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "scratchpad/USER.md"
+    role = "scratchpad-user"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "scratchpad/CURRENT.md"
+    role = "scratchpad-current"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "CHANGELOG.md"
+    role = "system-history"
+    required = true
+    cost = "medium"
+
+    [[modes.periodic_review.steps]]
+    path = "meta/curation-policy.md"
+    role = "governance-reference"
+    required = true
+    cost = "medium"
+
+    [[modes.periodic_review.steps]]
+    path = "meta/update-guidelines.md"
+    role = "change-control"
+    required = true
+    cost = "medium"
+
+    [[modes.periodic_review.steps]]
+    path = "meta/system-maturity.md"
+    role = "stage-reference"
+    required = true
+    cost = "medium"
+
+    [[modes.periodic_review.steps]]
+    path = "meta/belief-diff-log.md"
+    role = "drift-audit"
+    required = true
+    cost = "medium"
+
+    [[modes.periodic_review.steps]]
+    path = "meta/review-queue.md"
+    role = "pending-proposals"
+    required = true
+    cost = "light"
+
+    [[modes.periodic_review.steps]]
+    path = "meta/integrity-checklist.md"
+    role = "integrity-audit"
+    required = true
+    cost = "medium"
+
+    [modes.automation]
+    token_budget = 7000
+    prefer_summaries = true
+    maintenance_probes = [
+      "meta/review-queue.md:load_only_when_non_placeholder",
+      "ACCESS.jsonl:count_non_empty_lines",
+    ]
+    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+
+    [[modes.automation.steps]]
+    path = "meta/quick-reference.md"
+    role = "router"
+    required = true
+    cost = "light"
+
+    [[modes.automation.steps]]
+    path = "scratchpad/USER.md"
+    role = "scratchpad-user"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.automation.steps]]
+    path = "scratchpad/CURRENT.md"
+    role = "scratchpad-current"
+    required = false
+    skip_if = "placeholder_or_empty"
+    cost = "light"
+
+    [[modes.automation.steps]]
+    path = "plans/SUMMARY.md"
+    role = "plan-summary"
+    required = false
+    skip_if = "no_active_plans"
+    cost = "light"
+    """
+)
+
 
 def write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -101,6 +397,7 @@ def write(path: Path, content: str) -> None:
 
 
 def build_minimal_repo(root: Path) -> None:
+    write(root / "agent-bootstrap.toml", VALID_BOOTSTRAP_MANIFEST)
     write(
         root / "README.md",
         textwrap.dedent(
@@ -112,6 +409,7 @@ def build_minimal_repo(root: Path) -> None:
             """
         ),
     )
+    write(root / "CHANGELOG.md", "# Changelog\n")
     write(
         root / "setup.sh",
         textwrap.dedent(
@@ -199,6 +497,7 @@ def build_minimal_repo(root: Path) -> None:
     )
 
     write(root / "meta" / "quick-reference.md", VALID_QUICK_REFERENCE)
+    write(root / "meta" / "first-run.md", "# First run\n")
     write(
         root / "meta" / "curation-policy.md",
         "# Curation Policy\nUse `meta/quick-reference.md` for live thresholds.\n",
@@ -212,6 +511,9 @@ def build_minimal_repo(root: Path) -> None:
         "# Session checklists\nLoad this file on demand when you need more detail than the compact manifest in `meta/quick-reference.md`.\n",
     )
     write(root / "meta" / "review-queue.md", "# Review Queue\n\n_No pending items._\n")
+    write(root / "meta" / "system-maturity.md", "# System maturity\n")
+    write(root / "meta" / "belief-diff-log.md", "# Belief diff log\n")
+    write(root / "meta" / "integrity-checklist.md", "# Integrity checklist\n")
 
     for dirname in ("identity", "knowledge", "skills", "plans", "chats"):
         write(root / dirname / "SUMMARY.md", f"# {dirname} summary\n")
@@ -265,6 +567,59 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
+
+    def test_missing_bootstrap_manifest_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "agent-bootstrap.toml").unlink()
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("missing bootstrap manifest" in error for error in result.errors)
+            )
+
+    def test_bootstrap_manifest_with_wrong_router_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "agent-bootstrap.toml",
+                VALID_BOOTSTRAP_MANIFEST.replace(
+                    'router = "meta/quick-reference.md"',
+                    'router = "README.md"',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "router must be 'meta/quick-reference.md'" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_bootstrap_manifest_with_wrong_returning_order_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "agent-bootstrap.toml",
+                VALID_BOOTSTRAP_MANIFEST.replace(
+                    'path = "identity/SUMMARY.md"',
+                    'path = "knowledge/SUMMARY.md"',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "modes.returning.steps must load" in error
+                    for error in result.errors
+                )
+            )
 
     def test_access_entry_with_malformed_session_id_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

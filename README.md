@@ -12,6 +12,8 @@ An adaptive, self-organizing, version-controlled memory layer for AI agents. Any
 
 You are an AI agent reading this repository. Start every session with `meta/quick-reference.md`. Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review, or when you need the system architecture and governance reference.
 
+Compatible tooling may also read `agent-bootstrap.toml`, the machine-readable preload contract for this repo. Treat it as the tool-facing companion to `meta/quick-reference.md`, not a replacement for that Markdown router.
+
 ## Purpose
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
@@ -52,6 +54,7 @@ For the complete mapping of which files to load per session type, see `meta/quic
 
 ```
 /
+├── agent-bootstrap.toml   ← Repo-declared startup manifest for compatible tooling.
 ├── setup.sh               ← Repo-root compatibility wrapper for `setup/setup.sh`.
 ├── setup.html             ← Repo-root compatibility wrapper for `setup/setup.html`.
 ├── README.md              ← You are here. System architecture and protocols.

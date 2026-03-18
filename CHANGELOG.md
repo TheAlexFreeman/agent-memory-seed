@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Bootstrap manifest prototype and validator-backed preload contract
+
+**Changed:**
+
+- **Added a repo-declared bootstrap manifest prototype.** Created `agent-bootstrap.toml` as a machine-readable startup contract covering `first_run`, `returning`, `full_bootstrap`, `periodic_review`, and `automation` modes, along with mode-detection hints, token-budget ceilings, maintenance probes, on-demand summary expansions, and ordered preload steps.
+
+- **Made the contract executable in tooling.** Extended `HUMANS/tooling/scripts/validate_memory_repo.py` and its test suite to parse and validate the manifest, enforce mode coverage and ordered step paths, and keep the manifest aligned with the repo's existing routing surface.
+
+- **Aligned architecture and setup surfaces.** Updated `README.md` to describe `agent-bootstrap.toml` as the tool-facing companion to `meta/quick-reference.md`, and added the new file to `setup/initial-commit-paths.txt` so first-run setup preserves the bootstrap contract in the canonical seed commit.
+
+- **Advanced the bootstrap product plan.** Updated `plans/codex-desktop-bootstrap-support.md` and `plans/SUMMARY.md` with Phase 2 runtime decisions: startup-mode precedence, dedup/skip semantics, budget hints, and the default rule that preloads remain visible but do not automatically count as ACCESS retrievals.
+
+**Reasoning:** The bootstrap-support plan was already the highest-priority active implementation track, but it still lived mostly as prose. Adding a concrete manifest and validator-backed contract turns it into a working repo prototype: the preload graph is now explicit, reviewable in git, and testable for drift. That improves consistency across router/docs/tooling, gives compatible app runtimes a real artifact to consume, and preserves context efficiency by encoding compact-returning budgets and metadata-first probes in a single machine-readable place.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] Human-facing core architecture guide
 
 **Changed:**

@@ -27,7 +27,7 @@ Priority order for active work:
 Implementation plan for memory-aware repo startup in Codex desktop. Focus: repo-declared startup manifests, first-run vs. returning-session detection, compact preload ordering, and startup UI for branch/worktree/bootstrap state.
 
 **Progress:** 3/11 tasks complete
-**Next action:** Phase 2 — implement startup mode detection and deterministic preload ordering
+**Next action:** Phase 2 — translate the manifest-backed prototype into app-side detection, dedup, and preload telemetry behavior
 <!-- END: codex-desktop-bootstrap-support -->
 
 ---

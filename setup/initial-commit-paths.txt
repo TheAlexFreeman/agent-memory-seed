@@ -5,7 +5,9 @@
 .gitattributes
 .github/workflows/ci.yml
 .gitignore
+.vscode/settings.json
 AGENTS.md
+agent-bootstrap.toml
 CHANGELOG.md
 CLAUDE.md
 HUMANS/README.md
@@ -31,6 +33,10 @@ chats/2026/03/18/chat-002/SUMMARY.md
 chats/2026/03/18/chat-002/reflection.md
 chats/2026/03/18/chat-003/SUMMARY.md
 chats/2026/03/18/chat-003/reflection.md
+chats/2026/03/18/chat-004/SUMMARY.md
+chats/2026/03/18/chat-004/reflection.md
+chats/2026/03/18/chat-005/SUMMARY.md
+chats/2026/03/18/chat-005/reflection.md
 chats/ACCESS.jsonl
 chats/SUMMARY.md
 identity/ACCESS.jsonl
@@ -80,12 +86,14 @@ meta/update-guidelines.md
 plans/ACCESS.jsonl
 plans/SUMMARY.md
 plans/agent-memory-mcp.md
+plans/ai-paradigm-genealogy-research.md
 plans/codex-desktop-automation-continuity.md
 plans/codex-desktop-bootstrap-support.md
 plans/codex-desktop-github-network-ergonomics.md
 plans/codex-desktop-governed-memory-writes.md
 plans/devops-docker-research.md
 plans/django-stack-research.md
+plans/lesswrong-rationalist-community-research.md
 plans/philosophy-history-survey.md
 plans/production-readiness-roadmap.md
 plans/react-stack-research.md

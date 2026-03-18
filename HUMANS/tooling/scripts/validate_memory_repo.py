@@ -8,6 +8,11 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
+    import tomli as tomllib
+
 
 CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
 ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "chats")
@@ -46,6 +51,79 @@ EXPECTED_QUICK_REFERENCE_PARAMETERS = (
     "Knowledge flooding alarm",
     "Task similarity method",
     "Cluster co-retrieval threshold",
+)
+
+BOOTSTRAP_MANIFEST_PATH = Path("agent-bootstrap.toml")
+EXPECTED_BOOTSTRAP_MODES = (
+    "first_run",
+    "returning",
+    "full_bootstrap",
+    "periodic_review",
+    "automation",
+)
+EXPECTED_BOOTSTRAP_COST_VALUES = {"light", "medium", "heavy"}
+EXPECTED_BOOTSTRAP_TOKEN_BUDGETS = {
+    "first_run": 20000,
+    "returning": 7000,
+    "full_bootstrap": 25000,
+    "periodic_review": 25000,
+    "automation": 7000,
+}
+EXPECTED_BOOTSTRAP_PREFER_SUMMARIES = {
+    "first_run": False,
+    "returning": True,
+    "full_bootstrap": True,
+    "periodic_review": True,
+    "automation": True,
+}
+EXPECTED_RETURNING_STEP_PATHS = (
+    "meta/quick-reference.md",
+    "identity/SUMMARY.md",
+    "chats/SUMMARY.md",
+    "plans/SUMMARY.md",
+    "scratchpad/USER.md",
+    "scratchpad/CURRENT.md",
+)
+EXPECTED_FIRST_RUN_STEP_PATHS = (
+    "meta/quick-reference.md",
+    "README.md",
+    "meta/first-run.md",
+)
+EXPECTED_FULL_BOOTSTRAP_STEP_PATHS = (
+    "meta/quick-reference.md",
+    "README.md",
+    "identity/SUMMARY.md",
+    "chats/SUMMARY.md",
+    "plans/SUMMARY.md",
+    "scratchpad/USER.md",
+    "scratchpad/CURRENT.md",
+    "CHANGELOG.md",
+    "meta/curation-policy.md",
+    "meta/update-guidelines.md",
+)
+EXPECTED_PERIODIC_REVIEW_STEP_PATHS = EXPECTED_FULL_BOOTSTRAP_STEP_PATHS + (
+    "meta/system-maturity.md",
+    "meta/belief-diff-log.md",
+    "meta/review-queue.md",
+    "meta/integrity-checklist.md",
+)
+EXPECTED_AUTOMATION_STEP_PATHS = (
+    "meta/quick-reference.md",
+    "scratchpad/USER.md",
+    "scratchpad/CURRENT.md",
+    "plans/SUMMARY.md",
+)
+EXPECTED_MODE_STEP_PATHS = {
+    "first_run": EXPECTED_FIRST_RUN_STEP_PATHS,
+    "returning": EXPECTED_RETURNING_STEP_PATHS,
+    "full_bootstrap": EXPECTED_FULL_BOOTSTRAP_STEP_PATHS,
+    "periodic_review": EXPECTED_PERIODIC_REVIEW_STEP_PATHS,
+    "automation": EXPECTED_AUTOMATION_STEP_PATHS,
+}
+EXPECTED_BOOTSTRAP_ON_DEMAND = ("knowledge/SUMMARY.md", "skills/SUMMARY.md")
+EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
+    "meta/review-queue.md:load_only_when_non_placeholder",
+    "ACCESS.jsonl:count_non_empty_lines",
 )
 
 RUNTIME_GUIDANCE_FILES = (
@@ -390,6 +468,166 @@ def extract_manifest_row(text: str, session_type: str) -> str | None:
     return match.group("body")
 
 
+def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> None:
+    path = root / BOOTSTRAP_MANIFEST_PATH
+    if not path.exists():
+        result.error(f"{path}: missing bootstrap manifest")
+        return
+
+    text = read_text(path, result)
+    if text is None:
+        return
+
+    try:
+        manifest = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        result.error(f"{path}: invalid TOML ({exc})")
+        return
+
+    version = manifest.get("version")
+    if version != 1:
+        result.error(f"{path}: version must be 1, got {version!r}")
+
+    router = manifest.get("router")
+    if router != "meta/quick-reference.md":
+        result.error(
+            f"{path}: router must be 'meta/quick-reference.md', got {router!r}"
+        )
+    elif not (root / router).exists():
+        result.error(f"{path}: router target {router!r} does not exist")
+
+    default_mode = manifest.get("default_mode")
+    if default_mode != "returning":
+        result.error(f"{path}: default_mode must be 'returning', got {default_mode!r}")
+
+    adapter_files = manifest.get("adapter_files")
+    expected_adapter_files = [str(adapter_path) for adapter_path in ADAPTER_FILES]
+    if adapter_files != expected_adapter_files:
+        result.error(
+            f"{path}: adapter_files must be {expected_adapter_files!r}, got {adapter_files!r}"
+        )
+
+    mode_detection = manifest.get("mode_detection")
+    if not isinstance(mode_detection, dict):
+        result.error(f"{path}: mode_detection must be a TOML table")
+    else:
+        for key in EXPECTED_BOOTSTRAP_MODES:
+            value = mode_detection.get(key)
+            if not isinstance(value, str) or not value.strip():
+                result.error(
+                    f"{path}: mode_detection.{key} must be a non-empty string"
+                )
+        for key in (
+            "warn_on_detached_head",
+            "warn_on_worktree_branch_drift",
+            "warn_on_branch_checked_out_elsewhere",
+        ):
+            if not isinstance(mode_detection.get(key), bool):
+                result.error(f"{path}: mode_detection.{key} must be a boolean")
+
+    modes = manifest.get("modes")
+    if not isinstance(modes, dict):
+        result.error(f"{path}: modes must be a TOML table")
+        return
+
+    missing_modes = [mode for mode in EXPECTED_BOOTSTRAP_MODES if mode not in modes]
+    if missing_modes:
+        result.error(
+            f"{path}: missing required bootstrap modes: {', '.join(missing_modes)}"
+        )
+
+    for mode_name in EXPECTED_BOOTSTRAP_MODES:
+        mode = modes.get(mode_name)
+        if not isinstance(mode, dict):
+            result.error(f"{path}: modes.{mode_name} must be a TOML table")
+            continue
+
+        expected_budget = EXPECTED_BOOTSTRAP_TOKEN_BUDGETS[mode_name]
+        if mode.get("token_budget") != expected_budget:
+            result.error(
+                f"{path}: modes.{mode_name}.token_budget must be {expected_budget}, got {mode.get('token_budget')!r}"
+            )
+
+        expected_prefer_summaries = EXPECTED_BOOTSTRAP_PREFER_SUMMARIES[mode_name]
+        if mode.get("prefer_summaries") is not expected_prefer_summaries:
+            result.error(
+                f"{path}: modes.{mode_name}.prefer_summaries must be {expected_prefer_summaries!r}"
+            )
+
+        if mode_name != "first_run":
+            if mode.get("on_demand") != list(EXPECTED_BOOTSTRAP_ON_DEMAND):
+                result.error(
+                    f"{path}: modes.{mode_name}.on_demand must be {list(EXPECTED_BOOTSTRAP_ON_DEMAND)!r}"
+                )
+            if mode.get("maintenance_probes") != list(
+                EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES
+            ):
+                result.error(
+                    f"{path}: modes.{mode_name}.maintenance_probes must be {list(EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES)!r}"
+                )
+
+        steps = mode.get("steps")
+        if not isinstance(steps, list) or not steps:
+            result.error(f"{path}: modes.{mode_name}.steps must be a non-empty array")
+            continue
+
+        step_paths: list[str] = []
+        seen_paths: set[str] = set()
+        for index, step in enumerate(steps, start=1):
+            if not isinstance(step, dict):
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}] must be a table"
+                )
+                continue
+
+            step_path = step.get("path")
+            if not isinstance(step_path, str) or not step_path:
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}].path must be a non-empty string"
+                )
+                continue
+            if step_path in seen_paths:
+                result.error(
+                    f"{path}: modes.{mode_name} declares duplicate step path {step_path!r}"
+                )
+            seen_paths.add(step_path)
+            step_paths.append(step_path)
+
+            if not (root / step_path).exists():
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}] references missing path {step_path!r}"
+                )
+
+            role = step.get("role")
+            if not isinstance(role, str) or not role.strip():
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}].role must be a non-empty string"
+                )
+
+            if not isinstance(step.get("required"), bool):
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}].required must be a boolean"
+                )
+
+            cost = step.get("cost")
+            if cost not in EXPECTED_BOOTSTRAP_COST_VALUES:
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}].cost must be one of {sorted(EXPECTED_BOOTSTRAP_COST_VALUES)!r}, got {cost!r}"
+                )
+
+            skip_if = step.get("skip_if")
+            if skip_if is not None and not isinstance(skip_if, str):
+                result.error(
+                    f"{path}: modes.{mode_name}.steps[{index}].skip_if must be a string when present"
+                )
+
+        expected_step_paths = list(EXPECTED_MODE_STEP_PATHS[mode_name])
+        if step_paths != expected_step_paths:
+            result.error(
+                f"{path}: modes.{mode_name}.steps must load {expected_step_paths!r}, got {step_paths!r}"
+            )
+
+
 def validate_quick_reference(root: Path, result: ValidationResult) -> None:
     path = root / "meta" / "quick-reference.md"
     text = read_text(path, result)
@@ -626,6 +864,7 @@ def validate_quarantine(root: Path, result: ValidationResult) -> None:
 def validate_repo(root: Path) -> ValidationResult:
     result = ValidationResult()
 
+    validate_agent_bootstrap_manifest(root, result)
     validate_quick_reference(root, result)
     validate_runtime_guidance(root, result)
     validate_setup_entrypoints(root, result)

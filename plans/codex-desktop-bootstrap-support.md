@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Phase 2 — implement startup mode detection and deterministic preload ordering"
+next_action: "Phase 2 — translate the manifest-backed prototype into app-side detection, dedup, and preload telemetry behavior"
 ---
 
 # Implementation Plan: Codex Desktop Bootstrap Support
@@ -160,6 +160,41 @@ When the manifest is present but incomplete, Codex should trust the declared ste
 
 This preserves consistency and keeps preload behavior reviewable in git.
 
+### Phase 2 prototype decisions (2026-03-18)
+
+#### 1. Mode detection precedence
+
+Codex should resolve startup mode in this order:
+
+1. **Automation** when thread metadata says the run is scheduled or recurring.
+2. **Periodic review** when the task itself is a governance review or review automation.
+3. **First run** when the repo is blank or template-backed and there is no real chat history yet.
+4. **Full bootstrap** when the repo is clearly returning, but the current thread is a fresh instantiation or the user explicitly asks for the full governance stack.
+5. **Returning** otherwise.
+
+Repo-side prototype: `agent-bootstrap.toml` now records the named modes plus the branch/worktree warnings the app should surface before work starts.
+
+#### 2. Deterministic preload ordering
+
+The manifest should be the ordered preload contract. Runtime behavior should:
+
+- normalize and canonicalize paths before deduplication
+- preserve the first declared occurrence of a file and drop later duplicates
+- emit a startup trace with one record per declared step: `loaded`, `skipped`, or `missing`
+- preserve explicit skip reasons such as `placeholder_or_empty`, `no_active_plans`, user override, or budget pressure
+
+Repo-side prototype: added `agent-bootstrap.toml` and validator coverage so the machine-readable startup graph stays aligned with `meta/quick-reference.md`, adapter files, README copy, and setup artifacts.
+
+#### 3. Budgeting and preload auditability
+
+Use per-mode token ceilings as hints, not hard failures:
+
+- returning / automation: **7k**
+- first run: **20k**
+- full bootstrap / periodic review: **25k**
+
+When the budget is tight, summaries beat transcripts and metadata probes beat deeper governance files. Preloaded files should be visible in the startup trace, but they should **not** automatically become ACCESS retrievals by default; explicit file opens remain the auditable retrieval boundary for this repo unless a repo opts into preload logging.
+
 ### Phase 2 — Startup runtime and detection logic · ☐ 0/3 complete
 
 4. ☐ Implement startup mode detection
@@ -223,6 +258,7 @@ This preserves consistency and keeps preload behavior reviewable in git.
 |---|---|
 | 2026-03-18 | Plan created from identified Codex desktop gap: memory-aware repo startup and bootstrap loading |
 | 2026-03-18 | Completed Phase 1 contract definition: chose a repo-owned `agent-bootstrap.toml`, defined fallback and conflict rules, and formalized adapter-file precedence |
+| 2026-03-18 | Added a repo-local `agent-bootstrap.toml` prototype plus validator-backed checks, and defined mode detection precedence, dedup semantics, budget hints, and preload-audit defaults for Phase 2 |
 
 ---
 
