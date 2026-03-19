@@ -8,21 +8,12 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-automation-continuity.md`
-2. `codex-desktop-github-network-ergonomics.md`
-3. `django-stack-research.md`
-4. `react-stack-research.md`
-5. `devops-docker-research.md`
-6. `philosophy-history-survey.md`
-7. `lesswrong-rationalist-community-research.md`
-
-<!-- BEGIN: codex-desktop-automation-continuity -->
-### `codex-desktop-automation-continuity.md` · status: complete · trust: medium
-**Progress:** 11/11 items complete
-**Next action:** (all complete)
-<!-- END: codex-desktop-automation-continuity -->
-
----
+1. `codex-desktop-github-network-ergonomics.md`
+2. `django-stack-research.md`
+3. `react-stack-research.md`
+4. `devops-docker-research.md`
+5. `philosophy-history-survey.md`
+6. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: codex-desktop-github-network-ergonomics -->
 ### `codex-desktop-github-network-ergonomics.md` · status: active · trust: medium
@@ -89,6 +80,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: codex-desktop-automation-continuity -->
+### `codex-desktop-automation-continuity.md` · status: complete · trust: medium
+
+Implementation plan for recurring-run continuity in Codex desktop completed: automation-local memory, plan pinning, branch/base-branch carry-forward, blocker persistence, structured run writeback, validation matrix, and rollout metrics.
+
+**Progress:** 11/11 items complete
+**Completed:** 2026-03-18
+<!-- END: codex-desktop-automation-continuity -->
+
+---
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
 ### `codex-desktop-bootstrap-support.md` · status: complete · trust: medium
