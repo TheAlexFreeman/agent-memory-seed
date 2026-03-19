@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Add continuity-aware scheduling hooks
+next_action: Test recurring-run scenarios
 origin_session: manual
 source: agent-generated
 status: active
@@ -272,7 +272,7 @@ Minimum blocker actions:
 
 The UX should treat blocker carry-forward as a control surface, not just a warning banner. That is what prevents repeated doomed publish attempts and makes automation continuity materially better than a fresh thread.
 
-### Phase 3 — Execution and writeback · ☐ 2/3 complete
+### Phase 3 — Execution and writeback · ☑ 3/3 complete
 
 7. ☑ Define automatic writeback at run end
    - concise run summary
@@ -285,7 +285,7 @@ The UX should treat blocker carry-forward as a control surface, not just a warni
    - rerun on same branch
    - superseding old blockers
 
-9. ☐ Add continuity-aware scheduling hooks
+9. ☑ Add continuity-aware scheduling hooks
    - skip redundant work if prior blocker still applies
    - reopen the same branch if appropriate
    - warn when the repo state diverged since last run
@@ -373,6 +373,7 @@ The scheduler should not make deep product decisions on its own. Its role is to 
 | 2026-03-18 | Completed Add blocker carry-forward controls (codex-desktop-automation-continuity 6/11) |
 | 2026-03-18 | Completed Define automatic writeback at run end (codex-desktop-automation-continuity 7/11) |
 | 2026-03-18 | Completed Define interruption and retry semantics (codex-desktop-automation-continuity 8/11) |
+| 2026-03-18 | Completed Add continuity-aware scheduling hooks (codex-desktop-automation-continuity 9/11) |
 
 ---
 
