@@ -61,4 +61,7 @@ Security flags should never be silently queued for later review. All other types
 
 ---
 
-_No pending items._
+### [2026-03-18] Promote ai-history knowledge files from `_unverified/` to `knowledge/`
+**Type:** proposed
+**Description:** 11 `external-research` files written 2026-03-18 document the full genealogy of the current AI paradigm across five phases (cybernetics/perceptrons, backprop/PDP, ConvNets/LSTM/statistical NLP, GPUs/ImageNet/transformers, scaling laws/RLHF/multimodality) plus a synthesis file. All reside in `knowledge/_unverified/ai-history/` at `trust: low`. Proposed action: Alex reviews or spot-checks representative files and explicitly affirms accuracy; on confirmation — (1) trust upgraded to `medium` (reviewed) or `high` (accuracy confirmed); (2) files moved from `knowledge/_unverified/ai-history/` to `knowledge/ai-history/`; (3) `knowledge/SUMMARY.md` updated to reflect the new folder. Files will auto-archive around 2026-07-16 (120-day threshold) if not reviewed.
+**Status:** pending
