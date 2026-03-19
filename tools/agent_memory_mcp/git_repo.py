@@ -15,6 +15,7 @@ Design notes:
 from __future__ import annotations
 
 import subprocess
+from datetime import date
 from pathlib import Path
 
 from .errors import StagingError
@@ -62,15 +63,11 @@ class GitRepo:
 
     def ensure_author_identity(self) -> None:
         """Set git user.name / user.email locally if not already configured."""
-        name_result = self._run(
-            ["git", "config", "--local", "user.name"], check=False
-        )
+        name_result = self._run(["git", "config", "--local", "user.name"], check=False)
         if name_result.returncode != 0 or not name_result.stdout.strip():
             self._run(["git", "config", "--local", "user.name", _FALLBACK_AUTHOR_NAME])
 
-        email_result = self._run(
-            ["git", "config", "--local", "user.email"], check=False
-        )
+        email_result = self._run(["git", "config", "--local", "user.email"], check=False)
         if email_result.returncode != 0 or not email_result.stdout.strip():
             self._run(["git", "config", "--local", "user.email", _FALLBACK_AUTHOR_EMAIL])
 
@@ -151,11 +148,15 @@ class GitRepo:
         """Return the last n commits as structured dicts."""
         # Use a record separator to handle multi-line messages
         sep = "|||COMMIT|||"
-        result = self._run([
-            "git", "log", f"-{n}",
-            f"--pretty=format:{sep}%H%n%s%n%ai%n",
-            "--name-only",
-        ])
+        result = self._run(
+            [
+                "git",
+                "log",
+                f"-{n}",
+                f"--pretty=format:{sep}%H%n%s%n%ai%n",
+                "--name-only",
+            ]
+        )
 
         commits = []
         raw = result.stdout.strip()
@@ -170,12 +171,14 @@ class GitRepo:
             message = lines[1].strip()
             date = lines[2].strip()
             files = [line.strip() for line in lines[3:] if line.strip()]
-            commits.append({
-                "sha": sha,
-                "message": message,
-                "date": date,
-                "files_changed": files,
-            })
+            commits.append(
+                {
+                    "sha": sha,
+                    "message": message,
+                    "date": date,
+                    "files_changed": files,
+                }
+            )
         return commits
 
     def revert(self, sha: str) -> str:
@@ -237,12 +240,8 @@ class GitRepo:
 
     def diff_status(self) -> dict[str, list[str]]:
         """Return working tree status: staged, unstaged, untracked file lists."""
-        staged_result = self._run(
-            ["git", "diff", "--name-only", "--cached"], check=False
-        )
-        unstaged_result = self._run(
-            ["git", "diff", "--name-only"], check=False
-        )
+        staged_result = self._run(["git", "diff", "--name-only", "--cached"], check=False)
+        unstaged_result = self._run(["git", "diff", "--name-only"], check=False)
         untracked_result = self._run(
             ["git", "ls-files", "--others", "--exclude-standard"], check=False
         )
@@ -256,6 +255,36 @@ class GitRepo:
             "untracked": _lines(untracked_result),
         }
 
+    def first_tracked_author_date(self, rel_path: str) -> date | None:
+        """Return the first git author date for a tracked path, if available."""
+        result = self._run(
+            [
+                "git",
+                "log",
+                "--diff-filter=A",
+                "--follow",
+                "--format=%aI",
+                "--reverse",
+                "--",
+                rel_path,
+            ],
+            check=False,
+        )
+        if result.returncode not in (0, 1):
+            raise StagingError(
+                f"git log failed (exit {result.returncode}): {result.stderr.strip()}",
+                stderr=result.stderr.strip(),
+            )
+
+        first_line = next(
+            (line.strip() for line in result.stdout.splitlines() if line.strip()),
+            "",
+        )
+        if not first_line:
+            return None
+
+        return date.fromisoformat(first_line[:10])
+
     # ------------------------------------------------------------------
     # Path utilities
     # ------------------------------------------------------------------
@@ -267,9 +296,8 @@ class GitRepo:
             p.relative_to(self.root)
         except ValueError:
             from .errors import MemoryPermissionError
-            raise MemoryPermissionError(
-                f"Path escapes repository root: {rel_path}", path=rel_path
-            )
+
+            raise MemoryPermissionError(f"Path escapes repository root: {rel_path}", path=rel_path)
         return p
 
     def rel_path(self, abs_path: Path) -> str:

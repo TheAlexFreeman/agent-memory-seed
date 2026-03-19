@@ -3,29 +3,35 @@ from __future__ import annotations
 import asyncio
 import importlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
+from types import ModuleType
+from typing import Any, Callable, ClassVar, Coroutine, cast
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+ToolCallable = Callable[..., Coroutine[Any, Any, str]]
 
 
-def load_server_module():
+def load_server_module() -> ModuleType:
     if str(REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(REPO_ROOT))
     try:
         return importlib.import_module("tools.agent_memory_mcp.server")
     except ModuleNotFoundError as exc:
-        raise unittest.SkipTest(
-            f"agent_memory_mcp dependencies unavailable: {exc.name}"
-        ) from exc
+        raise unittest.SkipTest(f"agent_memory_mcp dependencies unavailable: {exc.name}") from exc
 
 
 class AgentMemoryWriteToolTests(unittest.TestCase):
+    server: ClassVar[ModuleType]
+    errors: ClassVar[ModuleType]
+    frontmatter_utils: ClassVar[Any]
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.server = load_server_module()
@@ -44,7 +50,12 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         self._tmpdir = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmpdir.cleanup)
 
-    def _init_repo(self, files: dict[str, str]) -> Path:
+    def _init_repo(
+        self,
+        files: dict[str, str],
+        *,
+        initial_commit_date: str | None = None,
+    ) -> Path:
         temp_root = Path(self._tmpdir.name) / (f"repo_{id(files)}")
         temp_root.mkdir(parents=True, exist_ok=True)
         subprocess.run(["git", "init"], cwd=temp_root, check=True, capture_output=True, text=True)
@@ -67,13 +78,23 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             target = temp_root / rel_path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
-        subprocess.run(["git", "add", "."], cwd=temp_root, check=True, capture_output=True, text=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=temp_root, check=True, capture_output=True, text=True
+        )
+        commit_env = None
+        if initial_commit_date is not None:
+            commit_env = {
+                **os.environ,
+                "GIT_AUTHOR_DATE": initial_commit_date,
+                "GIT_COMMITTER_DATE": initial_commit_date,
+            }
         subprocess.run(
             ["git", "commit", "-m", "seed"],
             cwd=temp_root,
             check=True,
             capture_output=True,
             text=True,
+            env=commit_env,
         )
         return temp_root
 
@@ -86,13 +107,13 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         delete_permission_hook=None,
         *,
         enable_raw_write_tools: bool = False,
-    ) -> dict[str, object]:
+    ) -> dict[str, ToolCallable]:
         _, tools, _, _ = self.server.create_mcp(
             repo_root=repo_root,
             delete_permission_hook=delete_permission_hook,
             enable_raw_write_tools=enable_raw_write_tools,
         )
-        return tools
+        return cast(dict[str, ToolCallable], tools)
 
     def test_memory_delete_uses_permission_hook_for_allowed_paths(self) -> None:
         repo_root = self._init_repo_with_file("plans/delete-me.md")
@@ -241,12 +262,10 @@ origin_session: manual
         target_path = repo_root / "knowledge" / "literature" / "test-note.md"
         old_path = repo_root / "knowledge" / "_unverified" / "literature" / "test-note.md"
         frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(target_path)
-        unverified_summary = (
-            repo_root / "knowledge" / "_unverified" / "SUMMARY.md"
-        ).read_text(encoding="utf-8")
-        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(
+        unverified_summary = (repo_root / "knowledge" / "_unverified" / "SUMMARY.md").read_text(
             encoding="utf-8"
         )
+        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
 
         self.assertEqual(payload["new_state"]["new_path"], "knowledge/literature/test-note.md")
         self.assertEqual(payload["new_state"]["trust"], "high")
@@ -315,9 +334,7 @@ next_action: Original next action
             }
         )
         tools = self._create_tools(repo_root)
-        read_payload = json.loads(
-            asyncio.run(tools["memory_read_file"](path="plans/test-plan.md"))
-        )
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="plans/test-plan.md")))
         old_token = read_payload["version_token"]
 
         plan_path = repo_root / "plans" / "test-plan.md"
@@ -372,6 +389,67 @@ next_action: Original next action
                     dest="knowledge/README.md",
                 )
             )
+
+    def test_memory_move_rejects_protected_identity_destination(self) -> None:
+        repo_root = self._init_repo_with_file("knowledge/note.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_move"](
+                    source="knowledge/note.md",
+                    dest="identity/note.md",
+                )
+            )
+
+    def test_memory_move_rejects_protected_meta_destination(self) -> None:
+        repo_root = self._init_repo_with_file("plans/note.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_move"](
+                    source="plans/note.md",
+                    dest="meta/note.md",
+                )
+            )
+
+    def test_memory_move_rejects_protected_skills_destination(self) -> None:
+        repo_root = self._init_repo_with_file("scratchpad/note.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_move"](
+                    source="scratchpad/note.md",
+                    dest="skills/note.md",
+                )
+            )
+
+    def test_memory_move_rejects_protected_chats_destination(self) -> None:
+        repo_root = self._init_repo_with_file("knowledge/note.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_move"](
+                    source="knowledge/note.md",
+                    dest="chats/2026/03/19/chat-001/note.md",
+                )
+            )
+
+    def test_memory_move_allows_knowledge_destination(self) -> None:
+        repo_root = self._init_repo_with_file("knowledge/old/note.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        asyncio.run(
+            tools["memory_move"](
+                source="knowledge/old/note.md",
+                dest="knowledge/new/note.md",
+            )
+        )
+
+        self.assertTrue((repo_root / "knowledge" / "new" / "note.md").exists())
 
     def test_memory_add_knowledge_file_requires_low_trust_and_session_id(self) -> None:
         repo_root = self._init_repo(
@@ -470,9 +548,7 @@ trust: high
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(
-                tools["memory_write"](path="identity/profile.md", content="injected\n")
-            )
+            asyncio.run(tools["memory_write"](path="identity/profile.md", content="injected\n"))
         self.assertEqual(
             (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
             "# Profile\n",
@@ -483,18 +559,14 @@ trust: high
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(
-                tools["memory_write"](path="skills/session-start.md", content="injected\n")
-            )
+            asyncio.run(tools["memory_write"](path="skills/session-start.md", content="injected\n"))
 
     def test_memory_write_blocks_protected_meta_path(self) -> None:
         repo_root = self._init_repo({"meta/curation-policy.md": "# Policy\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(
-                tools["memory_write"](path="meta/curation-policy.md", content="injected\n")
-            )
+            asyncio.run(tools["memory_write"](path="meta/curation-policy.md", content="injected\n"))
 
     def test_memory_edit_blocks_protected_identity_path(self) -> None:
         repo_root = self._init_repo({"identity/profile.md": "# Profile\noriginal\n"})
@@ -508,7 +580,9 @@ trust: high
                     new_string="injected",
                 )
             )
-        self.assertIn("original", (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"))
+        self.assertIn(
+            "original", (repo_root / "identity" / "profile.md").read_text(encoding="utf-8")
+        )
 
     def test_memory_write_allows_knowledge_path(self) -> None:
         """Sanity check: knowledge/ writes still work after the policy change."""
@@ -529,6 +603,7 @@ trust: high
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         import os
+
         # Set a very small limit so we don't actually need a large payload
         original = os.environ.get("MEMORY_MAX_FILE_BYTES")
         try:
@@ -554,6 +629,7 @@ trust: high
         tools = self._create_tools(repo_root)
 
         import os
+
         original = os.environ.get("MEMORY_MAX_FILE_BYTES")
         try:
             os.environ["MEMORY_MAX_FILE_BYTES"] = "10"
@@ -599,7 +675,10 @@ trust: high
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
 
         lines = [
-            l for l in (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").splitlines()
+            l
+            for l in (repo_root / "knowledge" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
             if l.strip()
         ]
         self.assertEqual(len(lines), 1)
@@ -612,9 +691,7 @@ trust: high
         self.assertIn("date", entry)
 
     def test_memory_log_access_uses_unverified_access_jsonl(self) -> None:
-        repo_root = self._init_repo(
-            {"knowledge/_unverified/django/foo.md": "# Foo\n"}
-        )
+        repo_root = self._init_repo({"knowledge/_unverified/django/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
@@ -626,9 +703,7 @@ trust: high
             )
         )
         payload = json.loads(raw)
-        self.assertEqual(
-            payload["new_state"]["access_jsonl"], "knowledge/_unverified/ACCESS.jsonl"
-        )
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/_unverified/ACCESS.jsonl")
         self.assertTrue((repo_root / "knowledge" / "_unverified" / "ACCESS.jsonl").exists())
 
     def test_memory_log_access_rejects_invalid_helpfulness(self) -> None:
@@ -658,6 +733,80 @@ trust: high
                     note="scratchpad is not access-tracked",
                 )
             )
+
+    # ------------------------------------------------------------------
+    # P0-2: memory_audit_trust frontmatterless files
+    # ------------------------------------------------------------------
+
+    def test_memory_audit_trust_flags_overdue_frontmatterless_file(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/legacy.md": "# Legacy\n",
+            },
+            initial_commit_date="2025-01-01T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["files_checked"], 1)
+        self.assertEqual(len(payload["overdue_medium"]), 1)
+        self.assertEqual(payload["overdue_medium"][0]["path"], "knowledge/legacy.md")
+        self.assertTrue(payload["overdue_medium"][0]["implicit_trust"])
+
+    def test_memory_audit_trust_skips_recent_frontmatterless_file_from_overdue(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/recent.md": "# Recent\n",
+            },
+            initial_commit_date="2026-02-20T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["files_checked"], 1)
+        self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(payload["upcoming_medium"], [])
+        self.assertEqual(payload["unevaluable"], [])
+
+    def test_memory_audit_trust_reports_untracked_frontmatterless_file_as_unevaluable(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/tracked.md": "# Tracked\n",
+            },
+            initial_commit_date="2026-02-20T00:00:00+00:00",
+        )
+        (repo_root / "knowledge" / "draft.md").write_text("# Draft\n", encoding="utf-8")
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["files_checked"], 2)
+        self.assertEqual(len(payload["unevaluable"]), 1)
+        self.assertEqual(payload["unevaluable"][0]["path"], "knowledge/draft.md")
+        self.assertEqual(
+            payload["unevaluable"][0]["reason"],
+            "untracked_without_frontmatter",
+        )
 
     # ------------------------------------------------------------------
     # P1: Identity churn alarm + memory_reset_session_state
@@ -762,18 +911,13 @@ trust: high
         # Exhaust counter on instance A
         for i in range(5):
             asyncio.run(
-                tools_a["memory_update_identity_trait"](
-                    file="profile", key=f"a_{i}", value=f"v{i}"
-                )
+                tools_a["memory_update_identity_trait"](file="profile", key=f"a_{i}", value=f"v{i}")
             )
 
         # Instance B counter is independent — should not be affected
         asyncio.run(
-            tools_b["memory_update_identity_trait"](
-                file="profile", key="b_0", value="independent"
-            )
+            tools_b["memory_update_identity_trait"](file="profile", key="b_0", value="independent")
         )
-
 
     # ------------------------------------------------------------------
     # P2: Version-token conflict tests for raw write tools
@@ -785,9 +929,7 @@ trust: high
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         # Get the current token
-        read_payload = json.loads(
-            asyncio.run(tools["memory_read_file"](path="knowledge/test.md"))
-        )
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/test.md")))
         old_token = read_payload["version_token"]
 
         # Modify the file directly (bypassing the MCP layer)
@@ -810,9 +952,7 @@ trust: high
         repo_root = self._init_repo({"knowledge/test.md": "# Hello\n\nSome text.\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
-        read_payload = json.loads(
-            asyncio.run(tools["memory_read_file"](path="knowledge/test.md"))
-        )
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/test.md")))
         old_token = read_payload["version_token"]
 
         # Modify the file directly

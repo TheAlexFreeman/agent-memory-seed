@@ -19,11 +19,12 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import (
     KNOWN_COMMIT_PREFIXES,
     resolve_repo_path,
+    validate_raw_move_destination,
     validate_raw_mutation_source,
     validate_raw_write_target,
 )
@@ -33,8 +34,14 @@ def _max_file_bytes() -> int:
     """Return the configured file-size ceiling (default 512 KB)."""
     return int(os.environ.get("MEMORY_MAX_FILE_BYTES", "512000"))
 
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
+
+
+def _tool_annotations(**kwargs: object) -> Any:
+    """Return MCP tool annotations with a relaxed runtime-only type surface."""
+    return cast(Any, kwargs)
 
 
 def register(
@@ -50,13 +57,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_write",
-        annotations={
-            "title": "Write Memory File",
-            "readOnlyHint": False,
-            "destructiveHint": True,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Write Memory File",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_write(
         path: str,
@@ -125,13 +132,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_edit",
-        annotations={
-            "title": "Edit Memory File (String Replace)",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Edit Memory File (String Replace)",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_edit(
         path: str,
@@ -206,13 +213,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_delete",
-        annotations={
-            "title": "Delete Memory File",
-            "readOnlyHint": False,
-            "destructiveHint": True,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Delete Memory File",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_delete(
         path: str,
@@ -281,13 +288,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_move",
-        annotations={
-            "title": "Move/Rename Memory File",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Move/Rename Memory File",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_move(
         source: str,
@@ -299,7 +306,8 @@ def register(
 
         SOURCE PATH RESTRICTIONS: Same as memory_delete — source paths in
         identity/, meta/, chats/, or skills/ are blocked. Destination paths
-        are unrestricted (moving a file INTO a protected folder is additive).
+        in protected directories are also blocked; use Tier 1 semantic tools
+        for governed writes into those folders.
 
         The move is staged. Call memory_commit to finalise.
 
@@ -321,7 +329,7 @@ def register(
             source,
             operation="move from",
         )
-        dest, abs_dest = resolve_repo_path(repo, dest, field_name="dest")
+        dest, abs_dest = validate_raw_move_destination(repo, dest, field_name="dest")
 
         if not abs_source.exists():
             raise NotFoundError(f"Source file not found: {source}")
@@ -347,13 +355,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_update_frontmatter",
-        annotations={
-            "title": "Update File Frontmatter",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Update File Frontmatter",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_update_frontmatter(
         path: str,
@@ -417,13 +425,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_commit",
-        annotations={
-            "title": "Commit Staged Memory Changes",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Commit Staged Memory Changes",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_commit(
         message: str,
@@ -461,6 +469,7 @@ def register(
 
         # Validate prefix (warn, don't error)
         import re
+
         prefix_match = re.match(r"^\[([^\]]+)\]", message)
         if not prefix_match:
             warnings.append(
