@@ -73,8 +73,8 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 
 Narrative research plan for understanding how the current AI paradigm formed: perceptrons, symbolic detours, backpropagation, deep learning, transformers, scaling, and frontier LLM systems. Output goes to `knowledge/_unverified/ai-history/`.
 
-**Progress:** 0/11 files written
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/ai-history/origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md`
+**Progress:** 2/11 files written
+**Next action:** Begin Phase 2 — write `knowledge/_unverified/ai-history/origins/backpropagation-and-the-pdp-revival.md`
 <!-- END: ai-paradigm-genealogy-research -->
 
 ---
@@ -84,8 +84,8 @@ Narrative research plan for understanding how the current AI paradigm formed: pe
 
 Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker stack. 10 files planned across 7 phases. Priority order: Celery Canvas in depth → Celery worker/beat ops → drf-spectacular → Django test data/factories → Django async → Django security → Django migrations advanced → gunicorn/uvicorn deployment → database connection pooling → django-storages. Output goes to `knowledge/_unverified/django/`.
 
-**Progress:** 2/10 files written
-**Next action:** Begin Phase 2 — write `knowledge/_unverified/django/drf-spectacular.md`
+**Progress:** 4/10 files written
+**Next action:** Begin Phase 3 — write `knowledge/_unverified/django/django-async.md`
 <!-- END: django-stack-research -->
 
 ---
@@ -95,8 +95,8 @@ Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker s
 
 Gaps and depth research for Alex's React + Chakra UI 3 frontend (backed by Django/DRF). 9 files planned across 8 phases. Priority order: TanStack Query (DRF integration) → react-hook-form + zod → TanStack Router → TypeScript patterns → testing (Vitest/RTL/MSW) → auth state management → performance → Vite build tooling → error boundaries + Suspense. Output goes to `knowledge/_unverified/react/`.
 
-**Progress:** 0/9 files written
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/react/tanstack-query.md`
+**Progress:** 3/9 files written
+**Next action:** Begin Phase 3 — write `knowledge/_unverified/react/typescript-react-patterns.md`
 <!-- END: react-stack-research -->
 
 ---
@@ -106,8 +106,8 @@ Gaps and depth research for Alex's React + Chakra UI 3 frontend (backed by Djang
 
 Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + Postgres stack. 10 files planned across 9 phases. Priority order: Docker Compose local dev → multi-worker Celery containers → nginx reverse proxy → production Docker config → GitHub Actions CI/CD → zero-downtime deploys → secrets/environment management → Celery + Prometheus monitoring → database ops → dev workflow tooling (Makefile, pre-commit, debugpy). Output goes to `knowledge/_unverified/devops/`.
 
-**Progress:** 0/10 files written
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/devops/docker-compose-local-dev.md`
+**Progress:** 2/10 files written
+**Next action:** Begin Phase 2 — write `knowledge/_unverified/devops/nginx-django-react.md`
 <!-- END: devops-docker-research -->
 
 ---

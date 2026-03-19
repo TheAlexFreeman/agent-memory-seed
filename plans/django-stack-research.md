@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 2 — write knowledge/_unverified/django/drf-spectacular.md"
+next_action: "Begin Phase 3 — write knowledge/_unverified/django/django-async.md"
 ---
 
 # Research Plan: Django Stack — Gaps and Depth
@@ -61,11 +61,11 @@ Alex explicitly wants deep Celery expertise accumulated over time. The existing 
 
 ---
 
-### Phase 2 — DRF and API depth · ☐ 0/2 complete
+### Phase 2 — DRF and API depth · ☑ 2/2 complete
 
 The existing `django-react-drf.md` is solid on basics but `drf-spectacular` deserves its own file and the testing file's `django-perf-rec` entry needs updating.
 
-3. ☐ `drf-spectacular.md`
+3. ☑ `drf-spectacular.md`
    - **Why**: `rest_framework`'s built-in schema generation is deprecated as of DRF 3.14; `drf-spectacular` is the community standard
    - **Setup**: `INSTALLED_APPS`, `SPECTACULAR_SETTINGS`, the `SpectacularAPIView` / `SpectacularSwaggerView` / `SpectacularRedocView` endpoints
    - **Schema annotation**: `@extend_schema`, `@extend_schema_view`, `OpenApiTypes`, `inline_serializer`
@@ -76,7 +76,7 @@ The existing `django-react-drf.md` is solid on basics but `drf-spectacular` dese
    - **Versioning**: URL-based vs. namespace-based versioning and how the schema reflects it
    - **CI validation**: `--validate` flag, checking schema drift in CI, `spectacular --file openapi.yaml`
 
-4. ☐ `django-test-data-factories.md`
+4. ☑ `django-test-data-factories.md`
    - **factory_boy**: `DjangoModelFactory`, `Faker` integration, `SubFactory`, `RelatedFactory`, `LazyAttribute`, `LazyFunction`, `Trait`, `post_generation`
    - **Patterns for complex models**: many-to-many with `@factory.post_generation`, self-referential models, models with `unique_together`
    - **faker standalone**: generating realistic test data outside factories
@@ -171,6 +171,8 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 | 2026-03-18 | Plan created; existing 9 Django files reviewed and gaps identified |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/celery-canvas-in-depth.md`; next up is `celery-worker-beat-ops.md` |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/celery-worker-beat-ops.md`; Phase 1 complete, next up is `drf-spectacular.md` |
+| 2026-03-18 | Wrote `knowledge/_unverified/django/drf-spectacular.md`; covers setup, @extend_schema, JWT auth, enum/versioning/CI validation |
+| 2026-03-18 | Wrote `knowledge/_unverified/django/django-test-data-factories.md`; covers factory_boy 3.3, Celery mocking patterns, freezegun, responses; Phase 2 complete |
 
 ---
 

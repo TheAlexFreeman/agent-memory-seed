@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 1 — write knowledge/_unverified/react/tanstack-query.md"
+next_action: "Begin Phase 3 — write knowledge/_unverified/react/typescript-react-patterns.md"
 ---
 
 # Research Plan: React Stack — Gaps and Depth
@@ -28,11 +28,11 @@ Alex's frontend is React with Chakra UI 3, paired with a Django/DRF backend. The
 
 ## Research phases and priority order
 
-### Phase 1 — Data and server state (highest priority) · ☐ 0/2 complete
+### Phase 1 — Data and server state (highest priority) · ☑ 2/2 complete
 
 The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, server state is ad hoc. Forms are also unavoidable in any CRUD app. These two files unlock the most day-to-day practical value.
 
-1. ☐ `tanstack-query.md`
+1. ☑ `tanstack-query.md`
    - **Why**: the standard solution for DRF-backed React UIs; eliminates ad hoc fetch/loading/error/cache state
    - **Core model**: `QueryClient`, `QueryClientProvider`, `useQuery`, `useMutation`, query keys and key factories, stale-while-revalidate, background refetching
    - **Fetching patterns**: `queryFn` with axios/fetch, DRF pagination (cursor pagination + `keepPreviousData`), conditional queries (`enabled`), dependent queries
@@ -42,10 +42,10 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
    - **Error and loading states**: `isLoading` vs. `isFetching` vs. `isPending`, global error handling, `useQueryErrorResetBoundary`
    - **`useInfiniteQuery`**: infinite scroll, `getNextPageParam`, `fetchNextPage`, integration with TanStack Virtual
    - **TanStack Query DevTools**: configuration, using in development
-   - **Integration with React 19 Suspense**: `suspense: true` query option, `useSuspenseQuery`, `ErrorBoundary` + `Suspense` pairing
-   - **DRF-specific patterns**: CSRF token in headers for mutations, session auth vs. JWT in query config, handling 401 with `onError` global interceptor
+   - **Integration with React 19 Suspense**: `useSuspenseQuery`, `ErrorBoundary` + `Suspense` pairing
+   - **DRF-specific patterns**: CSRF token in headers for mutations, session auth vs. JWT in query config, handling 401 with global interceptor
 
-2. ☐ `react-hook-form-zod.md`
+2. ☑ `react-hook-form-zod.md`
    - **Why**: de facto standard for performant uncontrolled React forms; zod is the natural TypeScript-first validator
    - **react-hook-form core**: `useForm`, `register`, `handleSubmit`, `formState` (`errors`, `isSubmitting`, `isDirty`, `isValid`), `watch`, `setValue`, `reset`
    - **Controller pattern**: `<Controller>` for controlled inputs and Chakra UI integration — required for Chakra's `Input`, `Select`, `Checkbox`, `RadioGroup`
@@ -60,9 +60,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 2 — Routing · ☐ 0/1 complete
+### Phase 2 — Routing · ☑ 1/1 complete
 
-3. ☐ `tanstack-router.md`
+3. ☑ `tanstack-router.md`
    - **Why TanStack Router**: fully type-safe routing end-to-end (route params, search params, loader data, navigation); file-based or code-based route tree; built-in search param state management superior to React Router's `useSearchParams`
    - **Route tree setup**: `createRootRoute`, `createRoute`, `createRouter`, `RouterProvider`; file-based routing with Vite plugin (`@tanstack/router-plugin`) vs. code-based
    - **Type safety model**: how TanStack Router infers types from the route tree; `Link` component is fully type-checked (no invalid `to` paths); `useParams`, `useSearch`, `useLoaderData` all return correctly typed values without casting
@@ -175,6 +175,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created; existing 4 React files reviewed and gaps identified |
+| 2026-03-18 | Wrote `knowledge/_unverified/react/tanstack-query.md`; covers v5 API, query keys, useQuery, useMutation, optimistic updates, DRF patterns, useInfiniteQuery, useSuspenseQuery, useQueries |
+| 2026-03-18 | Wrote `knowledge/_unverified/react/react-hook-form-zod.md`; covers RHF v7 + zod v3, Controller/Chakra integration, useFieldArray, multi-step forms, DRF error mapping; Phase 1 complete |
+| 2026-03-18 | Wrote `knowledge/_unverified/react/tanstack-router.md`; covers v1 file-based + code-based setup, type safety model, loaders, validateSearch with zod, pathless layouts, beforeLoad guards, navigation, pending UI, error components, code splitting, Query integration; Phase 2 complete |
 
 ---
 

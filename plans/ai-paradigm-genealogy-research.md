@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 1 — write knowledge/_unverified/ai-history/origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md"
+next_action: "Begin Phase 2 — write knowledge/_unverified/ai-history/origins/backpropagation-and-the-pdp-revival.md"
 ---
 
 # Research Plan: Genealogy of the Current AI Paradigm
@@ -42,16 +42,16 @@ Maintain a `SUMMARY.md` as files are written.
 
 ## Research phases and priority order
 
-### Phase 1 — First-wave connectionism and its eclipse (highest priority) · ☐ 0/2 complete
+### Phase 1 — First-wave connectionism and its eclipse (highest priority) · ☑ 2/2 complete
 
 Start with the prehistory of the modern neural paradigm: the first wave of optimism, the first hard limits, and the first major conceptual split.
 
-1. ☐ `origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md`
+1. ☑ `origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md`
    - McCulloch and Pitts, Hebbian intuitions, Rosenblatt's perceptron, and early hopes for learning machines
    - What single-layer perceptrons could actually do, and why that already mattered
    - The importance of hardware imaginaries, neuroscience analogies, and early pattern-recognition ambitions
 
-2. ☐ `origins/symbolic-ai-expert-systems-and-the-neural-winter.md`
+2. ☑ `origins/symbolic-ai-expert-systems-and-the-neural-winter.md`
    - Minsky and Papert's critique of perceptrons, the limits of linear separability, and why this mattered historically
    - The shift toward symbolic AI, search, expert systems, and hand-built knowledge representations
    - Why neural approaches receded without disappearing, and what problems symbolic systems solved better in that era
@@ -142,5 +142,6 @@ This phase covers the current frontier as a system, not just a base model: multi
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created for a narrative genealogy of the current AI paradigm |
+| 2026-03-18 | Phase 1 complete — wrote SUMMARY.md, cybernetics-perceptrons-and-the-first-connectionist-wave.md, symbolic-ai-expert-systems-and-the-neural-winter.md |
 
 Last updated: 2026-03-18
