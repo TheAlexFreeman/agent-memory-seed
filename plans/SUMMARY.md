@@ -15,7 +15,6 @@ Priority order for active work:
 5. `devops-docker-research.md`
 6. `philosophy-history-survey.md`
 7. `lesswrong-rationalist-community-research.md`
-8. `ai-paradigm-genealogy-research.md`
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
@@ -56,17 +55,6 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 **Progress:** 0/11 files written
 **Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
 <!-- END: lesswrong-rationalist-community-research -->
-
----
-
-<!-- BEGIN: ai-paradigm-genealogy-research -->
-### `ai-paradigm-genealogy-research.md` · status: active · trust: medium
-
-Narrative research plan for understanding how the current AI paradigm formed: perceptrons, symbolic detours, backpropagation, deep learning, transformers, scaling, and frontier LLM systems. Output goes to `knowledge/_unverified/ai-history/`.
-
-**Progress:** 2/11 files written
-**Next action:** Begin Phase 2 — write `knowledge/_unverified/ai-history/origins/backpropagation-and-the-pdp-revival.md`
-<!-- END: ai-paradigm-genealogy-research -->
 
 ---
 
@@ -113,6 +101,17 @@ Concrete Codex desktop bootstrap roadmap completed: repo-declared startup manife
 **Progress:** 11/11 items complete
 **Completed:** 2026-03-18
 <!-- END: codex-desktop-bootstrap-support -->
+
+---
+
+<!-- BEGIN: ai-paradigm-genealogy-research -->
+### `ai-paradigm-genealogy-research.md` · status: complete · trust: medium
+
+Narrative genealogy of how the current AI paradigm formed: from perceptrons through symbolic AI, backpropagation, ConvNets/LSTMs, statistical NLP, the deep learning turn, transformers, BERT/GPT/scaling laws, RLHF, and frontier LLM systems. All 11 files written in `knowledge/_unverified/ai-history/`.
+
+**Progress:** 11/11 files written
+**Completed:** 2026-03-18
+<!-- END: ai-paradigm-genealogy-research -->
 
 ---
 
