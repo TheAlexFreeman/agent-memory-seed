@@ -8,17 +8,22 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `lesswrong-rationalist-community-research.md`
-
-<!-- BEGIN: lesswrong-rationalist-community-research -->
-### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
-**Progress:** 0/11 items complete
-**Next action:** Begin Phase 3/1 — write knowledge/_unverified/rationalist-community/origins/robin-hanson-overcoming-bias-and-the-founding-split.md
-<!-- END: lesswrong-rationalist-community-research -->
+_No active plans._
 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: lesswrong-rationalist-community-research -->
+### `lesswrong-rationalist-community-research.md` · status: complete · trust: medium
+
+Narrative research program on LessWrong and the Rationalist community: origins, intellectual sources, figures, institutions, and lived practices. 11 files across 6 phases written in `knowledge/_unverified/rationalist-community/`. Subfolders: `origins/` (Yudkowsky, Sequences, heuristics/Bayes, prehistory, Hanson/Overcoming Bias), `community/` (LessWrong formation/norms, meetups/HPMOR), `figures/` (Scott Alexander, Gwern), `institutions/` (MIRI/CFAR), `synthesis/` (full story, aims, and tensions).
+
+**Progress:** 11/11 items complete
+**Completed:** 2026-03-19
+<!-- END: lesswrong-rationalist-community-research -->
+
+---
 
 <!-- BEGIN: devops-docker-research -->
 ### `devops-docker-research.md` · status: complete · trust: medium
