@@ -8,6 +8,24 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
+<!-- BEGIN: systems-architecture-research -->
+### `systems-architecture-research.md` · status: active · trust: medium
+
+Research program on the storage, concurrency, and data modeling primitives underlying the memory system. 13 files across 6 phases, each tied to a specific open architectural issue: git object model and index locking (Phase 1), filesystem atomicity and POSIX locking (Phase 2), WAL design and append-only log compaction (Phase 3), CRDT/concurrency models (Phase 4), provenance/trust/temporal modeling (Phase 5), schema evolution and content-addressable storage (Phase 6). Output in `knowledge/_unverified/systems-architecture/`.
+
+**Progress:** 0/13 files complete
+**Next action:** Phase 1, item 1 — git-object-model.md
+<!-- END: systems-architecture-research -->
+
+<!-- BEGIN: worktree-integration -->
+### `worktree-integration.md` · status: active · trust: medium
+
+Roadmap to enable agent-memory-seed to drop into an existing project as a git orphan branch checked out as a worktree. 24 items across 5 phases: init script + seed file set (Phase 0), MCP config and adapter file placement (Phase 1), host-repo git log access and freshness detection (Phase 2), CI/CD and tooling hygiene templates (Phase 3), codebase knowledge starter templates (Phase 4), validator and test suite extensions (Phase 5).
+
+**Progress:** 0/24 items complete
+**Next action:** Phase 0, item 1 — write init-worktree.sh scaffold
+<!-- END: worktree-integration -->
+
 <!-- BEGIN: access-log-tooling-improvements -->
 ### `access-log-tooling-improvements.md` · status: active · trust: medium
 
