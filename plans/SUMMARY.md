@@ -12,11 +12,8 @@ Priority order for active work:
 
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
-
-Narrative research plan for understanding LessWrong and the Rationalist community: Yudkowsky and the Sequences, heuristics-and-biases roots, Overcoming Bias, Scott Alexander, Gwern, and institutions such as MIRI and CFAR. Output goes to `knowledge/_unverified/rationalist-community/`.
-
-**Progress:** 0/11 files written
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
+**Progress:** 0/11 items complete
+**Next action:** Begin Phase 1/2 — write knowledge/_unverified/rationalist-community/origins/the-sequences-core-arguments.md
 <!-- END: lesswrong-rationalist-community-research -->
 
 ---

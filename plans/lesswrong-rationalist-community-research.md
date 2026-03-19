@@ -1,12 +1,12 @@
 ---
-source: agent-generated
-type: research-plan
-origin_session: chats/2026/03/18/chat-004
 created: 2026-03-18
-last_verified: 2026-03-18
-trust: medium
+last_verified: '2026-03-19'
+next_action: Begin Phase 1/2 — write knowledge/_unverified/rationalist-community/origins/the-sequences-core-arguments.md
+origin_session: chats/2026/03/18/chat-004
+source: agent-generated
 status: active
-next_action: "Begin Phase 1 — write knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md"
+trust: medium
+type: research-plan
 ---
 
 # Research Plan: LessWrong and the Rationalist Community
