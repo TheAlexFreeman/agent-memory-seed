@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 3 — write knowledge/_unverified/ai-history/deep-learning/gpus-imagenet-and-the-deep-learning-turn.md"
+next_action: "Begin Phase 4 — write knowledge/_unverified/ai-history/language-models/bert-gpt-and-the-scaling-laws-era.md"
 ---
 
 # Research Plan: Genealogy of the Current AI Paradigm
@@ -79,16 +79,16 @@ This is the core conceptual hinge. The modern paradigm depends on the rediscover
 
 ---
 
-### Phase 3 — Deep learning becomes dominant (high priority) · ☐ 0/2 complete
+### Phase 3 — Deep learning becomes dominant (high priority) · ☑ 2/2 complete
 
 The field's center of gravity shifts when neural methods stop being interesting alternatives and start winning benchmarks decisively.
 
-6. ☐ `deep-learning/gpus-imagenet-and-the-deep-learning-turn.md`
+6. ☑ `deep-learning/gpus-imagenet-and-the-deep-learning-turn.md`
    - AlexNet, ReLUs, dropout, GPU training, large labeled datasets, and why 2012 was a true inflection point
    - How ImageNet changed institutional belief about scale, depth, and compute
    - The feedback loop among benchmarks, hardware, industrial labs, and research prestige
 
-7. ☐ `language-models/attention-and-the-transformer-breakthrough.md`
+7. ☑ `language-models/attention-and-the-transformer-breakthrough.md`
    - Bahdanau-style attention as the immediate conceptual precursor
    - Why self-attention beat recurrence for long-range dependencies, parallelization, and scaling
    - Transformers as an architectural simplification that unexpectedly opened the path to foundation models
@@ -144,5 +144,6 @@ This phase covers the current frontier as a system, not just a base model: multi
 | 2026-03-18 | Plan created for a narrative genealogy of the current AI paradigm |
 | 2026-03-18 | Phase 1 complete — wrote SUMMARY.md, cybernetics-perceptrons-and-the-first-connectionist-wave.md, symbolic-ai-expert-systems-and-the-neural-winter.md |
 | 2026-03-18 | Phase 2 complete — wrote backpropagation-and-the-pdp-revival.md, convnets-rnns-and-lstm-inductive-biases.md, statistical-nlp-word-embeddings-and-seq2seq.md |
+| 2026-03-18 | Phase 3 complete — wrote gpus-imagenet-and-the-deep-learning-turn.md, attention-and-the-transformer-breakthrough.md |
 
 Last updated: 2026-03-18
