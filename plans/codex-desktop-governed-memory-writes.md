@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: 2026-03-18
-next_action: Add structured UI feedback
+next_action: Build test coverage around invariants
 origin_session: manual
 source: agent-generated
 status: active
@@ -198,7 +198,7 @@ The governed-write contract now distinguishes four fallback scenarios instead of
 
 Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares these fallback profiles directly, gap operations point to the `semantic_gap` profile, and `HUMANS/tooling/scripts/resolve_memory_capabilities.py` plus `HUMANS/tooling/tests/test_memory_capabilities.py` validate the profile contract. This keeps raw fallback narrow, auditable, and distinct from contract-preserving defer paths.
 
-### Phase 3 — Desktop and MCP integration · ☐ 2/3 complete
+### Phase 3 — Desktop and MCP integration · ☑ 3/3 complete
 
 7. ☑ Decide integration boundary
    - Codex-native semantic tools
@@ -210,7 +210,7 @@ Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declare
    - versioning and compatibility checks
    - graceful degradation when only read tools exist
 
-9. ☐ Add structured UI feedback
+9. ☑ Add structured UI feedback
    - operation preview
    - changed-file summary
    - resulting next action or plan state
@@ -263,6 +263,24 @@ The resolver now classifies runtime state into three concrete modes:
 
 That gives Codex desktop a stable decision point for choosing between repo-local semantic MCP, native preview/policy handling, or raw fallback/defer behavior without hardcoding repo-specific invariants into the app.
 
+#### 5. UI feedback should be a repo-declared contract, not an app-side reconstruction
+
+The desktop layer should not rebuild governed-write UI from raw operation tables every time. Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares a `ui_feedback` contract with:
+
+- a stable panel title and primary manifest action
+- mode-specific status labels for semantic, read-only, fallback, and manifest-only states
+- labeled preview sections that match the approval preview contract
+- labeled result fields so post-write state can be rendered consistently
+
+The resolver now emits a dedicated `ui_feedback` object that packages:
+
+- a status banner driven by capability discovery mode
+- a primary action that opens the capability manifest
+- preview-section rows and change-class flow metadata
+- per-operation summaries with preview requirements, changed-file lists, and highlighted result fields such as `next_action`, `plan_progress`, `status`, and `trust`
+
+That gives Codex desktop a direct UI surface for governed writes, much like the startup panel prototype, instead of forcing the app to reverse-engineer user-facing presentation from lower-level contract tables.
+
 ### Phase 4 — Hardening and evaluation · ☐ 0/2 complete
 
 10. ☐ Build test coverage around invariants
@@ -298,6 +316,7 @@ That gives Codex desktop a stable decision point for choosing between repo-local
 | 2026-03-18 | Chose a hybrid integration boundary: repo-local MCP remains the semantic authority, Codex desktop owns UX/policy/discovery, and native semantics stay generic unless the repo declares a contract |
 | 2026-03-18 | Completed Decide integration boundary (codex-desktop-governed-memory-writes 7/11) |
 | 2026-03-18 | Added a manifest-driven capability discovery contract plus resolver classification for semantic/read-only/fallback runtimes; completed Define repo capability discovery (codex-desktop-governed-memory-writes 8/11) |
+| 2026-03-18 | Added a repo-declared `ui_feedback` contract plus resolver-emitted preview/result summaries for semantic and read-only governed-write states; completed Add structured UI feedback (codex-desktop-governed-memory-writes 9/11) |
 
 ---
 

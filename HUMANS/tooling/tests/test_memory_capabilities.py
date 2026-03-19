@@ -182,6 +182,37 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "raw_fallback_or_defer",
         )
 
+    def test_manifest_declares_ui_feedback_contract(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        ui_feedback = manifest["ui_feedback"]
+
+        self.assertEqual(ui_feedback["panel_title"], "Governed Memory Writes")
+        self.assertEqual(
+            ui_feedback["manifest_action_label"],
+            "Open Capability Manifest",
+        )
+        self.assertEqual(
+            ui_feedback["status_labels"],
+            {
+                "semantic": "Repo-local semantic MCP ready",
+                "read_only": "Read-only governed preview",
+                "fallback": "Fallback or defer",
+                "manifest_only": "Manifest loaded",
+            },
+        )
+        self.assertEqual(
+            ui_feedback["preview_section_labels"]["target_files"],
+            "Changed Files",
+        )
+        self.assertEqual(
+            ui_feedback["result_field_labels"]["next_action"],
+            "Next Action",
+        )
+        self.assertEqual(
+            ui_feedback["result_field_labels"]["plan_progress"],
+            "Plan Progress",
+        )
+
     def test_manifest_declares_fallback_behavior_profiles_for_raw_and_deferred_paths(
         self,
     ) -> None:
@@ -343,6 +374,64 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(discovery["missing_minimum_read_tools"], [])
         self.assertEqual(discovery["missing_minimum_semantic_tools"], [])
 
+    def test_resolver_returns_structured_ui_feedback_for_semantic_mode(self) -> None:
+        resolution = resolver.resolve_capabilities(REPO_ROOT)
+        ui_feedback = resolution["ui_feedback"]
+        create_plan = next(
+            op for op in ui_feedback["operations"] if op["id"] == "create_plan"
+        )
+        mark_complete = next(
+            op
+            for op in ui_feedback["operations"]
+            if op["id"] == "mark_plan_item_complete"
+        )
+
+        self.assertEqual(ui_feedback["title"], "Governed Memory Writes")
+        self.assertEqual(ui_feedback["status"], "ready")
+        self.assertEqual(
+            ui_feedback["status_label"],
+            "Repo-local semantic MCP ready",
+        )
+        self.assertEqual(
+            ui_feedback["primary_action"]["path"],
+            "HUMANS/tooling/agent-memory-capabilities.toml",
+        )
+        self.assertEqual(
+            ui_feedback["preview"]["sections"],
+            [
+                {"id": "summary", "label": "Change Summary"},
+                {"id": "reasoning", "label": "Why This Change"},
+                {"id": "target_files", "label": "Changed Files"},
+                {"id": "invariant_effects", "label": "Invariant Effects"},
+                {"id": "commit_suggestion", "label": "Commit Suggestion"},
+                {"id": "fallback_behavior", "label": "Fallback Behavior"},
+            ],
+        )
+        self.assertTrue(
+            ui_feedback["preview"]["change_class_flows"]["proposed"][
+                "preview_required"
+            ]
+        )
+        self.assertFalse(
+            ui_feedback["preview"]["change_class_flows"]["automatic"][
+                "preview_required"
+            ]
+        )
+        self.assertTrue(create_plan["preview_required"])
+        self.assertEqual(
+            create_plan["changed_files"],
+            ["plans/{plan_id}.md", "plans/SUMMARY.md"],
+        )
+        self.assertEqual(
+            create_plan["highlighted_result_labels"],
+            ["Status", "Plan File"],
+        )
+        self.assertFalse(mark_complete["preview_required"])
+        self.assertEqual(
+            mark_complete["highlighted_result_labels"],
+            ["Next Action", "Plan Progress"],
+        )
+
     def test_resolver_degrades_to_read_only_when_runtime_exports_only_read_tools(
         self,
     ) -> None:
@@ -357,6 +446,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             resolution = resolver.resolve_capabilities(REPO_ROOT)
 
         discovery = resolution["capability_discovery"]
+        ui_feedback = resolution["ui_feedback"]
         self.assertEqual(resolution["errors"], [], "\n".join(resolution["errors"]))
         self.assertEqual(discovery["mode"], "read_only")
         self.assertEqual(
@@ -364,6 +454,11 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "codex_native_preview_and_policy",
         )
         self.assertEqual(discovery["available_semantic_tools"], [])
+        self.assertEqual(ui_feedback["status"], "attention")
+        self.assertEqual(
+            ui_feedback["status_label"],
+            "Read-only governed preview",
+        )
 
 
 if __name__ == "__main__":

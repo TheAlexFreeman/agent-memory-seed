@@ -21,8 +21,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-governed-memory-writes -->
 ### `codex-desktop-governed-memory-writes.md` · status: active · trust: medium
-**Progress:** 8/11 items complete
-**Next action:** Add structured UI feedback
+**Progress:** 9/11 items complete
+**Next action:** Build test coverage around invariants
 <!-- END: codex-desktop-governed-memory-writes -->
 
 ---

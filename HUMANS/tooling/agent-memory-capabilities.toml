@@ -94,6 +94,43 @@ semantic_result = "repo_local_semantic_mcp"
 read_only_result = "codex_native_preview_and_policy"
 incompatible_result = "raw_fallback_or_defer"
 
+[ui_feedback]
+panel_title = "Governed Memory Writes"
+manifest_action_label = "Open Capability Manifest"
+manifest_action_reason = "Repo-declared governed-write contract and semantic tool surface."
+
+[ui_feedback.status_labels]
+semantic = "Repo-local semantic MCP ready"
+read_only = "Read-only governed preview"
+fallback = "Fallback or defer"
+manifest_only = "Manifest loaded"
+
+[ui_feedback.preview_section_labels]
+summary = "Change Summary"
+reasoning = "Why This Change"
+target_files = "Changed Files"
+invariant_effects = "Invariant Effects"
+commit_suggestion = "Commit Suggestion"
+fallback_behavior = "Fallback Behavior"
+
+[ui_feedback.result_field_labels]
+plan_path = "Plan File"
+status = "Status"
+next_action = "Next Action"
+phase_progress = "Phase Progress"
+plan_progress = "Plan Progress"
+version_token = "Version Token"
+new_path = "Knowledge Path"
+trust = "Trust"
+archive_path = "Archive Path"
+target = "Scratchpad Target"
+key = "Identity Key"
+mode = "Update Mode"
+identity_updates_this_session = "Identity Updates This Session"
+session_id = "Chat Session"
+flagged_path = "Flagged Path"
+priority = "Review Priority"
+
 [shared_result]
 fields = [
   "files_changed",

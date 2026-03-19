@@ -46,6 +46,20 @@ REQUIRED_CAPABILITY_DISCOVERY_KEYS = (
     "read_only_result",
     "incompatible_result",
 )
+REQUIRED_UI_FEEDBACK_KEYS = (
+    "panel_title",
+    "manifest_action_label",
+    "manifest_action_reason",
+    "status_labels",
+    "preview_section_labels",
+    "result_field_labels",
+)
+REQUIRED_UI_FEEDBACK_STATUS_KEYS = (
+    "semantic",
+    "read_only",
+    "fallback",
+    "manifest_only",
+)
 REQUIRED_CHANGE_CLASS_KEYS = (
     "approval",
     "user_awareness",
@@ -144,6 +158,24 @@ REQUIRED_NATIVE_FALLBACK_OWNERSHIP = {
 }
 EXPECTED_SEMANTIC_DETECTION = "manifest_and_minimum_semantic_tools"
 EXPECTED_READ_ONLY_DETECTION = "minimum_read_tools_without_write_tools"
+RESULT_HIGHLIGHT_PRIORITY = (
+    "next_action",
+    "plan_progress",
+    "phase_progress",
+    "status",
+    "new_path",
+    "trust",
+    "archive_path",
+    "plan_path",
+    "session_id",
+    "flagged_path",
+    "priority",
+    "version_token",
+    "target",
+    "key",
+    "mode",
+    "identity_updates_this_session",
+)
 
 
 def load_manifest(repo_root: Path) -> dict[str, Any]:
@@ -183,6 +215,17 @@ def _ensure_int_list(errors: list[str], label: str, value: Any) -> list[int]:
         errors.append(f"{label} must be an array of integers")
         return []
     return value
+
+
+def _humanize_identifier(value: str) -> str:
+    return value.replace("_", " ").title()
+
+
+def _pick_highlight_fields(result_fields: list[str]) -> list[str]:
+    prioritized = [field for field in RESULT_HIGHLIGHT_PRIORITY if field in result_fields]
+    if prioritized:
+        return prioritized[:2]
+    return result_fields[:1]
 
 
 def resolve_capabilities(
@@ -595,6 +638,47 @@ def resolve_capabilities(
                 f"{MANIFEST_PATH}: approval_ux.{class_name}.copy_style must be a string"
             )
 
+    ui_feedback = manifest.get("ui_feedback")
+    if not isinstance(ui_feedback, dict):
+        errors.append(f"{MANIFEST_PATH}: ui_feedback must be a TOML table")
+        ui_feedback = {}
+    for key in REQUIRED_UI_FEEDBACK_KEYS:
+        if key not in ui_feedback:
+            errors.append(f"{MANIFEST_PATH}: ui_feedback missing {key}")
+
+    for key in ("panel_title", "manifest_action_label", "manifest_action_reason"):
+        if not isinstance(ui_feedback.get(key), str):
+            errors.append(f"{MANIFEST_PATH}: ui_feedback.{key} must be a string")
+
+    status_labels = ui_feedback.get("status_labels")
+    if not isinstance(status_labels, dict):
+        errors.append(f"{MANIFEST_PATH}: ui_feedback.status_labels must be a TOML table")
+        status_labels = {}
+    for key in REQUIRED_UI_FEEDBACK_STATUS_KEYS:
+        if not isinstance(status_labels.get(key), str):
+            errors.append(
+                f"{MANIFEST_PATH}: ui_feedback.status_labels.{key} must be a string"
+            )
+
+    preview_section_labels = ui_feedback.get("preview_section_labels")
+    if not isinstance(preview_section_labels, dict):
+        errors.append(
+            f"{MANIFEST_PATH}: ui_feedback.preview_section_labels must be a TOML table"
+        )
+        preview_section_labels = {}
+    for section_name in preview_sections:
+        if not isinstance(preview_section_labels.get(section_name), str):
+            errors.append(
+                f"{MANIFEST_PATH}: ui_feedback.preview_section_labels.{section_name} must be a string"
+            )
+
+    result_field_labels = ui_feedback.get("result_field_labels")
+    if not isinstance(result_field_labels, dict):
+        errors.append(
+            f"{MANIFEST_PATH}: ui_feedback.result_field_labels must be a TOML table"
+        )
+        result_field_labels = {}
+
     error_taxonomy = manifest.get("error_taxonomy")
     if not isinstance(error_taxonomy, dict):
         errors.append(f"{MANIFEST_PATH}: error_taxonomy must be a TOML table")
@@ -640,6 +724,16 @@ def resolve_capabilities(
             f"operations.{tool_name}.error_kinds",
             op.get("error_kinds"),
         )
+        result_fields = _ensure_string_list(
+            errors,
+            f"operations.{tool_name}.result_fields",
+            op.get("result_fields"),
+        )
+        for result_field in result_fields:
+            if not isinstance(result_field_labels.get(result_field), str):
+                errors.append(
+                    f"{MANIFEST_PATH}: ui_feedback.result_field_labels.{result_field} must be a string"
+                )
         for error_kind in error_kinds:
             if error_kind not in error_taxonomy:
                 errors.append(
@@ -797,6 +891,136 @@ def resolve_capabilities(
                 reason_parts.append("runtime does not satisfy the capability discovery contract")
             discovery_reason = "; ".join(reason_parts)
 
+    ui_status_by_mode = {
+        "semantic": "ready",
+        "read_only": "attention",
+        "fallback": "attention",
+        "manifest_only": "info",
+    }
+    preview_required_set = set(preview_required_for)
+    ui_preview_sections = [
+        {
+            "id": section_name,
+            "label": preview_section_labels.get(
+                section_name,
+                _humanize_identifier(section_name),
+            ),
+        }
+        for section_name in preview.get("sections", [])
+        if isinstance(section_name, str)
+    ]
+    ui_change_class_flows: dict[str, dict[str, Any]] = {}
+    for class_name in ("automatic", "proposed", "protected"):
+        if class_name not in change_classes:
+            continue
+        flow = approval_flows.get(class_name, {})
+        change_class_config = change_classes[class_name]
+        ui_change_class_flows[class_name] = {
+            "preview_required": class_name in preview_required_set,
+            "ui_affordance": change_class_config.get("ui_affordance"),
+            "read_only_behavior": change_class_config.get("read_only_behavior"),
+            "primary_action": flow.get("primary_action"),
+            "secondary_actions": flow.get("secondary_actions", []),
+            "deferred_outcome": flow.get("deferred_outcome"),
+        }
+
+    ui_operation_summaries: list[dict[str, Any]] = []
+    implemented_operation_count = 0
+    gap_operation_count = 0
+    for operation_name, config in desktop_operations.items():
+        if not isinstance(config, dict):
+            continue
+        operation_summary: dict[str, Any] = {
+            "id": operation_name,
+            "title": _humanize_identifier(operation_name),
+            "status": config.get("status"),
+            "group": config.get("operation_group"),
+            "change_class": config.get("change_class"),
+            "preview_required": config.get("change_class") in preview_required_set,
+        }
+
+        if config.get("status") == "implemented":
+            implemented_operation_count += 1
+            tool_name = config.get("tool")
+            operation_config = (
+                operations.get(tool_name, {})
+                if isinstance(tool_name, str)
+                else {}
+            )
+            changed_files = [
+                path
+                for path in operation_config.get("writes", [])
+                if isinstance(path, str)
+            ]
+            result_fields = [
+                field
+                for field in operation_config.get("result_fields", [])
+                if isinstance(field, str)
+            ]
+            highlighted_result_fields = _pick_highlight_fields(result_fields)
+            operation_summary.update(
+                {
+                    "tool": tool_name,
+                    "commit_category_hint": operation_config.get("commit_category_hint"),
+                    "changed_files": changed_files,
+                    "changed_file_count": len(changed_files),
+                    "result_fields": [
+                        {
+                            "id": field,
+                            "label": result_field_labels.get(
+                                field,
+                                _humanize_identifier(field),
+                            ),
+                            "highlight": field in highlighted_result_fields,
+                        }
+                        for field in result_fields
+                    ],
+                    "highlighted_result_fields": highlighted_result_fields,
+                    "highlighted_result_labels": [
+                        result_field_labels.get(field, _humanize_identifier(field))
+                        for field in highlighted_result_fields
+                    ],
+                }
+            )
+        elif config.get("status") == "gap":
+            gap_operation_count += 1
+            operation_summary.update(
+                {
+                    "fallback_profile": config.get("fallback_profile"),
+                    "notes": config.get("notes"),
+                }
+            )
+
+        ui_operation_summaries.append(operation_summary)
+
+    ui_feedback_summary = {
+        "title": ui_feedback.get("panel_title"),
+        "status": ui_status_by_mode.get(discovery_mode, "attention"),
+        "status_label": status_labels.get(
+            discovery_mode,
+            _humanize_identifier(discovery_mode),
+        ),
+        "strategy": selected_strategy,
+        "reason": discovery_reason,
+        "primary_action": {
+            "label": ui_feedback.get("manifest_action_label"),
+            "path": MANIFEST_PATH.as_posix(),
+            "reason": ui_feedback.get("manifest_action_reason"),
+        },
+        "preview": {
+            "required_for": preview_required_for,
+            "sections": ui_preview_sections,
+            "show_resulting_state": preview.get("show_resulting_state"),
+            "show_warnings": preview.get("show_warnings"),
+            "change_class_flows": ui_change_class_flows,
+        },
+        "operations": ui_operation_summaries,
+        "implemented_operation_count": implemented_operation_count,
+        "gap_operation_count": gap_operation_count,
+        "warning_count": len(warnings),
+        "warnings": warnings,
+    }
+
     return {
         "manifest_path": str(repo_root / MANIFEST_PATH),
         "change_classes": change_classes,
@@ -830,6 +1054,7 @@ def resolve_capabilities(
             "selected_strategy": selected_strategy,
             "reason": discovery_reason,
         },
+        "ui_feedback": ui_feedback_summary,
         "raw_fallback_policy": raw_fallback_policy,
         "fallback_behavior": fallback_behavior,
         "approval_ux": {
