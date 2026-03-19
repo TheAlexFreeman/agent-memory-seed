@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: 2026-03-18
-next_action: Build test coverage around invariants
+next_action: Define rollout metrics
 origin_session: manual
 source: agent-generated
 status: active
@@ -281,9 +281,9 @@ The resolver now emits a dedicated `ui_feedback` object that packages:
 
 That gives Codex desktop a direct UI surface for governed writes, much like the startup panel prototype, instead of forcing the app to reverse-engineer user-facing presentation from lower-level contract tables.
 
-### Phase 4 — Hardening and evaluation · ☐ 0/2 complete
+### Phase 4 — Hardening and evaluation · ☐ 1/2 complete
 
-10. ☐ Build test coverage around invariants
+10. ☑ Build test coverage around invariants
    - frontmatter round trips
    - summary sync
    - protected-change blocking
@@ -293,6 +293,19 @@ That gives Codex desktop a direct UI surface for governed writes, much like the 
    - semantic write success rate
    - number of raw-edit fallbacks
    - invariant drift incidents prevented
+
+### Phase 4 decisions (2026-03-18)
+
+#### 1. Hardening should exercise the semantic runtime against real git state
+
+Manifest validation alone is not enough for governed writes. The hardening pass should prove invariants at the runtime boundary where the MCP tools actually mutate a repo. Repo-side prototype: `HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py` now covers four concrete cases against temporary git repos:
+
+- plan frontmatter and `plans/SUMMARY.md` stay synchronized when `memory_mark_plan_item_complete` advances a checklist item
+- knowledge promotion updates trust and `last_verified`, removes the `_unverified/` summary entry, and inserts the verified summary entry
+- protected directories such as `identity/` are blocked by raw fallback deletion tools
+- stale version tokens trigger `ConflictError` instead of silently overwriting newer plan state
+
+That makes the governed-write contract harder to regress where it matters: at the mutation boundary, not just in manifest prose or resolver metadata.
 
 ---
 
@@ -317,6 +330,7 @@ That gives Codex desktop a direct UI surface for governed writes, much like the 
 | 2026-03-18 | Completed Decide integration boundary (codex-desktop-governed-memory-writes 7/11) |
 | 2026-03-18 | Added a manifest-driven capability discovery contract plus resolver classification for semantic/read-only/fallback runtimes; completed Define repo capability discovery (codex-desktop-governed-memory-writes 8/11) |
 | 2026-03-18 | Added a repo-declared `ui_feedback` contract plus resolver-emitted preview/result summaries for semantic and read-only governed-write states; completed Add structured UI feedback (codex-desktop-governed-memory-writes 9/11) |
+| 2026-03-18 | Added invariant coverage for semantic plan progression, knowledge promotion summary sync, protected-path blocking, and stale version-token conflicts; completed Build test coverage around invariants (codex-desktop-governed-memory-writes 10/11) |
 
 ---
 
