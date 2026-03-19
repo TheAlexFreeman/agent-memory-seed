@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: 2026-03-18
-next_action: Define repo capability discovery
+next_action: Define rollout metrics
 origin_session: manual
 source: agent-generated
 status: active
@@ -198,19 +198,19 @@ The governed-write contract now distinguishes four fallback scenarios instead of
 
 Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares these fallback profiles directly, gap operations point to the `semantic_gap` profile, and `HUMANS/tooling/scripts/resolve_memory_capabilities.py` plus `HUMANS/tooling/tests/test_memory_capabilities.py` validate the profile contract. This keeps raw fallback narrow, auditable, and distinct from contract-preserving defer paths.
 
-### Phase 3 — Desktop and MCP integration · ☐ 1/3 complete
+### Phase 3 — Desktop and MCP integration · ☑ 3/3 complete
 
 7. ☑ Decide integration boundary
    - Codex-native semantic tools
    - MCP-discovered semantic tools
    - hybrid model
 
-8. ☐ Define repo capability discovery
+8. ☑ Define repo capability discovery
    - how the app detects that a repo exposes semantic memory operations
    - versioning and compatibility checks
    - graceful degradation when only read tools exist
 
-9. ☐ Add structured UI feedback
+9. ☑ Add structured UI feedback
    - operation preview
    - changed-file summary
    - resulting next action or plan state
@@ -244,9 +244,46 @@ The prototype now makes a stricter claim: Codex desktop may ship generic governe
 
 Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` and `HUMANS/tooling/tests/test_memory_capabilities.py` now validate the hybrid boundary and its required ownership markers.
 
-### Phase 4 — Hardening and evaluation · ☐ 0/2 complete
+#### 4. Capability discovery should be manifest-first and runtime-verified
 
-10. ☐ Build test coverage around invariants
+Desktop should detect repo-specific memory semantics from a well-known manifest path, not from prompt heuristics or file-tree guesses. Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares a `capability_discovery` contract with:
+
+- the well-known manifest path the app should probe first
+- supported manifest versions and required `kind`
+- a required MCP entrypoint for repo-local semantic authority
+- minimum read tools for read-only compatibility
+- minimum semantic tools for enabling repo-local governed writes
+- the expected degradation targets for semantic, read-only, and incompatible runtimes
+
+The resolver now classifies runtime state into three concrete modes:
+
+- **`semantic`** when the manifest is compatible and the runtime exports the minimum semantic tool set
+- **`read_only`** when the manifest is compatible and the runtime exposes only the minimum read contract
+- **`fallback`** when compatibility checks fail or the runtime exposes a partial semantic surface that is too weak to trust
+
+That gives Codex desktop a stable decision point for choosing between repo-local semantic MCP, native preview/policy handling, or raw fallback/defer behavior without hardcoding repo-specific invariants into the app.
+
+#### 5. UI feedback should be a repo-declared contract, not an app-side reconstruction
+
+The desktop layer should not rebuild governed-write UI from raw operation tables every time. Repo-side prototype: `HUMANS/tooling/agent-memory-capabilities.toml` now declares a `ui_feedback` contract with:
+
+- a stable panel title and primary manifest action
+- mode-specific status labels for semantic, read-only, fallback, and manifest-only states
+- labeled preview sections that match the approval preview contract
+- labeled result fields so post-write state can be rendered consistently
+
+The resolver now emits a dedicated `ui_feedback` object that packages:
+
+- a status banner driven by capability discovery mode
+- a primary action that opens the capability manifest
+- preview-section rows and change-class flow metadata
+- per-operation summaries with preview requirements, changed-file lists, and highlighted result fields such as `next_action`, `plan_progress`, `status`, and `trust`
+
+That gives Codex desktop a direct UI surface for governed writes, much like the startup panel prototype, instead of forcing the app to reverse-engineer user-facing presentation from lower-level contract tables.
+
+### Phase 4 — Hardening and evaluation · ☐ 1/2 complete
+
+10. ☑ Build test coverage around invariants
    - frontmatter round trips
    - summary sync
    - protected-change blocking
@@ -256,6 +293,19 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` and
    - semantic write success rate
    - number of raw-edit fallbacks
    - invariant drift incidents prevented
+
+### Phase 4 decisions (2026-03-18)
+
+#### 1. Hardening should exercise the semantic runtime against real git state
+
+Manifest validation alone is not enough for governed writes. The hardening pass should prove invariants at the runtime boundary where the MCP tools actually mutate a repo. Repo-side prototype: `HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py` now covers four concrete cases against temporary git repos:
+
+- plan frontmatter and `plans/SUMMARY.md` stay synchronized when `memory_mark_plan_item_complete` advances a checklist item
+- knowledge promotion updates trust and `last_verified`, removes the `_unverified/` summary entry, and inserts the verified summary entry
+- protected directories such as `identity/` are blocked by raw fallback deletion tools
+- stale version tokens trigger `ConflictError` instead of silently overwriting newer plan state
+
+That makes the governed-write contract harder to regress where it matters: at the mutation boundary, not just in manifest prose or resolver metadata.
 
 ---
 
@@ -278,6 +328,9 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_memory_capabilities.py` and
 | 2026-03-18 | Defined explicit fallback profiles for semantic gaps, uninterpretable targets, preview-only runs, and read-only contexts; completed Phase 2 (codex-desktop-governed-memory-writes 6/11) |
 | 2026-03-18 | Chose a hybrid integration boundary: repo-local MCP remains the semantic authority, Codex desktop owns UX/policy/discovery, and native semantics stay generic unless the repo declares a contract |
 | 2026-03-18 | Completed Decide integration boundary (codex-desktop-governed-memory-writes 7/11) |
+| 2026-03-18 | Added a manifest-driven capability discovery contract plus resolver classification for semantic/read-only/fallback runtimes; completed Define repo capability discovery (codex-desktop-governed-memory-writes 8/11) |
+| 2026-03-18 | Added a repo-declared `ui_feedback` contract plus resolver-emitted preview/result summaries for semantic and read-only governed-write states; completed Add structured UI feedback (codex-desktop-governed-memory-writes 9/11) |
+| 2026-03-18 | Added invariant coverage for semantic plan progression, knowledge promotion summary sync, protected-path blocking, and stale version-token conflicts; completed Build test coverage around invariants (codex-desktop-governed-memory-writes 10/11) |
 
 ---
 

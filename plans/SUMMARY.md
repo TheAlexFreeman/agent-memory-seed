@@ -21,8 +21,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-governed-memory-writes -->
 ### `codex-desktop-governed-memory-writes.md` · status: active · trust: medium
-**Progress:** 7/11 items complete
-**Next action:** Define repo capability discovery
+**Progress:** 10/11 items complete
+**Next action:** Define rollout metrics
 <!-- END: codex-desktop-governed-memory-writes -->
 
 ---

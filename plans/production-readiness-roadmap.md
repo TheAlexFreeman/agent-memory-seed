@@ -1,3 +1,14 @@
+---
+created: 2026-03-18
+last_verified: 2026-03-18
+next_action: "Reconcile this roadmap with the current HUMANS/tooling layout before reactivating it"
+origin_session: manual
+source: agent-generated
+status: paused
+trust: medium
+type: implementation-plan
+---
+
 # Production-Readiness Roadmap
 
 This roadmap assumes the current repository remains a beta proving ground. The production target is not "ship this branch unchanged"; it is "extract the smallest durable governance core from this branch into the next architecture iteration without losing the working safety model."

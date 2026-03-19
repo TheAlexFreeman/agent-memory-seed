@@ -32,6 +32,34 @@ REQUIRED_INTEGRATION_BOUNDARY_KEYS = (
     "repo_local_mcp_owns",
     "native_fallback_owns",
 )
+REQUIRED_CAPABILITY_DISCOVERY_KEYS = (
+    "well_known_paths",
+    "requires_kind",
+    "supported_versions",
+    "requires_mcp_entrypoint",
+    "minimum_read_tools",
+    "minimum_semantic_tools",
+    "read_only_runtime_allowed",
+    "semantic_detection",
+    "read_only_detection",
+    "semantic_result",
+    "read_only_result",
+    "incompatible_result",
+)
+REQUIRED_UI_FEEDBACK_KEYS = (
+    "panel_title",
+    "manifest_action_label",
+    "manifest_action_reason",
+    "status_labels",
+    "preview_section_labels",
+    "result_field_labels",
+)
+REQUIRED_UI_FEEDBACK_STATUS_KEYS = (
+    "semantic",
+    "read_only",
+    "fallback",
+    "manifest_only",
+)
 REQUIRED_CHANGE_CLASS_KEYS = (
     "approval",
     "user_awareness",
@@ -128,6 +156,26 @@ REQUIRED_NATIVE_FALLBACK_OWNERSHIP = {
     "raw_tool_orchestration",
     "deferred_action_summary",
 }
+EXPECTED_SEMANTIC_DETECTION = "manifest_and_minimum_semantic_tools"
+EXPECTED_READ_ONLY_DETECTION = "minimum_read_tools_without_write_tools"
+RESULT_HIGHLIGHT_PRIORITY = (
+    "next_action",
+    "plan_progress",
+    "phase_progress",
+    "status",
+    "new_path",
+    "trust",
+    "archive_path",
+    "plan_path",
+    "session_id",
+    "flagged_path",
+    "priority",
+    "version_token",
+    "target",
+    "key",
+    "mode",
+    "identity_updates_this_session",
+)
 
 
 def load_manifest(repo_root: Path) -> dict[str, Any]:
@@ -158,6 +206,26 @@ def _ensure_bool(errors: list[str], label: str, value: Any) -> bool:
         errors.append(f"{label} must be a boolean")
         return False
     return value
+
+
+def _ensure_int_list(errors: list[str], label: str, value: Any) -> list[int]:
+    if not isinstance(value, list) or not all(
+        isinstance(item, int) and not isinstance(item, bool) for item in value
+    ):
+        errors.append(f"{label} must be an array of integers")
+        return []
+    return value
+
+
+def _humanize_identifier(value: str) -> str:
+    return value.replace("_", " ").title()
+
+
+def _pick_highlight_fields(result_fields: list[str]) -> list[str]:
+    prioritized = [field for field in RESULT_HIGHLIGHT_PRIORITY if field in result_fields]
+    if prioritized:
+        return prioritized[:2]
+    return result_fields[:1]
 
 
 def resolve_capabilities(
@@ -239,6 +307,114 @@ def resolve_capabilities(
         if missing_items:
             errors.append(
                 f"{MANIFEST_PATH}: integration_boundary.{key} is missing required ownership markers {missing_items!r}"
+            )
+
+    capability_discovery = manifest.get("capability_discovery")
+    if not isinstance(capability_discovery, dict):
+        errors.append(f"{MANIFEST_PATH}: capability_discovery must be a TOML table")
+        capability_discovery = {}
+    for key in REQUIRED_CAPABILITY_DISCOVERY_KEYS:
+        if key not in capability_discovery:
+            errors.append(f"{MANIFEST_PATH}: capability_discovery missing {key}")
+
+    well_known_paths = _ensure_string_list(
+        errors,
+        "capability_discovery.well_known_paths",
+        capability_discovery.get("well_known_paths"),
+    )
+    if MANIFEST_PATH.as_posix() not in well_known_paths:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.well_known_paths must include {MANIFEST_PATH.as_posix()!r}"
+        )
+
+    requires_kind = capability_discovery.get("requires_kind")
+    if not isinstance(requires_kind, str):
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.requires_kind must be a string"
+        )
+        requires_kind = ""
+    if manifest.get("kind") != requires_kind:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.requires_kind must match manifest kind"
+        )
+
+    supported_versions = _ensure_int_list(
+        errors,
+        "capability_discovery.supported_versions",
+        capability_discovery.get("supported_versions"),
+    )
+    if manifest.get("version") not in supported_versions:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.supported_versions must include the current manifest version"
+        )
+
+    requires_mcp_entrypoint = _ensure_bool(
+        errors,
+        "capability_discovery.requires_mcp_entrypoint",
+        capability_discovery.get("requires_mcp_entrypoint"),
+    )
+    entrypoint = manifest.get("mcp_entrypoint")
+    entrypoint_exists = False
+    if requires_mcp_entrypoint:
+        if not isinstance(entrypoint, str):
+            errors.append(f"{MANIFEST_PATH}: mcp_entrypoint must be a string")
+        else:
+            entrypoint_exists = (repo_root / entrypoint).is_file()
+            if not entrypoint_exists:
+                errors.append(
+                    f"{MANIFEST_PATH}: mcp_entrypoint does not exist at {entrypoint!r}"
+                )
+    elif isinstance(entrypoint, str):
+        entrypoint_exists = (repo_root / entrypoint).is_file()
+
+    minimum_read_tools = _ensure_string_list(
+        errors,
+        "capability_discovery.minimum_read_tools",
+        capability_discovery.get("minimum_read_tools"),
+    )
+    unknown_minimum_read_tools = sorted(set(minimum_read_tools) - read_support)
+    if unknown_minimum_read_tools:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.minimum_read_tools references undeclared read tools {unknown_minimum_read_tools!r}"
+        )
+
+    minimum_semantic_tools = _ensure_string_list(
+        errors,
+        "capability_discovery.minimum_semantic_tools",
+        capability_discovery.get("minimum_semantic_tools"),
+    )
+    unknown_minimum_semantic_tools = sorted(
+        set(minimum_semantic_tools) - semantic_extensions
+    )
+    if unknown_minimum_semantic_tools:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.minimum_semantic_tools references undeclared semantic tools {unknown_minimum_semantic_tools!r}"
+        )
+
+    read_only_runtime_allowed = _ensure_bool(
+        errors,
+        "capability_discovery.read_only_runtime_allowed",
+        capability_discovery.get("read_only_runtime_allowed"),
+    )
+
+    if capability_discovery.get("semantic_detection") != EXPECTED_SEMANTIC_DETECTION:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.semantic_detection must be {EXPECTED_SEMANTIC_DETECTION!r}"
+        )
+    if capability_discovery.get("read_only_detection") != EXPECTED_READ_ONLY_DETECTION:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.read_only_detection must be {EXPECTED_READ_ONLY_DETECTION!r}"
+        )
+
+    expected_discovery_results = {
+        "semantic_result": REQUIRED_DEGRADATION_ORDER[0],
+        "read_only_result": REQUIRED_DEGRADATION_ORDER[1],
+        "incompatible_result": REQUIRED_DEGRADATION_ORDER[2],
+    }
+    for key, expected_value in expected_discovery_results.items():
+        if capability_discovery.get(key) != expected_value:
+            errors.append(
+                f"{MANIFEST_PATH}: capability_discovery.{key} must be {expected_value!r}"
             )
 
     for left_name, left, right_name, right in (
@@ -462,6 +638,47 @@ def resolve_capabilities(
                 f"{MANIFEST_PATH}: approval_ux.{class_name}.copy_style must be a string"
             )
 
+    ui_feedback = manifest.get("ui_feedback")
+    if not isinstance(ui_feedback, dict):
+        errors.append(f"{MANIFEST_PATH}: ui_feedback must be a TOML table")
+        ui_feedback = {}
+    for key in REQUIRED_UI_FEEDBACK_KEYS:
+        if key not in ui_feedback:
+            errors.append(f"{MANIFEST_PATH}: ui_feedback missing {key}")
+
+    for key in ("panel_title", "manifest_action_label", "manifest_action_reason"):
+        if not isinstance(ui_feedback.get(key), str):
+            errors.append(f"{MANIFEST_PATH}: ui_feedback.{key} must be a string")
+
+    status_labels = ui_feedback.get("status_labels")
+    if not isinstance(status_labels, dict):
+        errors.append(f"{MANIFEST_PATH}: ui_feedback.status_labels must be a TOML table")
+        status_labels = {}
+    for key in REQUIRED_UI_FEEDBACK_STATUS_KEYS:
+        if not isinstance(status_labels.get(key), str):
+            errors.append(
+                f"{MANIFEST_PATH}: ui_feedback.status_labels.{key} must be a string"
+            )
+
+    preview_section_labels = ui_feedback.get("preview_section_labels")
+    if not isinstance(preview_section_labels, dict):
+        errors.append(
+            f"{MANIFEST_PATH}: ui_feedback.preview_section_labels must be a TOML table"
+        )
+        preview_section_labels = {}
+    for section_name in preview_sections:
+        if not isinstance(preview_section_labels.get(section_name), str):
+            errors.append(
+                f"{MANIFEST_PATH}: ui_feedback.preview_section_labels.{section_name} must be a string"
+            )
+
+    result_field_labels = ui_feedback.get("result_field_labels")
+    if not isinstance(result_field_labels, dict):
+        errors.append(
+            f"{MANIFEST_PATH}: ui_feedback.result_field_labels must be a TOML table"
+        )
+        result_field_labels = {}
+
     error_taxonomy = manifest.get("error_taxonomy")
     if not isinstance(error_taxonomy, dict):
         errors.append(f"{MANIFEST_PATH}: error_taxonomy must be a TOML table")
@@ -507,6 +724,16 @@ def resolve_capabilities(
             f"operations.{tool_name}.error_kinds",
             op.get("error_kinds"),
         )
+        result_fields = _ensure_string_list(
+            errors,
+            f"operations.{tool_name}.result_fields",
+            op.get("result_fields"),
+        )
+        for result_field in result_fields:
+            if not isinstance(result_field_labels.get(result_field), str):
+                errors.append(
+                    f"{MANIFEST_PATH}: ui_feedback.result_field_labels.{result_field} must be a string"
+                )
         for error_kind in error_kinds:
             if error_kind not in error_taxonomy:
                 errors.append(
@@ -569,13 +796,230 @@ def resolve_capabilities(
             )
 
     runtime_tool_names: set[str] = set()
+    available_read_tools: list[str] = []
+    available_raw_tools: list[str] = []
+    available_semantic_tools: list[str] = []
+    missing_declared_tools = {
+        "read_support": [],
+        "raw_fallback": [],
+        "semantic_extensions": [],
+    }
+    missing_minimum_read_tools: list[str] = []
+    missing_minimum_semantic_tools: list[str] = []
+    contract_compatible = (
+        manifest.get("kind") == requires_kind
+        and manifest.get("version") in supported_versions
+        and (not requires_mcp_entrypoint or entrypoint_exists)
+    )
+    discovery_mode = "manifest_only"
+    selected_strategy = capability_discovery.get("semantic_result")
+    discovery_reason = "Runtime inspection was skipped."
     if include_runtime:
         runtime_tool_names = runtime_tools(repo_root)
-        for tool_name in sorted(read_support | raw_fallback | semantic_extensions):
-            if tool_name not in runtime_tool_names:
+        available_read_tools = sorted(read_support & runtime_tool_names)
+        available_raw_tools = sorted(raw_fallback & runtime_tool_names)
+        available_semantic_tools = sorted(semantic_extensions & runtime_tool_names)
+        missing_declared_tools = {
+            "read_support": sorted(read_support - runtime_tool_names),
+            "raw_fallback": sorted(raw_fallback - runtime_tool_names),
+            "semantic_extensions": sorted(semantic_extensions - runtime_tool_names),
+        }
+        missing_minimum_read_tools = sorted(set(minimum_read_tools) - runtime_tool_names)
+        missing_minimum_semantic_tools = sorted(
+            set(minimum_semantic_tools) - runtime_tool_names
+        )
+
+        write_tools_present = bool((raw_fallback | semantic_extensions) & runtime_tool_names)
+        read_only_runtime = (
+            read_only_runtime_allowed
+            and not write_tools_present
+            and not missing_minimum_read_tools
+        )
+
+        if write_tools_present:
+            for tool_name in sorted(read_support | raw_fallback | semantic_extensions):
+                if tool_name not in runtime_tool_names:
+                    errors.append(
+                        f"{MANIFEST_PATH}: declared tool {tool_name!r} is not exported by the MCP runtime"
+                    )
+        else:
+            for tool_name in missing_minimum_read_tools:
                 errors.append(
-                    f"{MANIFEST_PATH}: declared tool {tool_name!r} is not exported by the MCP runtime"
+                    f"{MANIFEST_PATH}: required read-only tool {tool_name!r} is not exported by the MCP runtime"
                 )
+            optional_read_tools = sorted(read_support - set(minimum_read_tools) - runtime_tool_names)
+            if optional_read_tools:
+                warnings.append(
+                    f"{MANIFEST_PATH}: runtime is read-only and omits optional read tools {optional_read_tools!r}"
+                )
+
+        partial_semantic_runtime = bool(available_semantic_tools) and bool(
+            missing_minimum_semantic_tools
+        )
+
+        if contract_compatible and not missing_minimum_read_tools and not missing_minimum_semantic_tools:
+            discovery_mode = "semantic"
+            selected_strategy = capability_discovery.get("semantic_result")
+            discovery_reason = (
+                "Manifest is compatible and the runtime exports the minimum semantic tool set."
+            )
+        elif contract_compatible and read_only_runtime:
+            discovery_mode = "read_only"
+            selected_strategy = capability_discovery.get("read_only_result")
+            discovery_reason = (
+                "Manifest is compatible and the runtime exports the minimum read tool set without write tools."
+            )
+        else:
+            discovery_mode = "fallback"
+            selected_strategy = capability_discovery.get("incompatible_result")
+            reason_parts: list[str] = []
+            if not contract_compatible:
+                reason_parts.append("manifest compatibility checks failed")
+            if missing_minimum_read_tools:
+                reason_parts.append(
+                    f"minimum read tools are missing: {missing_minimum_read_tools!r}"
+                )
+            if missing_minimum_semantic_tools and write_tools_present:
+                reason_parts.append(
+                    f"minimum semantic tools are missing: {missing_minimum_semantic_tools!r}"
+                )
+            if partial_semantic_runtime:
+                warnings.append(
+                    f"{MANIFEST_PATH}: runtime exports a partial semantic tool set; degrading to {selected_strategy!r}"
+                )
+            if not reason_parts:
+                reason_parts.append("runtime does not satisfy the capability discovery contract")
+            discovery_reason = "; ".join(reason_parts)
+
+    ui_status_by_mode = {
+        "semantic": "ready",
+        "read_only": "attention",
+        "fallback": "attention",
+        "manifest_only": "info",
+    }
+    preview_required_set = set(preview_required_for)
+    ui_preview_sections = [
+        {
+            "id": section_name,
+            "label": preview_section_labels.get(
+                section_name,
+                _humanize_identifier(section_name),
+            ),
+        }
+        for section_name in preview.get("sections", [])
+        if isinstance(section_name, str)
+    ]
+    ui_change_class_flows: dict[str, dict[str, Any]] = {}
+    for class_name in ("automatic", "proposed", "protected"):
+        if class_name not in change_classes:
+            continue
+        flow = approval_flows.get(class_name, {})
+        change_class_config = change_classes[class_name]
+        ui_change_class_flows[class_name] = {
+            "preview_required": class_name in preview_required_set,
+            "ui_affordance": change_class_config.get("ui_affordance"),
+            "read_only_behavior": change_class_config.get("read_only_behavior"),
+            "primary_action": flow.get("primary_action"),
+            "secondary_actions": flow.get("secondary_actions", []),
+            "deferred_outcome": flow.get("deferred_outcome"),
+        }
+
+    ui_operation_summaries: list[dict[str, Any]] = []
+    implemented_operation_count = 0
+    gap_operation_count = 0
+    for operation_name, config in desktop_operations.items():
+        if not isinstance(config, dict):
+            continue
+        operation_summary: dict[str, Any] = {
+            "id": operation_name,
+            "title": _humanize_identifier(operation_name),
+            "status": config.get("status"),
+            "group": config.get("operation_group"),
+            "change_class": config.get("change_class"),
+            "preview_required": config.get("change_class") in preview_required_set,
+        }
+
+        if config.get("status") == "implemented":
+            implemented_operation_count += 1
+            tool_name = config.get("tool")
+            operation_config = (
+                operations.get(tool_name, {})
+                if isinstance(tool_name, str)
+                else {}
+            )
+            changed_files = [
+                path
+                for path in operation_config.get("writes", [])
+                if isinstance(path, str)
+            ]
+            result_fields = [
+                field
+                for field in operation_config.get("result_fields", [])
+                if isinstance(field, str)
+            ]
+            highlighted_result_fields = _pick_highlight_fields(result_fields)
+            operation_summary.update(
+                {
+                    "tool": tool_name,
+                    "commit_category_hint": operation_config.get("commit_category_hint"),
+                    "changed_files": changed_files,
+                    "changed_file_count": len(changed_files),
+                    "result_fields": [
+                        {
+                            "id": field,
+                            "label": result_field_labels.get(
+                                field,
+                                _humanize_identifier(field),
+                            ),
+                            "highlight": field in highlighted_result_fields,
+                        }
+                        for field in result_fields
+                    ],
+                    "highlighted_result_fields": highlighted_result_fields,
+                    "highlighted_result_labels": [
+                        result_field_labels.get(field, _humanize_identifier(field))
+                        for field in highlighted_result_fields
+                    ],
+                }
+            )
+        elif config.get("status") == "gap":
+            gap_operation_count += 1
+            operation_summary.update(
+                {
+                    "fallback_profile": config.get("fallback_profile"),
+                    "notes": config.get("notes"),
+                }
+            )
+
+        ui_operation_summaries.append(operation_summary)
+
+    ui_feedback_summary = {
+        "title": ui_feedback.get("panel_title"),
+        "status": ui_status_by_mode.get(discovery_mode, "attention"),
+        "status_label": status_labels.get(
+            discovery_mode,
+            _humanize_identifier(discovery_mode),
+        ),
+        "strategy": selected_strategy,
+        "reason": discovery_reason,
+        "primary_action": {
+            "label": ui_feedback.get("manifest_action_label"),
+            "path": MANIFEST_PATH.as_posix(),
+            "reason": ui_feedback.get("manifest_action_reason"),
+        },
+        "preview": {
+            "required_for": preview_required_for,
+            "sections": ui_preview_sections,
+            "show_resulting_state": preview.get("show_resulting_state"),
+            "show_warnings": preview.get("show_warnings"),
+            "change_class_flows": ui_change_class_flows,
+        },
+        "operations": ui_operation_summaries,
+        "implemented_operation_count": implemented_operation_count,
+        "gap_operation_count": gap_operation_count,
+        "warning_count": len(warnings),
+        "warnings": warnings,
+    }
 
     return {
         "manifest_path": str(repo_root / MANIFEST_PATH),
@@ -587,6 +1031,30 @@ def resolve_capabilities(
             "declared_gaps": sorted(declared_gaps),
         },
         "integration_boundary": integration_boundary,
+        "capability_discovery": {
+            "well_known_paths": well_known_paths,
+            "requires_kind": requires_kind,
+            "supported_versions": supported_versions,
+            "requires_mcp_entrypoint": requires_mcp_entrypoint,
+            "mcp_entrypoint": entrypoint,
+            "entrypoint_exists": entrypoint_exists,
+            "minimum_read_tools": minimum_read_tools,
+            "minimum_semantic_tools": minimum_semantic_tools,
+            "read_only_runtime_allowed": read_only_runtime_allowed,
+            "semantic_detection": capability_discovery.get("semantic_detection"),
+            "read_only_detection": capability_discovery.get("read_only_detection"),
+            "contract_compatible": contract_compatible,
+            "available_read_tools": available_read_tools,
+            "available_raw_tools": available_raw_tools,
+            "available_semantic_tools": available_semantic_tools,
+            "missing_declared_tools": missing_declared_tools,
+            "missing_minimum_read_tools": missing_minimum_read_tools,
+            "missing_minimum_semantic_tools": missing_minimum_semantic_tools,
+            "mode": discovery_mode,
+            "selected_strategy": selected_strategy,
+            "reason": discovery_reason,
+        },
+        "ui_feedback": ui_feedback_summary,
         "raw_fallback_policy": raw_fallback_policy,
         "fallback_behavior": fallback_behavior,
         "approval_ux": {
