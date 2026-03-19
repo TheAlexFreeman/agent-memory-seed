@@ -1,7 +1,8 @@
 ---
-source: agent-knowledge
+source: external-research
+origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-trust: medium
+trust: low
 tags: [docker, docker-compose, django, celery, local-dev, postgres, redis]
 version_note: Docker Compose v2 (plugin, not standalone). Uses Compose spec features (depends_on conditions, develop.watch).
 ---

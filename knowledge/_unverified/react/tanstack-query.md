@@ -1,7 +1,8 @@
 ---
-source: web-research + agent-knowledge
+source: external-research
+origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-trust: medium
+trust: low
 tags: [react, tanstack-query, data-fetching, drf, server-state]
 version_note: TanStack Query v5 (React 18 required). Several v4→v5 breaking changes are called out throughout.
 ---

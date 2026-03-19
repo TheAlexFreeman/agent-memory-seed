@@ -1,10 +1,10 @@
 ---
-source: agent-knowledge
+source: external-research
+origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-trust: medium
+trust: low
 tags: [docker, docker-compose, celery, workers, queues, redis]
-cross-references:
-  - knowledge/_unverified/django/celery-worker-beat-ops.md  # pool types, beat config, graceful shutdown signals
+cross_references: knowledge/_unverified/django/celery-worker-beat-ops.md
 ---
 
 # Celery Multi-Worker Setup in Docker Compose

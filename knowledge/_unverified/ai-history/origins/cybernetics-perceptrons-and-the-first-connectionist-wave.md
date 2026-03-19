@@ -1,5 +1,6 @@
 ---
-source: agent-knowledge
+source: external-research
+origin_session: chats/2026/03/18/chat-005
 created: 2026-03-18
 trust: low
 tags: [ai-history, connectionism, perceptrons, cybernetics, neural-networks]

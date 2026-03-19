@@ -1,7 +1,8 @@
 ---
-source: web-research + agent-knowledge
+source: external-research
+origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-trust: medium
+trust: low
 tags: [react, routing, tanstack-router, typescript, spa]
 version_note: TanStack Router v1 (stable). Vite plugin is now @tanstack/router-plugin/vite.
 ---

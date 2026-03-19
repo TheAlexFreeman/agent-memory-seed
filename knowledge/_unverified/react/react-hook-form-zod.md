@@ -1,7 +1,8 @@
 ---
-source: web-research + agent-knowledge
+source: external-research
+origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-trust: medium
+trust: low
 tags: [react, forms, react-hook-form, zod, validation, chakra-ui, drf]
 version_note: react-hook-form v7, @hookform/resolvers v5, zod v3 (zod v4 resolver in progress as of mid-2025)
 ---
