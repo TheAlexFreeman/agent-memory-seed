@@ -18,8 +18,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-**Progress:** 5/11 items complete
-**Next action:** Add blocker carry-forward controls
+**Progress:** 6/11 items complete
+**Next action:** Define automatic writeback at run end
 <!-- END: codex-desktop-automation-continuity -->
 
 ---
