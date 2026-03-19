@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Define separation of concerns
+next_action: Define startup preload order for recurring runs
 origin_session: manual
 source: agent-generated
 status: active
@@ -57,7 +57,7 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
 
 ## Research and design phases
 
-### Phase 1 — Automation state model · ☐ 1/3 complete
+### Phase 1 — Automation state model · ☐ 2/3 complete
 
 1. ☑ Define the automation continuity schema
    - run metadata
@@ -65,7 +65,7 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
    - active plan pointer
    - blockers and deferred actions
 
-2. ☐ Define separation of concerns
+2. ☑ Define separation of concerns
    - what belongs in automation-local memory
    - what belongs in repo memory
    - what belongs in thread UI only
@@ -108,6 +108,44 @@ On preload, Codex should read the continuity record first, then verify any refer
 5. expand only the plan or files needed for the carried-forward next action
 
 If continuity state and repo memory disagree, the app should prefer durable repo truth for plan status and current git truth for branch state, while surfacing the mismatch as an automation warning instead of silently overwriting either side.
+
+#### 3. Separation of concerns
+
+The continuity design should enforce a strict three-layer model so the app does not blur durable repo memory, automation execution state, and transient chat context.
+
+**Automation-local memory owns:**
+
+- the latest run outcome and concise handoff summary
+- pinned plan selection for that automation
+- unresolved blockers and deferred follow-ups
+- branch/base branch expectations and prior publish state
+- retry semantics for interrupted or blocked runs
+
+This layer is mutable by the automation runtime on every run and is optimized for resume accuracy, not long-term knowledge retention.
+
+**Repo memory owns:**
+
+- governed plan progress and `next_action`
+- knowledge files, promotions, trust levels, and summaries
+- scratchpad notes intended to persist across sessions
+- chat summaries and other durable session artifacts
+
+This layer remains the durable source of truth that other runs and interactive threads can inspect independently of one automation's local state.
+
+**Thread UI owns only ephemeral execution context:**
+
+- chain-of-thought and exploratory reasoning
+- one-off debugging traces and command output
+- conversational framing and local clarification during the run
+- transient observations that were not promoted into automation-local or repo memory
+
+If something must survive into the next run, it should be written into automation-local continuity state or governed repo memory before the run ends. The thread must never be the sole persistence layer for blockers, next-action state, branch expectations, or artifact references.
+
+A practical boundary rule follows from this split:
+
+- if the state is specific to one automation's resume path, keep it automation-local
+- if the state should be true for the repo regardless of which automation or person resumes work, write it to repo memory
+- if the state only helps the current conversation and has no resume value, leave it in the thread UI
 
 ### Phase 2 — Continuity UX · ☐ 0/3 complete
 
@@ -176,6 +214,7 @@ If continuity state and repo memory disagree, the app should prefer durable repo
 |---|---|
 | 2026-03-18 | Plan created from identified Codex desktop gap: recurring-run continuity, branch context, and blocker carry-forward |
 | 2026-03-18 | Completed Define the automation continuity schema (codex-desktop-automation-continuity 1/11) |
+| 2026-03-18 | Completed Define separation of concerns (codex-desktop-automation-continuity 2/11) |
 
 ---
 
