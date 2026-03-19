@@ -44,6 +44,15 @@ Roadmap for three cross-cutting improvements: `memory_update_frontmatter_bulk` t
 **Next action:** Phase 1, item 1 — implement `memory_update_frontmatter_bulk` in `write_tools.py`
 <!-- END: mcp-write-and-crosscutting-improvements -->
 
+<!-- BEGIN: ai-frontier-research -->
+### `ai-frontier-research.md` · status: active · trust: medium
+
+7-phase research plan building a knowledge base on frontier AI topics at conceptual depth: reasoning models and test-time compute scaling (Phase 1), alignment and post-training methods — RLHF/DPO/GRPO/Constitutional AI (Phase 2), RAG/long-context/persistent memory architecture (Phase 3), multi-agent systems and coordination (Phase 4), mechanistic interpretability and LLM epistemology (Phase 5), emerging architectures — Mamba/MoE/synthetic data (Phase 6), and AI epistemology connecting to the philosophy knowledge base — dynamical systems, compression, and what it means to "know" (Phase 7). Output in `knowledge/_unverified/ai-frontier/` organized by phase subfolder. 21 items total.
+
+**Progress:** 0/21 items complete
+**Next action:** Phase 1, item 1 — research reasoning models (o1/o3, DeepSeek R1, chain-of-thought, process reward models, test-time compute scaling)
+<!-- END: ai-frontier-research -->
+
 ---
 
 ## Completed plans
