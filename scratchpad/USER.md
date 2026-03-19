@@ -6,4 +6,4 @@ The agent reads this file at every session start. Write anything you want it to 
 
 ---
 
-_Nothing here yet. Add any context you'd like the agent to pick up at session start._
+This system is still very much a work-in-progress and being used to help build/design itself.
