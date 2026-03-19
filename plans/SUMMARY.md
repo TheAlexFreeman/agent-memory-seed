@@ -38,11 +38,8 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 
 <!-- BEGIN: django-stack-research -->
 ### `django-stack-research.md` · status: active · trust: medium
-
-Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker stack. 10 files planned across 7 phases. Priority order: Celery Canvas in depth → Celery worker/beat ops → drf-spectacular → Django test data/factories → Django async → Django security → Django migrations advanced → gunicorn/uvicorn deployment → database connection pooling → django-storages. Output goes to `knowledge/_unverified/django/`.
-
-**Progress:** 4/10 files written
-**Next action:** Begin Phase 3 — write `knowledge/_unverified/django/django-async.md`
+**Progress:** 5/10 items complete
+**Next action:** `django-security.md`
 <!-- END: django-stack-research -->
 
 ---

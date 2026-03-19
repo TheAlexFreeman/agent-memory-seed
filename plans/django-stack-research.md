@@ -1,12 +1,12 @@
 ---
-source: agent-generated
-type: research-plan
-origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-last_verified: 2026-03-18
-trust: medium
+last_verified: '2026-03-19'
+next_action: '`django-security.md`'
+origin_session: chats/2026/03/18/chat-001
+source: agent-generated
 status: active
-next_action: "Begin Phase 3 — write knowledge/_unverified/django/django-async.md"
+trust: medium
+type: research-plan
 ---
 
 # Research Plan: Django Stack — Gaps and Depth
@@ -87,11 +87,11 @@ The existing `django-react-drf.md` is solid on basics but `drf-spectacular` dese
 
 ---
 
-### Phase 3 — Django async · ☐ 0/1 complete
+### Phase 3 — Django async · ☑ 1/1 complete
 
 The async model is absent from the current knowledge base entirely. Relevant because Alex may want to use async views for real-time features or high-concurrency endpoints.
 
-5. ☐ `django-async.md`
+5. ☑ `django-async.md`
    - **Async view basics**: `async def` views, `asgiref`, running under Daphne/uvicorn vs. gunicorn (sync workers)
    - **`sync_to_async` / `async_to_sync`**: when each is needed, thread sensitivity, `thread_sensitive=True` default behavior
    - **ORM in async context**: `sync_to_async(queryset.get)`, the `_default_manager` caveat, the coming native async ORM (Django roadmap)
@@ -173,6 +173,7 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 | 2026-03-18 | Wrote `knowledge/_unverified/django/celery-worker-beat-ops.md`; Phase 1 complete, next up is `drf-spectacular.md` |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/drf-spectacular.md`; covers setup, @extend_schema, JWT auth, enum/versioning/CI validation |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/django-test-data-factories.md`; covers factory_boy 3.3, Celery mocking patterns, freezegun, responses; Phase 2 complete |
+| 2026-03-19 | Completed django-async.md (django-stack-research 5/10) |
 
 ---
 
