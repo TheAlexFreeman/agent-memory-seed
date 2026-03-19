@@ -11,19 +11,7 @@ Priority order for active work:
 1. `django-stack-research.md`
 2. `react-stack-research.md`
 3. `devops-docker-research.md`
-4. `philosophy-history-survey.md`
-5. `lesswrong-rationalist-community-research.md`
-
-<!-- BEGIN: philosophy-history-survey -->
-### `philosophy-history-survey.md` · status: active · trust: medium
-
-Broad survey of the history of philosophy — the overarching story of how ideas developed, what mattered in different times and places, how schools influenced one another. 26 output files planned across 7 phases + 4 synthesis files. Output goes to `knowledge/_unverified/philosophy/history/`.
-
-**Progress:** 0/26 files written (0/4 synthesis files)
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/philosophy/history/ancient/pre-socratics.md`
-<!-- END: philosophy-history-survey -->
-
----
+4. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
@@ -67,6 +55,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: philosophy-history-survey -->
+### `philosophy-history-survey.md` · status: complete · trust: medium
+
+Broad narrative survey of the history of philosophy: 26 period/tradition files across 7 phases (ancient through contemporary + non-Western) plus 4 cross-cutting synthesis files (mind-body, language/meaning, the self, science/metaphysics/religion). All output in `knowledge/_unverified/philosophy/history/`.
+
+**Progress:** 30/30 files written (26 period + 4 synthesis)
+**Completed:** 2026-03-19
+<!-- END: philosophy-history-survey -->
+
+---
 
 <!-- BEGIN: codex-desktop-github-network-ergonomics -->
 ### `codex-desktop-github-network-ergonomics.md` · status: complete · trust: medium

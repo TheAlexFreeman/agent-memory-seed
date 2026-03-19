@@ -5,8 +5,8 @@ origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
-status: active
-next_action: "Begin synthesis files — write knowledge/_unverified/philosophy/history/synthesis/mind-body-across-history.md"
+status: complete
+next_action: "Plan complete — all 26 period files and 4 synthesis files written; consider SUMMARY.md or cross-linking pass"
 ---
 
 # Research Plan: History of Philosophy — Broad Survey
@@ -257,14 +257,14 @@ Not an afterthought — these are independent developments of comparable depth a
 
 ---
 
-## Synthesis files (to write after period files are complete) · ☐ 0/4 complete
+## Synthesis files (to write after period files are complete) · ✓ 4/4 complete
 
 These cut across periods and track the four through-lines:
 
-- ☐ `synthesis/mind-body-across-history.md` — Aristotle's hylomorphism → Descartes' dualism → Kant's transcendental idealism → Hegel's absolute idealism → phenomenology → functionalism → embodied cognition. The longest sustained argument in Western philosophy.
-- ☐ `synthesis/language-thought-meaning-across-history.md` — Aristotle on meaning → medieval linguistics → Locke's ideas → Leibniz's universal characteristic → Frege/Russell → Wittgenstein → cognitive linguistics. Connect to our existing cognitive linguistics files.
-- ☐ `synthesis/the-self-across-history.md` — Plato's soul → Aristotle's psyche → Augustine's inner self → Descartes' cogito → Hume's bundle → Kant's transcendental unity → Hegel's spirit → Nietzsche's will to power → Ricoeur's narrative identity → contemporary.
-- ☐ `synthesis/science-metaphysics-religion-across-history.md` — The shifting authority claims across intellectual history; how the boundary between philosophy and science moved; secularization as philosophical process.
+- ✓ `synthesis/mind-body-across-history.md` — Aristotle's hylomorphism → Descartes' dualism → Kant's transcendental idealism → Hegel's absolute idealism → phenomenology → functionalism → embodied cognition. The longest sustained argument in Western philosophy.
+- ✓ `synthesis/language-thought-meaning-across-history.md` — Aristotle on meaning → medieval linguistics → Locke's ideas → Leibniz's universal characteristic → Frege/Russell → Wittgenstein → cognitive linguistics. Connect to our existing cognitive linguistics files.
+- ✓ `synthesis/the-self-across-history.md` — Plato's soul → Aristotle's psyche → Augustine's inner self → Descartes' cogito → Hume's bundle → Kant's transcendental unity → Hegel's spirit → Nietzsche's will to power → Ricoeur's narrative identity → contemporary.
+- ✓ `synthesis/science-metaphysics-religion-across-history.md` — The shifting authority claims across intellectual history; how the boundary between philosophy and science moved; secularization as philosophical process.
 
 ---
 
