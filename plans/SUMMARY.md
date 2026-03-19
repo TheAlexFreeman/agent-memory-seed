@@ -18,8 +18,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-**Progress:** 9/11 items complete
-**Next action:** Test recurring-run scenarios
+**Progress:** 10/11 items complete
+**Next action:** Define rollout metrics
 <!-- END: codex-desktop-automation-continuity -->
 
 ---

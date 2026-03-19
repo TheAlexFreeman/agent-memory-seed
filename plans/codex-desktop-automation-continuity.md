@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Test recurring-run scenarios
+next_action: Define rollout metrics
 origin_session: manual
 source: agent-generated
 status: active
@@ -336,9 +336,9 @@ Scheduling should consult continuity state before launching work so repeated aut
 
 The scheduler should not make deep product decisions on its own. Its role is to gate obvious non-starters, reopen viable in-progress work, and surface changed conditions early enough that the agent starts from the right premise.
 
-### Phase 4 — Validation and productization · ☐ 0/2 complete
+### Phase 4 — Validation and productization · ☐ 1/2 complete
 
-10. ☐ Test recurring-run scenarios
+10. ☑ Test recurring-run scenarios
    - daily research continuation
    - PR-follow-up automation
    - blocked network/auth run
@@ -350,6 +350,41 @@ The scheduler should not make deep product decisions on its own. Its role is to 
    - correct plan continuation rate
 
 ---
+
+### Phase 4 decisions (2026-03-18)
+
+#### 12. Recurring-run validation matrix
+
+Validation should prove that continuity works across the failure modes that motivated the plan, not just the happy path.
+
+| Scenario | What continuity must prove | Expected result |
+|---|---|---|
+| Daily research continuation | A pinned plan, next action, and prior branch reopen cleanly without repo-wide rediscovery. | Startup panel shows `ready`, resumes the same plan, and preserves artifact/branch context from the prior run. |
+| PR-follow-up automation | Branch/PR state survives between runs and writeback reflects publish status accurately. | Startup surfaces PR status, reuses the same branch when valid, and records follow-up outcome without losing prior blocker history. |
+| Blocked network/auth run | A known blocker prevents repeated doomed publish attempts. | Startup shows `blocked` or `waiting_on_user`, scheduling downgrades or skips the run, and blocker history remains visible. |
+| Branch drift between runs | Old continuity state does not silently override current repo truth. | Startup surfaces `repo_drift` / branch warning state, revalidates plan/branch assumptions, and forces a conscious resume path. |
+| Interrupted partial run | Partial artifacts and intended next action survive, but are clearly labeled incomplete. | Next run sees provisional artifacts, preserved intent, and a retry path distinct from a true blocker. |
+
+A continuity implementation is not ready if it only works for clean successful reruns. The point of the feature is to preserve state through interruptions, blockers, and drift.
+
+#### 13. Rollout metrics
+
+The rollout should measure whether continuity reduces rediscovery and repeated failure, not merely whether the app stored more metadata.
+
+**Primary metrics**
+
+- repeated rediscovery rate: how often the agent reopens broad repo context despite a valid pinned plan and continuity record
+- blocker recurrence rate: how often the same blocker causes repeated full execution attempts instead of early downgrade/skip behavior
+- correct plan continuation rate: how often the next run resumes the intended active plan and next action without manual repair
+
+**Secondary metrics**
+
+- branch reuse accuracy: same-branch resume when appropriate vs. unnecessary branch churn
+- stale-continuity warning frequency: how often drift or invalid pinned-plan state is caught before execution
+- interrupted-run recovery rate: how often a provisional run is resumed successfully rather than abandoned or misclassified
+- writeback completeness: share of runs that persist outcome, blocker, git, and artifact state successfully
+
+The release gate should be practical: continuity is successful when repeated automations start from the right state more often, skip doomed work earlier, and require less manual rediscovery than fresh-thread behavior.
 
 ## Open questions
 
@@ -374,6 +409,7 @@ The scheduler should not make deep product decisions on its own. Its role is to 
 | 2026-03-18 | Completed Define automatic writeback at run end (codex-desktop-automation-continuity 7/11) |
 | 2026-03-18 | Completed Define interruption and retry semantics (codex-desktop-automation-continuity 8/11) |
 | 2026-03-18 | Completed Add continuity-aware scheduling hooks (codex-desktop-automation-continuity 9/11) |
+| 2026-03-18 | Completed Test recurring-run scenarios (codex-desktop-automation-continuity 10/11) |
 
 ---
 
