@@ -13,7 +13,7 @@ Priority order for active work:
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
 **Progress:** 0/11 items complete
-**Next action:** Begin Phase 1/2 — write knowledge/_unverified/rationalist-community/origins/the-sequences-core-arguments.md
+**Next action:** Begin Phase 2/1 — write knowledge/_unverified/rationalist-community/origins/heuristics-biases-bayes-and-bounded-rationality.md
 <!-- END: lesswrong-rationalist-community-research -->
 
 ---
