@@ -69,6 +69,14 @@ Seven files covering Phase 1 (Greek foundation) and Phase 2 (Medieval synthesis)
 - **`cognitive-linguistics-metaphor-blending.md`** — Deep dive into three foundational cognitive linguistics programs: Lakoff & Johnson's Conceptual Metaphor Theory (primary metaphors, embodied grounding, radial categories, basic-level categories); Fauconnier & Turner's Conceptual Blending Theory (mental spaces, four network types, vital relations, compression, optimality principles); Sweetser's polysemy and viewpoint work (three-domain model for modality/conjunctions/perception verbs, frame semantics, fictive motion, subjectivity, gesture). Includes synthesis of how all three connect to the dynamical systems framework and LLM implications.
 - **`blending-compression-coupling-construal.md`** — Focused synthesis on three themes and their convergence in narrative world-understanding: (1) blending-as-compression — the AIT/MDL parallel, the key divergence (observer-relative vs. objective), and how blending optimality maps onto narrative aesthetics; (2) structural coupling and metaphor — primary metaphors as coupling deposits, languaging as intersubjective coupling, narrative as transmission of coupling history, and the asymmetry problem; (3) subjective construal — Langacker's spectrum, subjectification, narrative focalization as multi-perspective blending, the immersion/distance dual-mode. Synthesis: narrative as cognitive triangulation (compression + coupling + construal), with the dark side.
 
+<!-- section: rationalist-community -->
+### `rationalist-community/` — LessWrong and the Rationalist Community research (started 2026-03-19)
+
+Eleven-file narrative research program on the LessWrong/Rationalist community. See `plans/lesswrong-rationalist-community-research.md` for the full plan. All files carry `trust: low` pending Alex's review. Progress: 1/11.
+
+#### `origins/`
+- **`eliezer-yudkowsky-intellectual-biography.md`** — Yudkowsky's early autodidact background, Extropian/singularitarian milieu, the founding of SIAI, his central doctrines (recursive self-improvement, Friendly AI, Bayesian epistemology, reductionism, metaethics / CEV, "raising the sanity waterline"), and his role as writer-founder. Distinguishes biographical, doctrinal, and institutional-entrepreneurship dimensions.
+
 <!-- section: react -->
 ### `react/` — React 19 + Chakra UI 3 frontend research (ingested 2026-03-18)
 
