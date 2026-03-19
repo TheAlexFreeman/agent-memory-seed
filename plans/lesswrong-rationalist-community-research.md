@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-19'
-next_action: Begin Phase 2/1 — write knowledge/_unverified/rationalist-community/origins/heuristics-biases-bayes-and-bounded-rationality.md
+next_action: Begin Phase 3/1 — write knowledge/_unverified/rationalist-community/origins/robin-hanson-overcoming-bias-and-the-founding-split.md
 origin_session: chats/2026/03/18/chat-004
 source: agent-generated
 status: active
