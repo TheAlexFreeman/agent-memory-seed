@@ -26,6 +26,7 @@ HUMANS/tooling/scripts/resolve_memory_capabilities.py
 HUMANS/tooling/scripts/resolve_bootstrap_manifest.py
 HUMANS/tooling/scripts/resolve_task_readiness.py
 HUMANS/tooling/scripts/validate_memory_repo.py
+tools/agent_memory_mcp/path_policy.py
 HUMANS/tooling/tests/test_bootstrap_resolver.py
 HUMANS/tooling/tests/test_memory_capabilities.py
 HUMANS/tooling/tests/test_task_readiness.py
@@ -74,6 +75,7 @@ knowledge/_unverified/django/celery-advanced-patterns.md
 knowledge/_unverified/django/celery-canvas-in-depth.md
 knowledge/_unverified/django/celery-worker-beat-ops.md
 knowledge/_unverified/django/django-6.0-whats-new.md
+knowledge/_unverified/django/django-async.md
 knowledge/_unverified/django/django-caching-redis.md
 knowledge/_unverified/django/django-observability-structlog-sentry.md
 knowledge/_unverified/django/django-orm-postgres.md

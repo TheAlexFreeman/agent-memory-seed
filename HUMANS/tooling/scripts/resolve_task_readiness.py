@@ -607,7 +607,19 @@ def infer_profile(
     task_text: str | None = None,
     requested_profile: str | None = None,
 ) -> tuple[str, str]:
-    profiles = manifest["profiles"]
+    profiles = manifest.get("profiles")
+    if not isinstance(profiles, dict):
+        profiles = {}
+    task_detection = manifest.get("task_detection")
+    if not isinstance(task_detection, dict):
+        task_detection = {}
+    default_profile = task_detection.get("default_profile", "workspace_general")
+    profile_order = [
+        profile_name
+        for profile_name in task_detection.get("profile_order", [])
+        if isinstance(profile_name, str) and profile_name in profiles
+    ]
+
     if requested_profile:
         if requested_profile not in profiles:
             raise ValueError(f"Unknown task profile: {requested_profile}")
@@ -615,12 +627,6 @@ def infer_profile(
 
     normalized_task = (task_text or "").strip().lower()
     if normalized_task:
-        for profile_name in manifest["task_detection"]["profile_order"]:
-            profile = profiles[profile_name]
-            keywords = [keyword.lower() for keyword in profile["keywords"]]
-            if any(keyword in normalized_task for keyword in keywords):
-                return profile_name, "keyword_match"
-
         if any(keyword in normalized_task for keyword in INSTALL_KEYWORDS):
             if repo_hints["python"] and not repo_hints["node"]:
                 return "python_dependency_install", "repo_inferred"
@@ -632,7 +638,25 @@ def infer_profile(
             if repo_hints["node"] and not repo_hints["python"]:
                 return "node_validation", "repo_inferred"
 
-    return manifest["task_detection"]["default_profile"], "default"
+        for profile_name in profile_order:
+            profile = profiles.get(profile_name)
+            if not isinstance(profile, dict):
+                continue
+            keywords = [
+                keyword.lower()
+                for keyword in profile.get("keywords", [])
+                if isinstance(keyword, str)
+            ]
+            if any(keyword in normalized_task for keyword in keywords):
+                return profile_name, "keyword_match"
+
+    if default_profile in profiles:
+        return default_profile, "default"
+    if "workspace_general" in profiles:
+        return "workspace_general", "default"
+    if profiles:
+        return next(iter(profiles)), "default"
+    return "workspace_general", "default"
 
 
 def classify_remote_failure(message: str) -> str:
@@ -1405,8 +1429,18 @@ def build_ui_feedback(
     resolved_previous: list[dict[str, Any]],
     include_runtime: bool,
 ) -> dict[str, Any]:
-    ui_feedback = manifest["ui_feedback"]
-    profile = manifest["profiles"][profile_name]
+    ui_feedback = manifest.get("ui_feedback")
+    if not isinstance(ui_feedback, dict):
+        ui_feedback = {}
+    status_labels = ui_feedback.get("status_labels")
+    if not isinstance(status_labels, dict):
+        status_labels = {}
+    profiles = manifest.get("profiles")
+    if not isinstance(profiles, dict):
+        profiles = {}
+    profile = profiles.get(profile_name)
+    if not isinstance(profile, dict):
+        profile = {}
     status = "manifest_only"
     reason = "Runtime probes were skipped."
     recovery_message = None
@@ -1429,21 +1463,27 @@ def build_ui_feedback(
 
     blocker_summary = blockers[0]["summary"] if blockers else None
     return {
-        "title": ui_feedback["panel_title"],
+        "title": ui_feedback.get("panel_title", "Task Readiness"),
         "status": status,
-        "status_label": ui_feedback["status_labels"][status],
+        "status_label": status_labels.get(status, status.replace("_", " ").title()),
         "profile": profile_name,
-        "profile_title": profile["title"],
+        "profile_title": profile.get("title", profile_name.replace("_", " ").title()),
         "profile_source": profile_source,
         "checked_at": isoformat(checked_at),
         "reason": reason,
         "recovery_message": recovery_message,
-        "fallback_message": profile["fallback_message"],
+        "fallback_message": profile.get(
+            "fallback_message",
+            "Environment checks were not completed.",
+        ),
         "details_default": status != "ready",
         "manifest_action": {
-            "label": ui_feedback["manifest_action_label"],
+            "label": ui_feedback.get("manifest_action_label", "Open Manifest"),
             "path": MANIFEST_PATH.as_posix(),
-            "reason": ui_feedback["manifest_action_reason"],
+            "reason": ui_feedback.get(
+                "manifest_action_reason",
+                "Repo-declared task-readiness contract.",
+            ),
         },
         "check_count": len(check_results),
         "blocker_count": len(blockers),
@@ -1473,6 +1513,21 @@ def resolve_task_readiness(
 ) -> dict[str, Any]:
     manifest, errors, warnings = validate_manifest(repo_root)
     previous_blockers = previous_blockers or []
+    profiles = manifest.get("profiles")
+    if not isinstance(profiles, dict):
+        profiles = {}
+    checks = manifest.get("checks")
+    if not isinstance(checks, dict):
+        checks = {}
+    cache_policy = manifest.get("cache_policy")
+    if not isinstance(cache_policy, dict):
+        cache_policy = {}
+    execution = manifest.get("execution")
+    if not isinstance(execution, dict):
+        execution = {}
+    automation_integration = manifest.get("automation_integration")
+    if not isinstance(automation_integration, dict):
+        automation_integration = {}
 
     repo_hints = detect_repo_hints(
         repo_root,
@@ -1496,14 +1551,20 @@ def resolve_task_readiness(
 
     check_results: list[dict[str, Any]] = []
     checked_at = now_utc()
+    selected_profile = profiles.get(profile_name)
+    if not isinstance(selected_profile, dict):
+        selected_profile = {}
+
     if include_runtime and not errors:
-        for check_id in manifest["profiles"][profile_name]["checks"]:
+        for check_id in selected_profile.get("checks", []):
+            if check_id not in checks:
+                continue
             check_results.append(
                 resolve_check(
                     repo_root,
                     check_id=check_id,
-                    definition=manifest["checks"][check_id],
-                    cache_policy=manifest["cache_policy"],
+                    definition=checks[check_id],
+                    cache_policy=cache_policy,
                     checked_at=checked_at,
                     repo_hints=repo_hints,
                     command_runner=command_runner,
@@ -1523,13 +1584,13 @@ def resolve_task_readiness(
         include_runtime=include_runtime and not errors,
     )
 
-    if resolved_previous and manifest["automation_integration"]["notify_when_restored"]:
+    if resolved_previous and automation_integration.get("notify_when_restored"):
         warnings.append(
             "One or more previously carried-forward blockers are no longer active."
         )
 
     skip_unchanged_publish_attempts = (
-        manifest["automation_integration"]["skip_unchanged_publish_attempts"]
+        automation_integration.get("skip_unchanged_publish_attempts")
         and profile_name in {"pull_request", "publish_branch"}
         and any(blocker["unchanged_since_previous"] for blocker in blockers)
     )
@@ -1540,14 +1601,14 @@ def resolve_task_readiness(
         "profile_source": profile_source,
         "task_text": task_text,
         "repo_hints": repo_hints,
-        "cache_policy": manifest["cache_policy"],
-        "execution": manifest["execution"],
+        "cache_policy": cache_policy,
+        "execution": execution,
         "automation_integration": {
-            **manifest["automation_integration"],
+            **automation_integration,
             "skip_unchanged_publish_attempts_now": skip_unchanged_publish_attempts,
         },
-        "required_checks": list(manifest["profiles"][profile_name]["checks"]),
-        "final_gate_checks": list(manifest["profiles"][profile_name]["final_gate_checks"]),
+        "required_checks": list(selected_profile.get("checks", [])),
+        "final_gate_checks": list(selected_profile.get("final_gate_checks", [])),
         "check_results": check_results,
         "blockers": blockers,
         "resolved_previous_blockers": resolved_previous,

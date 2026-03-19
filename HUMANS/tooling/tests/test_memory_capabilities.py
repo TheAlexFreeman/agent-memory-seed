@@ -85,10 +85,35 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(
             raw_fallback_policy["policy"], "inherit_operation_change_class"
         )
+        self.assertEqual(raw_fallback_policy["runtime_export"], "opt_in")
+        self.assertEqual(
+            raw_fallback_policy["opt_in_env_var"],
+            "MEMORY_ENABLE_RAW_WRITE_TOOLS",
+        )
         self.assertTrue(raw_fallback_policy["requires_change_class"])
         self.assertEqual(
             raw_fallback_policy["preview_required_for"],
             ["proposed", "protected"],
+        )
+
+    def test_default_runtime_reports_raw_fallback_as_unavailable(self) -> None:
+        resolution = resolver.resolve_capabilities(REPO_ROOT)
+
+        self.assertEqual(resolution["errors"], [], "\n".join(resolution["errors"]))
+        runtime = resolution["capability_discovery"]
+        self.assertEqual(runtime["mode"], "semantic")
+        self.assertFalse(runtime["raw_fallback_available"])
+        self.assertEqual(runtime["available_raw_tools"], [])
+        self.assertEqual(
+            runtime["unavailable_opt_in_raw_tools"],
+            [
+                "memory_commit",
+                "memory_delete",
+                "memory_edit",
+                "memory_move",
+                "memory_update_frontmatter",
+                "memory_write",
+            ],
         )
 
     def test_manifest_declares_hybrid_integration_boundary(self) -> None:

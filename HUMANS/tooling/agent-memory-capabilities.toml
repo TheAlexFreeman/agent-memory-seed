@@ -165,6 +165,8 @@ notes = "Protected-target writes such as README.md, most meta/ files, and skills
 
 [raw_fallback_policy]
 policy = "inherit_operation_change_class"
+runtime_export = "opt_in"
+opt_in_env_var = "MEMORY_ENABLE_RAW_WRITE_TOOLS"
 requires_change_class = true
 preview_required_for = ["proposed", "protected"]
 read_only_mode = "emit_deferred_action_summary"

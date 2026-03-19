@@ -113,12 +113,13 @@ class MemoryMCPTests(unittest.TestCase):
 
     def test_new_tools_are_exported(self) -> None:
         for name in (
-            "memory_write",
-            "memory_commit",
             "memory_git_log",
             "memory_mark_plan_item_complete",
+            "memory_create_plan",
         ):
             self.assertTrue(callable(getattr(self.module, name)))
+        self.assertFalse(hasattr(self.module, "memory_write"))
+        self.assertFalse(hasattr(self.module, "memory_commit"))
 
 
 if __name__ == "__main__":

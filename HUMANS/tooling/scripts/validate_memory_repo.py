@@ -5,8 +5,11 @@ import json
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import date
-from pathlib import Path
+from datetime import date, datetime
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+import frontmatter as fmlib
 
 try:
     import tomllib
@@ -215,9 +218,7 @@ ONBOARDING_EXPORT_TEMPLATE_PATH = Path("HUMANS/tooling/onboard-export-template.m
 ONBOARDING_EXPORT_REQUIRED_PHRASE = (
     "bash HUMANS/tooling/scripts/onboard-export.sh <file>"
 )
-ONBOARDING_EXPORT_FORBIDDEN_PATTERNS = (
-    r"bash scripts/onboard-export\.sh(?: <file>)?",
-)
+ONBOARDING_EXPORT_FORBIDDEN_PATTERNS = (r"bash scripts/onboard-export\.sh(?: <file>)?",)
 ADAPTER_FILES = (Path("AGENTS.md"), Path("CLAUDE.md"), Path(".cursorrules"))
 ROOT_SETUP_TARGETS = {
     Path("setup.sh"): "setup/setup.sh",
@@ -225,54 +226,30 @@ ROOT_SETUP_TARGETS = {
 }
 CANONICAL_SETUP_FILES = (Path("setup/setup.sh"), Path("setup/setup.html"))
 
-PROMPT_START_LINE = (
-    "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
-)
-PROMPT_ROUTE_LINE = (
-    "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
-)
-PROMPT_MCP_LINE = (
-    "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
-LIVE_CONFIG_LINE = (
-    "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
-)
+PROMPT_START_LINE = "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
+PROMPT_ROUTE_LINE = "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
+PROMPT_MCP_LINE = "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+LIVE_CONFIG_LINE = "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
 ADAPTER_ROUTING_PHRASE = "follow the routing rules in `meta/quick-reference.md`"
 ADAPTER_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes"
 README_START_PHRASE = "Start every session with `meta/quick-reference.md`."
-README_ARCHITECTURE_PHRASE = (
-    "Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review"
-)
-README_MCP_PHRASE = (
-    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
+README_ARCHITECTURE_PHRASE = "Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review"
+MCP_PREFERENCE_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 QUICK_REFERENCE_ROUTER_PHRASE = (
     "Use this file as the operational router for every session:"
 )
-FIRST_RUN_MCP_PHRASE = README_MCP_PHRASE
-SESSION_CHECKLISTS_MCP_PHRASE = README_MCP_PHRASE
-SKILLS_SUMMARY_MCP_PHRASE = (
-    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes while executing these skills; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
-ONBOARDING_SKILL_MCP_PHRASE = (
-    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during onboarding; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
-SESSION_START_SKILL_MCP_PHRASE = (
-    "When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
-SESSION_SYNC_SKILL_MCP_PHRASE = (
-    "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
-SESSION_WRAPUP_SKILL_MCP_PHRASE = (
-    "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-)
+FIRST_RUN_MCP_PHRASE = MCP_PREFERENCE_PHRASE
+SESSION_CHECKLISTS_MCP_PHRASE = MCP_PREFERENCE_PHRASE
+SKILLS_SUMMARY_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes while executing these skills; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+ONBOARDING_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during onboarding; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+SESSION_START_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
+SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
 SETUP_GUIDANCE_REQUIRED_PATTERNS = (
     r"live routing (?:in|from)\s+`?meta/quick-reference\.md`?",
 )
-SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (
-    r"follow the bootstrap sequence",
-)
+SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
 SESSION_START_SKILL_PATH = Path("skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
     "compact returning manifest in `meta/quick-reference.md`",
@@ -381,7 +358,7 @@ def iter_access_files(root: Path) -> list[Path]:
 
 def parse_frontmatter(
     path: Path, text: str, result: ValidationResult
-) -> dict[str, str] | None:
+) -> dict[str, Any] | None:
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -397,28 +374,24 @@ def parse_frontmatter(
         )
         return None
 
-    data: dict[str, str] = {}
-    for offset, line in enumerate(lines[1:end_index], start=2):
-        if not line.strip():
-            continue
-        if ":" not in line:
-            result.error(f"{path}:{offset}: malformed frontmatter line {line!r}")
-            continue
-        key, value = line.split(":", 1)
-        key = key.strip()
-        value = value.strip()
-        if not key or not value:
-            result.error(f"{path}:{offset}: malformed frontmatter key/value pair")
-            continue
-        data[key] = value
-    return data
+    try:
+        return dict(fmlib.loads(text).metadata)
+    except Exception as exc:
+        result.error(f"{path}: invalid YAML frontmatter ({exc})")
+        return None
 
 
 def validate_iso_date(
     value: object, path: Path, field_name: str, result: ValidationResult
 ) -> None:
+    if isinstance(value, datetime):
+        value = value.date()
+    if isinstance(value, date):
+        return
     if not isinstance(value, str):
-        result.error(f"{path}: {field_name} must be a string in YYYY-MM-DD format")
+        result.error(
+            f"{path}: {field_name} must be a date or string in YYYY-MM-DD format"
+        )
         return
     try:
         date.fromisoformat(value)
@@ -426,6 +399,27 @@ def validate_iso_date(
         result.error(
             f"{path}: {field_name} must be a valid YYYY-MM-DD date, got {value!r}"
         )
+
+
+def normalize_repo_relative_path(raw_path: str) -> str | None:
+    if not raw_path or raw_path.startswith(("/", "\\")):
+        return None
+    if Path(raw_path).is_absolute():
+        return None
+
+    parts: list[str] = []
+    for part in raw_path.replace("\\", "/").split("/"):
+        if part in {"", "."}:
+            continue
+        if part == "..":
+            if not parts:
+                return None
+            parts.pop()
+            continue
+        parts.append(part)
+
+    normalized = "/".join(parts)
+    return normalized or None
 
 
 def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> None:
@@ -486,14 +480,20 @@ def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> No
             )
 
         next_action = frontmatter.get("next_action")
+        if status == "complete":
+            return
         if not next_action:
-            result.error(f"{path}: plan files must define non-empty frontmatter key 'next_action'")
+            result.error(
+                f"{path}: plan files must define non-empty frontmatter key 'next_action'"
+            )
 
 
-def validate_access_file(path: Path, result: ValidationResult) -> None:
+def validate_access_file(path: Path, root: Path, result: ValidationResult) -> None:
     text = read_text(path, result)
     if text is None:
         return
+    namespace = path.relative_to(root).parts[0]
+    is_archive = path.name == "ACCESS.archive.jsonl"
 
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
         line = raw_line.strip()
@@ -518,6 +518,26 @@ def validate_access_file(path: Path, result: ValidationResult) -> None:
 
         if not isinstance(payload["file"], str):
             result.error(f"{path}:{line_number}: file must be a string")
+        else:
+            normalized_file = normalize_repo_relative_path(payload["file"])
+            if normalized_file is None:
+                result.error(
+                    f"{path}:{line_number}: file must be a repo-relative path inside the memory repo"
+                )
+            else:
+                file_parts = PurePosixPath(normalized_file).parts
+                if not file_parts or file_parts[0] != namespace:
+                    result.error(
+                        f"{path}:{line_number}: file must stay inside the owning namespace {namespace!r}, got {normalized_file!r}"
+                    )
+                else:
+                    target_path = root.joinpath(*file_parts)
+                    if not target_path.exists():
+                        message = f"{path}:{line_number}: file references missing target {normalized_file!r}"
+                        if is_archive:
+                            result.warn(message)
+                        else:
+                            result.error(message)
         validate_iso_date(payload["date"], path, f"line {line_number} date", result)
         if not isinstance(payload["task"], str):
             result.error(f"{path}:{line_number}: task must be a string")
@@ -552,6 +572,51 @@ def validate_access_file(path: Path, result: ValidationResult) -> None:
             result.warn(
                 f"{path}:{line_number}: unknown ACCESS fields present: {', '.join(sorted(unknown_keys))}"
             )
+
+
+def validate_chat_leaf_sessions(root: Path, result: ValidationResult) -> None:
+    chats_root = root / "chats"
+    if not chats_root.exists():
+        return
+
+    for session_dir in sorted(chats_root.glob("*/*/*/chat-*")):
+        summary_path = session_dir / "SUMMARY.md"
+        reflection_path = session_dir / "reflection.md"
+        session_id = session_dir.relative_to(root).as_posix()
+
+        if not summary_path.exists():
+            result.error(f"{summary_path}: missing chat leaf SUMMARY.md")
+        else:
+            text = read_text(summary_path, result)
+            if text is not None:
+                frontmatter = parse_frontmatter(summary_path, text, result)
+                body = text
+                if frontmatter is not None:
+                    try:
+                        body = fmlib.loads(text).content
+                    except Exception:
+                        body = text
+                    session_value = frontmatter.get("session")
+                    if session_value is not None and str(session_value) != session_id:
+                        result.error(
+                            f"{summary_path}: frontmatter session must match {session_id!r}, got {session_value!r}"
+                        )
+                    if "date" in frontmatter:
+                        validate_iso_date(
+                            frontmatter["date"], summary_path, "date", result
+                        )
+
+                first_nonempty_line = next(
+                    (line.strip() for line in body.splitlines() if line.strip()),
+                    "",
+                )
+                if not first_nonempty_line.startswith("# Chat Summary"):
+                    result.error(
+                        f"{summary_path}: chat leaf summaries must begin with '# Chat Summary'"
+                    )
+
+        if not reflection_path.exists():
+            result.warn(f"{reflection_path}: missing session reflection note")
 
 
 def extract_manifest_row(text: str, session_type: str) -> str | None:
@@ -611,9 +676,7 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
         for key in EXPECTED_BOOTSTRAP_MODES:
             value = mode_detection.get(key)
             if not isinstance(value, str) or not value.strip():
-                result.error(
-                    f"{path}: mode_detection.{key} must be a non-empty string"
-                )
+                result.error(f"{path}: mode_detection.{key} must be a non-empty string")
         for key in (
             "warn_on_detached_head",
             "warn_on_worktree_branch_drift",
@@ -745,7 +808,10 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         result.error(f"{path}: version must be 1")
     if manifest.get("kind") != "agent-task-readiness":
         result.error(f"{path}: kind must be 'agent-task-readiness'")
-    if not isinstance(manifest.get("manifest_role"), str) or not manifest["manifest_role"].strip():
+    if (
+        not isinstance(manifest.get("manifest_role"), str)
+        or not manifest["manifest_role"].strip()
+    ):
         result.error(f"{path}: manifest_role must be a non-empty string")
 
     resolver_entrypoint = manifest.get("resolver_entrypoint")
@@ -764,7 +830,9 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
             result.error(
                 f"{path}: task_detection.default_profile must be 'workspace_general'"
             )
-        if task_detection.get("profile_order") != list(EXPECTED_TASK_READINESS_PROFILE_ORDER):
+        if task_detection.get("profile_order") != list(
+            EXPECTED_TASK_READINESS_PROFILE_ORDER
+        ):
             result.error(
                 f"{path}: task_detection.profile_order must be {list(EXPECTED_TASK_READINESS_PROFILE_ORDER)!r}"
             )
@@ -821,7 +889,10 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
             "manifest_action_label",
             "manifest_action_reason",
         ):
-            if not isinstance(ui_feedback.get(key), str) or not ui_feedback[key].strip():
+            if (
+                not isinstance(ui_feedback.get(key), str)
+                or not ui_feedback[key].strip()
+            ):
                 result.error(f"{path}: ui_feedback.{key} must be a non-empty string")
         for key in ("details_when_blocked_only", "green_summary_only"):
             if not isinstance(ui_feedback.get(key), bool):
@@ -831,7 +902,10 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
             result.error(f"{path}: ui_feedback.status_labels must be a TOML table")
         else:
             for key in EXPECTED_TASK_READINESS_STATUS_LABELS:
-                if not isinstance(status_labels.get(key), str) or not status_labels[key].strip():
+                if (
+                    not isinstance(status_labels.get(key), str)
+                    or not status_labels[key].strip()
+                ):
                     result.error(
                         f"{path}: ui_feedback.status_labels.{key} must be a non-empty string"
                     )
@@ -846,7 +920,9 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         checks = {}
 
     missing_profiles = [
-        profile for profile in EXPECTED_TASK_READINESS_PROFILES if profile not in profiles
+        profile
+        for profile in EXPECTED_TASK_READINESS_PROFILES
+        if profile not in profiles
     ]
     if missing_profiles:
         result.error(
@@ -854,7 +930,9 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         )
 
     missing_checks = [
-        check_id for check_id in EXPECTED_TASK_READINESS_CHECKS if check_id not in checks
+        check_id
+        for check_id in EXPECTED_TASK_READINESS_CHECKS
+        if check_id not in checks
     ]
     if missing_checks:
         result.error(
@@ -1012,9 +1090,13 @@ def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
         if "meta/quick-reference.md" not in text:
             result.error(f"{path}: must point agents to meta/quick-reference.md")
         if ADAPTER_ROUTING_PHRASE not in text:
-            result.error(f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}")
+            result.error(
+                f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}"
+            )
         if ADAPTER_MCP_PHRASE not in text:
-            result.error(f"{path}: missing MCP preference phrase {ADAPTER_MCP_PHRASE!r}")
+            result.error(
+                f"{path}: missing MCP preference phrase {ADAPTER_MCP_PHRASE!r}"
+            )
 
 
 def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
@@ -1026,7 +1108,12 @@ def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
         text = read_text(path, result)
         if text is None:
             continue
-        for phrase in (PROMPT_START_LINE, PROMPT_ROUTE_LINE, PROMPT_MCP_LINE, LIVE_CONFIG_LINE):
+        for phrase in (
+            PROMPT_START_LINE,
+            PROMPT_ROUTE_LINE,
+            PROMPT_MCP_LINE,
+            LIVE_CONFIG_LINE,
+        ):
             if phrase not in text:
                 result.error(f"{path}: missing prompt-copy phrase {phrase!r}")
 
@@ -1042,9 +1129,7 @@ def validate_setup_guidance(root: Path, result: ValidationResult) -> None:
             continue
         for pattern in SETUP_GUIDANCE_REQUIRED_PATTERNS:
             if not re.search(pattern, text):
-                result.error(
-                    f"{path}: missing setup-guidance pattern {pattern!r}"
-                )
+                result.error(f"{path}: missing setup-guidance pattern {pattern!r}")
         for pattern in SETUP_GUIDANCE_FORBIDDEN_PATTERNS:
             if re.search(pattern, text):
                 result.error(
@@ -1077,9 +1162,11 @@ def validate_onboarding_export_template(root: Path, result: ValidationResult) ->
 def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
     readme = read_text(root / "README.md", result)
     if readme is not None:
-        for phrase in (README_START_PHRASE, README_ARCHITECTURE_PHRASE, README_MCP_PHRASE):
+        for phrase in (README_START_PHRASE, README_ARCHITECTURE_PHRASE):
             if phrase not in readme:
-                result.error(f"{root / 'README.md'}: missing contract phrase {phrase!r}")
+                result.error(
+                    f"{root / 'README.md'}: missing contract phrase {phrase!r}"
+                )
 
     session_checklists = read_text(root / "meta" / "session-checklists.md", result)
     if session_checklists is not None:
@@ -1104,7 +1191,9 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
         if text is not None:
             for phrase in SESSION_START_REQUIRED_PHRASES:
                 if phrase not in text:
-                    result.error(f"{session_start}: missing startup-skill phrase {phrase!r}")
+                    result.error(
+                        f"{session_start}: missing startup-skill phrase {phrase!r}"
+                    )
             for pattern in SESSION_START_FORBIDDEN_PATTERNS:
                 if re.search(pattern, text, re.MULTILINE):
                     result.error(
@@ -1128,18 +1217,14 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
 
     skills_summary = read_text(root / SKILLS_SUMMARY_PATH, result)
     if skills_summary is not None and SKILLS_SUMMARY_MCP_PHRASE not in skills_summary:
-        result.error(
-            f"{root / SKILLS_SUMMARY_PATH}: missing MCP preference guidance"
-        )
+        result.error(f"{root / SKILLS_SUMMARY_PATH}: missing MCP preference guidance")
 
     onboarding_skill = read_text(root / ONBOARDING_SKILL_PATH, result)
     if (
         onboarding_skill is not None
         and ONBOARDING_SKILL_MCP_PHRASE not in onboarding_skill
     ):
-        result.error(
-            f"{root / ONBOARDING_SKILL_PATH}: missing MCP preference guidance"
-        )
+        result.error(f"{root / ONBOARDING_SKILL_PATH}: missing MCP preference guidance")
 
     session_sync = read_text(root / SESSION_SYNC_SKILL_PATH, result)
     if session_sync is not None and SESSION_SYNC_SKILL_MCP_PHRASE not in session_sync:
@@ -1196,12 +1281,13 @@ def validate_repo(root: Path) -> ValidationResult:
     validate_onboarding_export_template(root, result)
     validate_contract_consistency(root, result)
     validate_quarantine(root, result)
+    validate_chat_leaf_sessions(root, result)
 
     for path in iter_content_files(root):
         validate_frontmatter(path, root, result)
 
     for path in iter_access_files(root):
-        validate_access_file(path, result)
+        validate_access_file(path, root, result)
 
     return result
 

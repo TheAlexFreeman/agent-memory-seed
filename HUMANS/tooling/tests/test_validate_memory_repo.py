@@ -26,7 +26,6 @@ PROMPT_MCP_LINE = validator.PROMPT_MCP_LINE
 LIVE_CONFIG_LINE = validator.LIVE_CONFIG_LINE
 ADAPTER_ROUTING_LINE = validator.ADAPTER_ROUTING_PHRASE
 ADAPTER_MCP_LINE = validator.ADAPTER_MCP_PHRASE
-README_MCP_LINE = validator.README_MCP_PHRASE
 FIRST_RUN_MCP_LINE = validator.FIRST_RUN_MCP_PHRASE
 SESSION_CHECKLISTS_MCP_LINE = validator.SESSION_CHECKLISTS_MCP_PHRASE
 SKILLS_SUMMARY_MCP_LINE = validator.SKILLS_SUMMARY_MCP_PHRASE
@@ -412,7 +411,10 @@ def write(path: Path, content: str) -> None:
 
 def build_minimal_repo(root: Path) -> None:
     write(root / "agent-bootstrap.toml", VALID_BOOTSTRAP_MANIFEST)
-    write(root / "HUMANS" / "tooling" / "agent-task-readiness.toml", VALID_TASK_READINESS_MANIFEST)
+    write(
+        root / "HUMANS" / "tooling" / "agent-task-readiness.toml",
+        VALID_TASK_READINESS_MANIFEST,
+    )
     write(
         root / "HUMANS" / "tooling" / "scripts" / "resolve_task_readiness.py",
         "#!/usr/bin/env python3\n",
@@ -663,7 +665,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("missing task-readiness manifest" in error for error in result.errors)
+                any(
+                    "missing task-readiness manifest" in error
+                    for error in result.errors
+                )
             )
 
     def test_task_readiness_manifest_with_wrong_default_profile_fails(self) -> None:
@@ -682,7 +687,8 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(
                 any(
-                    "task_detection.default_profile must be 'workspace_general'" in error
+                    "task_detection.default_profile must be 'workspace_general'"
+                    in error
                     for error in result.errors
                 )
             )
@@ -702,7 +708,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("references unknown check 'missing_check'" in error for error in result.errors)
+                any(
+                    "references unknown check 'missing_check'" in error
+                    for error in result.errors
+                )
             )
 
     def test_bootstrap_manifest_with_wrong_router_fails(self) -> None:
@@ -1336,6 +1345,118 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 any(
                     "quarantine file expected source: external-research" in w
                     for w in result.warnings
+                )
+            )
+
+    def test_single_quoted_frontmatter_dates_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: 'user-stated'
+                    origin_session: manual
+                    created: '2026-03-16'
+                    last_verified: '2026-03-16'
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+
+    def test_access_entry_with_path_traversal_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.jsonl",
+                '{"file":"../identity/profile.md","date":"2026-03-16","task":"test","helpfulness":0.7,"note":"used"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "file must be a repo-relative path inside the memory repo" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_access_entry_with_missing_live_target_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.jsonl",
+                '{"file":"skills/missing.md","date":"2026-03-16","task":"test","helpfulness":0.7,"note":"used"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "file references missing target 'skills/missing.md'" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_access_archive_missing_target_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.archive.jsonl",
+                '{"file":"skills/missing.md","date":"2026-03-16","task":"test","helpfulness":0.7,"note":"used"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any(
+                    "file references missing target 'skills/missing.md'" in warning
+                    for warning in result.warnings
+                )
+            )
+
+    def test_chat_leaf_missing_reflection_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "chats" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+                "# Chat Summary\n\nSession notes.\n",
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any(
+                    "missing session reflection note" in warning
+                    for warning in result.warnings
+                )
+            )
+
+    def test_chat_leaf_summary_without_heading_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "chats" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+                "# Chat Log\n\nSession notes.\n",
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "chat leaf summaries must begin with '# Chat Summary'" in error
+                    for error in result.errors
                 )
             )
 

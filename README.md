@@ -12,12 +12,6 @@ An adaptive, self-organizing, version-controlled memory layer for AI agents. Any
 
 You are an AI agent reading this repository. Start every session with `meta/quick-reference.md`. Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review, or when you need the system architecture and governance reference.
 
-Compatible tooling may also read `agent-bootstrap.toml`, the machine-readable preload contract for this repo. Treat it as the tool-facing companion to `meta/quick-reference.md`, not a replacement for that Markdown router.
-
-Compatible tooling may also read `HUMANS/tooling/agent-task-readiness.toml`, the repo-declared preflight contract for task-aware GitHub, network, runtime, and package-manager checks. Treat it as readiness metadata for publish, install, and validation flows, not as a replacement for the startup router or task execution logic.
-
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Purpose
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
@@ -58,9 +52,6 @@ For the complete mapping of which files to load per session type, see `meta/quic
 
 ```
 /
-├── .codex/               ← Project-scoped Codex config preferring the local agent-memory MCP.
-│   └── config.toml       ← Launches `HUMANS/tooling/scripts/memory_mcp.py` against this repo.
-├── agent-bootstrap.toml   ← Repo-declared startup manifest for compatible tooling.
 ├── setup.sh               ← Repo-root compatibility wrapper for `setup/setup.sh`.
 ├── setup.html             ← Repo-root compatibility wrapper for `setup/setup.html`.
 ├── README.md              ← You are here. System architecture and protocols.
@@ -132,11 +123,10 @@ For the complete mapping of which files to load per session type, see `meta/quic
     │   ├── DESIGN.md      ← Design philosophy, use cases, and future directions.
     │   └── GLOSSARY.md    ← Definitions of system terminology (human reference only).
     └── tooling/           ← Maintenance tooling and tests.
-        ├── agent-task-readiness.toml ← Repo-declared task-readiness/preflight contract.
         ├── mcp-config-example.json ← Example Claude Desktop MCP configuration.
         ├── onboard-export-template.md ← Structured format for onboarding exports.
-        ├── scripts/       ← memory_mcp.py, validate_memory_repo.py, resolve_* prototypes, onboard-export.sh.
-        └── tests/         ← Test suite for the validator, resolver prototypes, and import tooling.
+        ├── scripts/       ← memory_mcp.py, validate_memory_repo.py, onboard-export.sh.
+        └── tests/         ← Test suite for the validator and import tooling.
 
 ```
 

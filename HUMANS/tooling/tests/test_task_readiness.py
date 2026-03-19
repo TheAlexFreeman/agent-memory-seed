@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -62,6 +64,37 @@ class TaskReadinessTests(unittest.TestCase):
         self.assertEqual(resolution["errors"], [], "\n".join(resolution["errors"]))
         self.assertEqual(resolution["ui_feedback"]["status"], "manifest_only")
 
+    def test_malformed_manifest_returns_structured_errors_without_crashing(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            manifest_path = root / "HUMANS" / "tooling" / "agent-task-readiness.toml"
+            manifest_path.parent.mkdir(parents=True, exist_ok=True)
+            manifest_path.write_text(
+                textwrap.dedent(
+                    """\
+                    version = 1
+                    kind = "agent-task-readiness"
+                    resolver_entrypoint = "missing.py"
+                    manifest_role = "Task readiness contract"
+                    task_detection = []
+                    profiles = []
+                    checks = []
+                    cache_policy = []
+                    execution = []
+                    automation_integration = []
+                    ui_feedback = []
+                    """
+                ),
+                encoding="utf-8",
+            )
+
+            resolution = resolver.resolve_task_readiness(root, include_runtime=False)
+
+            self.assertTrue(resolution["errors"])
+            self.assertEqual(resolution["ui_feedback"]["status"], "manifest_only")
+            self.assertEqual(resolution["profile"], "workspace_general")
+            self.assertEqual(resolution["required_checks"], [])
+
     def test_task_text_infers_pull_request_profile(self) -> None:
         manifest = resolver.load_manifest(REPO_ROOT)
         profile, source = resolver.infer_profile(
@@ -72,6 +105,17 @@ class TaskReadinessTests(unittest.TestCase):
 
         self.assertEqual(profile, "pull_request")
         self.assertEqual(source, "keyword_match")
+
+    def test_validation_task_prefers_repo_hint_over_keyword_bias(self) -> None:
+        manifest = resolver.load_manifest(REPO_ROOT)
+        profile, source = resolver.infer_profile(
+            manifest,
+            {"python": False, "node": True},
+            task_text="run tests",
+        )
+
+        self.assertEqual(profile, "node_validation")
+        self.assertEqual(source, "repo_inferred")
 
     def test_pull_request_profile_reports_ready_when_all_checks_pass(self) -> None:
         command_runner = make_command_runner(

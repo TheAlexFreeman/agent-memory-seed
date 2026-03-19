@@ -17,6 +17,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+import frontmatter as fmlib
+
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
@@ -205,19 +207,17 @@ def parse_frontmatter_value(path: Path, key: str) -> str | None:
     if not path.exists():
         return None
     text = read_text(path)
-    lines = text.splitlines()
-    if not lines or lines[0].strip() != "---":
+    if not text.lstrip().startswith("---"):
         return None
-    for line in lines[1:]:
-        if line.strip() == "---":
-            break
-        if ":" not in line:
-            continue
-        candidate_key, candidate_value = line.split(":", 1)
-        if candidate_key.strip() != key:
-            continue
-        return candidate_value.strip().strip('"')
-    return None
+    try:
+        metadata = dict(fmlib.loads(text).metadata)
+    except Exception:
+        return None
+
+    value = metadata.get(key)
+    if value is None:
+        return None
+    return str(value)
 
 
 def has_chat_history(repo_root: Path) -> bool:

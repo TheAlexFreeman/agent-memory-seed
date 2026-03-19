@@ -1,6 +1,6 @@
 ---
 created: '2026-03-19'
-last_verified: '2026-03-19'
+origin_session: manual
 source: external-research
 trust: low
 ---

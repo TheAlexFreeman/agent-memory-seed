@@ -17,6 +17,15 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ..path_policy import (
+    forbid_prefix,
+    require_under_prefix,
+    resolve_repo_path,
+    validate_session_id,
+    validate_slug,
+    validate_top_level_root,
+)
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
@@ -26,6 +35,10 @@ _IDENTITY_CHURN_LIMIT = 5
 
 # Module-level session counter for identity trait updates
 _identity_updates_this_session: int = 0
+
+
+def _plan_path(plan_id: str) -> str:
+    return f"plans/{validate_slug(plan_id, field_name='plan_id')}.md"
 
 
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
@@ -90,7 +103,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        plan_path = f"plans/{plan_id}.md"
+        plan_path = _plan_path(plan_id)
         abs_plan = repo.abs_path(plan_path)
         if not abs_plan.exists():
             raise NotFoundError(f"Plan not found: {plan_path}")
@@ -238,14 +251,15 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        if "_unverified" not in source_path:
-            raise ValidationError(
-                f"source_path must be under knowledge/_unverified/: {source_path}"
-            )
+        source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
+        require_under_prefix(
+            source_path,
+            "knowledge/_unverified",
+            field_name="source_path",
+        )
         if trust_level not in ("medium", "high"):
             raise ValidationError(f"trust_level must be 'medium' or 'high', got: {trust_level}")
 
-        abs_source = repo.abs_path(source_path)
         if not abs_source.exists():
             raise NotFoundError(f"Source file not found: {source_path}")
 
@@ -253,11 +267,18 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         # Infer target path
         if target_path is None:
-            target_path = source_path.replace("/_unverified/", "/", 1)
-        if "_unverified" in target_path:
-            raise ValidationError(
-                f"target_path must not be under _unverified/: {target_path}"
-            )
+            target_path = source_path.replace("knowledge/_unverified/", "knowledge/", 1)
+        target_path, _ = resolve_repo_path(repo, target_path, field_name="target_path")
+        validate_top_level_root(
+            target_path,
+            allowed_roots=("knowledge",),
+            field_name="target_path",
+        )
+        forbid_prefix(
+            target_path,
+            "knowledge/_unverified",
+            field_name="target_path",
+        )
 
         # Update frontmatter before moving
         fm_dict, body = read_with_frontmatter(abs_source)
@@ -374,17 +395,17 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        if "_unverified" in source_path:
+        source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
+        validate_top_level_root(
+            source_path,
+            allowed_roots=("knowledge",),
+            field_name="source_path",
+        )
+        if source_path.startswith("knowledge/_unverified/"):
             raise ValidationError(
                 f"source_path is already under _unverified/: {source_path}. "
                 "Use memory_archive_knowledge instead if you want to archive it."
             )
-        if not source_path.startswith("knowledge/"):
-            raise ValidationError(
-                f"source_path must be under knowledge/: {source_path}"
-            )
-
-        abs_source = repo.abs_path(source_path)
         if not abs_source.exists():
             raise NotFoundError(f"File not found: {source_path}")
 
@@ -499,10 +520,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        if not source_path.startswith("knowledge/"):
-            raise ValidationError(f"source_path must be under knowledge/: {source_path}")
-
-        abs_source = repo.abs_path(source_path)
+        source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
+        validate_top_level_root(
+            source_path,
+            allowed_roots=("knowledge",),
+            field_name="source_path",
+        )
         if not abs_source.exists():
             raise NotFoundError(f"File not found: {source_path}")
 
@@ -531,7 +554,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         # Remove from source SUMMARY.md
         section_id = infer_section_id_from_path(source_path)
-        if "_unverified" in source_path:
+        if source_path.startswith("knowledge/_unverified/"):
             summary_path = "knowledge/_unverified/SUMMARY.md"
         else:
             summary_path = "knowledge/SUMMARY.md"
@@ -576,8 +599,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         path: str,
         content: str,
         source: str,
+        session_id: str,
         trust: str = "low",
-        session_id: str | None = None,
         summary_entry: str | None = None,
     ) -> str:
         """Create a new knowledge file with correct frontmatter and SUMMARY entry.
@@ -586,7 +609,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         quarantined until verified by the user via memory_promote_knowledge).
 
         Invariants:
-          1. Correct frontmatter: source, created, last_verified, trust, origin_session
+          1. Correct frontmatter: source, created, trust, origin_session
           2. _unverified/SUMMARY.md entry added in the matching section
           3. Auto-committed as [knowledge] Add {filename}
 
@@ -595,9 +618,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             content:       File body (do NOT include frontmatter — this tool adds it).
             source:        Provenance string: 'external-research', 'agent-generated',
                            'user-stated', etc.
-            trust:         'low' (default) — use memory_promote_knowledge to elevate.
             session_id:    Current session path for origin_session frontmatter field
                            (e.g. 'chats/2026/03/18/chat-001').
+            trust:         'low' (default) — use memory_promote_knowledge to elevate.
             summary_entry: One-line description for SUMMARY.md. Inferred from the
                            first H1 heading in content if not provided.
 
@@ -617,14 +640,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        if "_unverified" not in path:
-            raise ValidationError(
-                f"New knowledge files must go under knowledge/_unverified/: {path}"
-            )
-        if trust not in ("low", "medium", "high"):
-            raise ValidationError(f"trust must be 'low', 'medium', or 'high': {trust}")
-
-        abs_path = repo.abs_path(path)
+        validate_session_id(session_id)
+        path, abs_path = resolve_repo_path(repo, path)
+        require_under_prefix(path, "knowledge/_unverified")
+        if trust != "low":
+            raise ValidationError("trust must be 'low' for new unverified knowledge")
         if abs_path.exists():
             raise ValidationError(
                 f"File already exists: {path}. Use memory_write to overwrite."
@@ -635,11 +655,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         fm_dict = {
             "source": source,
             "created": today,
-            "last_verified": today,
-            "trust": trust,
+            "trust": "low",
+            "origin_session": session_id,
         }
-        if session_id:
-            fm_dict["origin_session"] = session_id
 
         # Create file
         abs_path.parent.mkdir(parents=True, exist_ok=True)
@@ -822,7 +840,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        root = get_root()
 
         if mode not in ("upsert", "append", "replace"):
             raise ValidationError(f"mode must be 'upsert', 'append', or 'replace': {mode}")
@@ -835,8 +852,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "memory_reset_identity_churn_counter (if available) or restart the session."
             )
 
-        rel_path = f"identity/{file}.md"
-        abs_path = root / rel_path
+        file = validate_slug(file, field_name="file")
+        rel_path, abs_path = resolve_repo_path(repo, f"identity/{file}.md")
         if not abs_path.exists():
             raise ValidationError(f"Identity file not found: {rel_path}")
 
@@ -952,9 +969,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
+        validate_session_id(session_id)
+
         # Write session SUMMARY.md
-        session_summary_rel = f"{session_id}/SUMMARY.md"
-        abs_session_summary = root / session_summary_rel
+        session_summary_rel, abs_session_summary = resolve_repo_path(
+            repo,
+            f"{session_id}/SUMMARY.md",
+            field_name="session_id",
+        )
         abs_session_summary.parent.mkdir(parents=True, exist_ok=True)
 
         today = today_str()
@@ -1026,6 +1048,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         description: str,
         content: str,
         next_action: str,
+        session_id: str,
         plan_type: str = "research-plan",
     ) -> str:
         """Create a new plan file and add it to plans/SUMMARY.md.
@@ -1036,6 +1059,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             description: One-line description for plans/SUMMARY.md.
             content:     Full plan body (without frontmatter — added here).
             next_action: First action to take (written to frontmatter).
+            session_id:  Current session path for origin_session frontmatter.
             plan_type:   Plan type (default: 'research-plan').
 
         Returns:
@@ -1049,7 +1073,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        plan_path = f"plans/{plan_id}.md"
+        validate_session_id(session_id)
+        plan_path = _plan_path(plan_id)
         abs_plan = repo.abs_path(plan_path)
         if abs_plan.exists():
             raise ValidationError(
@@ -1066,6 +1091,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "trust": "medium",
             "status": "active",
             "next_action": next_action,
+            "origin_session": session_id,
         }
 
         import frontmatter as fmlib
@@ -1155,7 +1181,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         warnings = []
 
-        plan_path = f"plans/{plan_id}.md"
+        plan_path = _plan_path(plan_id)
         abs_plan = repo.abs_path(plan_path)
         if not abs_plan.exists():
             raise NotFoundError(f"Plan not found: {plan_path}")

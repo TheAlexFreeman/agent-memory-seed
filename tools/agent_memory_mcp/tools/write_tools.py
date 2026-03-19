@@ -8,43 +8,29 @@ These replace raw Edit/Write/Bash calls for memory writes. All tools:
   - Support an optional delete-permission hook for runtimes that need it
 
 Directory restrictions:
-  memory_delete and memory_move SOURCE paths may not target:
-    identity/, meta/, chats/, skills/
-  (hard PermissionError before any filesystem access)
+  memory_delete and memory_move SOURCE paths must target:
+    knowledge/, plans/, scratchpad/
+  Protected paths under identity/, meta/, chats/, and skills/ are rejected
+  before any filesystem access.
 """
 
 from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from pathlib import Path
 from typing import TYPE_CHECKING
+
+from ..path_policy import resolve_repo_path, validate_raw_mutation_source
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
-
-# Directories protected from deletion/move-source
-_PROTECTED_DIRS = {"identity", "meta", "chats", "skills"}
 
 # Commit-prefix validation set (for memory_commit)
 _KNOWN_PREFIXES = {
     "[knowledge]", "[plan]", "[identity]", "[chat]",
     "[curation]", "[scratchpad]", "[system]",
 }
-
-
-def _check_protected(rel_path: str, operation: str = "delete") -> None:
-    """Raise MemoryPermissionError if path is in a protected top-level directory."""
-    from ..errors import MemoryPermissionError
-
-    top = Path(rel_path).parts[0] if Path(rel_path).parts else ""
-    if top in _PROTECTED_DIRS:
-        raise MemoryPermissionError(
-            f"Cannot {operation} '{rel_path}': '{top}/' is a protected directory. "
-            f"Protected directories: {sorted(_PROTECTED_DIRS)}",
-            path=rel_path,
-        )
 
 
 def register(
@@ -93,7 +79,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = resolve_repo_path(repo, path)
 
         if version_token is not None:
             if not abs_path.exists():
@@ -154,7 +140,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = resolve_repo_path(repo, path)
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
@@ -230,11 +216,12 @@ def register(
         from ..errors import NotFoundError, MemoryPermissionError
         from ..models import MemoryWriteResult
 
-        # Hard directory restriction — checked before any filesystem access
-        _check_protected(path, operation="delete")
-
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = validate_raw_mutation_source(
+            repo,
+            path,
+            operation="delete",
+        )
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
@@ -305,11 +292,13 @@ def register(
         from ..errors import NotFoundError
         from ..models import MemoryWriteResult
 
-        # Hard source path restriction
-        _check_protected(source, operation="move from")
-
         repo = get_repo()
-        abs_source = repo.abs_path(source)
+        source, abs_source = validate_raw_mutation_source(
+            repo,
+            source,
+            operation="move from",
+        )
+        dest, abs_dest = resolve_repo_path(repo, dest, field_name="dest")
 
         if not abs_source.exists():
             raise NotFoundError(f"Source file not found: {source}")
@@ -317,7 +306,6 @@ def register(
         repo.check_version_token(source, version_token)
 
         if create_dirs:
-            abs_dest = repo.abs_path(dest)
             abs_dest.parent.mkdir(parents=True, exist_ok=True)
 
         repo.mv(source, dest)
@@ -371,7 +359,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = resolve_repo_path(repo, path)
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
