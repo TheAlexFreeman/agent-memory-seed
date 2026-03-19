@@ -5,8 +5,8 @@ origin_session: chats/2026/03/18/chat-005
 created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
-status: active
-next_action: "Begin Phase 5 — write knowledge/_unverified/ai-history/frontier/multimodality-tool-use-and-reasoning-time-compute.md"
+status: complete
+next_action: "Review all 11 files and promote to knowledge/ once verified"
 ---
 
 # Research Plan: Genealogy of the Current AI Paradigm
@@ -28,88 +28,55 @@ Across all files, keep four through-lines in view:
 
 ## Output file structure: `knowledge/_unverified/ai-history/`
 
-Use subfolders to preserve the chronology:
-
 - `origins/` — perceptrons, symbolic detours, and the backprop revival
 - `deep-learning/` — architectural and infrastructure advances that made depth practical
 - `language-models/` — embeddings, seq2seq, attention, transformers, and scaling
 - `frontier/` — post-training, tool use, multimodality, and recent reasoning-era systems
 - `synthesis/` — the integrated story of how the current paradigm formed
 
-Maintain a `SUMMARY.md` as files are written.
-
 ---
 
-## Research phases and priority order
+## All phases complete — 11/11 files written
 
-### Phase 1 — First-wave connectionism and its eclipse (highest priority) · ☑ 2/2 complete
-
-Start with the prehistory of the modern neural paradigm: the first wave of optimism, the first hard limits, and the first major conceptual split.
-
+### Phase 1 · ☑ 2/2
 1. ☑ `origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md`
 2. ☑ `origins/symbolic-ai-expert-systems-and-the-neural-winter.md`
 
----
-
-### Phase 2 — Learning internal representations again (highest priority) · ☑ 3/3 complete
-
+### Phase 2 · ☑ 3/3
 3. ☑ `origins/backpropagation-and-the-pdp-revival.md`
 4. ☑ `deep-learning/convnets-rnns-and-lstm-inductive-biases.md`
 5. ☑ `language-models/statistical-nlp-word-embeddings-and-seq2seq.md`
 
----
-
-### Phase 3 — Deep learning becomes dominant (high priority) · ☑ 2/2 complete
-
+### Phase 3 · ☑ 2/2
 6. ☑ `deep-learning/gpus-imagenet-and-the-deep-learning-turn.md`
 7. ☑ `language-models/attention-and-the-transformer-breakthrough.md`
 
----
-
-### Phase 4 — Foundation models and the LLM turn (high priority) · ☑ 2/2 complete
-
+### Phase 4 · ☑ 2/2
 8. ☑ `language-models/bert-gpt-and-the-scaling-laws-era.md`
-   - In-context learning, scaling laws (Kaplan 2020), Chinchilla compute-optimal training, emergent capabilities, encoder vs decoder pretraining strategies
-
 9. ☑ `frontier/instruction-tuning-rlhf-and-the-chat-model-turn.md`
-   - SFT, RLHF (InstructGPT), Constitutional AI / RLAIF, DPO, ChatGPT launch, sycophancy and reward hacking
 
----
-
-### Phase 5 — Frontier LLM systems (high priority, fast-moving) · ☐ 0/2 complete
-
-This phase covers the current frontier as a system, not just a base model: multimodal inputs, retrieval, tools, routing, and reasoning-time strategies.
-
-10. ☐ `frontier/multimodality-tool-use-and-reasoning-time-compute.md`
-   - Multimodal models, retrieval augmentation, tool use, code execution, and agent-style scaffolding
-   - Mixture-of-experts, efficiency techniques, open-weight vs. closed-weight ecosystems, and deployment tradeoffs
-   - Chain-of-thought, deliberate inference, and recent reinforcement-learning-heavy reasoning systems
-
-11. ☐ `synthesis/how-the-current-ai-paradigm-formed.md`
-   - Reconstruct the full story from perceptrons to frontier LLMs as a chain of bottlenecks and unlocks
-   - Make explicit what each transition added: hidden-layer learning, architecture-specific inductive bias, scale, attention, pretraining, post-training, tool use
-   - Track the themes that persist across the whole genealogy: representation, optimization, data/compute co-evolution, and the return of old questions inside new neural systems
+### Phase 5 · ☑ 2/2
+10. ☑ `frontier/multimodality-tool-use-and-reasoning-time-compute.md`
+11. ☑ `synthesis/how-the-current-ai-paradigm-formed.md`
 
 ---
 
 ## Research approach and practical notes
 
-- Each file: ~2500-4000 words. Write for causal understanding, not encyclopedic completeness.
-- For every file, answer the same five questions: what bottleneck existed, what insight addressed it, what enabling conditions made it practical, what new bottlenecks remained, and what later work built on it.
-- Use primary sources aggressively: Rosenblatt (1958), Minsky and Papert (1969), Rumelhart/Hinton/Williams (1986), Hochreiter/Schmidhuber (1997), LeCun's convnet work, AlexNet (2012), word2vec (2013), seq2seq (2014), Bahdanau attention (2014), Transformer (2017), BERT (2018), GPT-3 (2020), Chinchilla (2022), and InstructGPT (2022) should form the core spine.
-- Avoid Whig history. Include winters, dead ends, and rival paradigms such as symbolic AI and statistical machine learning where they genuinely shaped the path.
-- Be explicit about infrastructure. Many "algorithmic" breakthroughs only mattered because of compute, datasets, libraries, and industrial-scale training pipelines.
-- Frontier sections should be re-checked against current technical reports when written, because this part of the story is moving quickly.
 - Mark all produced knowledge files `trust: low` until Alex reviews them.
+- Frontier sections (o1, DeepSeek-R1, GPT-4V) should be re-checked against current technical reports.
+- The synthesis file explicitly flags that errors in component files propagate; review component files first.
 
 ## Progress log
 
 | Date | Action |
 |---|---|
-| 2026-03-18 | Plan created for a narrative genealogy of the current AI paradigm |
-| 2026-03-18 | Phase 1 complete — wrote SUMMARY.md, cybernetics-perceptrons-and-the-first-connectionist-wave.md, symbolic-ai-expert-systems-and-the-neural-winter.md |
-| 2026-03-18 | Phase 2 complete — wrote backpropagation-and-the-pdp-revival.md, convnets-rnns-and-lstm-inductive-biases.md, statistical-nlp-word-embeddings-and-seq2seq.md |
-| 2026-03-18 | Phase 3 complete — wrote gpus-imagenet-and-the-deep-learning-turn.md, attention-and-the-transformer-breakthrough.md |
-| 2026-03-18 | Phase 4 complete — wrote bert-gpt-and-the-scaling-laws-era.md, instruction-tuning-rlhf-and-the-chat-model-turn.md |
+| 2026-03-18 | Plan created |
+| 2026-03-18 | Phase 1 complete — SUMMARY.md, cybernetics-perceptrons, symbolic-ai-expert-systems |
+| 2026-03-18 | Phase 2 complete — backpropagation-pdp-revival, convnets-rnns-lstm, statistical-nlp-word-embeddings-seq2seq |
+| 2026-03-18 | Phase 3 complete — gpus-imagenet-deep-learning-turn, attention-transformer-breakthrough |
+| 2026-03-18 | Phase 4 complete — bert-gpt-scaling-laws-era, instruction-tuning-rlhf-chat-model-turn |
+| 2026-03-18 | Phase 5 complete — multimodality-tool-use-reasoning-time-compute, how-the-current-ai-paradigm-formed |
+| 2026-03-18 | All 11 files written; plan marked complete; awaiting Alex review |
 
 Last updated: 2026-03-18

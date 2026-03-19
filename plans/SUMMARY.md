@@ -16,7 +16,6 @@ Priority order for active work:
 6. `devops-docker-research.md`
 7. `philosophy-history-survey.md`
 8. `lesswrong-rationalist-community-research.md`
-9. `ai-paradigm-genealogy-research.md`
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
 ### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
@@ -68,17 +67,6 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 
 ---
 
-<!-- BEGIN: ai-paradigm-genealogy-research -->
-### `ai-paradigm-genealogy-research.md` · status: active · trust: medium
-
-Narrative research plan for understanding how the current AI paradigm formed: perceptrons, symbolic detours, backpropagation, deep learning, transformers, scaling, and frontier LLM systems. Output goes to `knowledge/_unverified/ai-history/`.
-
-**Progress:** 9/11 files written
-**Next action:** Begin Phase 5 — write `knowledge/_unverified/ai-history/frontier/multimodality-tool-use-and-reasoning-time-compute.md`
-<!-- END: ai-paradigm-genealogy-research -->
-
----
-
 <!-- BEGIN: django-stack-research -->
 ### `django-stack-research.md` · status: active · trust: medium
 
@@ -113,6 +101,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: ai-paradigm-genealogy-research -->
+### `ai-paradigm-genealogy-research.md` · status: complete · trust: medium
+
+Narrative genealogy of how the current AI paradigm formed: from perceptrons through symbolic AI, backpropagation, ConvNets/LSTMs, statistical NLP, the deep learning turn, transformers, BERT/GPT/scaling laws, RLHF, and frontier LLM systems. All 11 files written in `knowledge/_unverified/ai-history/`.
+
+**Progress:** 11/11 files written
+**Completed:** 2026-03-18
+<!-- END: ai-paradigm-genealogy-research -->
+
+---
 
 <!-- BEGIN: codex-desktop-governed-memory-writes -->
 ### `codex-desktop-governed-memory-writes.md` · status: complete · trust: medium
