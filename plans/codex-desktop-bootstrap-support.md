@@ -1,10 +1,9 @@
 ---
 created: 2026-03-18
-last_verified: 2026-03-18
-next_action: Draft rollout strategy
+last_verified: '2026-03-18'
 origin_session: manual
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 ---
@@ -289,7 +288,7 @@ The overrides map onto runtime behavior as follows:
 
 Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`, routes `skip_manifest` through a dedicated `_resolve_skip_manifest()` helper, and always populates `available_overrides` with all three controls. `test_bootstrap_resolver.py` validates each override type plus the no-override baseline (5 new tests, 14 total passing).
 
-### Phase 4 — Validation and rollout · ☑ 1/2 complete
+### Phase 4 — Validation and rollout · ☑ 2/2 complete
 
 10. ☑ Define test matrix
    - fresh clone
@@ -297,7 +296,7 @@ Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`
    - detached automation worktree
    - malformed manifest
 
-11. ☐ Draft rollout strategy
+11. ☑ Draft rollout strategy
    - behind feature flag first
    - support repo opt-in before default-on
    - telemetry on preload usefulness and skipped-file rates
@@ -312,6 +311,31 @@ Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`
 | Malformed manifest | Invalid repo declarations are rejected before the runtime treats them as executable startup authority. | `test_missing_bootstrap_manifest_fails`, `test_bootstrap_manifest_with_wrong_router_fails`, `test_bootstrap_manifest_with_wrong_returning_order_fails` in `HUMANS/tooling/tests/test_validate_memory_repo.py` | Validator rejects missing manifests, wrong router authority, and wrong ordered step sets |
 
 Resolver behavior should stay intentionally separate from manifest-validation behavior. The runtime prototype may assume `agent-bootstrap.toml` already passed validation; malformed-manifest cases belong in validator coverage, not ad hoc resolver fallbacks.
+
+### Phase 4 rollout strategy decisions (2026-03-18)
+
+The rollout should stay deliberately staged so Codex desktop can learn from real repos without silently taking over startup behavior.
+
+| Stage | Scope | Guardrails | Exit signal |
+|---|---|---|---|
+| 0. Repo-side prototype | Keep `agent-bootstrap.toml`, the bootstrap resolver, and validator checks in-repo only. Use this stage to harden manifest semantics and startup-panel shape before any product integration. | No app behavior changes yet; the repo remains the only place where the contract is exercised. | Resolver + validator stay aligned, and the startup-panel contract is stable across the defined test matrix. |
+| 1. Desktop beta behind feature flag | Add bootstrap support to Codex desktop behind an app feature flag. Read manifests only for flagged users and surface the startup panel as an inspectable preview before auto-preload becomes default behavior. | Feature flag off by default; no silent manifest writes; keep manual override controls and warning surfacing mandatory. | Beta users can resolve startup mode and inspect preload traces without regressions in repo authority or startup clarity. |
+| 2. Repo opt-in rollout | Allow any repo with a valid `agent-bootstrap.toml` to opt into startup-manifest support while non-participating repos keep the existing heuristic path. | Manifest presence is required for productized preload behavior; invalid manifests fail closed into existing startup heuristics with explicit warnings. | Opt-in repos show stable preload ordering, warning delivery, and override usage without requiring app-side per-repo customization. |
+| 3. Broader default-aware adoption | After enough opt-in evidence, teach Codex desktop to treat startup manifests as the preferred contract when present and to offer inferred-manifest migration help for repos that match the memory-repo shape. | Default-on only for repos that declare the contract; heuristic inference remains advisory and reviewable, never silent authority. | Startup usefulness telemetry is positive, skipped-file rates are understood, and manifest-backed repos consistently outperform heuristic startup on clarity and repeatability. |
+
+Telemetry should focus on whether preload behavior is actually helping, not just whether the feature ran:
+
+- mode-selection accuracy signals: override frequency, manifest-skipped sessions, and user re-routing immediately after startup
+- preload usefulness signals: router open rate, startup-panel interaction rate, and whether users expand into the recommended next file
+- preload cost signals: estimated budget pressure frequency, optional-step skip rates, and transcript-vs-summary suppression frequency
+- startup risk signals: detached HEAD / branch-drift warning rates, required-file missing rates, and malformed-manifest validation failures
+
+Release gates for moving beyond opt-in:
+
+- manifest-backed startup must remain auditable: loaded, skipped, inferred, and overridden state all visible in the startup panel
+- startup preload must not materially exceed the published compact/full context budget bands for seeded memory repos
+- invalid manifests must fail closed into existing startup heuristics instead of producing partial silent behavior
+- the app must preserve repo authority: the router and manifest stay reviewable in git, and Codex does not auto-author repo startup contracts
 
 ---
 
@@ -340,6 +364,7 @@ Resolver behavior should stay intentionally separate from manifest-validation be
 | 2026-03-18 | Added manual override controls: `user_override` param routes full_bootstrap/compact_only through detect_mode and skip_manifest through a dedicated fallback path; all three controls always present in startup_panel.available_overrides; 5 new tests (14 total passing) |
 | 2026-03-18 | Completed Add manual override controls (codex-desktop-bootstrap-support 9/11) |
 | 2026-03-18 | Defined the Phase 4 test matrix across fresh-clone, mature-repo, detached-automation-worktree, and malformed-manifest scenarios; added detached automation worktree coverage to the bootstrap resolver tests and advanced the plan to 10/11 |
+| 2026-03-18 | Completed Draft rollout strategy (codex-desktop-bootstrap-support 11/11) |
 
 ---
 

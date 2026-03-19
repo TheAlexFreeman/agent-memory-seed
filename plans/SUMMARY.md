@@ -19,9 +19,9 @@ Priority order for active work:
 9. `ai-paradigm-genealogy-research.md`
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
-### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
-**Progress:** 10/11 items complete
-**Next action:** Draft rollout strategy
+### `codex-desktop-bootstrap-support.md` · status: complete · trust: medium
+**Progress:** 11/11 items complete
+**Next action:** (all complete)
 <!-- END: codex-desktop-bootstrap-support -->
 
 ---
