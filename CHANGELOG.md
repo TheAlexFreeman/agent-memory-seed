@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-18] Task-readiness contract for GitHub, network, and local tooling
+
+**Changed:**
+
+- **Added a repo-declared readiness manifest.** Created `HUMANS/tooling/agent-task-readiness.toml` to define task-aware preflight profiles for pull requests, branch publish, Python validation and dependency installs, Node validation and dependency installs, plus a generic workspace fallback. The contract now records cache/freshness rules, automation blocker carry-forward behavior, UI labels, and per-check fallback paths.
+
+- **Added an executable readiness resolver prototype.** Created `HUMANS/tooling/scripts/resolve_task_readiness.py`, which validates the manifest, infers the relevant profile from task text and repo hints, runs GitHub/network/runtime/package-manager probes, classifies blockers (`missing`, `auth`, `config`, `connectivity`, `policy`, `repo_state`, `runtime`), and emits structured UI feedback including blocker carry-forward and restored-blocker attention states.
+
+- **Added test and validator coverage.** Created `HUMANS/tooling/tests/test_task_readiness.py` to cover healthy publish readiness, missing `gh`, locked `gh` config, missing Python runtime, unauthenticated push, unchanged carried-forward blockers, and resolved blocker recovery. Extended `HUMANS/tooling/scripts/validate_memory_repo.py` and `HUMANS/tooling/tests/test_validate_memory_repo.py` so the readiness manifest becomes part of the repo contract and the minimal seed fixture includes the current MCP-preference guidance.
+
+- **Kept seed and documentation surfaces aligned.** Updated `README.md`, `plans/codex-desktop-github-network-ergonomics.md`, `plans/SUMMARY.md`, and `setup/initial-commit-paths.txt` so the readiness prototype is documented, tracked in the canonical initial commit, and reflected in plan state. Also fixed stale seed-validator issues by restoring missing `origin_session` frontmatter on the AI-history quarantine files and normalizing the completed automation-continuity plan frontmatter.
+
+**Reasoning:** The ergonomics gap was late discovery of environment blockers: GitHub auth issues, unreachable remotes, missing runtimes, and package-network failures were often discovered only after the work was already done. The new readiness contract makes those checks explicit, task-aware, and testable. It improves consistency by encoding the preflight logic once in a manifest plus resolver, improves user-friendliness by standardizing blocker messages and recovery states, and improves context efficiency by letting the app know which checks matter for the current task instead of front-loading every possible diagnostic.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-18] MCP-preference contract aligned across entrypoints and setup
 
 **Changed:**

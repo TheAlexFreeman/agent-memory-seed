@@ -8,21 +8,11 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-github-network-ergonomics.md`
-2. `django-stack-research.md`
-3. `react-stack-research.md`
-4. `devops-docker-research.md`
-5. `philosophy-history-survey.md`
-6. `lesswrong-rationalist-community-research.md`
-
-<!-- BEGIN: codex-desktop-github-network-ergonomics -->
-### `codex-desktop-github-network-ergonomics.md` · status: active · trust: medium
-
-Implementation plan for earlier GitHub, network, and runtime blocker detection in Codex desktop. Focus: preflight checks, task-aware readiness, blocker reporting, and recovery ergonomics.
-
-**Progress:** 0/11 tasks complete
-**Next action:** Phase 1 — define preflight checks for GitHub auth, network reachability, and local tooling availability
-<!-- END: codex-desktop-github-network-ergonomics -->
+1. `django-stack-research.md`
+2. `react-stack-research.md`
+3. `devops-docker-research.md`
+4. `philosophy-history-survey.md`
+5. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: philosophy-history-survey -->
 ### `philosophy-history-survey.md` · status: active · trust: medium
@@ -80,6 +70,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: codex-desktop-github-network-ergonomics -->
+### `codex-desktop-github-network-ergonomics.md` · status: complete · trust: medium
+
+Task-readiness support for Codex desktop is now prototyped through a repo-declared manifest plus executable resolver covering GitHub publish checks, runtime and package-manager readiness, blocker carry-forward, and structured UI feedback.
+
+**Progress:** 11/11 items complete
+**Completed:** 2026-03-18
+<!-- END: codex-desktop-github-network-ergonomics -->
+
+---
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: complete · trust: medium

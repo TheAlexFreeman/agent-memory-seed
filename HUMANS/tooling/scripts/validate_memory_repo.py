@@ -125,6 +125,74 @@ EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
     "meta/review-queue.md:load_only_when_non_placeholder",
     "ACCESS.jsonl:count_non_empty_lines",
 )
+TASK_READINESS_MANIFEST_PATH = Path("HUMANS/tooling/agent-task-readiness.toml")
+EXPECTED_TASK_READINESS_PROFILES = (
+    "workspace_general",
+    "pull_request",
+    "publish_branch",
+    "python_validation",
+    "python_dependency_install",
+    "node_validation",
+    "node_dependency_install",
+)
+EXPECTED_TASK_READINESS_PROFILE_ORDER = (
+    "pull_request",
+    "publish_branch",
+    "python_dependency_install",
+    "node_dependency_install",
+    "python_validation",
+    "node_validation",
+)
+EXPECTED_TASK_READINESS_CHECKS = (
+    "git_cli",
+    "git_remote",
+    "git_push_dry_run",
+    "gh_auth",
+    "remote_network",
+    "python_runtime",
+    "python_validation_stack",
+    "python_package_manager",
+    "python_package_network",
+    "node_runtime",
+    "node_validation_stack",
+    "node_package_manager",
+    "node_package_network",
+)
+REQUIRED_TASK_READINESS_PROFILE_KEYS = (
+    "title",
+    "description",
+    "keywords",
+    "checks",
+    "final_gate_checks",
+    "fallback_message",
+    "blocked_reason",
+    "success_message",
+)
+REQUIRED_TASK_READINESS_CHECK_KEYS = (
+    "title",
+    "category",
+    "failure_modes",
+    "retry_action",
+    "fallback_paths",
+)
+EXPECTED_TASK_READINESS_STATUS_LABELS = (
+    "ready",
+    "attention",
+    "blocked",
+    "manifest_only",
+)
+ALLOWED_TASK_READINESS_CATEGORIES = {"github", "connectivity", "runtime", "tooling"}
+ALLOWED_TASK_READINESS_FAILURE_MODES = {
+    "missing",
+    "missing_remote",
+    "auth",
+    "config",
+    "connectivity",
+    "runtime",
+    "policy",
+    "repo_state",
+    "unknown",
+}
 
 RUNTIME_GUIDANCE_FILES = (
     Path("README.md"),
@@ -657,6 +725,197 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
             )
 
 
+def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> None:
+    path = root / TASK_READINESS_MANIFEST_PATH
+    if not path.exists():
+        result.error(f"{path}: missing task-readiness manifest")
+        return
+
+    text = read_text(path, result)
+    if text is None:
+        return
+
+    try:
+        manifest = tomllib.loads(text)
+    except tomllib.TOMLDecodeError as exc:
+        result.error(f"{path}: invalid TOML ({exc})")
+        return
+
+    if manifest.get("version") != 1:
+        result.error(f"{path}: version must be 1")
+    if manifest.get("kind") != "agent-task-readiness":
+        result.error(f"{path}: kind must be 'agent-task-readiness'")
+    if not isinstance(manifest.get("manifest_role"), str) or not manifest["manifest_role"].strip():
+        result.error(f"{path}: manifest_role must be a non-empty string")
+
+    resolver_entrypoint = manifest.get("resolver_entrypoint")
+    if not isinstance(resolver_entrypoint, str) or not resolver_entrypoint.strip():
+        result.error(f"{path}: resolver_entrypoint must be a non-empty string")
+    elif not (root / resolver_entrypoint).exists():
+        result.error(
+            f"{path}: resolver_entrypoint does not exist at {resolver_entrypoint!r}"
+        )
+
+    task_detection = manifest.get("task_detection")
+    if not isinstance(task_detection, dict):
+        result.error(f"{path}: task_detection must be a TOML table")
+    else:
+        if task_detection.get("default_profile") != "workspace_general":
+            result.error(
+                f"{path}: task_detection.default_profile must be 'workspace_general'"
+            )
+        if task_detection.get("profile_order") != list(EXPECTED_TASK_READINESS_PROFILE_ORDER):
+            result.error(
+                f"{path}: task_detection.profile_order must be {list(EXPECTED_TASK_READINESS_PROFILE_ORDER)!r}"
+            )
+
+    cache_policy = manifest.get("cache_policy")
+    if not isinstance(cache_policy, dict):
+        result.error(f"{path}: cache_policy must be a TOML table")
+    else:
+        for key in (
+            "result_ttl_sec",
+            "retry_failure_ttl_sec",
+        ):
+            if not isinstance(cache_policy.get(key), int) or isinstance(
+                cache_policy.get(key), bool
+            ):
+                result.error(f"{path}: cache_policy.{key} must be an integer")
+        for key in (
+            "recheck_on_manual_retry",
+            "recheck_on_final_gate",
+            "agent_refresh_allowed",
+        ):
+            if not isinstance(cache_policy.get(key), bool):
+                result.error(f"{path}: cache_policy.{key} must be a boolean")
+
+    execution = manifest.get("execution")
+    if not isinstance(execution, dict):
+        result.error(f"{path}: execution must be a TOML table")
+    else:
+        for key in (
+            "preflight_before_substantial_work",
+            "surface_changes_since_initial_check",
+        ):
+            if not isinstance(execution.get(key), bool):
+                result.error(f"{path}: execution.{key} must be a boolean")
+
+    automation_integration = manifest.get("automation_integration")
+    if not isinstance(automation_integration, dict):
+        result.error(f"{path}: automation_integration must be a TOML table")
+    else:
+        for key in (
+            "carry_forward_blockers",
+            "skip_unchanged_publish_attempts",
+            "notify_when_restored",
+        ):
+            if not isinstance(automation_integration.get(key), bool):
+                result.error(f"{path}: automation_integration.{key} must be a boolean")
+
+    ui_feedback = manifest.get("ui_feedback")
+    if not isinstance(ui_feedback, dict):
+        result.error(f"{path}: ui_feedback must be a TOML table")
+    else:
+        for key in (
+            "panel_title",
+            "manifest_action_label",
+            "manifest_action_reason",
+        ):
+            if not isinstance(ui_feedback.get(key), str) or not ui_feedback[key].strip():
+                result.error(f"{path}: ui_feedback.{key} must be a non-empty string")
+        for key in ("details_when_blocked_only", "green_summary_only"):
+            if not isinstance(ui_feedback.get(key), bool):
+                result.error(f"{path}: ui_feedback.{key} must be a boolean")
+        status_labels = ui_feedback.get("status_labels")
+        if not isinstance(status_labels, dict):
+            result.error(f"{path}: ui_feedback.status_labels must be a TOML table")
+        else:
+            for key in EXPECTED_TASK_READINESS_STATUS_LABELS:
+                if not isinstance(status_labels.get(key), str) or not status_labels[key].strip():
+                    result.error(
+                        f"{path}: ui_feedback.status_labels.{key} must be a non-empty string"
+                    )
+
+    profiles = manifest.get("profiles")
+    if not isinstance(profiles, dict):
+        result.error(f"{path}: profiles must be a TOML table")
+        profiles = {}
+    checks = manifest.get("checks")
+    if not isinstance(checks, dict):
+        result.error(f"{path}: checks must be a TOML table")
+        checks = {}
+
+    missing_profiles = [
+        profile for profile in EXPECTED_TASK_READINESS_PROFILES if profile not in profiles
+    ]
+    if missing_profiles:
+        result.error(
+            f"{path}: missing required task-readiness profiles: {', '.join(missing_profiles)}"
+        )
+
+    missing_checks = [
+        check_id for check_id in EXPECTED_TASK_READINESS_CHECKS if check_id not in checks
+    ]
+    if missing_checks:
+        result.error(
+            f"{path}: missing required task-readiness checks: {', '.join(missing_checks)}"
+        )
+
+    for profile_name in EXPECTED_TASK_READINESS_PROFILES:
+        profile = profiles.get(profile_name)
+        if not isinstance(profile, dict):
+            result.error(f"{path}: profiles.{profile_name} must be a TOML table")
+            continue
+        for key in REQUIRED_TASK_READINESS_PROFILE_KEYS:
+            value = profile.get(key)
+            if key in {"keywords", "checks", "final_gate_checks"}:
+                if not isinstance(value, list) or not all(
+                    isinstance(item, str) and item.strip() for item in value
+                ):
+                    result.error(
+                        f"{path}: profiles.{profile_name}.{key} must be an array of non-empty strings"
+                    )
+                else:
+                    for check_id in value:
+                        if key != "keywords" and check_id not in checks:
+                            result.error(
+                                f"{path}: profiles.{profile_name}.{key} references unknown check {check_id!r}"
+                            )
+            elif not isinstance(value, str) or not value.strip():
+                result.error(
+                    f"{path}: profiles.{profile_name}.{key} must be a non-empty string"
+                )
+
+    for check_id in EXPECTED_TASK_READINESS_CHECKS:
+        check_definition = checks.get(check_id)
+        if not isinstance(check_definition, dict):
+            result.error(f"{path}: checks.{check_id} must be a TOML table")
+            continue
+        for key in REQUIRED_TASK_READINESS_CHECK_KEYS:
+            value = check_definition.get(key)
+            if key in {"failure_modes", "fallback_paths"}:
+                if not isinstance(value, list) or not all(
+                    isinstance(item, str) and item.strip() for item in value
+                ):
+                    result.error(
+                        f"{path}: checks.{check_id}.{key} must be an array of non-empty strings"
+                    )
+                elif key == "failure_modes":
+                    for item in value:
+                        if item not in ALLOWED_TASK_READINESS_FAILURE_MODES:
+                            result.error(
+                                f"{path}: checks.{check_id}.failure_modes contains unknown mode {item!r}"
+                            )
+            elif not isinstance(value, str) or not value.strip():
+                result.error(
+                    f"{path}: checks.{check_id}.{key} must be a non-empty string"
+                )
+        if check_definition.get("category") not in ALLOWED_TASK_READINESS_CATEGORIES:
+            result.error(
+                f"{path}: checks.{check_id}.category must be one of {sorted(ALLOWED_TASK_READINESS_CATEGORIES)!r}"
+            )
+
+
 def validate_quick_reference(root: Path, result: ValidationResult) -> None:
     path = root / "meta" / "quick-reference.md"
     text = read_text(path, result)
@@ -927,6 +1186,7 @@ def validate_repo(root: Path) -> ValidationResult:
     result = ValidationResult()
 
     validate_agent_bootstrap_manifest(root, result)
+    validate_task_readiness_manifest(root, result)
     validate_quick_reference(root, result)
     validate_runtime_guidance(root, result)
     validate_setup_entrypoints(root, result)

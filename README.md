@@ -14,6 +14,8 @@ You are an AI agent reading this repository. Start every session with `meta/quic
 
 Compatible tooling may also read `agent-bootstrap.toml`, the machine-readable preload contract for this repo. Treat it as the tool-facing companion to `meta/quick-reference.md`, not a replacement for that Markdown router.
 
+Compatible tooling may also read `HUMANS/tooling/agent-task-readiness.toml`, the repo-declared preflight contract for task-aware GitHub, network, runtime, and package-manager checks. Treat it as readiness metadata for publish, install, and validation flows, not as a replacement for the startup router or task execution logic.
+
 When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 
 ## Purpose
@@ -130,10 +132,11 @@ For the complete mapping of which files to load per session type, see `meta/quic
     │   ├── DESIGN.md      ← Design philosophy, use cases, and future directions.
     │   └── GLOSSARY.md    ← Definitions of system terminology (human reference only).
     └── tooling/           ← Maintenance tooling and tests.
+        ├── agent-task-readiness.toml ← Repo-declared task-readiness/preflight contract.
         ├── mcp-config-example.json ← Example Claude Desktop MCP configuration.
         ├── onboard-export-template.md ← Structured format for onboarding exports.
-        ├── scripts/       ← memory_mcp.py, validate_memory_repo.py, onboard-export.sh.
-        └── tests/         ← Test suite for the validator and import tooling.
+        ├── scripts/       ← memory_mcp.py, validate_memory_repo.py, resolve_* prototypes, onboard-export.sh.
+        └── tests/         ← Test suite for the validator, resolver prototypes, and import tooling.
 
 ```
 

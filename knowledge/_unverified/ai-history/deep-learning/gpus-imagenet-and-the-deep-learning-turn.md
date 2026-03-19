@@ -1,5 +1,6 @@
 ---
-source: agent-generated
+source: external-research
+origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [deep-learning, alexnet, imagenet, gpu, krizhevsky, hinton, lecun, relu, dropout, benchmark, scale, infrastructure]
