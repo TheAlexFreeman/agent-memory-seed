@@ -91,5 +91,88 @@ Since session_id coverage is only 13%, the tool's `total_sessions` output is mis
 
 ---
 
+<!-- 2026-03-19, session: chats/2026/03/19/chat-001 -->
+## MCP tooling system review — second pass
+
+**Method:** Read all three tool files in full (`read_tools.py`, `semantic_tools.py`, `write_tools.py`), the capabilities TOML, `session-start.md`, `quick-reference.md`, `integrity-checklist.md`, and `curation-algorithms.md`.
+
+---
+
+### Tier 0 — Read tool gaps
+
+**G1 `memory_git_log` missing `since` / `path_filter` params**
+`git log --after=DATE -- path/` is fully supported by the underlying git CLI but not exposed. When >15 commits have landed between sessions, you either over-fetch with a high `n` or miss changes. Especially painful for identity/ and meta/ where you want "what changed to my profile this week?" 
+
+**G2 No `memory_session_health_check` (highest-priority missing read)**
+`session-start.md` explicitly instructs agents to: (a) read `meta/quick-reference.md` to get the aggregation trigger count, (b) count non-empty lines in each ACCESS.jsonl, (c) compare to threshold individually, (d) also check review queue for placeholder vs. real entries, and (e) check the last periodic-review date. That is 6–10 tool calls just to answer "is any maintenance due?" A single `memory_session_health_check` returning a structured result would collapse this entirely:
+```json
+{
+  "aggregation_due": [{"folder": "plans/", "entries": 100, "threshold": 15, "overdue": true}],
+  "review_queue_pending": 0,
+  "periodic_review_due": false,
+  "days_since_review": 0,
+  "trust_decay_alerts": 0
+}
+```
+
+**G3 `memory_audit_trust` scan-only — no approaching-threshold warning tier**
+Currently reports overdue/upcoming (upcoming = within 30 days of threshold). But an approaching file that's 90 days into a 120-day clock has no visibility until it's 30 days out. A `warn_pct` param (default: 75%) would surface these earlier without flooding the report.
+
+---
+
+### Tier 1 — Semantic tool gaps
+
+**G4 `memory_append_scratchpad` only targets `'user'` | `'current'`**
+The repo has date-named scratchpad files (`scratchpad/2026-03-18-automation-backlog.md`, etc.) that were created mid-session and can't be targeted by this tool. Agents are forced to fall back to raw `memory_write` for these, losing the append-only convention, the `---` separator insertion, and the `[scratchpad]` commit prefix. Fix: accept any `scratchpad/{slug}.md` path as a third target form.
+
+**G5 No `memory_resolve_review_item` / `memory_dismiss_review_item`**
+`memory_flag_for_review` pushes items to `meta/review-queue.md`, but there is no governed path to remove them once resolved. After a periodic review, the agent currently has to use raw `memory_edit` or `memory_write` on `meta/` which is explicitly blocked by Tier 2 path policy. The review queue therefore accumulates without a governed pop. A `memory_resolve_review_item(item_id, resolution_note)` tool that removes an entry and appends to a resolved-items log would close the loop.
+
+**G6 No skill file semantic tool**
+`skills/` is protected from all Tier 2 mutations. But unlike `identity/` (which has `memory_update_identity_trait`), there is no `memory_update_skill` tool. Creating or updating a skill file currently has no tool-backed path — the user must do it manually or the agent falls silent. Minimum needed: `memory_update_skill(file, section, content, mode)` mirroring `memory_update_identity_trait`.
+
+**G7 `memory_record_chat_summary` + `memory_record_reflection` are always called together**
+Session wrap-up calls both back-to-back, producing two separate commits. A `memory_record_session(session_id, summary, reflection, key_topics)` composite would atomically write SUMMARY.md, reflection.md, update chats/SUMMARY.md, and log ACCESS — all in a single `[chat]` commit, and with proper session_id injection into the access log entry.
+
+**G8 No `memory_run_aggregation`**
+`curation-algorithms.md` defines a multi-step manual aggregation process: group ACCESS entries by session, compute co-retrieval pairs, identify clusters, write SUMMARY updates. With 100 entries already in plans/ACCESS.jsonl (6.7× the 15-entry trigger), this process should be tool-backed. A `memory_run_aggregation(folder)` that reads the algorithm parameters from `quick-reference.md` and executes Phase 1 co-occurrence clustering would make aggregation routine rather than heroic.
+
+---
+
+### Tier 2 — Write tool gaps
+
+**G9 No `memory_update_frontmatter_bulk`**
+Last session required updating `origin_session` or `source` fields across 35+ files individually. The current `memory_update_frontmatter` handles one file at a time. A `[{path, updates}]` batch form that stages all changes and commits them in a single `[system]` commit would handle mass backfills efficiently and safely.
+
+---
+
+### Cross-cutting gaps
+
+**G10 No `memory_get_capabilities` tool**
+Capability discovery currently requires: call `memory_list_folder("HUMANS/tooling", include_humans=True)` → then `memory_read_file("HUMANS/tooling/agent-memory-capabilities.toml")` → parse manually. A `memory_get_capabilities` tool that reads + parses the TOML and returns structured `{read_support, semantic_extensions, declared_gaps, desktop_operations}` would make capability discovery tool-native and align with the `capability_discovery` integration boundary the TOML already declares.
+
+**G11 `memory_search` returns line matches with no surrounding context**
+Current output: `file.md\n  45: matching line here`. When reading code or multi-line narratives, you need 2–5 surrounding lines to understand the match without a follow-up `memory_read_file`. A `context_lines` param (like `grep -B/-A`) would eliminate a common read-after-search round trip.
+
+---
+
+### Priority ranking
+
+| # | Gap | Impact | Effort |
+|---|-----|--------|--------|
+| G2 | `memory_session_health_check` | HIGH — directly reduces session-start friction | Medium |
+| G5 | `memory_resolve_review_item` | HIGH — review queue is currently a one-way accumulator | Low |
+| G4 | `memory_append_scratchpad` target expansion | HIGH — dated scratchpad files are tool-inaccessible | Low |
+| G6 | `memory_update_skill` | HIGH — skills/ is a write dead-end | Medium |
+| G8 | `memory_run_aggregation` | HIGH — trigger hit, process is fully manual | High |
+| G9 | `memory_update_frontmatter_bulk` | MEDIUM — demonstrated pain last session | Low |
+| G7 | `memory_record_session` composite | MEDIUM — ergonomic, reduces session-end commits | Medium |
+| G1 | `memory_git_log` since/path filter | MEDIUM — git supports it natively | Low |
+| G10 | `memory_get_capabilities` | LOW — currently workable via read_file | Low |
+| G11 | `memory_search` context lines | LOW — reduces follow-up reads | Low |
+| G3 | `memory_audit_trust` warn_pct | LOW — not urgent at current scale | Low |
+
+---
+
 <!-- 2026-03-18, session: chats/2026/03/18/chat-003 -->
 Pattern (needs more data): The memory repo now has a plausible second-tier automation backlog beyond the first four maintenance drafts. Candidate ideas are tracked in `scratchpad/2026-03-18-automation-backlog.md` until repeated need or user approval justifies promotion into a formal plan or skill proposal.

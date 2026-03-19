@@ -17,6 +17,33 @@ Roadmap to improve the ACCESS.jsonl logging layer: batch writes, session-id wiri
 **Next action:** Phase 1, item 1 — implement `memory_log_access_batch` in `write_tools.py`
 <!-- END: access-log-tooling-improvements -->
 
+<!-- BEGIN: mcp-semantic-tools-improvements -->
+### `mcp-semantic-tools-improvements.md` · status: active · trust: medium
+
+Roadmap to close five Tier 1 semantic tool gaps: expand `memory_append_scratchpad` to dated slugs (G4), add `memory_resolve_review_item` to close the review queue lifecycle (G5), add `memory_update_skill` to unblock skill file authoring (G6), add `memory_record_session` composite for atomic wrap-up (G7), and implement `memory_run_aggregation` with the Phase 1 co-occurrence algorithm (G8). 22 items across 6 phases.
+
+**Progress:** 0/22 items complete
+**Next action:** Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
+<!-- END: mcp-semantic-tools-improvements -->
+
+<!-- BEGIN: mcp-read-tools-improvements -->
+### `mcp-read-tools-improvements.md` · status: active · trust: medium
+
+Roadmap to close three Tier 0 read tool gaps: add `since` and `path` filter params to `memory_git_log` (G1), implement `memory_session_health_check` to collapse 6–10 manual session-start round trips into one tool call (G2), and add a `warn_pct` early-warning bucket to `memory_audit_trust` (G3). 13 items across 4 phases.
+
+**Progress:** 0/13 items complete
+**Next action:** Phase 1, item 1 — add `since` and `path_filter` params to `memory_git_log` in `read_tools.py`
+<!-- END: mcp-read-tools-improvements -->
+
+<!-- BEGIN: mcp-write-and-crosscutting-improvements -->
+### `mcp-write-and-crosscutting-improvements.md` · status: active · trust: medium
+
+Roadmap for three cross-cutting improvements: `memory_update_frontmatter_bulk` to replace 35+ individual frontmatter calls with a single staged batch commit (G9), `memory_get_capabilities` to make the capabilities TOML natively queryable (G10), and a `context_lines` param for `memory_search` to eliminate follow-up reads (G11). 15 items across 4 phases.
+
+**Progress:** 0/15 items complete
+**Next action:** Phase 1, item 1 — implement `memory_update_frontmatter_bulk` in `write_tools.py`
+<!-- END: mcp-write-and-crosscutting-improvements -->
+
 ---
 
 ## Completed plans
