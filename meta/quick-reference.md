@@ -47,11 +47,11 @@ Use this table to determine which files to read for each session type. Load file
 
 ## Current active stage: Exploration
 
-_Last assessed: not yet assessed — Exploration defaults apply_
+_Last assessed: 2026-03-19 — Exploration retained (all 6 signals within bounds)_
 
 ## Last periodic review
 
-**Date:** _Not yet run_
+**Date:** 2026-03-19
 
 The agent should update this date when completing a full periodic review (same checklist as in `meta/update-guidelines.md` § "Periodic review").
 

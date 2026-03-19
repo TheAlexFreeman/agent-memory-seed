@@ -16,6 +16,30 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-19] First periodic review
+
+**Changed:**
+
+- **Ran the system's first full periodic review.** Loaded the full governance stack (`meta/integrity-checklist.md`, `meta/system-maturity.md`, `meta/update-guidelines.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/curation-policy.md`) and executed each checklist phase.
+
+- **Assessed maturity as Stage 1 Exploration (retained).** All six maturity signals fell within Exploration bounds: ~8 sessions, 128 total ACCESS entries, ~15% file coverage, 0.05 confirmation ratio, zero identity drift, mean helpfulness ~0.6 in plans ACCESS sample. First formal assessment block written to `meta/system-maturity.md`.
+
+- **Completed and published first belief diff.** Replaced the placeholder in `meta/belief-diff-log.md` with a full review entry documenting all knowledge files written since system inception, zero trust-level changes, zero identity drift, and the single integrity fix listed below.
+
+- **Fixed one integrity violation.** `knowledge/_unverified/rationalist-community/SUMMARY.md` incorrectly carried `last_verified` in its frontmatter (quarantine-zone files must not set this field). Field removed.
+
+- **Confirmed no instruction containment violations.** Grep flagged two files (`knowledge/literature/man-who-was-thursday.md`, `knowledge/literature/tree-of-smoke-top-down-bottom-up.md`); both confirmed false positives (ordinary prose, not imperative instructions).
+
+- **Added two maintenance proposals to `meta/review-queue.md`:** (1) aggregate `plans/ACCESS.jsonl`, which has 100 entries against a 15-entry Exploration trigger; (2) establish a next-periodic-review trigger (20 sessions or first `_unverified/` promotion).
+
+- **Updated `meta/quick-reference.md`** to record the first assessment date (2026-03-19, Exploration retained) and last periodic review date (2026-03-19).
+
+**Reasoning:** The system had no prior periodic review on record. The maturity assessment was overdue (threshold: any time after first-run, by convention before significant plan execution). Running it now establishes a baseline, confirms governance parameters are appropriate for the current volume, and surfaces a practical maintenance debt (`plans/ACCESS.jsonl` aggregation). No stage transition was warranted.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-18] Task-readiness contract for GitHub, network, and local tooling
 
 **Changed:**

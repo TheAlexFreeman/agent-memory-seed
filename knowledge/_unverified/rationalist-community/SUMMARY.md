@@ -1,6 +1,5 @@
 ---
 created: '2026-03-19'
-last_verified: '2026-03-19'
 source: agent-generated
 trust: low
 ---
