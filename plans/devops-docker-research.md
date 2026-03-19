@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 1 — write knowledge/_unverified/devops/docker-compose-local-dev.md"
+next_action: "Begin Phase 2 — write knowledge/_unverified/devops/nginx-django-react.md"
 ---
 
 # Research Plan: DevOps — Docker, Vite, and Dev-Ops Tooling for the Full Stack
@@ -39,11 +39,11 @@ New top-level subject folder. Add a `SUMMARY.md` when writing the first file.
 
 ## Research phases and priority order
 
-### Phase 1 — Local development environment (highest priority) · ☐ 0/2 complete
+### Phase 1 — Local development environment (highest priority) · ☑ 2/2 complete
 
 The daily development environment is where most friction lives and where the complexity of multiple Celery workers first becomes concrete. Getting this right has immediate payoff.
 
-1. ☐ `docker-compose-local-dev.md`
+1. ☑ `docker-compose-local-dev.md`
    - **Full service definition**: `web` (Django + gunicorn or `runserver`), `celery-worker` (one or more), `celery-beat`, `postgres`, `redis`, optional `flower`; all sharing one backend image built from the same `Dockerfile`
    - **`depends_on` with health checks**: `service_healthy` condition, writing actual healthcheck commands for Postgres (`pg_isready`) and Redis (`redis-cli ping`); why `depends_on: [postgres]` alone is not enough
    - **Volume mounts for hot reload**: bind-mounting the Django source for `runserver --reload`, the Celery `--autoreload` flag, when to use it and its caveats in production-like setups
@@ -54,7 +54,7 @@ The daily development environment is where most friction lives and where the com
    - **Running management commands**: `docker compose exec web python manage.py migrate`, `createsuperuser`, `shell_plus`; aliases and Makefile targets for common commands
    - **Log handling in dev**: `docker compose logs -f --tail=50 web celery-worker`, per-service log following, structlog's dev vs. production renderer (`ConsoleRenderer` in dev)
 
-2. ☐ `celery-multi-worker-docker.md`
+2. ☑ `celery-multi-worker-docker.md`
    - **Why multiple worker containers**: different task types need different pool types and concurrency — a gevent worker for outbound HTTP tasks should not share a process with a prefork worker doing CPU-intensive PDF generation
    - **Naming and queue assignment in Compose**: `celery-worker-default`, `celery-worker-io`, `celery-worker-heavy` as separate services each running `celery -A app worker -Q <queue> --pool=<pool> --concurrency=<n>`
    - **Pool type per worker**: gevent for I/O-bound (HTTP, email, lightweight DB reads), prefork for CPU-bound (image processing, PDF, report generation), solo for debug/test, threads as occasional alternative
@@ -193,6 +193,9 @@ The daily development environment is where most friction lives and where the com
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created; existing coverage reviewed, scope defined to avoid duplication with django-production-stack.md, django-gunicorn-uvicorn.md (planned), and vite-react-build.md (planned) |
+| 2026-03-18 | Created knowledge/_unverified/devops/ folder and SUMMARY.md |
+| 2026-03-18 | Wrote docker-compose-local-dev.md: full service definition, depends_on health checks, override pattern, env management, networking, volumes, management commands, hot reload, Vite-outside-Docker pattern |
+| 2026-03-18 | Wrote celery-multi-worker-docker.md: three-worker pattern, queue routing, pool selection, concurrency tuning, gevent patching, resource limits, shared image/entrypoint, beat singleton, worker healthchecks, graceful shutdown, scaling; Phase 1 complete |
 
 ---
 

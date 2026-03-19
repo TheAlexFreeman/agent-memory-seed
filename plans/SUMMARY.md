@@ -115,8 +115,8 @@ Gaps and depth research for Alex's React + Chakra UI 3 frontend (backed by Djang
 
 Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + Postgres stack. 10 files planned across 9 phases. Priority order: Docker Compose local dev → multi-worker Celery containers → nginx reverse proxy → production Docker config → GitHub Actions CI/CD → zero-downtime deploys → secrets/environment management → Celery + Prometheus monitoring → database ops → dev workflow tooling (Makefile, pre-commit, debugpy). Output goes to `knowledge/_unverified/devops/`.
 
-**Progress:** 0/10 files written
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/devops/docker-compose-local-dev.md`
+**Progress:** 2/10 files written
+**Next action:** Begin Phase 2 — write `knowledge/_unverified/devops/nginx-django-react.md`
 <!-- END: devops-docker-research -->
 
 ---
