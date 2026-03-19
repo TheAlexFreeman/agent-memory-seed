@@ -104,8 +104,8 @@ Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker s
 
 Gaps and depth research for Alex's React + Chakra UI 3 frontend (backed by Django/DRF). 9 files planned across 8 phases. Priority order: TanStack Query (DRF integration) → react-hook-form + zod → TanStack Router → TypeScript patterns → testing (Vitest/RTL/MSW) → auth state management → performance → Vite build tooling → error boundaries + Suspense. Output goes to `knowledge/_unverified/react/`.
 
-**Progress:** 2/9 files written
-**Next action:** Begin Phase 2 — write `knowledge/_unverified/react/tanstack-router.md`
+**Progress:** 3/9 files written
+**Next action:** Begin Phase 3 — write `knowledge/_unverified/react/typescript-react-patterns.md`
 <!-- END: react-stack-research -->
 
 ---

@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 2 — write knowledge/_unverified/react/tanstack-router.md"
+next_action: "Begin Phase 3 — write knowledge/_unverified/react/typescript-react-patterns.md"
 ---
 
 # Research Plan: React Stack — Gaps and Depth
@@ -60,9 +60,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 2 — Routing · ☐ 0/1 complete
+### Phase 2 — Routing · ☑ 1/1 complete
 
-3. ☐ `tanstack-router.md`
+3. ☑ `tanstack-router.md`
    - **Why TanStack Router**: fully type-safe routing end-to-end (route params, search params, loader data, navigation); file-based or code-based route tree; built-in search param state management superior to React Router's `useSearchParams`
    - **Route tree setup**: `createRootRoute`, `createRoute`, `createRouter`, `RouterProvider`; file-based routing with Vite plugin (`@tanstack/router-plugin`) vs. code-based
    - **Type safety model**: how TanStack Router infers types from the route tree; `Link` component is fully type-checked (no invalid `to` paths); `useParams`, `useSearch`, `useLoaderData` all return correctly typed values without casting
@@ -177,6 +177,7 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 | 2026-03-18 | Plan created; existing 4 React files reviewed and gaps identified |
 | 2026-03-18 | Wrote `knowledge/_unverified/react/tanstack-query.md`; covers v5 API, query keys, useQuery, useMutation, optimistic updates, DRF patterns, useInfiniteQuery, useSuspenseQuery, useQueries |
 | 2026-03-18 | Wrote `knowledge/_unverified/react/react-hook-form-zod.md`; covers RHF v7 + zod v3, Controller/Chakra integration, useFieldArray, multi-step forms, DRF error mapping; Phase 1 complete |
+| 2026-03-18 | Wrote `knowledge/_unverified/react/tanstack-router.md`; covers v1 file-based + code-based setup, type safety model, loaders, validateSearch with zod, pathless layouts, beforeLoad guards, navigation, pending UI, error components, code splitting, Query integration; Phase 2 complete |
 
 ---
 
