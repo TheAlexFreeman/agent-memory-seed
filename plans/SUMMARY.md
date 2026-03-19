@@ -8,24 +8,15 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-governed-memory-writes.md`
-2. `codex-desktop-bootstrap-support.md`
-3. `codex-desktop-automation-continuity.md`
-4. `codex-desktop-github-network-ergonomics.md`
-5. `django-stack-research.md`
-6. `react-stack-research.md`
-7. `devops-docker-research.md`
-8. `philosophy-history-survey.md`
-9. `lesswrong-rationalist-community-research.md`
-10. `ai-paradigm-genealogy-research.md`
-
-<!-- BEGIN: codex-desktop-governed-memory-writes -->
-### `codex-desktop-governed-memory-writes.md` · status: active · trust: medium
-**Progress:** 10/11 items complete
-**Next action:** Define rollout metrics
-<!-- END: codex-desktop-governed-memory-writes -->
-
----
+1. `codex-desktop-bootstrap-support.md`
+2. `codex-desktop-automation-continuity.md`
+3. `codex-desktop-github-network-ergonomics.md`
+4. `django-stack-research.md`
+5. `react-stack-research.md`
+6. `devops-docker-research.md`
+7. `philosophy-history-survey.md`
+8. `lesswrong-rationalist-community-research.md`
+9. `ai-paradigm-genealogy-research.md`
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
 ### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
@@ -122,6 +113,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: codex-desktop-governed-memory-writes -->
+### `codex-desktop-governed-memory-writes.md` · status: complete · trust: medium
+
+Governed memory writes now have a repo-declared capability contract, discovery flow, UI feedback surface, and runtime invariant coverage for plan, knowledge, protected-path, and version-token cases.
+
+**Progress:** 11/11 items complete
+**Completed:** 2026-03-18
+<!-- END: codex-desktop-governed-memory-writes -->
+
+---
 
 <!-- BEGIN: agent-memory-mcp -->
 ### `agent-memory-mcp.md` · status: complete · trust: medium

@@ -1,10 +1,10 @@
 ---
 created: 2026-03-18
 last_verified: 2026-03-18
-next_action: Define rollout metrics
+next_action: null
 origin_session: manual
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 ---
@@ -281,7 +281,7 @@ The resolver now emits a dedicated `ui_feedback` object that packages:
 
 That gives Codex desktop a direct UI surface for governed writes, much like the startup panel prototype, instead of forcing the app to reverse-engineer user-facing presentation from lower-level contract tables.
 
-### Phase 4 — Hardening and evaluation · ☐ 1/2 complete
+### Phase 4 — Hardening and evaluation · ☑ 2/2 complete
 
 10. ☑ Build test coverage around invariants
    - frontmatter round trips
@@ -289,7 +289,7 @@ That gives Codex desktop a direct UI surface for governed writes, much like the 
    - protected-change blocking
    - concurrent write conflict handling
 
-11. ☐ Define rollout metrics
+11. ☑ Define rollout metrics
    - semantic write success rate
    - number of raw-edit fallbacks
    - invariant drift incidents prevented
@@ -306,6 +306,23 @@ Manifest validation alone is not enough for governed writes. The hardening pass 
 - stale version tokens trigger `ConflictError` instead of silently overwriting newer plan state
 
 That makes the governed-write contract harder to regress where it matters: at the mutation boundary, not just in manifest prose or resolver metadata.
+
+#### 2. Rollout metrics should measure avoided drift, not just feature usage
+
+Governed writes succeed when they reduce silent contract breakage and unnecessary raw-file orchestration, not merely when semantic tools are called often. The rollout metric set should therefore track three layers:
+
+- **Adoption**: share of eligible memory writes routed through repo-local semantic tools instead of raw fallback tools
+- **Reliability**: semantic write success rate, conflict rate, and preview-to-apply completion rate for proposed/protected flows
+- **Safety value**: invariant drift incidents prevented, plus the count of writes that would have required multi-file manual repair without semantic tooling
+
+Repo-side prototype guidance:
+
+- record semantic-vs-raw fallback counts per operation group (`plan`, `knowledge`, `identity`, `chat`, `governance`)
+- separate read-only/deferred outcomes from true failures so constrained environments do not poison the success-rate signal
+- treat validator failures, post-write summary mismatches, and frontmatter repair needs as invariant incidents
+- watch fallback concentration, not just total fallback count, so recurring gaps like ACCESS append or session reflection stay visible as product priorities
+
+That keeps rollout evaluation aligned with the purpose of governed writes: fewer convention-based edits, fewer invariant regressions, and clearer visibility when the semantic surface is still incomplete.
 
 ---
 
@@ -331,6 +348,7 @@ That makes the governed-write contract harder to regress where it matters: at th
 | 2026-03-18 | Added a manifest-driven capability discovery contract plus resolver classification for semantic/read-only/fallback runtimes; completed Define repo capability discovery (codex-desktop-governed-memory-writes 8/11) |
 | 2026-03-18 | Added a repo-declared `ui_feedback` contract plus resolver-emitted preview/result summaries for semantic and read-only governed-write states; completed Add structured UI feedback (codex-desktop-governed-memory-writes 9/11) |
 | 2026-03-18 | Added invariant coverage for semantic plan progression, knowledge promotion summary sync, protected-path blocking, and stale version-token conflicts; completed Build test coverage around invariants (codex-desktop-governed-memory-writes 10/11) |
+| 2026-03-18 | Defined rollout metrics around semantic adoption, reliability, and invariant incidents prevented; completed the governed-memory-writes plan (codex-desktop-governed-memory-writes 11/11) |
 
 ---
 
