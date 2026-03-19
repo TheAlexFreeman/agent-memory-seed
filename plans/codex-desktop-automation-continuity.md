@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Define automatic writeback at run end
+next_action: Define interruption and retry semantics
 origin_session: manual
 source: agent-generated
 status: active
@@ -272,9 +272,9 @@ Minimum blocker actions:
 
 The UX should treat blocker carry-forward as a control surface, not just a warning banner. That is what prevents repeated doomed publish attempts and makes automation continuity materially better than a fresh thread.
 
-### Phase 3 — Execution and writeback · ☐ 0/3 complete
+### Phase 3 — Execution and writeback · ☐ 1/3 complete
 
-7. ☐ Define automatic writeback at run end
+7. ☑ Define automatic writeback at run end
    - concise run summary
    - blockers encountered
    - artifacts produced
@@ -289,6 +289,52 @@ The UX should treat blocker carry-forward as a control surface, not just a warni
    - skip redundant work if prior blocker still applies
    - reopen the same branch if appropriate
    - warn when the repo state diverged since last run
+
+### Phase 3 decisions (2026-03-18)
+
+#### 9. Automatic writeback at run end
+
+A recurring run should end by writing a normalized continuity result back into automation-local state, with links out to any durable repo-memory changes made during the run. The writeback should happen even when the run is blocked or interrupted, not only on clean success.
+
+**Required writeback fields**
+
+- `run_outcome`: `completed`, `blocked`, `waiting_on_user`, or `interrupted`
+- `run_summary`: concise summary of what changed or why progress stopped
+- `plan_result`: pinned plan id, any updated progress snapshot, and the next intended action
+- `git_result`: branch, base branch, head sha, dirty/clean state, commit refs, and PR state if applicable
+- `blocker_result`: active blockers to carry forward, resolved blockers to archive in history, and any newly discovered blockers
+- `artifact_result`: files produced, URLs created, and repo-memory operations performed
+
+The writeback rule should be "summarize outcome, not transcript." Automation continuity needs a durable resume record, not a replay of the whole conversation.
+
+#### 10. Interruption and retry semantics
+
+Automation continuity should distinguish between incomplete work and failed work. An interrupted run is not the same as a blocked run, and the retry path should preserve that difference.
+
+- `interrupted`: the run stopped before reaching a stable conclusion; keep the last known intended action and mark partial artifacts as provisional
+- `blocked`: the run reached a stable blocker that prevents useful progress; carry forward the blocker as active and allow scheduling logic to skip redundant retries
+- `waiting_on_user`: progress is paused on review, merge, credentials, or another explicit human handoff
+- `completed`: the run reached a stable end state, even if follow-up work remains for a future run
+
+Retry rules:
+
+- retries on the same branch are preferred when the branch still exists and the repo state has not diverged materially
+- stale blockers can be superseded, but never silently discarded; retain blocker history with a resolution reason
+- partial artifacts from interrupted runs should be visible to the next run, but clearly labeled as incomplete until verified or resumed
+- if a rerun starts after significant repo drift, continuity should preserve the prior intent but force revalidation before reusing branch or plan assumptions
+
+#### 11. Continuity-aware scheduling hooks
+
+Scheduling should consult continuity state before launching work so repeated automations can avoid predictable waste.
+
+**Minimum scheduling hooks**
+
+- skip or downgrade a run when an unchanged active blocker still makes the task non-viable
+- prefer reopening the prior branch when continuity state says the work is still in progress and the branch remains valid
+- surface a `repo_drift` warning when HEAD, branch availability, or pinned-plan state changed since the last run
+- escalate `waiting_on_user` runs into reminder-style behavior instead of full execution attempts
+
+The scheduler should not make deep product decisions on its own. Its role is to gate obvious non-starters, reopen viable in-progress work, and surface changed conditions early enough that the agent starts from the right premise.
 
 ### Phase 4 — Validation and productization · ☐ 0/2 complete
 
@@ -325,6 +371,7 @@ The UX should treat blocker carry-forward as a control surface, not just a warni
 | 2026-03-18 | Completed Design the run header panel (codex-desktop-automation-continuity 4/11) |
 | 2026-03-18 | Completed Add plan pinning and resume affordances (codex-desktop-automation-continuity 5/11) |
 | 2026-03-18 | Completed Add blocker carry-forward controls (codex-desktop-automation-continuity 6/11) |
+| 2026-03-18 | Completed Define automatic writeback at run end (codex-desktop-automation-continuity 7/11) |
 
 ---
 
