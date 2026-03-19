@@ -21,6 +21,22 @@ This quarantine zone ensures that **all externally sourced content is visible, l
 
 ## Current contents
 
+<!-- section: mcp -->
+### `mcp/` — Model Context Protocol knowledge base (ingested 2026-03-19)
+
+Three files synthesized from live `modelcontextprotocol.io` documentation (spec version `2025-06-18`) plus operational experience building the `agent_memory` MCP server in this repo. All carry `trust: low` pending review.
+
+- **`mcp-protocol-overview.md`** — Architecture and spec overview: Host/Client/Server participant model, data layer (JSON-RPC 2.0, lifecycle, primitives), transport layer (stdio vs. Streamable HTTP), all server and client primitives (Tools, Resources, Prompts, Sampling, Elicitation, Tasks, Apps), capability negotiation, and proto version timeline.
+- **`mcp-server-design-patterns.md`** — Practical server-building guide: FastMCP patterns, tool naming and description quality, input schema design, result design, tool annotations, security (path traversal prevention, stdio stdin inheritance critical fix, optimistic concurrency), async performance, tool count management, dynamic registration, state management, multi-tier organization, and testing with MCP Inspector and Postman.
+- **`mcp-ecosystem-survey.md`** — Ecosystem survey: 108 clients categorized by tier (VS Code Copilot, Claude Desktop/Code, Cursor, Windsurf, ChatGPT, Gemini CLI, Amazon Q, JetBrains, Zed, LM Studio, …), capability feature matrix across all clients, active reference servers (7: Everything, Fetch, Filesystem, Git, Memory, Sequential Thinking, Time), official company integrations, discovery registries (Smithery, Glama, mcp.so), SDK availability (Python, TypeScript, Go, Rust, Kotlin), community agent frameworks, and LF Projects governance.
+
+<!-- section: ai-tools -->
+### `ai-tools/` — Practical AI tools landscape (ingested 2026-03-19)
+
+One file synthesizing cutting-edge AI tools as of early 2026. Carries `trust: low` pending review.
+
+- **`ai-tools-landscape-2026.md`** — Survey of the current AI tools landscape: AI coding environments (Cursor, Windsurf, VS Code Copilot, Zed, Amp), AI coding CLI/terminal agents (Claude Code, Gemini CLI, OpenAI Codex, Aider, Goose), autonomous agents (Devin, OpenHands, SWE-agent, Replit Agent), agent orchestration frameworks (LangGraph, Pydantic AI, CrewAI, AutoGen, Mastra, Haystack, Semantic Kernel), research/knowledge tools (Perplexity, Claude.ai Projects, NotebookLM, OpenAI Responses API), specialized infrastructure (Smithery, Context7, E2B, Tavily, Browserbase), local inference (Ollama, LM Studio), frontier model comparison table, and 7 key trends shaping the field in 2026.
+
 <!-- section: django -->
 ### `django/` — Django 6.0 knowledge base (ingested 2026-03-18)
 
