@@ -1001,6 +1001,38 @@ Structured.
                 )
             )
 
+    def test_memory_revert_commit_allows_governance_scoped_system_commit(self) -> None:
+        repo_root = self._init_repo({"README.md": "# Project\n\nOriginal\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"README.md": "# Project\n\nUpdated\n"},
+            "[system] Update readme guidance",
+        )
+        tools = self._create_tools(repo_root)
+
+        preview_raw = asyncio.run(tools["memory_revert_commit"](sha=target_sha))
+        preview = json.loads(preview_raw)
+        preview_state = preview["new_state"]
+
+        self.assertTrue(preview_state["eligible"])
+        self.assertTrue(preview_state["applies_cleanly"])
+        self.assertIn("README.md", preview_state["files_changed"])
+
+        confirm_raw = asyncio.run(
+            tools["memory_revert_commit"](
+                sha=target_sha,
+                confirm=True,
+                preview_token=preview_state["preview_token"],
+            )
+        )
+        payload = json.loads(confirm_raw)
+
+        restored = (repo_root / "README.md").read_text(encoding="utf-8")
+        self.assertEqual(payload["new_state"]["mode"], "confirm")
+        self.assertEqual(payload["new_state"]["reverted_sha"], target_sha)
+        self.assertIn("Original", restored)
+        self.assertNotIn("Updated", restored)
+
     def test_memory_log_access_rejects_untracked_root(self) -> None:
         repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Scratch\n"})
         tools = self._create_tools(repo_root)

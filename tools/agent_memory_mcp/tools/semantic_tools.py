@@ -157,7 +157,14 @@ def _build_revert_preview(repo, sha: str) -> dict[str, object]:
 
     prefix_match = re.match(r"^\[[^\]]+\]", message)
     prefix = prefix_match.group(0) if prefix_match else None
-    disallowed_files = [path for path in files_changed if not _is_revertable_memory_path(path)]
+    if prefix == "[system]":
+        disallowed_files = [
+            path
+            for path in files_changed
+            if not (_is_revertable_memory_path(path) or _is_revertable_system_path(path))
+        ]
+    else:
+        disallowed_files = [path for path in files_changed if not _is_revertable_memory_path(path)]
     disallowed_system_files = (
         [path for path in files_changed if not _is_revertable_system_path(path)]
         if prefix == "[system]"
@@ -1823,6 +1830,19 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError(
                 "Repository HEAD changed since preview. "
                 "Re-run memory_revert_commit with confirm=False and review the new preview."
+            )
+
+        if not bool(preview["applies_cleanly"]):
+            conflict_details = str(preview["conflict_details"] or "")
+            detail_suffix = (
+                f" Details: {conflict_details}"
+                if conflict_details
+                else ""
+            )
+            raise ValidationError(
+                "Revert preview indicates conflicts at the current HEAD. "
+                "Review conflict_details from preview output and re-run preview after resolving competing changes."
+                + detail_suffix
             )
 
         policy_reasons = cast(list[str], preview["policy_reasons"])
