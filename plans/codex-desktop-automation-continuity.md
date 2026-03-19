@@ -1,10 +1,9 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Define rollout metrics
 origin_session: manual
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 ---
@@ -336,7 +335,7 @@ Scheduling should consult continuity state before launching work so repeated aut
 
 The scheduler should not make deep product decisions on its own. Its role is to gate obvious non-starters, reopen viable in-progress work, and surface changed conditions early enough that the agent starts from the right premise.
 
-### Phase 4 — Validation and productization · ☐ 1/2 complete
+### Phase 4 — Validation and productization · ☑ 2/2 complete
 
 10. ☑ Test recurring-run scenarios
    - daily research continuation
@@ -344,7 +343,7 @@ The scheduler should not make deep product decisions on its own. Its role is to 
    - blocked network/auth run
    - branch drift between runs
 
-11. ☐ Define rollout metrics
+11. ☑ Define rollout metrics
    - repeated rediscovery reduced
    - blocker recurrence rate
    - correct plan continuation rate
@@ -410,6 +409,7 @@ The release gate should be practical: continuity is successful when repeated aut
 | 2026-03-18 | Completed Define interruption and retry semantics (codex-desktop-automation-continuity 8/11) |
 | 2026-03-18 | Completed Add continuity-aware scheduling hooks (codex-desktop-automation-continuity 9/11) |
 | 2026-03-18 | Completed Test recurring-run scenarios (codex-desktop-automation-continuity 10/11) |
+| 2026-03-18 | Completed Define rollout metrics (codex-desktop-automation-continuity 11/11) |
 
 ---
 

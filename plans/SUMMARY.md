@@ -17,9 +17,9 @@ Priority order for active work:
 7. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
-### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-**Progress:** 10/11 items complete
-**Next action:** Define rollout metrics
+### `codex-desktop-automation-continuity.md` · status: complete · trust: medium
+**Progress:** 11/11 items complete
+**Next action:** (all complete)
 <!-- END: codex-desktop-automation-continuity -->
 
 ---
