@@ -12,6 +12,12 @@ from .errors import MemoryPermissionError, ValidationError
 _SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _SESSION_ID_RE = re.compile(r"^chats/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
 
+# Shared commit-prefix vocabulary used by both read_tools and write_tools.
+KNOWN_COMMIT_PREFIXES: frozenset[str] = frozenset({
+    "[knowledge]", "[plan]", "[identity]", "[chat]",
+    "[curation]", "[scratchpad]", "[system]", "[access]",
+})
+
 _PROTECTED_ROOTS = ("identity", "meta", "chats", "skills")
 _RAW_MUTATION_ROOTS = ("knowledge", "plans", "scratchpad")
 

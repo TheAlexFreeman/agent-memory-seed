@@ -39,8 +39,14 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
                 f"semantic write tool dependencies unavailable: {exc.name}"
             ) from exc
 
+    def setUp(self) -> None:
+        # Every test gets a fresh TemporaryDirectory; it's auto-deleted on teardown.
+        self._tmpdir = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmpdir.cleanup)
+
     def _init_repo(self, files: dict[str, str]) -> Path:
-        temp_root = Path(tempfile.mkdtemp())
+        temp_root = Path(self._tmpdir.name) / (f"repo_{id(files)}")
+        temp_root.mkdir(parents=True, exist_ok=True)
         subprocess.run(["git", "init"], cwd=temp_root, check=True, capture_output=True, text=True)
         subprocess.run(
             ["git", "config", "user.name", "Test User"],

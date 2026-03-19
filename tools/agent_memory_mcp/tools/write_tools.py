@@ -21,7 +21,12 @@ import os
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ..path_policy import resolve_repo_path, validate_raw_mutation_source, validate_raw_write_target
+from ..path_policy import (
+    KNOWN_COMMIT_PREFIXES,
+    resolve_repo_path,
+    validate_raw_mutation_source,
+    validate_raw_write_target,
+)
 
 
 def _max_file_bytes() -> int:
@@ -30,13 +35,6 @@ def _max_file_bytes() -> int:
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
-
-
-# Commit-prefix validation set (for memory_commit)
-_KNOWN_PREFIXES = {
-    "[knowledge]", "[plan]", "[identity]", "[chat]",
-    "[curation]", "[scratchpad]", "[system]",
-}
 
 
 def register(
@@ -468,14 +466,14 @@ def register(
             warnings.append(
                 f"Commit message '{message[:50]}...' does not start with a "
                 f"recognised [category] prefix. Known prefixes: "
-                f"{sorted(_KNOWN_PREFIXES)}"
+                f"{sorted(KNOWN_COMMIT_PREFIXES)}"
             )
         else:
             full_prefix = f"[{prefix_match.group(1)}]"
-            if full_prefix not in _KNOWN_PREFIXES:
+            if full_prefix not in KNOWN_COMMIT_PREFIXES:
                 warnings.append(
                     f"Unrecognised commit prefix '{full_prefix}'. "
-                    f"Known prefixes: {sorted(_KNOWN_PREFIXES)}. "
+                    f"Known prefixes: {sorted(KNOWN_COMMIT_PREFIXES)}. "
                     "Proceeding anyway."
                 )
 

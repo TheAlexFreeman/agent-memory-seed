@@ -22,15 +22,10 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
+
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
-
-
-# Known commit-prefix categories (for memory_commit validation)
-KNOWN_PREFIXES = {
-    "[knowledge]", "[plan]", "[identity]", "[chat]",
-    "[curation]", "[scratchpad]", "[system]",
-}
 
 # Trust decay thresholds (days) — defaults; runtime reads from quick-reference.md
 _DEFAULT_LOW_THRESHOLD = 120
