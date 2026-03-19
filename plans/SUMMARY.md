@@ -8,8 +8,7 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `devops-docker-research.md`
-2. `lesswrong-rationalist-community-research.md`
+1. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
@@ -22,18 +21,18 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 
 ---
 
+## Completed plans
+
 <!-- BEGIN: devops-docker-research -->
-### `devops-docker-research.md` · status: active · trust: medium
+### `devops-docker-research.md` · status: complete · trust: medium
 
-Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + Postgres stack. 10 files planned across 9 phases. Priority order: Docker Compose local dev → multi-worker Celery containers → nginx reverse proxy → production Docker config → GitHub Actions CI/CD → zero-downtime deploys → secrets/environment management → Celery + Prometheus monitoring → database ops → dev workflow tooling (Makefile, pre-commit, debugpy). Output goes to `knowledge/_unverified/devops/`.
+Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + Postgres stack. 10 files across 9 phases: Docker Compose local dev, multi-worker Celery, nginx reverse proxy, production Docker config, GitHub Actions CI/CD, zero-downtime deploys, secrets/environment management, Celery + Prometheus monitoring, database ops, dev workflow tooling (Makefile, pre-commit, debugpy). All output in `knowledge/_unverified/devops/`.
 
-**Progress:** 2/10 files written
-**Next action:** Begin Phase 2 — write `knowledge/_unverified/devops/nginx-django-react.md`
+**Progress:** 10/10 files written
+**Completed:** 2026-03-19
 <!-- END: devops-docker-research -->
 
 ---
-
-## Completed plans
 
 <!-- BEGIN: react-stack-research -->
 ### `react-stack-research.md` · status: complete · trust: medium

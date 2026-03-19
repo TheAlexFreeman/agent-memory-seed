@@ -5,8 +5,8 @@ origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
-status: active
-next_action: "Begin Phase 2 — write knowledge/_unverified/devops/nginx-django-react.md"
+status: complete
+next_action: null
 ---
 
 # Research Plan: DevOps — Docker, Vite, and Dev-Ops Tooling for the Full Stack
@@ -68,9 +68,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 2 — Nginx as the composition layer · ☐ 0/1 complete
+### Phase 2 — Nginx as the composition layer · ☑ 1/1 complete
 
-3. ☐ `nginx-django-react.md`
+3. ☑ `nginx-django-react.md`
    - **Role of nginx in this stack**: TLS termination, reverse proxy to gunicorn, serving React SPA static build, WebSocket proxying (if using Django Channels or similar), rate limiting, compression — keeps gunicorn and the React build cleanly separate
    - **Basic proxy to gunicorn**: `proxy_pass http://web:8000`, `proxy_set_header` for `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`; `proxy_read_timeout` for long-running views
    - **Serving the React SPA**: `root /usr/share/nginx/html`, `try_files $uri $uri/ /index.html` for client-side routing, `index index.html`; the distinction between assets that get cache-busted filenames (immutable caching) and `index.html` (no-cache)
@@ -85,9 +85,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 3 — Production Docker configuration · ☐ 0/1 complete
+### Phase 3 — Production Docker configuration · ☑ 1/1 complete
 
-4. ☐ `docker-production-config.md`
+4. ☑ `docker-production-config.md`
    - **Multi-stage Dockerfile for Django**: `base` stage (Python deps), `dev` stage (dev tools, bind mounts), `production` stage (`collectstatic`, non-root user, no dev deps); `COPY --chown` for file ownership
    - **Image tagging and versioning**: tag by git SHA (`ghcr.io/org/app:${{ github.sha }}`), `latest` as a convenience alias, why pinning to SHAs in Compose files matters for rollback
    - **`docker-compose.prod.yml`**: no bind mounts, explicit image tags, `restart: unless-stopped` or `on-failure:3`, removed dev ports, production environment variables, `logging` driver (json-file with rotation, or `fluentd`/`loki`)
@@ -100,9 +100,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 4 — CI/CD · ☐ 0/1 complete
+### Phase 4 — CI/CD · ☑ 1/1 complete
 
-5. ☐ `github-actions-cicd.md`
+5. ☑ `github-actions-cicd.md`
    - **Pipeline structure**: two-stage pipeline — (1) test + lint, (2) build + push + deploy; test stage runs on every push, deploy stage runs on merge to `main` (or tag)
    - **Django test job**: `services:` for Postgres and Redis in GH Actions, `pytest` with `--reuse-db`, coverage reporting, caching pip deps with `actions/cache`
    - **React test + build job**: `node` setup, `npm ci`, `vitest --run`, `vite build`, uploading the build artifact for the deploy job
@@ -117,9 +117,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 5 — Zero-downtime deploys · ☐ 0/1 complete
+### Phase 5 — Zero-downtime deploys · ☑ 1/1 complete
 
-6. ☐ `zero-downtime-deploys.md`
+6. ☑ `zero-downtime-deploys.md`
    - **The fundamental problem**: old and new code run simultaneously during a rolling deploy; database schema, task signatures, and API contracts must be compatible across versions
    - **Migration strategy**: run `migrate` as a separate step *before* bringing up the new app containers; additive-first migrations (add nullable column → backfill → make non-null in a later deploy); `SeparateDatabaseAndState` for zero-downtime renames (cross-reference `django-migrations-advanced.md` from django plan)
    - **Celery task versioning**: tasks in flight during a deploy may use old or new signatures; use `bind=True` + kwargs for forward compatibility, avoid positional-only task args
@@ -132,9 +132,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 6 — Secrets and environment management · ☐ 0/1 complete
+### Phase 6 — Secrets and environment management · ☑ 1/1 complete
 
-7. ☐ `environment-secrets-management.md`
+7. ☑ `environment-secrets-management.md`
    - **The three environments and their needs**: local dev (`.env` file, fake secrets fine), staging (real infrastructure, secrets from CI/deployment system), production (secrets from secrets manager or environment injection, never on disk in plaintext)
    - **`.env` file conventions**: `.env` (local, gitignored), `.env.example` (committed, all keys with placeholder values, documents required config), `.env.test` (test-specific overrides), Compose `env_file:` vs. `environment:` precedence
    - **`django-environ`**: `Env()` object, `env.db()`, `env.cache()`, `env.email()` URL-style parsers, `env.bool()` / `env.int()` / `env.list()`, `overwrite=True` for test env, `read_env()` call in `settings.py`
@@ -147,9 +147,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 7 — Celery monitoring · ☐ 0/1 complete
+### Phase 7 — Celery monitoring · ☑ 1/1 complete
 
-8. ☐ `celery-flower-monitoring.md`
+8. ☑ `celery-flower-monitoring.md`
    - **Flower**: setup as a Compose service (`mher/flower` image or `celery -A app flower`), `--basic-auth` for access control, `--url-prefix` for nginx proxying, what it shows (active tasks, task history, worker status, queue lengths) and its limitations (in-memory state, restarts lose history)
    - **`django-prometheus`**: `django_prometheus` middleware, `ExportModelOperationsMixin` for ORM metrics, Celery task metrics via `celery-prometheus-exporter` or custom signals, `prometheus_client` for custom metrics
    - **Key Celery metrics to track**: `celery_task_received_total`, `celery_task_succeeded_total`, `celery_task_failed_total`, `celery_task_runtime_seconds` (latency histogram), `celery_worker_tasks_active`, queue depth via Redis `LLEN` on broker queues
@@ -161,9 +161,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 8 — Database operations · ☐ 0/1 complete
+### Phase 8 — Database operations · ☑ 1/1 complete
 
-9. ☐ `docker-database-ops.md`
+9. ☑ `docker-database-ops.md`
    - **`pg_dump` / `pg_restore` in Docker**: `docker compose exec postgres pg_dump -U $USER $DB > backup.sql`, restoring with `psql`, automating with a cron container or host cron job, storing backups to S3 with `aws s3 cp`
    - **Seeding dev data**: `manage.py loaddata` with fixtures, `manage.py seed` custom command with `factory_boy`, loading a sanitized production dump for realistic local development, `--flush` before seed discipline
    - **Migration execution in CD**: dedicated `migrate` step before app rollout, `manage.py migrate --check` as a CI gate (fails if unapplied migrations exist), `manage.py showmigrations` for debugging
@@ -174,9 +174,9 @@ The daily development environment is where most friction lives and where the com
 
 ---
 
-### Phase 9 — Development workflow tooling · ☐ 0/1 complete
+### Phase 9 — Development workflow tooling · ☑ 1/1 complete
 
-10. ☐ `dev-workflow-tooling.md`
+10. ☑ `dev-workflow-tooling.md`
     - **Makefile as the dev interface**: `make up`, `make down`, `make logs`, `make shell`, `make migrate`, `make test`, `make lint`, `make build` — a standard Makefile that wraps Docker Compose commands; `.PHONY` declarations; self-documenting targets with `##` comments and a `help` target
     - **pre-commit hooks**: `pre-commit` framework, `.pre-commit-config.yaml`, hooks for `ruff` (lint + format), `mypy`, `djhtml` (Django template formatting), `eslint`, `prettier`, `detect-secrets`; `pre-commit install`, running in CI with `pre-commit run --all-files`
     - **`ruff` configuration**: replacing `black` + `isort` + `flake8` + `pyupgrade` with one tool, `ruff.toml` or `pyproject.toml` config, `ruff check --fix`, `ruff format`, Django-specific rules (`DJ` codes), line length, per-file ignores
@@ -196,6 +196,14 @@ The daily development environment is where most friction lives and where the com
 | 2026-03-18 | Created knowledge/_unverified/devops/ folder and SUMMARY.md |
 | 2026-03-18 | Wrote docker-compose-local-dev.md: full service definition, depends_on health checks, override pattern, env management, networking, volumes, management commands, hot reload, Vite-outside-Docker pattern |
 | 2026-03-18 | Wrote celery-multi-worker-docker.md: three-worker pattern, queue routing, pool selection, concurrency tuning, gevent patching, resource limits, shared image/entrypoint, beat singleton, worker healthchecks, graceful shutdown, scaling; Phase 1 complete |
+| 2026-03-19 | Wrote nginx-django-react.md: nginx in Compose, proxy_pass, proxy headers, SPA routing, cache-control (immutable/no-cache), WebSocket, TLS/certbot, gzip, rate limiting |
+| 2026-03-19 | Wrote docker-production-config.md: multi-stage Dockerfile, image tagging by SHA, entrypoint.sh, docker-compose.prod.yml, non-root user, read-only containers, resource limits, log rotation |
+| 2026-03-19 | Wrote github-actions-cicd.md: django/react parallel test jobs, Docker buildx+GHCR, deploy via SSH, secrets management, branch protection, caching strategies |
+| 2026-03-19 | Wrote zero-downtime-deploys.md: additive-first 3-phase migrations, task keyword args, graceful shutdown, deploy sequence, blue-green, --wait rolling update, health checks, rollback, smoke tests |
+| 2026-03-19 | Wrote environment-secrets-management.md: .env conventions, django-environ, Vite VITE_ prefix, runtime config API, AWS Secrets Manager/envconsul, SECRET_KEY_FALLBACKS rotation, .dockerignore, truffleHog |
+| 2026-03-19 | Wrote celery-flower-monitoring.md: Flower setup+nginx proxy, django-prometheus, celery-prometheus-exporter, Redis LLEN queue depth, Prometheus scrape config, Grafana provisioning, alert rules, Promtail+Loki |
+| 2026-03-19 | Wrote docker-database-ops.md: pg_dump/restore, S3 upload, backup automation, factory_boy seed command, migration CI gate, /docker-entrypoint-initdb.d/, volume inspection, backup verification |
+| 2026-03-19 | Wrote dev-workflow-tooling.md: Makefile with help target, pre-commit hooks, ruff config, mypy with django-stubs, debugpy remote debugging, Vite on host proxying to Django in Docker, Compose watch mode; Phases 2-9 complete, plan finished |
 
 ---
 
