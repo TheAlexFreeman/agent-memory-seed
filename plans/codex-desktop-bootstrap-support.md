@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
-last_verified: '2026-03-18'
-next_action: Define test matrix
+last_verified: 2026-03-18
+next_action: Draft rollout strategy
 origin_session: manual
 source: agent-generated
 status: active
@@ -289,9 +289,9 @@ The overrides map onto runtime behavior as follows:
 
 Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`, routes `skip_manifest` through a dedicated `_resolve_skip_manifest()` helper, and always populates `available_overrides` with all three controls. `test_bootstrap_resolver.py` validates each override type plus the no-override baseline (5 new tests, 14 total passing).
 
-### Phase 4 — Validation and rollout · ☐ 0/2 complete
+### Phase 4 — Validation and rollout · ☑ 1/2 complete
 
-10. ☐ Define test matrix
+10. ☑ Define test matrix
    - fresh clone
    - mature memory repo
    - detached automation worktree
@@ -301,6 +301,17 @@ Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`
    - behind feature flag first
    - support repo opt-in before default-on
    - telemetry on preload usefulness and skipped-file rates
+
+### Phase 4 test matrix decisions (2026-03-18)
+
+| Scenario | What the app/runtime must prove | Current repo coverage | Exit signal |
+|---|---|---|---|
+| Fresh clone / blank or template-backed repo | First-run detection wins, first-run preload stays explicit, and returning-only context does not leak into the startup set. | `test_automation_mode_beats_other_detection_routes`, `test_first_run_detection_uses_template_identity_and_no_chat_history`, validator baseline in `HUMANS/tooling/tests/test_validate_memory_repo.py` | `resolve_startup(...).mode == "first_run"` and the first-run manifest steps load in order |
+| Mature memory repo | Returning and full-bootstrap paths preserve compact preload order, skip placeholders or inactive plan surfaces correctly, and keep override state auditable. | `test_returning_trace_skips_placeholders_and_no_active_plans`, `test_override_full_bootstrap_forces_full_bootstrap_mode`, `test_no_override_leaves_active_override_none_with_all_controls_inactive` | Startup trace order, panel counts, and override state all match the declared manifest contract |
+| Detached automation worktree | Automation mode still wins, but the startup panel blocks silent drift by surfacing detached HEAD and branch-drift warnings before work begins. | `test_automation_mode_beats_other_detection_routes`, `test_automation_mode_surfaces_detached_worktree_attention` | `mode == "automation"` with explicit git warning rows and `startup_panel.status == "attention"` |
+| Malformed manifest | Invalid repo declarations are rejected before the runtime treats them as executable startup authority. | `test_missing_bootstrap_manifest_fails`, `test_bootstrap_manifest_with_wrong_router_fails`, `test_bootstrap_manifest_with_wrong_returning_order_fails` in `HUMANS/tooling/tests/test_validate_memory_repo.py` | Validator rejects missing manifests, wrong router authority, and wrong ordered step sets |
+
+Resolver behavior should stay intentionally separate from manifest-validation behavior. The runtime prototype may assume `agent-bootstrap.toml` already passed validation; malformed-manifest cases belong in validator coverage, not ad hoc resolver fallbacks.
 
 ---
 
@@ -328,6 +339,7 @@ Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`
 | 2026-03-18 | Completed Add branch/worktree warnings to startup (codex-desktop-bootstrap-support 8/11) |
 | 2026-03-18 | Added manual override controls: `user_override` param routes full_bootstrap/compact_only through detect_mode and skip_manifest through a dedicated fallback path; all three controls always present in startup_panel.available_overrides; 5 new tests (14 total passing) |
 | 2026-03-18 | Completed Add manual override controls (codex-desktop-bootstrap-support 9/11) |
+| 2026-03-18 | Defined the Phase 4 test matrix across fresh-clone, mature-repo, detached-automation-worktree, and malformed-manifest scenarios; added detached automation worktree coverage to the bootstrap resolver tests and advanced the plan to 10/11 |
 
 ---
 

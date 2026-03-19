@@ -8,8 +8,8 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-bootstrap-support.md`
-2. `codex-desktop-governed-memory-writes.md`
+1. `codex-desktop-governed-memory-writes.md`
+2. `codex-desktop-bootstrap-support.md`
 3. `codex-desktop-automation-continuity.md`
 4. `codex-desktop-github-network-ergonomics.md`
 5. `django-stack-research.md`
@@ -19,21 +19,19 @@ Priority order for active work:
 9. `lesswrong-rationalist-community-research.md`
 10. `ai-paradigm-genealogy-research.md`
 
----
-
-<!-- BEGIN: codex-desktop-bootstrap-support -->
-### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
-**Progress:** 9/11 items complete
-**Next action:** Define test matrix
-<!-- END: codex-desktop-bootstrap-support -->
-
----
-
 <!-- BEGIN: codex-desktop-governed-memory-writes -->
 ### `codex-desktop-governed-memory-writes.md` · status: active · trust: medium
 **Progress:** 7/11 items complete
 **Next action:** Define repo capability discovery
 <!-- END: codex-desktop-governed-memory-writes -->
+
+---
+
+<!-- BEGIN: codex-desktop-bootstrap-support -->
+### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
+**Progress:** 10/11 items complete
+**Next action:** Draft rollout strategy
+<!-- END: codex-desktop-bootstrap-support -->
 
 ---
 
