@@ -113,6 +113,36 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(mode, "automation")
             self.assertEqual(source, "automation_flag")
 
+    def test_automation_mode_surfaces_detached_worktree_attention(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root, placeholder_scratchpad=False)
+
+            resolution = resolver.resolve_startup(
+                root,
+                automation=True,
+                expected_branch="automation/daily-review",
+                git_state=resolver.GitState(
+                    current_branch=None,
+                    detached_head=True,
+                    worktree_branch_drift=True,
+                    branch_checked_out_elsewhere=False,
+                ),
+            )
+
+            self.assertEqual(resolution.mode, "automation")
+            self.assertEqual(resolution.mode_source, "automation_flag")
+            self.assertEqual(resolution.startup_panel.title, "Automation Startup")
+            self.assertEqual(resolution.startup_panel.mode_label, "Automation")
+            self.assertEqual(resolution.startup_panel.status, "attention")
+            self.assertEqual(resolution.startup_panel.loaded_count, 4)
+            self.assertEqual(
+                [warning.code for warning in resolution.startup_panel.warnings],
+                ["detached_head", "worktree_branch_drift"],
+            )
+            self.assertIsNone(resolution.active_override)
+            self.assertIsNone(resolution.startup_panel.active_override)
+
     def test_first_run_detection_uses_template_identity_and_no_chat_history(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
