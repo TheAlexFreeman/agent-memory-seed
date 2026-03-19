@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Define startup preload order for recurring runs
+next_action: Design the run header panel
 origin_session: manual
 source: agent-generated
 status: active
@@ -57,7 +57,7 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
 
 ## Research and design phases
 
-### Phase 1 — Automation state model · ☐ 2/3 complete
+### Phase 1 — Automation state model · ☑ 3/3 complete
 
 1. ☑ Define the automation continuity schema
    - run metadata
@@ -70,7 +70,7 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
    - what belongs in repo memory
    - what belongs in thread UI only
 
-3. ☐ Define startup preload order for recurring runs
+3. ☑ Define startup preload order for recurring runs
    - automation memory first
    - then repo startup manifest
    - then current task-specific plan/context
@@ -147,6 +147,54 @@ A practical boundary rule follows from this split:
 - if the state should be true for the repo regardless of which automation or person resumes work, write it to repo memory
 - if the state only helps the current conversation and has no resume value, leave it in the thread UI
 
+#### 4. Startup preload order for recurring runs
+
+Recurring automation startup should use a fixed preload sequence with verification gates between layers. The order should optimize for resume correctness first, context efficiency second.
+
+**Recommended preload sequence**
+
+1. **Load automation continuity state**
+   - last run outcome
+   - pinned plan pointer
+   - unresolved blockers
+   - branch/base expectations
+   - deferred actions
+
+2. **Run critical validity checks before deep context loads**
+   - confirm the repo/workspace still matches the continuity record
+   - confirm the referenced branch/base branch still exist or detect drift
+   - confirm any pinned plan still exists and is still `active`
+   - downgrade stale continuity fields into warnings rather than treating them as preload truth
+
+3. **Load automation-mode repo startup contract**
+   - repo router or `agent-bootstrap.toml` automation mode
+   - only the compact automation startup files declared by the repo
+   - startup warnings from git/worktree state or missing required files
+
+4. **Load the carried-forward execution thread**
+   - the pinned plan file when valid
+   - otherwise the highest-priority active plan relevant to the automation
+   - any directly referenced repo-memory artifacts needed for the next action
+
+5. **Load optional task-expansion context only if still needed**
+   - linked knowledge summaries
+   - prior chat summaries
+   - supporting files for the specific next action
+
+This sequence keeps the automation from spending startup budget on broad repo rediscovery before it has confirmed that the previous run's assumptions are still valid.
+
+#### 5. Preload resolution rules
+
+The preload contract should also specify how to behave when continuity inputs are stale or conflicting:
+
+- stale plan pointer: drop back to repo priority order and surface `pinned_plan_inactive`
+- missing branch: preserve the prior branch name in the warning state, but do not auto-create or silently substitute a branch
+- unresolved blocker still valid: surface it before execution and allow the automation scheduler to skip doomed work
+- unresolved blocker cleared: retain it in history, but remove it from the active blocker list so it does not poison the next run
+- repo startup contract changed since the last run: trust the current repo contract and mark the continuity snapshot as outdated
+
+A good default is "verify before expand": continuity state can nominate what to load next, but repo truth and current git state decide what is actually eligible for preload.
+
 ### Phase 2 — Continuity UX · ☐ 0/3 complete
 
 4. ☐ Design the run header panel
@@ -215,6 +263,7 @@ A practical boundary rule follows from this split:
 | 2026-03-18 | Plan created from identified Codex desktop gap: recurring-run continuity, branch context, and blocker carry-forward |
 | 2026-03-18 | Completed Define the automation continuity schema (codex-desktop-automation-continuity 1/11) |
 | 2026-03-18 | Completed Define separation of concerns (codex-desktop-automation-continuity 2/11) |
+| 2026-03-18 | Completed Define startup preload order for recurri (codex-desktop-automation-continuity 3/11) |
 
 ---
 

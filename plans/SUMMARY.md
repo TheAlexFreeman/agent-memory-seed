@@ -18,8 +18,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-**Progress:** 2/11 items complete
-**Next action:** Define startup preload order for recurring runs
+**Progress:** 3/11 items complete
+**Next action:** Design the run header panel
 <!-- END: codex-desktop-automation-continuity -->
 
 ---
