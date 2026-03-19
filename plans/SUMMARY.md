@@ -8,7 +8,14 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-_No active plans._
+<!-- BEGIN: access-log-tooling-improvements -->
+### `access-log-tooling-improvements.md` · status: active · trust: medium
+
+Roadmap to improve the ACCESS.jsonl logging layer: batch writes, session-id wiring, schema enrichment (mode, task_id, min_helpfulness filter), coverage validation, and `memory_get_maturity_signals` robustness. Driven by analysis of 128 real access entries revealing sweep inflation, broken session identity, and coverage gaps in meta/skills/chats. 12 items across 4 phases.
+
+**Progress:** 0/12 items complete
+**Next action:** Phase 1, item 1 — implement `memory_log_access_batch` in `write_tools.py`
+<!-- END: access-log-tooling-improvements -->
 
 ---
 
