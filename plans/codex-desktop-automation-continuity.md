@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Add plan pinning and resume affordances
+next_action: Add blocker carry-forward controls
 origin_session: manual
 source: agent-generated
 status: active
@@ -195,7 +195,7 @@ The preload contract should also specify how to behave when continuity inputs ar
 
 A good default is "verify before expand": continuity state can nominate what to load next, but repo truth and current git state decide what is actually eligible for preload.
 
-### Phase 2 — Continuity UX · ☐ 1/3 complete
+### Phase 2 — Continuity UX · ☐ 2/3 complete
 
 4. ☑ Design the run header panel
    - last run summary
@@ -203,7 +203,7 @@ A good default is "verify before expand": continuity state can nominate what to 
    - next action
    - unresolved blockers
 
-5. ☐ Add plan pinning and resume affordances
+5. ☑ Add plan pinning and resume affordances
    - "resume previous plan"
    - "switch plan"
    - "no active plan"
@@ -323,6 +323,7 @@ The UX should treat blocker carry-forward as a control surface, not just a warni
 | 2026-03-18 | Completed Define separation of concerns (codex-desktop-automation-continuity 2/11) |
 | 2026-03-18 | Completed Define startup preload order for recurri (codex-desktop-automation-continuity 3/11) |
 | 2026-03-18 | Completed Design the run header panel (codex-desktop-automation-continuity 4/11) |
+| 2026-03-18 | Completed Add plan pinning and resume affordances (codex-desktop-automation-continuity 5/11) |
 
 ---
 

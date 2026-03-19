@@ -18,8 +18,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-**Progress:** 4/11 items complete
-**Next action:** Add plan pinning and resume affordances
+**Progress:** 5/11 items complete
+**Next action:** Add blocker carry-forward controls
 <!-- END: codex-desktop-automation-continuity -->
 
 ---
