@@ -13,6 +13,9 @@ read_support = [
   "memory_diff",
   "memory_audit_trust",
   "memory_validate",
+  "memory_get_maturity_signals",
+  "memory_list_plans",
+  "memory_reset_session_state",
 ]
 raw_fallback = [
   "memory_write",
@@ -33,12 +36,12 @@ semantic_extensions = [
   "memory_append_scratchpad",
   "memory_update_identity_trait",
   "memory_record_chat_summary",
+  "memory_record_reflection",
+  "memory_log_access",
   "memory_flag_for_review",
+  "memory_revert_commit",
 ]
-declared_gaps = [
-  "append_access_entry",
-  "record_session_reflection",
-]
+declared_gaps = []
 
 [integration_boundary]
 model = "hybrid"
@@ -130,6 +133,14 @@ identity_updates_this_session = "Identity Updates This Session"
 session_id = "Chat Session"
 flagged_path = "Flagged Path"
 priority = "Review Priority"
+reflection_path = "Reflection Path"
+preview_token = "Preview Token"
+eligible = "Eligible for Revert"
+policy_reasons = "Policy Reasons"
+reverted_sha = "Reverted Commit"
+new_sha = "New Commit"
+access_jsonl = "Access Log File"
+entry_count = "Access Entry Count"
 
 [shared_result]
 fields = [
@@ -335,16 +346,18 @@ change_class = "automatic"
 notes = "Narrow machine-generated governance append; not a general protected meta edit."
 
 [desktop_operations.append_access_entry]
-status = "gap"
+status = "implemented"
+tool = "memory_log_access"
+tier = "semantic"
+operation_group = "chat"
 change_class = "automatic"
-fallback_profile = "semantic_gap"
-notes = "No dedicated semantic ACCESS append tool exists yet; callers still need raw writes or repo-specific batching."
 
 [desktop_operations.record_session_reflection]
-status = "gap"
+status = "implemented"
+tool = "memory_record_reflection"
+tier = "semantic"
+operation_group = "chat"
 change_class = "automatic"
-fallback_profile = "semantic_gap"
-notes = "Chat summary creation exists, but reflection artifacts are not yet a first-class semantic write."
 
 [operations.memory_create_plan]
 group = "plan"
@@ -524,3 +537,48 @@ owns_review_queue = ["meta/review-queue.md"]
 result_fields = ["flagged_path", "priority"]
 fallback_tools = ["memory_edit", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_log_access]
+group = "chat"
+tier = "semantic"
+change_class = "automatic"
+commit_model = "auto_commit"
+commit_category_hint = "chat"
+writes = ["{folder}/ACCESS.jsonl"]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = ["{folder}/ACCESS.jsonl"]
+owns_review_queue = []
+result_fields = ["access_jsonl", "entry_count"]
+fallback_tools = ["memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_record_reflection]
+group = "chat"
+tier = "semantic"
+change_class = "automatic"
+commit_model = "auto_commit"
+commit_category_hint = "chat"
+writes = ["chats/YYYY/MM/DD/chat-NNN/reflection.md"]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["reflection_path"]
+fallback_tools = ["memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_revert_commit]
+group = "governance"
+tier = "semantic"
+change_class = "protected"
+commit_model = "auto_commit"
+commit_category_hint = "curation"
+writes = ["<files from reverted commit>"]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["preview_token", "eligible", "policy_reasons", "mode", "reverted_sha", "new_sha"]
+fallback_tools = ["memory_commit"]
+error_kinds = ["ValidationError", "ConflictError", "StagingError"]

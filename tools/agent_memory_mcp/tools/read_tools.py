@@ -634,6 +634,200 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         except Exception as e:
             return f"Error running validator: {e}"
 
+    # ------------------------------------------------------------------
+    # memory_get_maturity_signals
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_get_maturity_signals",
+        annotations=_tool_annotations(
+            title="Maturity Signals",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_get_maturity_signals() -> str:
+        """Compute all six maturity signals for the periodic review.
+
+        These signals drive the maturity stage assessment in
+        meta/system-maturity.md and determine whether to retain the current
+        parameter set or transition to the next stage.  All values are derived
+        from ACCESS.jsonl files and content-file frontmatter — no network calls
+        are made.
+
+        Returns:
+            JSON with the following keys:
+              total_sessions          (int)   Distinct session_id values across
+                                              all ACCESS.jsonl files
+              access_density          (int)   Total ACCESS.jsonl entries across
+                                              all folders
+              file_coverage_pct       (float) % of content files accessed at
+                                              least once (0–100)
+              files_accessed          (int)   Count of distinct files in
+                                              ACCESS.jsonl entries
+              total_content_files     (int)   Total .md files in knowledge/,
+                                              plans/, identity/, skills/
+              confirmation_ratio      (float) trust:high files / total content
+                                              files (0.0–1.0)
+              high_trust_files        (int)   Count of trust:high content files
+              identity_stability      (int|null)
+                                              Sessions since last change to
+                                              identity/profile.md; null if the
+                                              file has no tracked commit history
+              mean_helpfulness        (float) Mean helpfulness score across all
+                                              ACCESS entries that carry the field
+              helpfulness_sample_size (int)   Number of entries with a
+                                              helpfulness score
+              computed_at             (str)   ISO date of computation
+        """
+        import statistics
+
+        root = get_root()
+        repo = get_repo()
+
+        # --- Collect all ACCESS.jsonl files (skip dot-dir worktrees) ------
+        access_files: list[Path] = []
+        for af in root.rglob("ACCESS.jsonl"):
+            try:
+                rel = af.relative_to(root)
+            except ValueError:
+                continue
+            if rel.parts and rel.parts[0].startswith("."):
+                continue  # skip .claude/ and similar dot-dirs
+            access_files.append(af)
+
+        # --- Parse every entry ---------------------------------------------
+        all_entries: list[dict] = []
+        for af in access_files:
+            try:
+                text = af.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for raw_line in text.splitlines():
+                raw_line = raw_line.strip()
+                if not raw_line:
+                    continue
+                try:
+                    all_entries.append(json.loads(raw_line))
+                except json.JSONDecodeError:
+                    continue
+
+        # Signal 1: total sessions (distinct session_ids) -------------------
+        session_ids: set[str] = set()
+        for entry in all_entries:
+            sid = entry.get("session_id")
+            if sid:
+                session_ids.add(sid)
+        total_sessions = len(session_ids)
+
+        # Signal 2: ACCESS density (total entry count) ----------------------
+        access_density = len(all_entries)
+
+        # Signals 3+4: file coverage ----------------------------------------
+        _content_dirs = ["knowledge", "plans", "identity", "skills"]
+        content_files: set[str] = set()
+        for dirname in _content_dirs:
+            dir_path = root / dirname
+            if dir_path.is_dir():
+                for md in dir_path.rglob("*.md"):
+                    try:
+                        content_files.add(md.relative_to(root).as_posix())
+                    except ValueError:
+                        pass
+        total_content_files = len(content_files)
+
+        accessed_files: set[str] = set()
+        for entry in all_entries:
+            f = entry.get("file")
+            if f and f in content_files:
+                accessed_files.add(f)
+        files_accessed = len(accessed_files)
+        file_coverage_pct = (
+            round(100.0 * files_accessed / total_content_files, 1)
+            if total_content_files
+            else 0.0
+        )
+
+        # Signal 5: confirmation ratio (trust:high) -------------------------
+        from ..frontmatter_utils import read_with_frontmatter
+
+        high_trust_count = 0
+        for rel_str in content_files:
+            fp = root / rel_str
+            try:
+                fm, _ = read_with_frontmatter(fp)
+                if fm and fm.get("trust") == "high":
+                    high_trust_count += 1
+            except Exception:
+                pass
+        confirmation_ratio = (
+            round(high_trust_count / total_content_files, 3)
+            if total_content_files
+            else 0.0
+        )
+
+        # Signal 6: identity stability (sessions since last profile change) --
+        identity_stability: int | None = None
+        try:
+            proc = repo._run(
+                ["git", "log", "-1", "--format=%ad", "--date=short",
+                 "--", "identity/profile.md"],
+                check=False,
+            )
+            last_change_str = proc.stdout.strip()
+            if last_change_str:
+                last_change = datetime.strptime(last_change_str, "%Y-%m-%d").date()
+                # Build a map from session_id → earliest date seen in any entry
+                session_dates: dict[str, date] = {}
+                for entry in all_entries:
+                    sid = entry.get("session_id")
+                    date_str = entry.get("date")
+                    if not sid or not date_str:
+                        continue
+                    try:
+                        entry_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    except ValueError:
+                        continue
+                    if sid not in session_dates or entry_date < session_dates[sid]:
+                        session_dates[sid] = entry_date
+                identity_stability = sum(
+                    1 for d in session_dates.values() if d > last_change
+                )
+        except Exception:
+            identity_stability = None
+
+        # Signal 7: retrieval success rate (mean helpfulness) ---------------
+        helpfulness_values: list[float] = []
+        for entry in all_entries:
+            h = entry.get("helpfulness")
+            if h is not None:
+                try:
+                    helpfulness_values.append(float(h))
+                except (TypeError, ValueError):
+                    pass
+        mean_helpfulness = (
+            round(statistics.mean(helpfulness_values), 3)
+            if helpfulness_values
+            else 0.0
+        )
+        helpfulness_sample_size = len(helpfulness_values)
+
+        signals = {
+            "total_sessions": total_sessions,
+            "access_density": access_density,
+            "file_coverage_pct": file_coverage_pct,
+            "files_accessed": files_accessed,
+            "total_content_files": total_content_files,
+            "confirmation_ratio": confirmation_ratio,
+            "high_trust_files": high_trust_count,
+            "identity_stability": identity_stability,
+            "mean_helpfulness": mean_helpfulness,
+            "helpfulness_sample_size": helpfulness_sample_size,
+            "computed_at": str(date.today()),
+        }
+        return json.dumps(signals, indent=2)
+
     return {
         "memory_read_file": memory_read_file,
         "memory_list_folder": memory_list_folder,
@@ -642,4 +836,5 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_diff": memory_diff,
         "memory_audit_trust": memory_audit_trust,
         "memory_validate": memory_validate,
+        "memory_get_maturity_signals": memory_get_maturity_signals,
     }

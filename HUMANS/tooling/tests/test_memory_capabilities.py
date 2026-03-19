@@ -35,16 +35,14 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
         declared_gaps = manifest["tool_sets"]["declared_gaps"]
 
+        self.assertEqual(declared_gaps, [])
         self.assertEqual(
-            declared_gaps,
-            ["append_access_entry", "record_session_reflection"],
-        )
-        self.assertEqual(
-            manifest["desktop_operations"]["append_access_entry"]["status"], "gap"
+            manifest["desktop_operations"]["append_access_entry"]["status"],
+            "implemented",
         )
         self.assertEqual(
             manifest["desktop_operations"]["record_session_reflection"]["status"],
-            "gap",
+            "implemented",
         )
         self.assertEqual(
             manifest["desktop_operations"]["append_access_entry"]["change_class"],
@@ -265,12 +263,12 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "return_deferred_action_summary",
         )
         self.assertEqual(
-            desktop_operations["append_access_entry"]["fallback_profile"],
-            "semantic_gap",
+            desktop_operations["append_access_entry"]["tool"],
+            "memory_log_access",
         )
         self.assertEqual(
-            desktop_operations["record_session_reflection"]["fallback_profile"],
-            "semantic_gap",
+            desktop_operations["record_session_reflection"]["tool"],
+            "memory_record_reflection",
         )
 
     def test_manifest_declares_approval_preview_and_confirmation_flows(self) -> None:
