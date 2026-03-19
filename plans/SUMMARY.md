@@ -73,8 +73,8 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 
 Narrative research plan for understanding how the current AI paradigm formed: perceptrons, symbolic detours, backpropagation, deep learning, transformers, scaling, and frontier LLM systems. Output goes to `knowledge/_unverified/ai-history/`.
 
-**Progress:** 2/11 files written
-**Next action:** Begin Phase 2 — write `knowledge/_unverified/ai-history/origins/backpropagation-and-the-pdp-revival.md`
+**Progress:** 5/11 files written
+**Next action:** Begin Phase 3 — write `knowledge/_unverified/ai-history/deep-learning/gpus-imagenet-and-the-deep-learning-turn.md`
 <!-- END: ai-paradigm-genealogy-research -->
 
 ---
