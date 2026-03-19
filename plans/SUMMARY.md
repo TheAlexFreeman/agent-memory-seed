@@ -8,9 +8,8 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `react-stack-research.md`
-2. `devops-docker-research.md`
-3. `lesswrong-rationalist-community-research.md`
+1. `devops-docker-research.md`
+2. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
@@ -20,17 +19,6 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 **Progress:** 0/11 files written
 **Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
 <!-- END: lesswrong-rationalist-community-research -->
-
----
-
-<!-- BEGIN: react-stack-research -->
-### `react-stack-research.md` · status: active · trust: medium
-
-Gaps and depth research for Alex's React + Chakra UI 3 frontend (backed by Django/DRF). 9 files planned across 8 phases. Priority order: TanStack Query (DRF integration) → react-hook-form + zod → TanStack Router → TypeScript patterns → testing (Vitest/RTL/MSW) → auth state management → performance → Vite build tooling → error boundaries + Suspense. Output goes to `knowledge/_unverified/react/`.
-
-**Progress:** 3/9 files written
-**Next action:** Begin Phase 3 — write `knowledge/_unverified/react/typescript-react-patterns.md`
-<!-- END: react-stack-research -->
 
 ---
 
@@ -46,6 +34,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: react-stack-research -->
+### `react-stack-research.md` · status: complete · trust: medium
+
+Gaps and depth research for Alex's React + Chakra UI 3 frontend (backed by Django/DRF). 9 files across 8 phases: TanStack Query, react-hook-form + zod, TanStack Router, TypeScript patterns, Vitest/RTL/MSW testing, auth state (httpOnly cookies/CSRF/protected routes), performance (memo discipline/React 19 Compiler/TanStack Virtual), Vite build tooling, and error boundaries + Suspense. All output in `knowledge/_unverified/react/`.
+
+**Progress:** 9/9 files written
+**Completed:** 2026-03-19
+<!-- END: react-stack-research -->
+
+---
 
 <!-- BEGIN: django-stack-research -->
 ### `django-stack-research.md` · status: complete · trust: medium

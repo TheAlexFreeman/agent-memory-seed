@@ -5,8 +5,8 @@ origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
-status: active
-next_action: "Begin Phase 3 — write knowledge/_unverified/react/typescript-react-patterns.md"
+status: complete
+next_action: null
 ---
 
 # Research Plan: React Stack — Gaps and Depth
@@ -79,9 +79,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 3 — TypeScript patterns · ☐ 0/1 complete
+### Phase 3 — TypeScript patterns · ☑ 1/1 complete
 
-4. ☐ `typescript-react-patterns.md`
+4. ☑ `typescript-react-patterns.md`
    - **Component prop typing**: `React.FC` vs. plain function (prefer plain), `ReactNode` vs. `ReactElement`, `PropsWithChildren`, `ComponentPropsWithoutRef` / `ComponentPropsWithRef` for extending native element props
    - **Generic components**: generic list components, generic form field wrappers, variance constraints (`T extends object`, `T extends { id: string }`)
    - **Discriminated union props**: `type` discriminant for variant components, TypeScript narrowing in render, exhaustive checks with `never`
@@ -95,9 +95,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 4 — Testing · ☐ 0/1 complete
+### Phase 4 — Testing · ☑ 1/1 complete
 
-5. ☐ `vitest-rtl-msw.md`
+5. ☑ `vitest-rtl-msw.md`
    - **Vitest**: `describe`, `it`, `expect`, `beforeEach`/`afterEach`, `vi.fn()`, `vi.spyOn()`, `vi.mock()`, `vi.useFakeTimers()`, `--coverage` with v8/istanbul, `--reporter`, config in `vite.config.ts`
    - **React Testing Library**: `render`, `screen`, `userEvent` (prefer over `fireEvent`), query priority (`getByRole` > `getByLabelText` > `getByText` > `getByTestId`), `waitFor`, `findBy*` async queries, `within`
    - **Testing Chakra UI components**: common pitfalls with portals (modals, menus), `ChakraProvider` in test setup, `@testing-library/user-event` for keyboard and click interactions
@@ -110,9 +110,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 5 — Auth state and protected routes · ☐ 0/1 complete
+### Phase 5 — Auth state and protected routes · ☑ 1/1 complete
 
-6. ☐ `react-auth-patterns.md`
+6. ☑ `react-auth-patterns.md`
    - **Token storage**: httpOnly cookie (set by DRF, no JS access, CSRF-protected, recommended) vs. localStorage (accessible to JS, XSS risk) vs. memory (safest but lost on refresh); practical recommendation for a DRF backend
    - **Auth state management**: global auth context (`user`, `isAuthenticated`, `isLoading`), initializing from `/api/me/` on app mount, TanStack Query for auth state (`useQuery` on the current user endpoint)
    - **JWT in React**: storing refresh tokens vs. access tokens, silent refresh pattern with axios interceptors, token expiry handling, `axios-auth-refresh`
@@ -124,9 +124,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 6 — Performance · ☐ 0/1 complete
+### Phase 6 — Performance · ☑ 1/1 complete
 
-7. ☐ `react-performance.md`
+7. ☑ `react-performance.md`
    - **The memo discipline question**: when `React.memo` actually helps (stable props, expensive renders), when it doesn't (props change every render anyway), the cost of memo itself
    - **`useMemo` and `useCallback` discipline**: correct mental model (referential stability, not computation cost avoidance), common over-memoization anti-patterns
    - **React 19 compiler** (React Forget): what it does, current status (opt-in, shipped in React 19), how it changes the `useMemo`/`useCallback` calculus
@@ -140,9 +140,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 7 — Build tooling · ☐ 0/1 complete
+### Phase 7 — Build tooling · ☑ 1/1 complete
 
-8. ☐ `vite-react-build.md`
+8. ☑ `vite-react-build.md`
    - **Vite for React**: `@vitejs/plugin-react` (Babel + SWC options), `@vitejs/plugin-react-swc` for faster builds, environment variables (`import.meta.env`, `.env` files, `VITE_` prefix)
    - **Dev server**: `proxy` config for DRF API (avoids CORS in development), HMR, `server.port`, `server.https`
    - **Build optimization**: `build.target`, `build.rollupOptions`, manual chunks for vendor splitting, `assetsInlineLimit`, `sourcemap` options
@@ -156,9 +156,9 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 
 ---
 
-### Phase 8 — Error handling and Suspense · ☐ 0/1 complete
+### Phase 8 — Error handling and Suspense · ☑ 1/1 complete
 
-9. ☐ `react-error-boundaries-suspense.md`
+9. ☑ `react-error-boundaries-suspense.md`
    - **Error boundaries**: class component requirement, placement strategy (per-page vs. per-feature vs. per-data-region), `getDerivedStateFromError` vs. `componentDidCatch`, `react-error-boundary` library (`ErrorBoundary`, `useErrorBoundary`, `withErrorBoundary`)
    - **React 19 error handling changes**: `onUncaughtError` / `onCaughtError` on `createRoot`, errors no longer rethrown the same way, implications for Sentry integration
    - **Suspense boundaries**: placement strategy (granular vs. coarse), skeleton screens vs. spinner vs. content placeholders, avoiding layout shift during loading
@@ -178,6 +178,12 @@ The biggest gap. Alex's frontend talks to a DRF API; without TanStack Query, ser
 | 2026-03-18 | Wrote `knowledge/_unverified/react/tanstack-query.md`; covers v5 API, query keys, useQuery, useMutation, optimistic updates, DRF patterns, useInfiniteQuery, useSuspenseQuery, useQueries |
 | 2026-03-18 | Wrote `knowledge/_unverified/react/react-hook-form-zod.md`; covers RHF v7 + zod v3, Controller/Chakra integration, useFieldArray, multi-step forms, DRF error mapping; Phase 1 complete |
 | 2026-03-18 | Wrote `knowledge/_unverified/react/tanstack-router.md`; covers v1 file-based + code-based setup, type safety model, loaders, validateSearch with zod, pathless layouts, beforeLoad guards, navigation, pending UI, error components, code splitting, Query integration; Phase 2 complete |
+| 2026-03-19 | Wrote `knowledge/_unverified/react/typescript-react-patterns.md`; prop typing, generic components, discriminated unions, type-safe context, zod/satisfies API layer, ref typing, event handlers, utility types, module augmentation; Phase 3 complete |
+| 2026-03-19 | Wrote `knowledge/_unverified/react/vitest-rtl-msw.md`; Vitest config, vi.fn/spyOn/mock/timers, RTL query priority/userEvent/within/renderHook, Chakra UI portal pitfalls, MSW v2 handlers/overrides, TanStack Query testing, RHF testing, routing testing, snapshot discipline; Phase 4 complete |
+| 2026-03-19 | Wrote `knowledge/_unverified/react/react-auth-patterns.md`; token storage comparison, TanStack Query auth state, login/logout/cross-tab broadcast, JWT silent refresh, TanStack Router beforeLoad guards, CSRF/Django allauth headless, global 401 interceptor, OAuth callback; Phase 5 complete |
+| 2026-03-19 | Wrote `knowledge/_unverified/react/react-performance.md`; React.memo discipline, useMemo/useCallback referential stability model, React 19 Compiler, useEffectEvent, TanStack Virtual row virtualization, code splitting, bundle analysis, React DevTools Profiler, useTransition/useDeferredValue; Phase 6 complete |
+| 2026-03-19 | Wrote `knowledge/_unverified/react/vite-react-build.md`; plugin-react vs plugin-react-swc, env vars/VITE_ prefix, dev proxy config, path aliases, manualChunks, bundle analysis with visualizer, size-limit CI, Vitest config sharing, Docker multi-stage + nginx SPA config, PWA; Phase 7 complete |
+| 2026-03-19 | Wrote `knowledge/_unverified/react/react-error-boundaries-suspense.md`; react-error-boundary library, React 19 onUncaughtError/onCaughtError, Suspense placement strategy, useSuspenseQuery, TanStack Router defer()/Await, useTransition + navigation, Sentry integration, error UX patterns; Phase 8 complete — plan complete 9/9 |
 
 ---
 
