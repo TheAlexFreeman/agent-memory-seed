@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import (
     forbid_prefix,
@@ -30,11 +30,18 @@ if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
 
+def _tool_annotations(**kwargs: object) -> Any:
+    """Return MCP tool annotations with a relaxed runtime-only type surface."""
+    return cast(Any, kwargs)
+
+
 # Identity churn alarm threshold per session
 _IDENTITY_CHURN_LIMIT = 5
 
 # ACCESS log folders — these directories each contain an ACCESS.jsonl file
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
+_CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
+_CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
 
 
 def _plan_path(plan_id: str) -> str:
@@ -56,6 +63,55 @@ def _access_jsonl_for(rel_path: str) -> str | None:
     return f"{root}/ACCESS.jsonl"
 
 
+def _replace_markdown_section(body: str, section_name: str, new_value: str) -> str | None:
+    """Replace a ## section body, returning None when the section is absent."""
+    section_heading = f"## {section_name}"
+    match = re.search(rf"(?m)^##\s+{re.escape(section_name)}\s*$", body)
+    if match is None:
+        return None
+
+    content_start = match.end()
+    next_heading = re.search(r"(?m)^## ", body[content_start:])
+    section_end = content_start + next_heading.start() if next_heading else len(body)
+    replacement = f"{section_heading}\n\n{new_value.strip()}\n"
+    if next_heading:
+        replacement += "\n"
+    return body[: match.start()] + replacement + body[section_end:]
+
+
+def _append_markdown_section(body: str, section_name: str, value: str) -> str | None:
+    """Append content to a ## section body, returning None when the section is absent."""
+    match = re.search(rf"(?m)^##\s+{re.escape(section_name)}\s*$", body)
+    if match is None:
+        return None
+
+    content_start = match.end()
+    next_heading = re.search(r"(?m)^## ", body[content_start:])
+    section_end = content_start + next_heading.start() if next_heading else len(body)
+    existing = body[content_start:section_end].strip()
+    appended = f"{existing}\n{value.strip()}" if existing else value.strip()
+    return _replace_markdown_section(body, section_name, appended)
+
+
+def _load_task_categories(root: Path) -> set[str]:
+    """Load the controlled category vocabulary from meta/task-categories.md."""
+    categories_path = root / "meta" / "task-categories.md"
+    if not categories_path.exists():
+        return set()
+
+    text = categories_path.read_text(encoding="utf-8")
+    categories = set(_CATEGORY_CODE_RE.findall(text))
+    if categories:
+        return categories
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        match = _CATEGORY_LIST_RE.match(stripped)
+        if match:
+            categories.add(match.group(1))
+    return categories
+
+
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     """Register all Tier 1 semantic tools and return their callables."""
 
@@ -70,13 +126,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_mark_plan_item_complete",
-        annotations={
-            "title": "Mark Plan Item Complete",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Mark Plan Item Complete",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_mark_plan_item_complete(
         plan_id: str,
@@ -122,7 +178,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         plan_path = _plan_path(plan_id)
         abs_plan = repo.abs_path(plan_path)
@@ -162,7 +218,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             fm_updates["status"] = "complete"
 
         # Re-read frontmatter from new_content and apply updates
-        import frontmatter as fmlib
+        import frontmatter as fmlib  # type: ignore[import-untyped]
         post = fmlib.loads(new_content)
         for k, v in fm_updates.items():
             if v is None:
@@ -225,13 +281,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_promote_knowledge",
-        annotations={
-            "title": "Promote Knowledge File to Verified",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Promote Knowledge File to Verified",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_promote_knowledge(
         source_path: str,
@@ -270,7 +326,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
         require_under_prefix(
@@ -375,13 +431,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_demote_knowledge",
-        annotations={
-            "title": "Demote Knowledge File to Unverified",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Demote Knowledge File to Unverified",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_demote_knowledge(
         source_path: str,
@@ -414,7 +470,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
         validate_top_level_root(
@@ -498,13 +554,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_archive_knowledge",
-        annotations={
-            "title": "Archive Knowledge File",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Archive Knowledge File",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_archive_knowledge(
         source_path: str,
@@ -539,7 +595,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
         validate_top_level_root(
@@ -608,13 +664,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_add_knowledge_file",
-        annotations={
-            "title": "Add Knowledge File to Unverified",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Add Knowledge File to Unverified",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_add_knowledge_file(
         path: str,
@@ -661,7 +717,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         validate_session_id(session_id)
         path, abs_path = resolve_repo_path(repo, path)
@@ -738,13 +794,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_append_scratchpad",
-        annotations={
-            "title": "Append to Scratchpad",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Append to Scratchpad",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_append_scratchpad(
         target: str,
@@ -829,13 +885,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_update_identity_trait",
-        annotations={
-            "title": "Update Identity Trait",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Update Identity Trait",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_update_identity_trait(
         file: str,
@@ -890,9 +946,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.check_version_token(rel_path, version_token)
 
         fm_dict, body = read_with_frontmatter(abs_path)
+        section_heading = f"## {key}"
 
         # Try frontmatter key first
-        if key in fm_dict or (mode == "upsert" and key not in body):
+        if key in fm_dict or (mode == "upsert" and section_heading not in body):
             # Update as frontmatter
             if mode == "append" and key in fm_dict:
                 existing = str(fm_dict[key])
@@ -903,42 +960,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             write_with_frontmatter(abs_path, fm_dict, body)
         else:
             # Treat as body section heading
-            section_heading = f"## {key}"
             if section_heading in body:
-                if mode == "replace":
-                    # Replace section content
-                    parts = body.split(section_heading, 1)
-                    after = parts[1]
-                    next_section = re.search(r"\n## ", after)
-                    if next_section:
-                        body = (
-                            parts[0]
-                            + section_heading
-                            + "\n\n"
-                            + value.strip()
-                            + "\n"
-                            + after[next_section.start():]
-                        )
-                    else:
-                        body = parts[0] + section_heading + "\n\n" + value.strip() + "\n"
-                elif mode == "append":
-                    parts = body.split(section_heading, 1)
-                    after = parts[1]
-                    next_section = re.search(r"\n## ", after)
-                    if next_section:
-                        body = (
-                            parts[0]
-                            + section_heading
-                            + after[: next_section.start()]
-                            + "\n"
-                            + value.strip()
-                            + "\n"
-                            + after[next_section.start():]
-                        )
-                    else:
-                        body = parts[0] + section_heading + after.rstrip() + "\n\n" + value.strip() + "\n"
-                else:  # upsert
-                    body = body.replace(section_heading, section_heading + "\n\n" + value.strip(), 1)
+                if mode in ("replace", "upsert"):
+                    updated_body = _replace_markdown_section(body, key, value)
+                else:  # append
+                    updated_body = _append_markdown_section(body, key, value)
+                if updated_body is None:
+                    raise ValidationError(f"Identity section not found: {section_heading}")
+                body = updated_body
             else:
                 # Create new section at end
                 body = body.rstrip() + f"\n\n{section_heading}\n\n{value.strip()}\n"
@@ -969,13 +998,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_record_chat_summary",
-        annotations={
-            "title": "Record Chat Session Summary",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Record Chat Session Summary",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_record_chat_summary(
         session_id: str,
@@ -997,7 +1026,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         validate_session_id(session_id)
 
@@ -1010,7 +1039,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         abs_session_summary.parent.mkdir(parents=True, exist_ok=True)
 
         today = today_str()
-        fm_dict = {
+        fm_dict: dict[str, object] = {
             "session": session_id,
             "date": today,
             "trust": "medium",
@@ -1020,7 +1049,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if topics:
             fm_dict["key_topics"] = topics
 
-        import frontmatter as fmlib
+        import frontmatter as fmlib  # type: ignore[import-untyped]
         post = fmlib.Post(summary, **fm_dict)
         abs_session_summary.write_text(fmlib.dumps(post), encoding="utf-8")
         repo.add(session_summary_rel)
@@ -1064,13 +1093,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_create_plan",
-        annotations={
-            "title": "Create Research Plan",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Create Research Plan",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_create_plan(
         plan_id: str,
@@ -1101,7 +1130,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         validate_session_id(session_id)
         plan_path = _plan_path(plan_id)
@@ -1113,7 +1142,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
 
         today = today_str()
-        fm_dict = {
+        fm_dict: dict[str, object] = {
             "source": "agent-generated",
             "type": plan_type,
             "created": today,
@@ -1124,7 +1153,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "origin_session": session_id,
         }
 
-        import frontmatter as fmlib
+        import frontmatter as fmlib  # type: ignore[import-untyped]
         post = fmlib.Post(content, **fm_dict)
         abs_plan.parent.mkdir(parents=True, exist_ok=True)
         abs_plan.write_text(fmlib.dumps(post), encoding="utf-8")
@@ -1170,13 +1199,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_update_plan_next_action",
-        annotations={
-            "title": "Update Plan Next Action",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Update Plan Next Action",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_update_plan_next_action(
         plan_id: str,
@@ -1209,7 +1238,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         root = get_root()
-        warnings = []
+        warnings: list[str] = []
 
         plan_path = _plan_path(plan_id)
         abs_plan = repo.abs_path(plan_path)
@@ -1219,7 +1248,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.check_version_token(plan_path, version_token)
 
         # Update frontmatter only
-        import frontmatter as fmlib
+        import frontmatter as fmlib  # type: ignore[import-untyped]
         text = abs_plan.read_text(encoding="utf-8")
         post = fmlib.loads(text)
         post.metadata["next_action"] = next_action
@@ -1275,13 +1304,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_flag_for_review",
-        annotations={
-            "title": "Flag File for Review",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Flag File for Review",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_flag_for_review(
         path: str,
@@ -1348,13 +1377,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_log_access",
-        annotations={
-            "title": "Log Memory File Access",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Log Memory File Access",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_log_access(
         file: str,
@@ -1415,6 +1444,20 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError(
                 f"helpfulness must be between 0.0 and 1.0, got {helpfulness}"
             )
+        if session_id is not None:
+            validate_session_id(session_id)
+        if category is not None:
+            category = validate_slug(category, field_name="category")
+            categories = _load_task_categories(root)
+            if not categories:
+                raise ValidationError(
+                    "category cannot be set until meta/task-categories.md exists "
+                    "with a controlled vocabulary"
+                )
+            if category not in categories:
+                raise ValidationError(
+                    f"category must be one of {sorted(categories)}, got: {category}"
+                )
 
         # Resolve and validate the target file path
         file, _ = resolve_repo_path(repo, file, field_name="file")
@@ -1469,13 +1512,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_list_plans",
-        annotations={
-            "title": "List Memory Plans",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="List Memory Plans",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_list_plans(
         status: str | None = None,
@@ -1532,13 +1575,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_record_reflection",
-        annotations={
-            "title": "Record Session Reflection",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Record Session Reflection",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_record_reflection(
         session_id: str,
@@ -1620,13 +1663,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_revert_commit",
-        annotations={
-            "title": "Revert a Memory Commit",
-            "readOnlyHint": False,
-            "destructiveHint": True,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Revert a Memory Commit",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_revert_commit(
         sha: str,
@@ -1671,13 +1714,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_reset_session_state",
-        annotations={
-            "title": "Reset Per-Session State",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Reset Per-Session State",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_reset_session_state() -> str:
         """Reset per-session counters (identity churn alarm) to their initial values.

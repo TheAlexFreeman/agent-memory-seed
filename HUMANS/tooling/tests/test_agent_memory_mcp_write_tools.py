@@ -527,6 +527,45 @@ trust: high
                 )
             )
 
+    def test_memory_update_identity_trait_replaces_existing_body_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-17
+trust: high
+---
+
+# Profile
+
+## tone
+
+Direct and concise.
+
+## workflow
+
+Structured.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_update_identity_trait"](
+                file="profile",
+                key="tone",
+                value="Even more direct.",
+                mode="upsert",
+            )
+        )
+
+        updated = (repo_root / "identity" / "profile.md").read_text(encoding="utf-8")
+        self.assertIn("## tone\n\nEven more direct.", updated)
+        self.assertNotIn("Even more direct.\n\nDirect and concise.", updated)
+        self.assertNotIn("Direct and concise.", updated)
+        self.assertIn("## workflow\n\nStructured.", updated)
+
     def test_memory_record_chat_summary_rejects_noncanonical_session_id(self) -> None:
         repo_root = self._init_repo({"chats/SUMMARY.md": "# Chats\n## Structure\n"})
         tools = self._create_tools(repo_root)
@@ -719,6 +758,60 @@ trust: high
                     note="out of range",
                 )
             )
+
+    def test_memory_log_access_rejects_noncanonical_session_id(self) -> None:
+        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_log_access"](
+                    file="knowledge/lit/foo.md",
+                    task="test",
+                    helpfulness=0.5,
+                    note="bad session id",
+                    session_id="chat-001",
+                )
+            )
+
+    def test_memory_log_access_rejects_category_without_vocabulary(self) -> None:
+        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_log_access"](
+                    file="knowledge/lit/foo.md",
+                    task="test",
+                    helpfulness=0.5,
+                    note="category should be blocked",
+                    category="react-performance",
+                )
+            )
+
+    def test_memory_log_access_accepts_category_from_controlled_vocabulary(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "meta/task-categories.md": "# Task Categories\n\n- `react-performance`\n- `uncategorized`\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/lit/foo.md",
+                task="test",
+                helpfulness=0.5,
+                note="category should be accepted",
+                category="react-performance",
+            )
+        )
+        payload = json.loads(raw)
+
+        entry = json.loads((repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip())
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["category"], "react-performance")
 
     def test_memory_log_access_rejects_untracked_root(self) -> None:
         repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Scratch\n"})
