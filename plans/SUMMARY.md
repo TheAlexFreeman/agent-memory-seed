@@ -23,8 +23,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-bootstrap-support -->
 ### `codex-desktop-bootstrap-support.md` · status: active · trust: medium
-**Progress:** 8/11 items complete
-**Next action:** Add manual override controls
+**Progress:** 9/11 items complete
+**Next action:** Define test matrix
 <!-- END: codex-desktop-bootstrap-support -->
 
 ---

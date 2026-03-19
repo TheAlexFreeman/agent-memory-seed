@@ -3,7 +3,8 @@
 
 This is a repo-side prototype for the Codex desktop bootstrap-support plan.
 It makes the manifest executable enough to test mode selection, preload order,
-skip handling, and startup warnings before those behaviors exist app-side.
+skip handling, startup warnings, and manual override controls before those
+behaviors exist app-side.
 """
 
 from __future__ import annotations
@@ -42,6 +43,34 @@ COST_TOKEN_ESTIMATES = {
 }
 MIN_BUDGET_RESERVE = 500
 DEFAULT_COST_ESTIMATE = COST_TOKEN_ESTIMATES["medium"]
+
+# Manual override definitions — the three controls surfaced in the startup panel.
+# Each override is always present in startup_panel.available_overrides; at most
+# one has active=True.
+_OVERRIDE_DEFINITIONS: list[dict[str, str]] = [
+    {
+        "id": "full_bootstrap",
+        "label": "Load Full Bootstrap",
+        "description": (
+            "Load the complete governance stack regardless of the detected session type."
+        ),
+    },
+    {
+        "id": "compact_only",
+        "label": "Load Compact Startup Only",
+        "description": (
+            "Force the compact returning-session preload and skip heavier governance files."
+        ),
+    },
+    {
+        "id": "skip_manifest",
+        "label": "Skip Repo Manifest",
+        "description": (
+            "Bypass agent-bootstrap.toml for this thread and fall back to"
+            " generic startup heuristics (AGENTS.md → README.md)."
+        ),
+    },
+]
 
 
 @dataclass(frozen=True)
@@ -105,6 +134,16 @@ class StartupPanelWarning:
 
 
 @dataclass(frozen=True)
+class StartupPanelOverride:
+    """One of the three manual controls the UI can render as a button."""
+
+    id: str
+    label: str
+    description: str
+    active: bool
+
+
+@dataclass(frozen=True)
 class StartupPanel:
     title: str
     status: str
@@ -118,6 +157,8 @@ class StartupPanel:
     missing_count: int
     warning_count: int
     budget_status: str
+    active_override: str | None
+    available_overrides: list[StartupPanelOverride]
 
 
 @dataclass(frozen=True)
@@ -134,6 +175,7 @@ class StartupResolution:
     git_state: GitState
     warnings: list[StartupWarning]
     trace: list[StartupTraceStep]
+    active_override: str | None
     startup_panel: StartupPanel
 
 
@@ -532,12 +574,14 @@ def build_panel_warning(warning: StartupWarning) -> StartupPanelWarning:
         "worktree_branch_drift": "Branch Drift",
         "branch_checked_out_elsewhere": "Branch In Another Worktree",
         "budget_pressure": "Budget Pressure",
+        "manifest_skipped": "Manifest Bypassed",
     }
     sources = {
         "detached_head": "git",
         "worktree_branch_drift": "git",
         "branch_checked_out_elsewhere": "git",
         "budget_pressure": "budget",
+        "manifest_skipped": "user_override",
     }
     return StartupPanelWarning(
         code=warning.code,
@@ -548,6 +592,18 @@ def build_panel_warning(warning: StartupWarning) -> StartupPanelWarning:
     )
 
 
+def _build_available_overrides(active_override: str | None) -> list[StartupPanelOverride]:
+    return [
+        StartupPanelOverride(
+            id=defn["id"],
+            label=defn["label"],
+            description=defn["description"],
+            active=defn["id"] == active_override,
+        )
+        for defn in _OVERRIDE_DEFINITIONS
+    ]
+
+
 def build_startup_panel(
     *,
     router: str,
@@ -556,6 +612,7 @@ def build_startup_panel(
     trace: list[StartupTraceStep],
     warnings: list[StartupWarning],
     budget: StartupBudget,
+    active_override: str | None = None,
 ) -> StartupPanel:
     return StartupPanel(
         title=f"{format_mode_label(mode)} Startup",
@@ -583,6 +640,96 @@ def build_startup_panel(
         missing_count=sum(1 for step in trace if step.status == "missing"),
         warning_count=len(warnings),
         budget_status=budget_status_from_budget(budget),
+        active_override=active_override,
+        available_overrides=_build_available_overrides(active_override),
+    )
+
+
+def _resolve_skip_manifest(
+    repo_root: Path,
+    *,
+    expected_branch: str | None = None,
+    git_state: GitState | None = None,
+) -> StartupResolution:
+    """Resolve startup without reading agent-bootstrap.toml.
+
+    Falls back to AGENTS.md → README.md and emits a manifest_skipped warning
+    so the UI can surface the bypass clearly.
+    """
+    active_override = "skip_manifest"
+    mode = "first_run" if repo_looks_first_run(repo_root) else "returning"
+    mode_source = "user_override_skip_manifest"
+    token_budget = 7_000
+    prefer_summaries = True
+    router = "README.md"
+
+    # Build a minimal fallback step list from the files most likely to exist
+    # in a generic repo. Required is False for both so budget pressure can
+    # still skip them; missing files are handled by resolve_trace normally.
+    fallback_steps: list[dict[str, Any]] = []
+    for path_str, role in [
+        ("AGENTS.md", "agents-manifest"),
+        ("README.md", "readme"),
+    ]:
+        fallback_steps.append(
+            {"path": path_str, "role": role, "required": False, "cost": "medium"}
+        )
+
+    trace, budget = resolve_trace(
+        repo_root,
+        fallback_steps,
+        token_budget=token_budget,
+        prefer_summaries=prefer_summaries,
+    )
+
+    current_git_state = git_state or detect_git_state(repo_root, expected_branch=expected_branch)
+
+    # Always warn that the manifest was bypassed, then append any git/budget warnings.
+    warnings: list[StartupWarning] = [
+        StartupWarning(
+            code="manifest_skipped",
+            message=(
+                "agent-bootstrap.toml was bypassed by user override;"
+                " fallback heuristics used for this thread."
+            ),
+        )
+    ]
+    warnings.extend(
+        resolve_warnings(
+            current_git_state,
+            {
+                "warn_on_detached_head": True,
+                "warn_on_worktree_branch_drift": True,
+                "warn_on_branch_checked_out_elsewhere": True,
+            },
+            budget=budget,
+            expected_branch=expected_branch,
+        )
+    )
+
+    return StartupResolution(
+        router=router,
+        mode=mode,
+        mode_source=mode_source,
+        token_budget=token_budget,
+        prefer_summaries=prefer_summaries,
+        on_demand=[],
+        maintenance_probes=[],
+        preload_access_mode="startup_trace_only",
+        budget=budget,
+        git_state=current_git_state,
+        warnings=warnings,
+        trace=trace,
+        active_override=active_override,
+        startup_panel=build_startup_panel(
+            router=router,
+            mode=mode,
+            mode_source=mode_source,
+            trace=trace,
+            warnings=warnings,
+            budget=budget,
+            active_override=active_override,
+        ),
     )
 
 
@@ -596,7 +743,34 @@ def resolve_startup(
     full_bootstrap: bool = False,
     expected_branch: str | None = None,
     git_state: GitState | None = None,
+    user_override: str | None = None,
 ) -> StartupResolution:
+    """Resolve the startup state for a repo.
+
+    ``user_override`` implements the three manual controls from the startup panel:
+
+    * ``"full_bootstrap"``  — force the full-bootstrap mode regardless of what
+      would have been auto-detected.
+    * ``"compact_only"``    — force the compact returning-session route,
+      skipping heavier governance files even if another mode would normally apply.
+    * ``"skip_manifest"``   — bypass ``agent-bootstrap.toml`` entirely; fall back
+      to AGENTS.md → README.md and emit a ``manifest_skipped`` warning.
+    """
+    # --- handle the skip-manifest override before touching the manifest ---
+    if user_override == "skip_manifest":
+        return _resolve_skip_manifest(
+            repo_root,
+            expected_branch=expected_branch,
+            git_state=git_state,
+        )
+
+    # --- translate the other two user overrides into detect_mode inputs ---
+    active_override: str | None = user_override
+    if user_override == "full_bootstrap":
+        full_bootstrap = True
+    elif user_override == "compact_only":
+        requested_mode = "returning"
+
     manifest = read_manifest(repo_root)
     mode, mode_source = detect_mode(
         repo_root,
@@ -642,6 +816,7 @@ def resolve_startup(
         git_state=current_git_state,
         warnings=warnings,
         trace=trace,
+        active_override=active_override,
         startup_panel=build_startup_panel(
             router=str(manifest["router"]),
             mode=mode,
@@ -649,6 +824,7 @@ def resolve_startup(
             trace=trace,
             warnings=warnings,
             budget=budget,
+            active_override=active_override,
         ),
     )
 
@@ -694,6 +870,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         help="Expected branch for worktree-drift and branch-elsewhere warnings.",
     )
     parser.add_argument(
+        "--override",
+        choices=("full_bootstrap", "compact_only", "skip_manifest"),
+        default=None,
+        help=(
+            "Apply a manual user override to the startup mode selection. "
+            "Corresponds to the three controls in the startup panel: "
+            "'full_bootstrap' loads the complete governance stack, "
+            "'compact_only' forces the compact returning-session route, "
+            "'skip_manifest' bypasses agent-bootstrap.toml entirely."
+        ),
+    )
+    parser.add_argument(
         "--indent",
         type=int,
         default=2,
@@ -713,6 +901,7 @@ def main(argv: list[str] | None = None) -> int:
         fresh_instantiation=args.fresh_instantiation,
         full_bootstrap=args.full_bootstrap,
         expected_branch=args.expected_branch,
+        user_override=args.override,
     )
     json.dump(asdict(resolution), sys.stdout, indent=args.indent)
     sys.stdout.write("\n")

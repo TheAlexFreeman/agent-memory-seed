@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Add manual override controls
+next_action: Define test matrix
 origin_session: manual
 source: agent-generated
 status: active
@@ -220,7 +220,7 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
    - explicit "load summaries before transcripts" behavior
    - preserve an access trail for preloaded files
 
-### Phase 3 — Desktop UX · ☐ 2/3 complete
+### Phase 3 — Desktop UX · ☑ 3/3 complete
 
 7. ☑ Design the startup panel
    - files loaded
@@ -232,7 +232,7 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
    - worktree not aligned with requested branch
    - branch already checked out in another worktree
 
-9. ☐ Add manual override controls
+9. ☑ Add manual override controls
    - "load full bootstrap"
    - "load compact startup only"
    - "skip repo manifest for this thread"
@@ -275,6 +275,20 @@ Those warnings should remain explicit in the panel even though the lower-level s
 
 Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now maps startup warnings into `startup_panel.warnings`, with explicit git-sourced warning entries for detached HEAD, branch drift, and branch-checked-out-elsewhere. `HUMANS/tooling/tests/test_bootstrap_resolver.py` validates both single-warning and all-warning panel states.
 
+#### 5. Manual override controls are a first-class startup panel contract, not CLI flags
+
+The three override actions ("Load Full Bootstrap", "Load Compact Startup Only", "Skip Repo Manifest") are always present in `startup_panel.available_overrides` so the UI can render them as buttons without additional runtime logic. At most one has `active=True`, making the panel self-describing: the app knows which override (if any) is in effect without parsing mode names or source strings.
+
+The overrides map onto runtime behavior as follows:
+
+- `full_bootstrap` — sets `full_bootstrap=True` internally; the manifest is still read and the full-bootstrap mode steps are used
+- `compact_only` — forces `requested_mode="returning"` regardless of what auto-detection would have chosen, even on a first-run or periodic-review shape
+- `skip_manifest` — bypasses `agent-bootstrap.toml` entirely and falls back to AGENTS.md → README.md; always emits a `manifest_skipped` warning (source: `user_override`) so the panel shows `attention` and the user can see the bypass clearly
+
+`StartupResolution.active_override` and `StartupPanel.active_override` carry the override identifier for machine-readable callers. The CLI gains `--override {full_bootstrap,compact_only,skip_manifest}` so the prototype can be exercised directly.
+
+Repo-side prototype: `resolve_bootstrap_manifest.py` now accepts `user_override`, routes `skip_manifest` through a dedicated `_resolve_skip_manifest()` helper, and always populates `available_overrides` with all three controls. `test_bootstrap_resolver.py` validates each override type plus the no-override baseline (5 new tests, 14 total passing).
+
 ### Phase 4 — Validation and rollout · ☐ 0/2 complete
 
 10. ☐ Define test matrix
@@ -312,6 +326,8 @@ Repo-side prototype: `HUMANS/tooling/scripts/resolve_bootstrap_manifest.py` now 
 | 2026-03-18 | Completed Design the startup panel (codex-desktop-bootstrap-support 7/11) |
 | 2026-03-18 | Added structured branch/worktree warning rows to the startup panel contract, covering detached HEAD, branch drift, and branch-checked-out-elsewhere states |
 | 2026-03-18 | Completed Add branch/worktree warnings to startup (codex-desktop-bootstrap-support 8/11) |
+| 2026-03-18 | Added manual override controls: `user_override` param routes full_bootstrap/compact_only through detect_mode and skip_manifest through a dedicated fallback path; all three controls always present in startup_panel.available_overrides; 5 new tests (14 total passing) |
+| 2026-03-18 | Completed Add manual override controls (codex-desktop-bootstrap-support 9/11) |
 
 ---
 

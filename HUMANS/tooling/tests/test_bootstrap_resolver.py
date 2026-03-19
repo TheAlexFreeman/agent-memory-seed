@@ -346,5 +346,113 @@ class BootstrapResolverTests(unittest.TestCase):
             )
 
 
+    # ------------------------------------------------------------------
+    # Manual override controls (Phase 3, item 9)
+    # ------------------------------------------------------------------
+
+    def test_override_full_bootstrap_forces_full_bootstrap_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root)
+
+            resolution = resolver.resolve_startup(root, user_override="full_bootstrap")
+
+            self.assertEqual(resolution.mode, "full_bootstrap")
+            self.assertEqual(resolution.active_override, "full_bootstrap")
+            self.assertEqual(resolution.startup_panel.active_override, "full_bootstrap")
+            # The active override must appear in available_overrides with active=True;
+            # the other two must be inactive.
+            overrides_by_id = {o.id: o for o in resolution.startup_panel.available_overrides}
+            self.assertIn("full_bootstrap", overrides_by_id)
+            self.assertIn("compact_only", overrides_by_id)
+            self.assertIn("skip_manifest", overrides_by_id)
+            self.assertTrue(overrides_by_id["full_bootstrap"].active)
+            self.assertFalse(overrides_by_id["compact_only"].active)
+            self.assertFalse(overrides_by_id["skip_manifest"].active)
+
+    def test_override_compact_only_forces_returning_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            # Build a first-run-shaped repo; compact_only should still force returning.
+            build_repo(root, first_run=True)
+
+            resolution = resolver.resolve_startup(root, user_override="compact_only")
+
+            self.assertEqual(resolution.mode, "returning")
+            self.assertEqual(resolution.active_override, "compact_only")
+            self.assertEqual(resolution.startup_panel.active_override, "compact_only")
+            overrides_by_id = {o.id: o for o in resolution.startup_panel.available_overrides}
+            self.assertTrue(overrides_by_id["compact_only"].active)
+            self.assertFalse(overrides_by_id["full_bootstrap"].active)
+            self.assertFalse(overrides_by_id["skip_manifest"].active)
+            # No manifest_skipped warning — we still used the manifest.
+            self.assertNotIn(
+                "manifest_skipped",
+                [w.code for w in resolution.warnings],
+            )
+
+    def test_override_skip_manifest_bypasses_manifest_and_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root)
+            write(root / "AGENTS.md", "# Agents\n")
+
+            resolution = resolver.resolve_startup(root, user_override="skip_manifest")
+
+            # Mode source communicates the bypass.
+            self.assertEqual(resolution.mode_source, "user_override_skip_manifest")
+            self.assertEqual(resolution.active_override, "skip_manifest")
+
+            # A manifest_skipped warning must always be present.
+            warning_codes = [w.code for w in resolution.warnings]
+            self.assertIn("manifest_skipped", warning_codes)
+
+            # Panel reflects the warning.
+            self.assertEqual(resolution.startup_panel.status, "attention")
+            panel_warning_codes = [w.code for w in resolution.startup_panel.warnings]
+            self.assertIn("manifest_skipped", panel_warning_codes)
+            manifest_panel_warning = next(
+                w for w in resolution.startup_panel.warnings if w.code == "manifest_skipped"
+            )
+            self.assertEqual(manifest_panel_warning.source, "user_override")
+            self.assertEqual(manifest_panel_warning.title, "Manifest Bypassed")
+
+            # AGENTS.md should have been loaded from the fallback step list.
+            trace_by_role = {step.role: step for step in resolution.trace}
+            self.assertIn("agents-manifest", trace_by_role)
+            self.assertEqual(trace_by_role["agents-manifest"].status, "loaded")
+
+            # Override reflected in available_overrides.
+            overrides_by_id = {o.id: o for o in resolution.startup_panel.available_overrides}
+            self.assertTrue(overrides_by_id["skip_manifest"].active)
+            self.assertFalse(overrides_by_id["full_bootstrap"].active)
+            self.assertFalse(overrides_by_id["compact_only"].active)
+
+    def test_override_skip_manifest_with_no_agents_md_falls_back_to_readme(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root)
+            # No AGENTS.md — only README.md should load.
+
+            resolution = resolver.resolve_startup(root, user_override="skip_manifest")
+
+            trace_by_role = {step.role: step for step in resolution.trace}
+            self.assertEqual(trace_by_role["agents-manifest"].status, "missing")
+            self.assertEqual(trace_by_role["readme"].status, "loaded")
+
+    def test_no_override_leaves_active_override_none_with_all_controls_inactive(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root)
+
+            resolution = resolver.resolve_startup(root, requested_mode="returning")
+
+            self.assertIsNone(resolution.active_override)
+            self.assertIsNone(resolution.startup_panel.active_override)
+            overrides = resolution.startup_panel.available_overrides
+            self.assertEqual(len(overrides), 3)
+            self.assertTrue(all(not o.active for o in overrides))
+
+
 if __name__ == "__main__":
     unittest.main()
