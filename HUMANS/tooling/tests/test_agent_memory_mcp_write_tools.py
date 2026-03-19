@@ -878,6 +878,8 @@ Structured.
         self.assertTrue(new_state["eligible"])
         self.assertEqual(new_state["resolved_sha"], target_sha)
         self.assertEqual(new_state["preview_token"], head_before)
+        self.assertTrue(new_state["applies_cleanly"])
+        self.assertEqual(new_state["conflict_details"], "")
         self.assertIn("plans/demo.md", new_state["files_changed"])
         self.assertEqual(head_after, head_before)
 
@@ -949,6 +951,53 @@ Structured.
                     sha=target_sha,
                     confirm=True,
                     preview_token=preview["new_state"]["preview_token"],
+                )
+            )
+
+    def test_memory_revert_commit_blocks_system_commit_outside_governance_scope(self) -> None:
+        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            "[system] Update demo plan",
+        )
+        tools = self._create_tools(repo_root)
+
+        preview_raw = asyncio.run(tools["memory_revert_commit"](sha=target_sha))
+        preview = json.loads(preview_raw)
+
+        self.assertFalse(preview["new_state"]["eligible"])
+        self.assertIn("[system] commits may only touch governance files", preview["warnings"][0])
+
+    def test_memory_revert_commit_preview_reports_conflict(self) -> None:
+        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\n\nFirst update\n"},
+            "[plan] Update demo plan",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\n\nSecond update\n"},
+            "[plan] Update demo plan again",
+        )
+        tools = self._create_tools(repo_root)
+
+        preview_raw = asyncio.run(tools["memory_revert_commit"](sha=target_sha))
+        preview = json.loads(preview_raw)
+        new_state = preview["new_state"]
+
+        self.assertFalse(new_state["applies_cleanly"])
+        self.assertFalse(new_state["eligible"])
+        self.assertTrue(new_state["conflict_details"])
+        self.assertIn("does not apply cleanly", preview["warnings"][0])
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_revert_commit"](
+                    sha=target_sha,
+                    confirm=True,
+                    preview_token=new_state["preview_token"],
                 )
             )
 

@@ -15,6 +15,7 @@ Design notes:
 from __future__ import annotations
 
 import subprocess
+import tempfile
 from datetime import date
 from pathlib import Path
 
@@ -207,6 +208,57 @@ class GitRepo:
             "parents": parents,
             "files_changed": files_changed,
         }
+
+    def revert_preview_status(self, sha: str) -> dict[str, object]:
+        """Return whether reverting *sha* at HEAD would apply cleanly."""
+        with tempfile.TemporaryDirectory(prefix="agent-memory-revert-preview-") as tmpdir:
+            worktree_path = Path(tmpdir) / "worktree"
+
+            add_result = subprocess.run(
+                ["git", "worktree", "add", "--detach", str(worktree_path), "HEAD"],
+                cwd=str(self.root),
+                capture_output=True,
+                text=True,
+                stdin=subprocess.DEVNULL,
+            )
+            if add_result.returncode != 0:
+                stderr = add_result.stderr.strip()
+                raise StagingError(
+                    f"`git worktree add` failed (exit {add_result.returncode}): {stderr}",
+                    stderr=stderr,
+                )
+
+            try:
+                revert_result = subprocess.run(
+                    ["git", "revert", "--no-commit", "--no-edit", sha],
+                    cwd=str(worktree_path),
+                    capture_output=True,
+                    text=True,
+                    stdin=subprocess.DEVNULL,
+                )
+                combined = "\n".join(
+                    part.strip()
+                    for part in (revert_result.stdout, revert_result.stderr)
+                    if part and part.strip()
+                ).strip()
+                return {
+                    "applies_cleanly": revert_result.returncode == 0,
+                    "details": combined,
+                }
+            finally:
+                remove_result = subprocess.run(
+                    ["git", "worktree", "remove", "--force", str(worktree_path)],
+                    cwd=str(self.root),
+                    capture_output=True,
+                    text=True,
+                    stdin=subprocess.DEVNULL,
+                )
+                if remove_result.returncode != 0:
+                    stderr = remove_result.stderr.strip()
+                    raise StagingError(
+                        f"`git worktree remove` failed (exit {remove_result.returncode}): {stderr}",
+                        stderr=stderr,
+                    )
 
     def revert(self, sha: str) -> str:
         """Create a revert commit for *sha*. Returns the new HEAD commit SHA."""

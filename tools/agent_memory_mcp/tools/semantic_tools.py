@@ -47,6 +47,10 @@ _REVERT_ALLOWED_TOP_LEVELS = frozenset(
     {"identity", "knowledge", "skills", "plans", "chats", "meta", "scratchpad"}
 )
 _REVERT_ALLOWED_FILES = frozenset({"CHANGELOG.md"})
+_REVERT_SYSTEM_TOP_LEVELS = frozenset({"meta"})
+_REVERT_SYSTEM_FILES = frozenset(
+    {"AGENTS.md", "CHANGELOG.md", "CLAUDE.md", "README.md", "agent-bootstrap.toml"}
+)
 
 
 def _plan_path(plan_id: str) -> str:
@@ -127,6 +131,16 @@ def _is_revertable_memory_path(rel_path: str) -> bool:
     return parts[0] in _REVERT_ALLOWED_TOP_LEVELS
 
 
+def _is_revertable_system_path(rel_path: str) -> bool:
+    """Return True when a [system] commit path stays in governance scope."""
+    parts = PurePosixPath(rel_path).parts
+    if not parts:
+        return False
+    if len(parts) == 1 and parts[0] in _REVERT_SYSTEM_FILES:
+        return True
+    return parts[0] in _REVERT_SYSTEM_TOP_LEVELS
+
+
 def _build_revert_preview(repo, sha: str) -> dict[str, object]:
     """Inspect a target commit and describe whether it is safe to confirm."""
     from ..errors import ValidationError
@@ -144,6 +158,14 @@ def _build_revert_preview(repo, sha: str) -> dict[str, object]:
     prefix_match = re.match(r"^\[[^\]]+\]", message)
     prefix = prefix_match.group(0) if prefix_match else None
     disallowed_files = [path for path in files_changed if not _is_revertable_memory_path(path)]
+    disallowed_system_files = (
+        [path for path in files_changed if not _is_revertable_system_path(path)]
+        if prefix == "[system]"
+        else []
+    )
+    preview_status = repo.revert_preview_status(resolved_sha)
+    applies_cleanly = bool(preview_status["applies_cleanly"])
+    conflict_details = str(preview_status["details"] or "")
 
     reasons: list[str] = []
     if len(parents) > 1:
@@ -159,6 +181,13 @@ def _build_revert_preview(repo, sha: str) -> dict[str, object]:
             "commit touches files outside the governed memory surface: "
             + ", ".join(disallowed_files)
         )
+    if disallowed_system_files:
+        reasons.append(
+            "[system] commits may only touch governance files: "
+            + ", ".join(disallowed_system_files)
+        )
+    if not applies_cleanly:
+        reasons.append("revert does not apply cleanly at the current HEAD")
 
     return {
         "resolved_sha": resolved_sha,
@@ -167,6 +196,8 @@ def _build_revert_preview(repo, sha: str) -> dict[str, object]:
         "target_parents": parents,
         "files_changed": files_changed,
         "preview_token": repo.current_head(),
+        "applies_cleanly": applies_cleanly,
+        "conflict_details": conflict_details,
         "eligible": not reasons,
         "policy_reasons": reasons,
     }
