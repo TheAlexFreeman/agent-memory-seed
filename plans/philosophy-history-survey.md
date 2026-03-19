@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 1 — write knowledge/_unverified/philosophy/history/ancient/pre-socratics.md"
+next_action: "Begin Phase 3 — write knowledge/_unverified/philosophy/history/early-modern/renaissance-scientific-revolution.md"
 ---
 
 # Research Plan: History of Philosophy — Broad Survey
@@ -32,16 +32,16 @@ Each file covers a period or tradition, organized by the four through-lines. A `
 
 ## Research phases and priority order
 
-### Phase 1 — The Greek Foundation (highest priority) · ☐ 0/4 complete
+### Phase 1 — The Greek Foundation (highest priority) · ✓ 4/4 complete
 
 The whole Western tradition refers back to this period constantly. Cannot understand anything else without it.
 
-1. ☐ `ancient/pre-socratics.md`
+1. ✓ `ancient/pre-socratics.md`
    - The question of *arche* (what is fundamental?): Thales (water), Anaximander (the Unlimited), Heraclitus (flux, logos), Parmenides (being as unchanging, the One), Empedocles (four elements), Democritus (atoms and void)
    - The Parmenides/Heraclitus opposition — the problem of change and permanence — runs through the entire subsequent tradition
    - The transition: from mythological to rational-cosmological explanation
 
-2. ☐ `ancient/plato.md`
+2. ✓ `ancient/plato.md`
    - The Theory of Forms: why it matters (the first systematic account of universal concepts, the problem of the one and the many)
    - Epistemology: the divided line, the cave, degrees of knowledge vs. opinion
    - The Socratic legacy: what virtue is, the examined life, the nature of the good
@@ -49,7 +49,7 @@ The whole Western tradition refers back to this period constantly. Cannot unders
    - The Symposium and Phaedrus: eros as a form of philosophical motivation
    - Later Plato: Parmenides dialogue (self-critique of the Forms), the Timaeus (cosmology)
 
-3. ☐ `ancient/aristotle.md`
+3. ✓ `ancient/aristotle.md`
    - Aristotle as systematizer and critic of Plato: the forms are in things, not separate
    - Logic: the Organon — syllogistic, categories, the first systematic formal logic
    - Metaphysics: substance, form/matter (hylomorphism), actuality/potentiality, the four causes, the unmoved mover
@@ -59,7 +59,7 @@ The whole Western tradition refers back to this period constantly. Cannot unders
    - Poetics: mimesis, catharsis, the unity of plot — Aristotle as the first narrative theorist
    - Note: Aristotle on causation and form is the predecessor to the dynamical systems discussions
 
-4. ☐ `ancient/hellenistic.md`
+4. ✓ `ancient/hellenistic.md`
    - Philosophy as therapy: the shift from cosmology to how to live
    - Epicureans: atoms and void; tranquility through limiting desires; friendship; the clinamen (swerve) and free will
    - Stoics: logos pervading nature; reason as both cosmic principle and human nature; *oikeiôsis* (belonging to oneself and extending to others); Epictetus, Marcus Aurelius, Seneca — practical ethics
@@ -68,15 +68,15 @@ The whole Western tradition refers back to this period constantly. Cannot unders
 
 ---
 
-### Phase 2 — The Medieval Synthesis (high priority) · ☐ 0/3 complete
+### Phase 2 — The Medieval Synthesis (high priority) · ✓ 3/3 complete
 
 Usually underweighted in popular accounts, but the medieval period does serious philosophical work — not just "reason in service of faith" but genuine innovations in logic, metaphysics, and philosophy of mind. Also the transmission channel through which Greek thought reached the West.
 
-5. ☐ `medieval/augustine-neoplatonism.md`
+5. ✓ `medieval/augustine-neoplatonism.md`
    - Augustine: the Christianization of Neo-Platonism; time and eternity (Confessions Book XI — Ricoeur's starting point for narrative temporality); the will and original sin; the City of God; inner illumination (precursor to Descartes' innate ideas?)
    - The problem of evil, predestination, free will — seeds debates that run to the present
 
-6. ☐ `medieval/islamic-jewish-transmission.md`
+6. ✓ `medieval/islamic-jewish-transmission.md`
    - The real history: Greek texts preserved and substantially developed in Islamic world while Western Europe largely lost them
    - Al-Kindi, Al-Farabi: first Islamic Aristotelians; Al-Farabi's political philosophy
    - Avicenna (Ibn Sina): the "floating man" thought experiment — a direct precursor to Descartes' cogito and phenomenological self-awareness arguments; his modal metaphysics; psychology
@@ -85,7 +85,7 @@ Usually underweighted in popular accounts, but the medieval period does serious 
    - Maimonides: negative theology; reconciling Aristotle and Torah; the Guide for the Perplexed
    - Note: this transmission story is important for the arc — the West recovered Aristotle largely through Arabic
 
-7. ☐ `medieval/scholasticism.md`
+7. ✓ `medieval/scholasticism.md`
    - The project: synthesize faith and Aristotelian reason
    - Anselm: the ontological argument (God exists necessarily, as that than which nothing greater can be conceived) — first version of a proof that will be argued about forever
    - Aquinas: the five ways; essence/existence distinction; natural law; the synthesis of Aristotle and Christianity — the most ambitious intellectual project of the medieval period; hylomorphic psychology (the soul as form of the body — closer to Aristotle than to Plato/Descartes)
