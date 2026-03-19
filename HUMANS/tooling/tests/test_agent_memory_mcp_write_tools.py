@@ -769,5 +769,62 @@ trust: high
         )
 
 
+    # ------------------------------------------------------------------
+    # P2: Version-token conflict tests for raw write tools
+    # ------------------------------------------------------------------
+
+    def test_memory_write_rejects_stale_version_token(self) -> None:
+        """Read a file, modify it out-of-band, then attempt a write with the old token."""
+        repo_root = self._init_repo({"knowledge/test.md": "# Original\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        # Get the current token
+        read_payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="knowledge/test.md"))
+        )
+        old_token = read_payload["version_token"]
+
+        # Modify the file directly (bypassing the MCP layer)
+        (repo_root / "knowledge" / "test.md").write_text(
+            "# Modified out of band\n", encoding="utf-8"
+        )
+
+        # memory_write with stale token must raise ConflictError
+        with self.assertRaises(self.errors.ConflictError):
+            asyncio.run(
+                tools["memory_write"](
+                    path="knowledge/test.md",
+                    content="# New content\n",
+                    version_token=old_token,
+                )
+            )
+
+    def test_memory_edit_rejects_stale_version_token(self) -> None:
+        """Read a file, modify it out-of-band, then attempt an edit with the old token."""
+        repo_root = self._init_repo({"knowledge/test.md": "# Hello\n\nSome text.\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        read_payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="knowledge/test.md"))
+        )
+        old_token = read_payload["version_token"]
+
+        # Modify the file directly
+        (repo_root / "knowledge" / "test.md").write_text(
+            "# Hello\n\nModified out of band.\n", encoding="utf-8"
+        )
+
+        # memory_edit with stale token must raise ConflictError
+        with self.assertRaises(self.errors.ConflictError):
+            asyncio.run(
+                tools["memory_edit"](
+                    path="knowledge/test.md",
+                    old_string="Some text.",
+                    new_string="Replaced text.",
+                    version_token=old_token,
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

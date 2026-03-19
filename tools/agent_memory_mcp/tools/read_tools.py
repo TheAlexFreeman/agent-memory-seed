@@ -231,10 +231,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     ) -> str:
         """Search for a pattern across files in the memory repository.
 
+        Uses git grep for tracked files (fast — git maintains an index), then
+        falls back to a Python glob walk for any untracked files. Results are
+        grouped by file with line numbers.
+
         Args:
-            query:          Search string or Python regex.
+            query:          Search string or Python regex (POSIX ERE via git grep).
             path:           Folder to search within (default: '.').
-            glob_pattern:   File filter (default: '**/*.md').
+            glob_pattern:   File glob filter (default: '**/*.md').
             case_sensitive: Case-sensitive match (default: False).
             max_results:    Max matching lines to return (default: 30, max 100).
             include_humans: Include the human-facing HUMANS/ tree when searching
@@ -243,58 +247,135 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Returns:
             Matching lines grouped by file with line numbers, or a not-found message.
         """
+        from ..errors import StagingError
+
         root = get_root()
         search_root = (root / path).resolve()
         if not search_root.exists():
             return f"Error: Path not found: {path}"
 
+        # Validate regex early so we can report a helpful error before spawning git
         flags = 0 if case_sensitive else re.IGNORECASE
         try:
-            pattern = re.compile(query, flags)
+            python_pattern = re.compile(query, flags)
         except re.error as e:
             return f"Error: Invalid regex pattern: {e}"
 
         max_results = min(max_results, 100)
-        results: list[str] = []
-        total_matches = 0
         explicit_humans_search = _is_humans_path(search_root, root)
 
-        for file_path in sorted(search_root.glob(glob_pattern)):
-            if any(part in _IGNORED_NAMES for part in file_path.parts):
-                continue
-            if not file_path.is_file():
-                continue
-            if (
-                not explicit_humans_search
-                and not include_humans
-                and _is_humans_path(file_path, root)
-            ):
-                continue
-            try:
-                text = file_path.read_text(encoding="utf-8", errors="replace")
-            except OSError:
-                continue
+        # Build the git-grep path prefix (repo-relative) so git restricts the search scope
+        try:
+            scope_prefix = search_root.relative_to(root).as_posix()
+        except ValueError:
+            scope_prefix = "."
 
-            file_matches = []
-            for line_no, line in enumerate(text.splitlines(), 1):
-                if pattern.search(line):
-                    file_matches.append(f"  {line_no}: {line.rstrip()}")
+        # Derive a simple glob extension for git grep from glob_pattern
+        # e.g. "**/*.md" → "*.md"; "*.txt" → "*.txt"
+        simple_glob = glob_pattern.lstrip("*/")  # strip leading **/ or */
+        if not simple_glob:
+            simple_glob = "*"
+
+        # Build the path spec for git grep
+        if scope_prefix in (".", ""):
+            git_pathspec = simple_glob
+        else:
+            git_pathspec = f"{scope_prefix}/{simple_glob}"
+
+        # Try git grep first (fast path for tracked files)
+        repo = get_repo()
+        try:
+            raw_matches = repo.grep(
+                query,
+                glob=git_pathspec,
+                case_sensitive=case_sensitive,
+            )
+        except StagingError:
+            # git grep unavailable or failed — fall through to Python fallback
+            raw_matches = None
+
+        # Build per-file match groups from git grep output
+        results: list[str] = []
+        total_matches = 0
+        seen_files: set[str] = set()
+
+        if raw_matches is not None:
+            # Group matches by file
+            from itertools import groupby
+            for file_rel, file_matches_iter in groupby(raw_matches, key=lambda t: t[0]):
+                file_matches_iter = list(file_matches_iter)
+                file_path = root / file_rel
+
+                # Apply HUMANS/ filter
+                if (
+                    not explicit_humans_search
+                    and not include_humans
+                    and _is_humans_path(file_path, root)
+                ):
+                    continue
+
+                # Apply _IGNORED_NAMES filter
+                if any(part in _IGNORED_NAMES for part in file_path.parts):
+                    continue
+
+                seen_files.add(file_rel)
+                file_output: list[str] = []
+                for _, line_no, line_text in file_matches_iter:
+                    file_output.append(f"  {line_no}: {line_text.rstrip()}")
                     total_matches += 1
                     if total_matches >= max_results:
                         break
 
-            if file_matches:
-                rel = file_path.relative_to(root).as_posix()
-                results.append(f"\n**{rel}**")
-                results.extend(file_matches)
+                if file_output:
+                    results.append(f"\n**{file_rel}**")
+                    results.extend(file_output)
 
-            if total_matches >= max_results:
-                results.append(f"\n_(truncated at {max_results} matches)_")
-                break
+                if total_matches >= max_results:
+                    results.append(f"\n_(truncated at {max_results} matches — use a narrower query or path)_")
+                    break
+
+        # Python fallback: search untracked files git grep wouldn't see
+        if total_matches < max_results:
+            for file_path in sorted(search_root.glob(glob_pattern)):
+                if any(part in _IGNORED_NAMES for part in file_path.parts):
+                    continue
+                if not file_path.is_file():
+                    continue
+                try:
+                    file_rel = file_path.relative_to(root).as_posix()
+                except ValueError:
+                    continue
+                if file_rel in seen_files:
+                    continue  # already handled by git grep
+                if (
+                    not explicit_humans_search
+                    and not include_humans
+                    and _is_humans_path(file_path, root)
+                ):
+                    continue
+                try:
+                    text = file_path.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+
+                file_output = []
+                for line_no, line in enumerate(text.splitlines(), 1):
+                    if python_pattern.search(line):
+                        file_output.append(f"  {line_no}: {line.rstrip()}")
+                        total_matches += 1
+                        if total_matches >= max_results:
+                            break
+
+                if file_output:
+                    results.append(f"\n**{file_rel}** _(untracked)_")
+                    results.extend(file_output)
+
+                if total_matches >= max_results:
+                    results.append(f"\n_(truncated at {max_results} matches)_")
+                    break
 
         if not results:
-            files_checked = len(list(search_root.glob(glob_pattern)))
-            return f"No matches found (searched {files_checked} files)."
+            return f"No matches found for {query!r} in {path!r}."
 
         return "\n".join(results)
 

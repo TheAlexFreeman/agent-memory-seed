@@ -178,6 +178,63 @@ class GitRepo:
             })
         return commits
 
+    def revert(self, sha: str) -> str:
+        """Create a revert commit for *sha*. Returns the new HEAD commit SHA."""
+        self.ensure_author_identity()
+        self._run(["git", "revert", "--no-edit", sha])
+        result = self._run(["git", "rev-parse", "HEAD"])
+        return result.stdout.strip()
+
+    def grep(
+        self,
+        pattern: str,
+        *,
+        glob: str = "*.md",
+        case_sensitive: bool = False,
+        max_count: int | None = None,
+    ) -> list[tuple[str, int, str]]:
+        """Run git grep and return (rel_path, line_no, line_text) triples.
+
+        Raises StagingError only on genuine failures. Returns [] when there
+        are no matches (git grep exits 1 for "no matches" — that is not an error).
+
+        Args:
+            pattern:        POSIX extended regex to match.
+            glob:           Path glob passed to git grep via '--' (e.g. '*.md').
+            case_sensitive: If False, passes -i to git grep.
+            max_count:      If set, pass --max-count to limit matches per file.
+        """
+        cmd = ["git", "grep", "-n", "-E"]
+        if not case_sensitive:
+            cmd.append("-i")
+        if max_count is not None:
+            cmd += [f"--max-count={max_count}"]
+        cmd += [pattern, "--", glob]
+
+        result = self._run(cmd, check=False)
+
+        if result.returncode == 0:
+            pass  # matches found
+        elif result.returncode == 1:
+            return []  # no matches — not an error
+        else:
+            # Real failure (e.g. bad regex, git not available)
+            raise StagingError(
+                f"git grep failed (exit {result.returncode}): {result.stderr.strip()}",
+                stderr=result.stderr.strip(),
+            )
+
+        matches: list[tuple[str, int, str]] = []
+        for line in result.stdout.splitlines():
+            # Format: <path>:<line_no>:<content>
+            try:
+                path_part, rest = line.split(":", 1)
+                line_no_str, text = rest.split(":", 1)
+                matches.append((path_part, int(line_no_str), text))
+            except ValueError:
+                continue
+        return matches
+
     def diff_status(self) -> dict[str, list[str]]:
         """Return working tree status: staged, unstaged, untracked file lists."""
         staged_result = self._run(

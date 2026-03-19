@@ -1465,6 +1465,208 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return result.to_json()
 
     # ------------------------------------------------------------------
+    # memory_list_plans
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_list_plans",
+        annotations={
+            "title": "List Memory Plans",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )
+    async def memory_list_plans(
+        status: str | None = None,
+    ) -> str:
+        """List all plans in the plans/ directory with their frontmatter metadata.
+
+        Reads frontmatter from each .md file in plans/ (excluding SUMMARY.md and
+        _archive/) and returns structured plan metadata.
+
+        Args:
+            status: Optional filter — 'active', 'complete', 'paused', etc.
+                    If omitted all plans are returned.
+
+        Returns:
+            JSON list of plan objects, each with keys: plan_id, status, trust,
+            next_action, created, last_verified. Sorted active-first, then by id.
+        """
+        import json as _json
+
+        from ..frontmatter_utils import read_with_frontmatter
+
+        root = get_root()
+        plans_dir = root / "plans"
+        if not plans_dir.is_dir():
+            return _json.dumps([])
+
+        plans = []
+        for plan_file in sorted(plans_dir.glob("*.md")):
+            if plan_file.name in ("SUMMARY.md",):
+                continue
+            try:
+                fm, _ = read_with_frontmatter(plan_file)
+            except Exception:
+                fm = {}
+            plan_id = plan_file.stem
+            plan_status = fm.get("status", "unknown")
+            if status is not None and plan_status != status:
+                continue
+            plans.append({
+                "plan_id": plan_id,
+                "status": plan_status,
+                "trust": fm.get("trust", "unknown"),
+                "next_action": fm.get("next_action", ""),
+                "created": str(fm.get("created", "")),
+                "last_verified": str(fm.get("last_verified", "")),
+            })
+
+        # Sort: active first, then alphabetically by plan_id
+        plans.sort(key=lambda p: (0 if p["status"] == "active" else 1, p["plan_id"]))
+        return _json.dumps(plans, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_record_reflection
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_record_reflection",
+        annotations={
+            "title": "Record Session Reflection",
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )
+    async def memory_record_reflection(
+        session_id: str,
+        memory_retrieved: str,
+        memory_influence: str,
+        outcome_quality: str,
+        gaps_noticed: str,
+        system_observations: str = "",
+    ) -> str:
+        """Write a reflection.md note to the session's chat folder and auto-commit.
+
+        Session reflection is the meta-level self-observation that captures
+        *how the memory system performed*, not just what happened. Distinct
+        from the chat SUMMARY.md which records what was discussed.
+
+        The reflection format mirrors README § "Session reflection".
+
+        Args:
+            session_id:           Canonical session path, e.g. 'chats/2026/03/19/chat-001'.
+            memory_retrieved:     List of files accessed and their helpfulness scores (freeform).
+            memory_influence:     1–2 sentences on how retrieved memory shaped responses.
+            outcome_quality:      Brief assessment of session quality and memory contribution.
+            gaps_noticed:         Moments where memory was missing or irrelevant content intruded.
+            system_observations:  Optional: patterns about the memory system itself.
+
+        Returns:
+            MemoryWriteResult JSON with the written reflection path.
+        """
+        from ..errors import ValidationError
+        from ..models import MemoryWriteResult
+        from ..path_policy import validate_session_id
+
+        validate_session_id(session_id)
+        repo = get_repo()
+        root = get_root()
+
+        session_dir = root / session_id
+        if not session_dir.is_dir():
+            raise ValidationError(
+                f"Session folder does not exist: {session_id}. "
+                "Create the chat summary first with memory_record_chat_summary."
+            )
+
+        reflection_rel = f"{session_id}/reflection.md"
+        reflection_abs = root / reflection_rel
+
+        if reflection_abs.exists():
+            raise ValidationError(
+                f"Reflection already exists for {session_id}. "
+                "Edit it directly with memory_edit if an update is needed."
+            )
+
+        lines = [
+            "## Session reflection\n",
+            "\n",
+            f"**Memory retrieved:** {memory_retrieved}\n",
+            f"**Memory influence:** {memory_influence}\n",
+            f"**Outcome quality:** {outcome_quality}\n",
+            f"**Gaps noticed:** {gaps_noticed}\n",
+        ]
+        if system_observations:
+            lines.append(f"**System observations:** {system_observations}\n")
+
+        reflection_abs.write_text("".join(lines), encoding="utf-8")
+        repo.add(reflection_rel)
+        commit_msg = f"[chat] Add session reflection for {session_id}"
+        sha = repo.commit(commit_msg)
+
+        result = MemoryWriteResult(
+            files_changed=[reflection_rel],
+            commit_sha=sha,
+            commit_message=commit_msg,
+            new_state={"reflection_path": reflection_rel},
+        )
+        return result.to_json()
+
+    # ------------------------------------------------------------------
+    # memory_revert_commit
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_revert_commit",
+        annotations={
+            "title": "Revert a Memory Commit",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )
+    async def memory_revert_commit(
+        sha: str,
+    ) -> str:
+        """Create a revert commit that undoes the changes introduced by *sha*.
+
+        Uses 'git revert --no-edit' — creates a new commit that inverts the
+        target commit. Does not amend or delete history; the original commit
+        and the revert commit both remain in the log.
+
+        Use memory_git_log first to identify the commit SHA you want to revert.
+
+        Args:
+            sha: Full or abbreviated commit SHA to revert.
+
+        Returns:
+            MemoryWriteResult JSON with the new revert commit SHA.
+        """
+        import re as _re
+
+        from ..errors import ValidationError
+        from ..models import MemoryWriteResult
+
+        if not _re.fullmatch(r"[0-9a-f]{4,64}", sha, _re.IGNORECASE):
+            raise ValidationError(
+                f"Invalid SHA: {sha!r}. Must be a 4–64 character hex string."
+            )
+
+        repo = get_repo()
+        new_sha = repo.revert(sha)
+
+        result = MemoryWriteResult(
+            files_changed=[],
+            commit_sha=new_sha,
+            commit_message=f"Revert {sha}",
+            new_state={"reverted_sha": sha, "new_sha": new_sha},
+        )
+        return result.to_json()
+
+    # ------------------------------------------------------------------
     # memory_reset_session_state
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -1507,5 +1709,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_update_plan_next_action": memory_update_plan_next_action,
         "memory_flag_for_review": memory_flag_for_review,
         "memory_log_access": memory_log_access,
+        "memory_list_plans": memory_list_plans,
+        "memory_record_reflection": memory_record_reflection,
+        "memory_revert_commit": memory_revert_commit,
         "memory_reset_session_state": memory_reset_session_state,
     }
