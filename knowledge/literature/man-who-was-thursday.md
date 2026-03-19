@@ -4,8 +4,11 @@ author_of_work: G.K. Chesterton
 work: The Man Who Was Thursday (1908)
 topic: General research — paradox, anarchism, theodicy, literary influence, style
 created: 2026-03-18
+origin_session: manual
+source: agent-generated
 status: in-progress
 tags: [literature, chesterton, edwardian, paradox, theology, anarchism, thriller, comedy, influence]
+trust: medium
 ---
 
 # The Man Who Was Thursday: A Nightmare — Research Notes

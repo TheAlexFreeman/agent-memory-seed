@@ -4,8 +4,11 @@ author_of_work: Richard Powers
 work: Galatea 2.2 (1995)
 topic: Machine understanding; language models; consciousness; anthropomorphization
 created: 2026-03-18
+origin_session: manual
+source: agent-generated
 status: in-progress
 tags: [literature, ai, consciousness, language-models, turing-test, richard-powers, cognitive-science]
+trust: medium
 ---
 
 # Galatea 2.2: Richard Powers and Today's AI Discourse

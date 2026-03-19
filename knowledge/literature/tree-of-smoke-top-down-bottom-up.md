@@ -4,8 +4,11 @@ author_of_work: Denis Johnson
 work: Tree of Smoke (2007)
 topic: Epistemology of war; top-down vs. bottom-up cognition
 created: 2026-03-18
+origin_session: manual
+source: agent-generated
 status: in-progress
 tags: [literature, vietnam-war, epistemology, cognition, denis-johnson, american-fiction]
+trust: medium
 ---
 
 # Tree of Smoke: Top-Down vs. Bottom-Up Processing
