@@ -8,10 +8,10 @@ These replace raw Edit/Write/Bash calls for memory writes. All tools:
   - Support an optional delete-permission hook for runtimes that need it
 
 Directory restrictions:
-  memory_delete and memory_move SOURCE paths must target:
-    knowledge/, plans/, scratchpad/
-  Protected paths under identity/, meta/, chats/, and skills/ are rejected
-  before any filesystem access.
+  ALL Tier 2 mutation tools (memory_write, memory_edit, memory_delete,
+  memory_move, memory_update_frontmatter) reject paths under protected
+  directories: identity/, meta/, chats/, skills/.
+  Use Tier 1 semantic tools for governed writes to protected directories.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import json
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ..path_policy import resolve_repo_path, validate_raw_mutation_source
+from ..path_policy import resolve_repo_path, validate_raw_mutation_source, validate_raw_write_target
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -64,6 +64,12 @@ def register(
 
         Call memory_commit when all related writes are staged.
 
+        DIRECTORY RESTRICTIONS: Writes to protected directories (identity/,
+        meta/, chats/, skills/) are blocked. Use the appropriate Tier 1
+        semantic tool instead (e.g. memory_update_identity_trait,
+        memory_record_chat_summary). Allowed targets: knowledge/, plans/,
+        scratchpad/, and top-level files.
+
         Args:
             path:          Repo-relative path (e.g. 'knowledge/_unverified/django/foo.md').
             content:       Full file content to write.
@@ -79,7 +85,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        path, abs_path = resolve_repo_path(repo, path)
+        path, abs_path = validate_raw_write_target(repo, path)
 
         if version_token is not None:
             if not abs_path.exists():
@@ -123,6 +129,10 @@ def register(
     ) -> str:
         """Exact string replacement in a file, then stage (no auto-commit).
 
+        DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
+        (identity/, meta/, chats/, skills/) are blocked for raw edits. Use
+        Tier 1 semantic tools for governed modifications to those directories.
+
         Raises ValidationError if old_string is not found, or is not unique
         when replace_all=False.
 
@@ -140,7 +150,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        path, abs_path = resolve_repo_path(repo, path)
+        path, abs_path = validate_raw_write_target(repo, path)
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
@@ -339,6 +349,10 @@ def register(
     ) -> str:
         """Merge key-value pairs into a file's YAML frontmatter (no auto-commit).
 
+        DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
+        (identity/, meta/, chats/, skills/) are blocked for raw frontmatter
+        updates. Use Tier 1 semantic tools for governed modifications.
+
         Does not touch the file body. Always sets last_verified to today's date
         unless 'last_verified' is explicitly included in updates.
 
@@ -359,7 +373,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        path, abs_path = resolve_repo_path(repo, path)
+        path, abs_path = validate_raw_write_target(repo, path)
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")

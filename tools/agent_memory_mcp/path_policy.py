@@ -26,6 +26,29 @@ def resolve_repo_path(repo, raw_path: str, *, field_name: str = "path") -> tuple
     return rel_path, abs_path
 
 
+def validate_raw_write_target(repo, raw_path: str, *, field_name: str = "path") -> tuple[str, Path]:
+    """Normalize and validate write targets against the protected-directory policy.
+
+    Protected directories (identity/, meta/, chats/, skills/) are blocked for
+    raw Tier 2 writes.  Use Tier 1 semantic tools for governed writes to those
+    directories (e.g. memory_update_identity_trait, memory_record_chat_summary).
+
+    Returns the repo-relative path and absolute path on success.
+    """
+    rel_path, abs_path = resolve_repo_path(repo, raw_path, field_name=field_name)
+    top = PurePosixPath(rel_path).parts[0] if rel_path else ""
+
+    if top in _PROTECTED_ROOTS:
+        raise MemoryPermissionError(
+            f"Cannot raw-write to '{rel_path}': '{top}/' is a protected directory. "
+            f"Use the appropriate Tier 1 semantic tool instead. "
+            f"Protected directories: {sorted(_PROTECTED_ROOTS)}",
+            path=rel_path,
+        )
+
+    return rel_path, abs_path
+
+
 def require_under_prefix(
     rel_path: str,
     prefix: str,
