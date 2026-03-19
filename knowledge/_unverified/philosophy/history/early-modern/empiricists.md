@@ -6,6 +6,7 @@ trust: low
 related:
   - early-modern/rationalists.md
   - early-modern/kant.md
+origin_session: unknown
 ---
 
 # The Empiricists: Locke, Berkeley, and Hume (1689–1776)

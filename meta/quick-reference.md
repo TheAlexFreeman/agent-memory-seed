@@ -49,6 +49,8 @@ Use this table to determine which files to read for each session type. Load file
 
 _Last assessed: 2026-03-19 — Exploration retained (all 6 signals within bounds)_
 
+**Exploration defaults apply** — use the threshold values in the Active thresholds table below until a periodic review triggers a stage transition.
+
 ## Last periodic review
 
 **Date:** 2026-03-19

@@ -7,6 +7,7 @@ related:
   - early-modern/kant.md
   - nineteenth/marx-materialism.md
   - nineteenth/kierkegaard-nietzsche.md
+origin_session: unknown
 ---
 
 # German Idealism: Fichte, Schelling, and Hegel (1794–1831)

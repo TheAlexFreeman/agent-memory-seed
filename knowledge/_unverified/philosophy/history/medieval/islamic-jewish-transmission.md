@@ -8,6 +8,7 @@ related:
   - ancient/hellenistic.md
   - medieval/augustine-neoplatonism.md
   - medieval/scholasticism.md
+origin_session: unknown
 ---
 
 # The Islamic and Jewish Middle Ages: Transmission, Transformation, and Independent Discovery (c. 800–1200 CE)

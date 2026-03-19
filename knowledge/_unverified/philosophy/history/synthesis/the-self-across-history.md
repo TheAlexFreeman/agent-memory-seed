@@ -13,6 +13,7 @@ related:
   - nineteenth/kierkegaard-nietzsche.md
   - twentieth/phenomenology-existentialism.md
   - contemporary/ethics-political-philosophy.md
+origin_session: unknown
 ---
 
 # The Self Across the History of Philosophy

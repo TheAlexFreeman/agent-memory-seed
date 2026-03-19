@@ -7,6 +7,7 @@ related:
   - early-modern/rationalists.md
   - early-modern/empiricists.md
   - nineteenth/german-idealism.md
+origin_session: unknown
 ---
 
 # Kant: The Copernican Revolution in Philosophy (1781–1800)

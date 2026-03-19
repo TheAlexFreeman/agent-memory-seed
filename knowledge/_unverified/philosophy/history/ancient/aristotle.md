@@ -8,6 +8,7 @@ related:
   - ancient/plato.md
   - ancient/hellenistic.md
   - medieval/scholasticism.md
+origin_session: unknown
 ---
 
 # Aristotle: Systematizer, Naturalist, and the Foundation of Western Science (384–322 BCE)

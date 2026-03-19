@@ -8,6 +8,7 @@ related:
   - django-gunicorn-uvicorn.md
   - django-security.md
   - django-react-drf.md
+origin_session: unknown
 ---
 
 # Django File Storage — django-storages, S3, Signed URLs, Direct Upload

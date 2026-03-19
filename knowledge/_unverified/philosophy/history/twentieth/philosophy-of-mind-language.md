@@ -7,6 +7,7 @@ related:
   - twentieth/analytic-foundations.md
   - twentieth/later-wittgenstein-ordinary-language.md
   - knowledge/_unverified/philosophy/narrative-cognition.md
+origin_session: unknown
 ---
 
 # Philosophy of Mind and Language in the 20th Century (1950–2000)

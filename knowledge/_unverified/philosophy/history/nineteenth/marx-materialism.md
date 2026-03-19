@@ -6,6 +6,7 @@ trust: low
 related:
   - nineteenth/german-idealism.md
   - nineteenth/kierkegaard-nietzsche.md
+origin_session: unknown
 ---
 
 # Marx and the Materialist Turn (1844–1867)

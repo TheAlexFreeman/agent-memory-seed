@@ -8,6 +8,7 @@ related:
   - medieval/islamic-jewish-transmission.md
   - ancient/aristotle.md
   - early-modern/rationalists.md
+origin_session: unknown
 ---
 
 # Scholasticism: Faith, Reason, and the Ambitions of Medieval Philosophy (c. 1100–1350 CE)

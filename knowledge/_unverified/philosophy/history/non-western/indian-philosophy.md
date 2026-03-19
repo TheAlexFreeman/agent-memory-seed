@@ -7,6 +7,7 @@ related:
   - medieval/islamic-jewish-transmission.md
   - twentieth/phenomenology-existentialism.md
   - twentieth/philosophy-of-mind-language.md
+origin_session: unknown
 ---
 
 # Indian Philosophy: From the Vedas to Contemporary Thought

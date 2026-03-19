@@ -6,6 +6,7 @@ trust: low
 related:
   - nineteenth/german-idealism.md
   - twentieth/phenomenology-existentialism.md
+origin_session: unknown
 ---
 
 # Kierkegaard and Nietzsche: The Individual Against the System (1843–1895)

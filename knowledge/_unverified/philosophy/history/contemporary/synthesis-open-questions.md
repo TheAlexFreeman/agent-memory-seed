@@ -12,6 +12,7 @@ related:
   - non-western/chinese-philosophy.md
   - contemporary/ethics-political-philosophy.md
   - contemporary/philosophy-of-science.md
+origin_session: unknown
 ---
 
 # Contemporary Philosophy: Open Questions and the Shape of the Field

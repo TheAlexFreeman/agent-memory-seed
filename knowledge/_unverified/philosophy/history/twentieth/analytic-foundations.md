@@ -7,6 +7,7 @@ related:
   - twentieth/later-wittgenstein-ordinary-language.md
   - twentieth/philosophy-of-mind-language.md
   - nineteenth/pragmatism-schopenhauer.md
+origin_session: unknown
 ---
 
 # Analytic Foundations: Frege, Russell, Early Wittgenstein, and the Logical Positivists (1879–1950)

@@ -8,6 +8,7 @@ related:
   - django-production-stack.md
   - django-gunicorn-uvicorn.md
   - celery-worker-beat-ops.md
+origin_session: unknown
 ---
 
 # Django Database Pooling and Postgres Production Tuning

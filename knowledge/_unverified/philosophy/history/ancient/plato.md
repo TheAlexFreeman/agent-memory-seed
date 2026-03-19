@@ -7,6 +7,7 @@ related:
   - ancient/pre-socratics.md
   - ancient/aristotle.md
   - medieval/augustine-neoplatonism.md
+origin_session: unknown
 ---
 
 # Plato: The Theory of Forms and the Birth of Idealism (427–347 BCE)

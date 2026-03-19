@@ -12,6 +12,7 @@ related:
   - twentieth/later-wittgenstein-ordinary-language.md
   - twentieth/philosophy-of-mind-language.md
   - twentieth/continental-structuralism-poststructuralism.md
+origin_session: unknown
 ---
 
 # Language, Thought, and Meaning Across the History of Philosophy

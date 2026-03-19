@@ -6,6 +6,7 @@ trust: low
 related:
   - twentieth/phenomenology-existentialism.md
   - nineteenth/kierkegaard-nietzsche.md
+origin_session: unknown
 ---
 
 # Continental Philosophy: Structuralism and Poststructuralism (1916–2000)

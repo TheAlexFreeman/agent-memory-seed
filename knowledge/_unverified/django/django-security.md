@@ -8,6 +8,7 @@ related:
   - django-production-stack.md
   - django-6.0-whats-new.md
   - django-observability-structlog-sentry.md
+origin_session: unknown
 ---
 
 # Django Security — Auth, HTTPS, Rate Limiting, Secrets, CSP

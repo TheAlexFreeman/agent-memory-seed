@@ -7,6 +7,7 @@ related:
   - medieval/islamic-jewish-transmission.md
   - non-western/indian-philosophy.md
   - twentieth/continental-structuralism-poststructuralism.md
+origin_session: unknown
 ---
 
 # Islamic Philosophy in the Modern Period (and Broader Revisit)

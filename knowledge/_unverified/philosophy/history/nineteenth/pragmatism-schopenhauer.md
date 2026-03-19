@@ -8,6 +8,7 @@ related:
   - nineteenth/german-idealism.md
   - twentieth/analytic-foundations.md
   - twentieth/philosophy-of-mind-language.md
+origin_session: unknown
 ---
 
 # Schopenhauer and Pragmatism: Will, Action, and Consequence (1818–1910)

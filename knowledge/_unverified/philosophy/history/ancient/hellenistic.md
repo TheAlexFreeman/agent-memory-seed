@@ -7,6 +7,7 @@ related:
   - ancient/aristotle.md
   - ancient/plato.md
   - medieval/augustine-neoplatonism.md
+origin_session: unknown
 ---
 
 # Hellenistic Philosophy: Ethics, Skepticism, and the Turn Inward (323–31 BCE and beyond)

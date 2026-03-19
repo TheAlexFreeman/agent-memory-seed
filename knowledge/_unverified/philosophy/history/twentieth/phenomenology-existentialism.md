@@ -7,6 +7,7 @@ related:
   - nineteenth/kierkegaard-nietzsche.md
   - early-modern/kant.md
   - knowledge/_unverified/philosophy/narrative-cognition.md
+origin_session: unknown
 ---
 
 # Phenomenology and Existentialism (1900–1960)

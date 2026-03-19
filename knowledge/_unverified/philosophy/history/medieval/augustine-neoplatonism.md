@@ -7,6 +7,7 @@ related:
   - ancient/hellenistic.md
   - ancient/plato.md
   - medieval/scholasticism.md
+origin_session: unknown
 ---
 
 # Augustine and Christian Neo-Platonism: The Synthesis of Athens and Jerusalem (354–430 CE and its Legacy)

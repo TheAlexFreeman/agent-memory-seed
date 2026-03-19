@@ -11,6 +11,7 @@ related:
   - twentieth/phenomenology-existentialism.md
   - twentieth/philosophy-of-mind-language.md
   - contemporary/synthesis-open-questions.md
+origin_session: unknown
 ---
 
 # The Mind-Body Problem Across the History of Philosophy

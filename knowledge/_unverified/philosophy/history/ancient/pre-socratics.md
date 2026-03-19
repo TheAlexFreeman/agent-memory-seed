@@ -6,6 +6,7 @@ trust: low
 related:
   - ancient/plato.md
   - ancient/aristotle.md
+origin_session: unknown
 ---
 
 # The Pre-Socratics: From Myth to Logos (c. 600–400 BCE)

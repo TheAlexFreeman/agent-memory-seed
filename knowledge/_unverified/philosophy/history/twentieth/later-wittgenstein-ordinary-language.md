@@ -6,6 +6,7 @@ trust: low
 related:
   - twentieth/analytic-foundations.md
   - twentieth/philosophy-of-mind-language.md
+origin_session: unknown
 ---
 
 # Later Wittgenstein and Ordinary Language Philosophy (1945–1970)

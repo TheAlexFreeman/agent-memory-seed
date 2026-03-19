@@ -7,6 +7,7 @@ related:
   - twentieth/analytic-foundations.md
   - twentieth/philosophy-of-mind-language.md
   - ancient/aristotle.md
+origin_session: unknown
 ---
 
 # Philosophy of Science: Popper, Kuhn, and the Contemporary Landscape

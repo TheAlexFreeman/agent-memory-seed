@@ -7,6 +7,7 @@ related:
   - non-western/indian-philosophy.md
   - medieval/islamic-jewish-transmission.md
   - nineteenth/kierkegaard-nietzsche.md
+origin_session: unknown
 ---
 
 # Chinese Philosophy: From the Hundred Schools to Contemporary Thought

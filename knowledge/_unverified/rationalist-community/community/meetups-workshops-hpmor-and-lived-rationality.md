@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 origin_session: chats/2026/03/19/chat-002
-source: agent-research
+source: agent-generated
 trust: low
 ---
 

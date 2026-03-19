@@ -17,6 +17,7 @@ related:
   - contemporary/philosophy-of-science.md
   - non-western/indian-philosophy.md
   - non-western/islamic-modern-philosophy.md
+origin_session: unknown
 ---
 
 # Science, Metaphysics, and Religion Across the History of Philosophy

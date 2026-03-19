@@ -6,6 +6,7 @@ trust: low
 related:
   - medieval/scholasticism.md
   - early-modern/rationalists.md
+origin_session: unknown
 ---
 
 # The Renaissance and the Scientific Revolution: Nature as Mechanism (c. 1400–1687)

@@ -7,6 +7,7 @@ related:
   - early-modern/renaissance-scientific-revolution.md
   - early-modern/empiricists.md
   - early-modern/kant.md
+origin_session: unknown
 ---
 
 # The Rationalists: Descartes, Spinoza, and Leibniz (1637–1716)

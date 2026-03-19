@@ -7,6 +7,7 @@ related:
   - django-orm-postgres.md
   - django-production-stack.md
   - django-database-pooling.md
+origin_session: unknown
 ---
 
 # Django Migrations — Advanced Patterns

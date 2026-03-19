@@ -8,6 +8,7 @@ related:
   - django-async.md
   - django-database-pooling.md
   - django-security.md
+origin_session: unknown
 ---
 
 # Django — Gunicorn, Uvicorn, Static Files, and Docker Build
