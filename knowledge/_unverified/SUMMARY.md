@@ -77,6 +77,7 @@ Eleven-file narrative research program on the LessWrong/Rationalist community. S
 #### `origins/`
 - **`eliezer-yudkowsky-intellectual-biography.md`** — Yudkowsky's early autodidact background, Extropian/singularitarian milieu, the founding of SIAI, his central doctrines (recursive self-improvement, Friendly AI, Bayesian epistemology, reductionism, metaethics / CEV, "raising the sanity waterline"), and his role as writer-founder. Distinguishes biographical, doctrinal, and institutional-entrepreneurship dimensions.
 - **[the-sequences-core-arguments.md](knowledge/_unverified/rationalist-community/origins/the-sequences-core-arguments.md)** — The Sequences — core arguments, structure, sources, and community function: map/territory, Bayes arc, bias catalog, reductionism, metaethics/CEV, pedagogical and initiation roles
+- **[heuristics-biases-bayes-and-bounded-rationality.md](knowledge/_unverified/rationalist-community/origins/heuristics-biases-bayes-and-bounded-rationality.md)** — Source literatures: Kahneman/Tversky heuristics-and-biases, Simon bounded rationality, Jaynes Bayesian probability, Tetlock forecasting — with how the community reinterpreted and outran each
 
 <!-- section: react -->
 ### `react/` — React 19 + Chakra UI 3 frontend research (ingested 2026-03-18)
