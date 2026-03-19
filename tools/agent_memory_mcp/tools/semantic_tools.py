@@ -33,16 +33,37 @@ if TYPE_CHECKING:
 # Identity churn alarm threshold per session
 _IDENTITY_CHURN_LIMIT = 5
 
-# Module-level session counter for identity trait updates
-_identity_updates_this_session: int = 0
+# ACCESS log folders — these directories each contain an ACCESS.jsonl file
+_ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 
 
 def _plan_path(plan_id: str) -> str:
     return f"plans/{validate_slug(plan_id, field_name='plan_id')}.md"
 
 
+def _access_jsonl_for(rel_path: str) -> str | None:
+    """Return the repo-relative ACCESS.jsonl path for a content file, or None."""
+    from pathlib import PurePosixPath
+    parts = PurePosixPath(rel_path).parts
+    if not parts:
+        return None
+    root = parts[0]
+    if root not in _ACCESS_ROOTS:
+        return None
+    # knowledge/_unverified/ has its own ACCESS.jsonl
+    if root == "knowledge" and len(parts) > 1 and parts[1] == "_unverified":
+        return "knowledge/_unverified/ACCESS.jsonl"
+    return f"{root}/ACCESS.jsonl"
+
+
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     """Register all Tier 1 semantic tools and return their callables."""
+
+    # Per-server-instance state.  Resets each time create_mcp() is called
+    # (i.e. on server restart).  Agents should call memory_reset_session_state
+    # at the start of each session to ensure a clean slate in long-running
+    # server processes.
+    _session_state: dict[str, int] = {"identity_updates": 0}
 
     # ------------------------------------------------------------------
     # memory_mark_plan_item_complete
@@ -627,6 +648,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Returns:
             MemoryWriteResult JSON with new_state: {version_token}.
         """
+        import os
+
         from ..errors import ValidationError
         from ..frontmatter_utils import (
             infer_section_id_from_path,
@@ -645,6 +668,15 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         require_under_prefix(path, "knowledge/_unverified")
         if trust != "low":
             raise ValidationError("trust must be 'low' for new unverified knowledge")
+
+        max_bytes = int(os.environ.get("MEMORY_MAX_FILE_BYTES", "512000"))
+        content_bytes = len(content.encode("utf-8"))
+        if content_bytes > max_bytes:
+            raise ValidationError(
+                f"Content is {content_bytes:,} bytes, which exceeds the "
+                f"{max_bytes:,}-byte limit (set MEMORY_MAX_FILE_BYTES to override). "
+                "Summarize or split the content before writing."
+            )
         if abs_path.exists():
             raise ValidationError(
                 f"File already exists: {path}. Use memory_write to overwrite."
@@ -833,8 +865,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Returns:
             MemoryWriteResult JSON.
         """
-        global _identity_updates_this_session
-
         from ..errors import ValidationError
         from ..frontmatter_utils import read_with_frontmatter, write_with_frontmatter, today_str
         from ..models import MemoryWriteResult
@@ -845,11 +875,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError(f"mode must be 'upsert', 'append', or 'replace': {mode}")
 
         # Identity churn alarm
-        if _identity_updates_this_session >= _IDENTITY_CHURN_LIMIT:
+        if _session_state["identity_updates"] >= _IDENTITY_CHURN_LIMIT:
             raise ValidationError(
                 f"Identity churn alarm: {_IDENTITY_CHURN_LIMIT} trait updates this session — "
-                "confirm before proceeding. If you're sure, reset the counter by calling "
-                "memory_reset_identity_churn_counter (if available) or restart the session."
+                "call memory_reset_session_state to acknowledge and reset the counter, "
+                "or restart the MCP server."
             )
 
         file = validate_slug(file, field_name="file")
@@ -917,7 +947,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             write_with_frontmatter(abs_path, fm_dict, body)
 
         repo.add(rel_path)
-        _identity_updates_this_session += 1
+        _session_state["identity_updates"] += 1
 
         commit_msg = f"[identity] Update {key} in identity/{file}.md"
         sha = repo.commit(commit_msg)
@@ -929,7 +959,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             new_state={
                 "key": key,
                 "mode": mode,
-                "identity_updates_this_session": _identity_updates_this_session,
+                "identity_updates_this_session": _session_state["identity_updates"],
             },
         )
         return result.to_json()
@@ -1313,6 +1343,157 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         )
         return result.to_json()
 
+    # ------------------------------------------------------------------
+    # memory_log_access
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_log_access",
+        annotations={
+            "title": "Log Memory File Access",
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )
+    async def memory_log_access(
+        file: str,
+        task: str,
+        helpfulness: float,
+        note: str,
+        session_id: str | None = None,
+        category: str | None = None,
+    ) -> str:
+        """Append an access note to the relevant ACCESS.jsonl file and auto-commit.
+
+        This is the canonical way to record that a memory file was retrieved
+        during a session. Consistent logging drives the ACCESS-pattern feedback
+        loop: access notes → aggregated usage patterns → better summaries →
+        smarter retrieval.
+
+        The date field is set automatically to today's date.
+
+        Supported folders (each has its own ACCESS.jsonl):
+          identity/, knowledge/, knowledge/_unverified/,
+          skills/, plans/, chats/
+
+        Args:
+            file:        Repo-relative path of the content file that was accessed
+                         (e.g. 'knowledge/literature/galatea-2-2.md').
+            task:        Brief description of what the user asked (1–2 sentences).
+            helpfulness: Float 0.0–1.0 rating of how useful this file was.
+                           0.0–0.1 wrong context; 0.2–0.4 near-miss;
+                           0.5–0.6 useful; 0.7–0.8 highly relevant;
+                           0.9–1.0 critical.
+            note:        One sentence explaining relevance or lack thereof.
+            session_id:  Current session path (e.g. 'chats/2026/03/18/chat-001').
+                         Optional but strongly recommended.
+            category:    Controlled-vocabulary task category. Only set at
+                         Consolidation stage once meta/task-categories.md exists.
+
+        Returns:
+            MemoryWriteResult JSON with new_state: {access_jsonl, entry_count}.
+        """
+        import json as _json
+
+        from ..errors import ValidationError
+        from ..frontmatter_utils import today_str
+        from ..models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        # Validate required fields
+        if not isinstance(task, str) or not task.strip():
+            raise ValidationError("task must be a non-empty string")
+        if not isinstance(note, str) or not note.strip():
+            raise ValidationError("note must be a non-empty string")
+        if not isinstance(helpfulness, (int, float)):
+            raise ValidationError("helpfulness must be a float between 0.0 and 1.0")
+        helpfulness = float(helpfulness)
+        if not (0.0 <= helpfulness <= 1.0):
+            raise ValidationError(
+                f"helpfulness must be between 0.0 and 1.0, got {helpfulness}"
+            )
+
+        # Resolve and validate the target file path
+        file, _ = resolve_repo_path(repo, file, field_name="file")
+
+        # Determine the ACCESS.jsonl path
+        access_jsonl = _access_jsonl_for(file)
+        if access_jsonl is None:
+            from pathlib import PurePosixPath
+            root_part = PurePosixPath(file).parts[0] if file else "(empty)"
+            raise ValidationError(
+                f"Cannot log access for '{file}': '{root_part}/' is not an "
+                f"access-tracked directory. Supported roots: {sorted(_ACCESS_ROOTS)}"
+            )
+
+        abs_access = root / access_jsonl
+        abs_access.parent.mkdir(parents=True, exist_ok=True)
+
+        # Build the JSONL entry
+        entry: dict = {
+            "file": file,
+            "date": today_str(),
+            "task": task.strip(),
+            "helpfulness": round(helpfulness, 2),
+            "note": note.strip(),
+        }
+        if session_id is not None:
+            entry["session_id"] = session_id
+        if category is not None:
+            entry["category"] = category
+
+        # Append to ACCESS.jsonl
+        existing = abs_access.read_text(encoding="utf-8") if abs_access.exists() else ""
+        new_line = _json.dumps(entry, ensure_ascii=False)
+        updated = (existing.rstrip("\n") + "\n" + new_line + "\n") if existing.strip() else new_line + "\n"
+        abs_access.write_text(updated, encoding="utf-8")
+        repo.add(access_jsonl)
+
+        entry_count = updated.count("\n")
+        commit_msg = f"[access] Log retrieval of {Path(file).name} (h={entry['helpfulness']:.1f})"
+        sha = repo.commit(commit_msg)
+
+        result = MemoryWriteResult(
+            files_changed=[access_jsonl],
+            commit_sha=sha,
+            commit_message=commit_msg,
+            new_state={"access_jsonl": access_jsonl, "entry_count": entry_count},
+        )
+        return result.to_json()
+
+    # ------------------------------------------------------------------
+    # memory_reset_session_state
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_reset_session_state",
+        annotations={
+            "title": "Reset Per-Session State",
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": False,
+        },
+    )
+    async def memory_reset_session_state() -> str:
+        """Reset per-session counters (identity churn alarm) to their initial values.
+
+        Call this at the start of each new session to ensure a clean slate,
+        particularly in long-running MCP server processes where the server is
+        not restarted between sessions.
+
+        Returns:
+            JSON object with the reset state values.
+        """
+        import json as _json
+        _session_state["identity_updates"] = 0
+        return _json.dumps({
+            "reset": True,
+            "identity_updates_this_session": 0,
+        })
+
     return {
         "memory_mark_plan_item_complete": memory_mark_plan_item_complete,
         "memory_promote_knowledge": memory_promote_knowledge,
@@ -1325,4 +1506,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_create_plan": memory_create_plan,
         "memory_update_plan_next_action": memory_update_plan_next_action,
         "memory_flag_for_review": memory_flag_for_review,
+        "memory_log_access": memory_log_access,
+        "memory_reset_session_state": memory_reset_session_state,
     }

@@ -455,6 +455,319 @@ trust: high
                 )
             )
 
+    # ------------------------------------------------------------------
+    # P0-1: memory_write / memory_edit protected-path enforcement
+    # ------------------------------------------------------------------
+
+    def test_memory_write_blocks_protected_identity_path(self) -> None:
+        repo_root = self._init_repo({"identity/profile.md": "# Profile\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_write"](path="identity/profile.md", content="injected\n")
+            )
+        self.assertEqual(
+            (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
+            "# Profile\n",
+        )
+
+    def test_memory_write_blocks_protected_skills_path(self) -> None:
+        repo_root = self._init_repo({"skills/session-start.md": "# Skill\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_write"](path="skills/session-start.md", content="injected\n")
+            )
+
+    def test_memory_write_blocks_protected_meta_path(self) -> None:
+        repo_root = self._init_repo({"meta/curation-policy.md": "# Policy\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_write"](path="meta/curation-policy.md", content="injected\n")
+            )
+
+    def test_memory_edit_blocks_protected_identity_path(self) -> None:
+        repo_root = self._init_repo({"identity/profile.md": "# Profile\noriginal\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_edit"](
+                    path="identity/profile.md",
+                    old_string="original",
+                    new_string="injected",
+                )
+            )
+        self.assertIn("original", (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"))
+
+    def test_memory_write_allows_knowledge_path(self) -> None:
+        """Sanity check: knowledge/ writes still work after the policy change."""
+        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        asyncio.run(
+            tools["memory_write"](path="knowledge/_unverified/test/note.md", content="# Note\n")
+        )
+        self.assertTrue((repo_root / "knowledge" / "_unverified" / "test" / "note.md").exists())
+
+    # ------------------------------------------------------------------
+    # P1: File size limits
+    # ------------------------------------------------------------------
+
+    def test_memory_write_rejects_oversized_content(self) -> None:
+        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        import os
+        # Set a very small limit so we don't actually need a large payload
+        original = os.environ.get("MEMORY_MAX_FILE_BYTES")
+        try:
+            os.environ["MEMORY_MAX_FILE_BYTES"] = "10"
+            with self.assertRaises(self.errors.ValidationError) as ctx:
+                asyncio.run(
+                    tools["memory_write"](
+                        path="knowledge/_unverified/test.md",
+                        content="This content is much longer than ten bytes.",
+                    )
+                )
+            self.assertIn("bytes", str(ctx.exception))
+        finally:
+            if original is None:
+                os.environ.pop("MEMORY_MAX_FILE_BYTES", None)
+            else:
+                os.environ["MEMORY_MAX_FILE_BYTES"] = original
+
+    def test_memory_add_knowledge_file_rejects_oversized_content(self) -> None:
+        repo_root = self._init_repo(
+            {"knowledge/_unverified/SUMMARY.md": "# Unverified\n\n<!-- section: test -->\n"}
+        )
+        tools = self._create_tools(repo_root)
+
+        import os
+        original = os.environ.get("MEMORY_MAX_FILE_BYTES")
+        try:
+            os.environ["MEMORY_MAX_FILE_BYTES"] = "10"
+            with self.assertRaises(self.errors.ValidationError) as ctx:
+                asyncio.run(
+                    tools["memory_add_knowledge_file"](
+                        path="knowledge/_unverified/test/note.md",
+                        content="This content is much longer than ten bytes.",
+                        source="external-research",
+                        session_id="chats/2026/03/19/chat-001",
+                    )
+                )
+            self.assertIn("bytes", str(ctx.exception))
+        finally:
+            if original is None:
+                os.environ.pop("MEMORY_MAX_FILE_BYTES", None)
+            else:
+                os.environ["MEMORY_MAX_FILE_BYTES"] = original
+
+    # ------------------------------------------------------------------
+    # P1: memory_log_access
+    # ------------------------------------------------------------------
+
+    def test_memory_log_access_appends_valid_entry(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/literature/galatea.md": "# Galatea\n",
+                "knowledge/ACCESS.jsonl": "",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/literature/galatea.md",
+                task="User asked about AI literature references",
+                helpfulness=0.8,
+                note="Core reference, shaped the response framing",
+                session_id="chats/2026/03/19/chat-001",
+            )
+        )
+        payload = json.loads(raw)
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+
+        lines = [
+            l for l in (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").splitlines()
+            if l.strip()
+        ]
+        self.assertEqual(len(lines), 1)
+        entry = json.loads(lines[0])
+        self.assertEqual(entry["file"], "knowledge/literature/galatea.md")
+        self.assertEqual(entry["helpfulness"], 0.8)
+        self.assertEqual(entry["session_id"], "chats/2026/03/19/chat-001")
+        self.assertIn("task", entry)
+        self.assertIn("note", entry)
+        self.assertIn("date", entry)
+
+    def test_memory_log_access_uses_unverified_access_jsonl(self) -> None:
+        repo_root = self._init_repo(
+            {"knowledge/_unverified/django/foo.md": "# Foo\n"}
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/_unverified/django/foo.md",
+                task="Django query test",
+                helpfulness=0.3,
+                note="Near-miss — adjacent topic",
+            )
+        )
+        payload = json.loads(raw)
+        self.assertEqual(
+            payload["new_state"]["access_jsonl"], "knowledge/_unverified/ACCESS.jsonl"
+        )
+        self.assertTrue((repo_root / "knowledge" / "_unverified" / "ACCESS.jsonl").exists())
+
+    def test_memory_log_access_rejects_invalid_helpfulness(self) -> None:
+        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_log_access"](
+                    file="knowledge/lit/foo.md",
+                    task="test",
+                    helpfulness=1.5,
+                    note="out of range",
+                )
+            )
+
+    def test_memory_log_access_rejects_untracked_root(self) -> None:
+        repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Scratch\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_log_access"](
+                    file="scratchpad/CURRENT.md",
+                    task="test",
+                    helpfulness=0.5,
+                    note="scratchpad is not access-tracked",
+                )
+            )
+
+    # ------------------------------------------------------------------
+    # P1: Identity churn alarm + memory_reset_session_state
+    # ------------------------------------------------------------------
+
+    def test_memory_update_identity_trait_churn_alarm_fires_at_limit(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-17
+trust: high
+---
+
+# Profile
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        # Make 5 successful updates (at the limit)
+        for i in range(5):
+            asyncio.run(
+                tools["memory_update_identity_trait"](
+                    file="profile",
+                    key=f"trait_{i}",
+                    value=f"value_{i}",
+                )
+            )
+
+        # The 6th update should raise the churn alarm
+        with self.assertRaises(self.errors.ValidationError) as ctx:
+            asyncio.run(
+                tools["memory_update_identity_trait"](
+                    file="profile",
+                    key="trait_6",
+                    value="value_6",
+                )
+            )
+        self.assertIn("churn alarm", str(ctx.exception).lower())
+
+    def test_memory_reset_session_state_clears_churn_counter(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-17
+trust: high
+---
+
+# Profile
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        # Exhaust the counter
+        for i in range(5):
+            asyncio.run(
+                tools["memory_update_identity_trait"](
+                    file="profile",
+                    key=f"trait_{i}",
+                    value=f"value_{i}",
+                )
+            )
+
+        # Reset
+        reset_payload = json.loads(asyncio.run(tools["memory_reset_session_state"]()))
+        self.assertTrue(reset_payload["reset"])
+        self.assertEqual(reset_payload["identity_updates_this_session"], 0)
+
+        # Should now succeed
+        asyncio.run(
+            tools["memory_update_identity_trait"](
+                file="profile",
+                key="trait_after_reset",
+                value="allowed",
+            )
+        )
+
+    def test_churn_counters_are_independent_per_server_instance(self) -> None:
+        """Two separate create_mcp() calls must have independent counters."""
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-17
+trust: high
+---
+
+# Profile
+""",
+            }
+        )
+
+        tools_a = self._create_tools(repo_root)
+        tools_b = self._create_tools(repo_root)
+
+        # Exhaust counter on instance A
+        for i in range(5):
+            asyncio.run(
+                tools_a["memory_update_identity_trait"](
+                    file="profile", key=f"a_{i}", value=f"v{i}"
+                )
+            )
+
+        # Instance B counter is independent — should not be affected
+        asyncio.run(
+            tools_b["memory_update_identity_trait"](
+                file="profile", key="b_0", value="independent"
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -17,10 +17,16 @@ Directory restrictions:
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ..path_policy import resolve_repo_path, validate_raw_mutation_source, validate_raw_write_target
+
+
+def _max_file_bytes() -> int:
+    """Return the configured file-size ceiling (default 512 KB)."""
+    return int(os.environ.get("MEMORY_MAX_FILE_BYTES", "512000"))
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -81,11 +87,20 @@ def register(
         Returns:
             MemoryWriteResult JSON with new_state.version_token for the written file.
         """
-        from ..errors import NotFoundError
+        from ..errors import NotFoundError, ValidationError
         from ..models import MemoryWriteResult
 
         repo = get_repo()
         path, abs_path = validate_raw_write_target(repo, path)
+
+        max_bytes = _max_file_bytes()
+        content_bytes = len(content.encode("utf-8"))
+        if content_bytes > max_bytes:
+            raise ValidationError(
+                f"Content is {content_bytes:,} bytes, which exceeds the "
+                f"{max_bytes:,}-byte limit (set MEMORY_MAX_FILE_BYTES to override). "
+                "Summarize or split the content before writing."
+            )
 
         if version_token is not None:
             if not abs_path.exists():
