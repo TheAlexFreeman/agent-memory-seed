@@ -1,12 +1,12 @@
 ---
-source: agent-generated
-type: implementation-plan
-origin_session: manual
 created: 2026-03-18
-last_verified: 2026-03-18
-trust: medium
+last_verified: '2026-03-18'
+next_action: Define separation of concerns
+origin_session: manual
+source: agent-generated
 status: active
-next_action: "Phase 1 — define the automation run-state model and memory handoff contract"
+trust: medium
+type: implementation-plan
 ---
 
 # Implementation Plan: Codex Desktop Automation Continuity
@@ -57,9 +57,9 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
 
 ## Research and design phases
 
-### Phase 1 — Automation state model · ☐ 0/3 complete
+### Phase 1 — Automation state model · ☐ 1/3 complete
 
-1. ☐ Define the automation continuity schema
+1. ☑ Define the automation continuity schema
    - run metadata
    - active branch/base branch
    - active plan pointer
@@ -74,6 +74,40 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
    - automation memory first
    - then repo startup manifest
    - then current task-specific plan/context
+
+### Phase 1 decisions (2026-03-18)
+
+#### 1. Automation continuity schema
+
+The automation continuity record should be a structured app-owned state object, not a Markdown note that the agent has to reinterpret each run. Markdown may still hold the human-readable run summary, but the preload contract should read from a normalized continuity record with these fields:
+
+- `automation_id` and `workspace_id` so state is scoped to one recurring automation in one repo/workspace
+- `last_run` metadata: timestamp, trigger type, outcome (`completed`, `blocked`, `waiting_on_user`, `interrupted`), and run summary
+- `git_context`: `branch`, `base_branch`, `head_sha`, `dirty_state`, and a `diverged_since_last_run` flag
+- `plan_context`: pinned `plan_id`, last known `next_action`, progress snapshot, and whether the plan is still active
+- `blockers`: typed entries with `kind` (`network`, `auth`, `tooling`, `repo_state`, `external_dependency`, `user_input`), status, first-seen / last-seen timestamps, and retry condition
+- `deferred_actions`: ordered follow-ups the previous run intentionally left for the next run
+- `artifacts`: branch names, commit SHAs, PR URLs, generated files, and links to any durable repo-memory writes made during the run
+
+The key design choice is that the continuity record stores resolved state, not raw conversation text. That keeps preload deterministic and lets the UI render the same automation state without reparsing prior threads.
+
+#### 2. Memory handoff contract
+
+The startup handoff between automation-local state and repo memory should be explicit and one-directional:
+
+- automation continuity owns run-local execution state, unresolved blockers, branch/base expectations, and the currently pinned plan pointer
+- repo memory remains the authority for durable knowledge, governed plan progress, scratchpad notes, and chat summaries
+- thread UI holds ephemeral reasoning and conversational detail, but should not be the only place where blocker or next-action state survives
+
+On preload, Codex should read the continuity record first, then verify any referenced durable objects instead of trusting stale pointers blindly:
+
+1. load automation continuity state
+2. validate the pinned plan still exists and is active
+3. verify branch/base branch assumptions against current repo state
+4. open the repo router / startup manifest for the automation mode
+5. expand only the plan or files needed for the carried-forward next action
+
+If continuity state and repo memory disagree, the app should prefer durable repo truth for plan status and current git truth for branch state, while surfacing the mismatch as an automation warning instead of silently overwriting either side.
 
 ### Phase 2 — Continuity UX · ☐ 0/3 complete
 
@@ -141,6 +175,7 @@ That adds avoidable work and increases the chance of resuming the wrong thread o
 | Date | Action |
 |---|---|
 | 2026-03-18 | Plan created from identified Codex desktop gap: recurring-run continuity, branch context, and blocker carry-forward |
+| 2026-03-18 | Completed Define the automation continuity schema (codex-desktop-automation-continuity 1/11) |
 
 ---
 

@@ -18,11 +18,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-
-Implementation plan for recurring-run continuity in Codex desktop. Focus: automation-local memory, plan pinning, branch/base-branch carry-forward, blocker persistence, and structured run writeback.
-
-**Progress:** 0/11 tasks complete
-**Next action:** Phase 1 — define the automation run-state model and memory handoff contract
+**Progress:** 1/11 items complete
+**Next action:** Define separation of concerns
 <!-- END: codex-desktop-automation-continuity -->
 
 ---
