@@ -8,10 +8,9 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `django-stack-research.md`
-2. `react-stack-research.md`
-3. `devops-docker-research.md`
-4. `lesswrong-rationalist-community-research.md`
+1. `react-stack-research.md`
+2. `devops-docker-research.md`
+3. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
@@ -21,14 +20,6 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 **Progress:** 0/11 files written
 **Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
 <!-- END: lesswrong-rationalist-community-research -->
-
----
-
-<!-- BEGIN: django-stack-research -->
-### `django-stack-research.md` · status: active · trust: medium
-**Progress:** 5/10 items complete
-**Next action:** `django-security.md`
-<!-- END: django-stack-research -->
 
 ---
 
@@ -55,6 +46,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: django-stack-research -->
+### `django-stack-research.md` · status: complete · trust: medium
+
+Django stack depth research covering Celery Canvas, worker ops, DRF/spectacular, test data factories, async Django, security (allauth, Argon2, HSTS, CSP, rate limiting), advanced migrations (zero-downtime, squashing, large tables), gunicorn/uvicorn/Docker builds, database pooling (pgBouncer, pg_stat_statements), and file storage (S3, signed URLs, direct upload). All 10 files written in `knowledge/_unverified/django/`.
+
+**Progress:** 10/10 files written
+**Completed:** 2026-03-19
+<!-- END: django-stack-research -->
+
+---
 
 <!-- BEGIN: philosophy-history-survey -->
 ### `philosophy-history-survey.md` · status: complete · trust: medium
