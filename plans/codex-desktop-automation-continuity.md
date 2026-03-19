@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Design the run header panel
+next_action: Add plan pinning and resume affordances
 origin_session: manual
 source: agent-generated
 status: active
@@ -195,9 +195,9 @@ The preload contract should also specify how to behave when continuity inputs ar
 
 A good default is "verify before expand": continuity state can nominate what to load next, but repo truth and current git state decide what is actually eligible for preload.
 
-### Phase 2 — Continuity UX · ☐ 0/3 complete
+### Phase 2 — Continuity UX · ☐ 1/3 complete
 
-4. ☐ Design the run header panel
+4. ☑ Design the run header panel
    - last run summary
    - active branch / base branch
    - next action
@@ -213,6 +213,64 @@ A good default is "verify before expand": continuity state can nominate what to 
    - auth unavailable
    - validation tool missing
    - waiting on user review or PR merge
+
+### Phase 2 decisions (2026-03-18)
+
+#### 6. Run header panel contract
+
+The automation run header should be a compact status surface shown before substantial work begins. It should answer four questions immediately:
+
+- what happened last time
+- what plan or branch is being resumed now
+- what the next action is
+- what blockers still apply
+
+**Recommended panel fields**
+
+- `status`: `ready`, `attention`, `blocked`, or `waiting_on_user`
+- `last_run`: timestamp, outcome, and one-line run summary
+- `git_context`: branch, base branch, drift warning, and PR state if relevant
+- `plan_context`: pinned plan name, progress snapshot, and current `next_action`
+- `blocker_summary`: count plus highest-severity active blocker
+- `primary_action`: resume plan, inspect blocker, or open startup contract
+
+The panel should stay summary-first. Detailed blocker lists, prior artifact lists, or historical run notes should sit behind expansion, not compete with the next action.
+
+#### 7. Plan pinning and resume affordances
+
+Plan continuity needs explicit controls instead of implicit carry-forward only. The UX should support three states:
+
+- `resume_previous_plan` when the pinned plan is still active and relevant
+- `switch_plan` when another active plan should take precedence for this automation
+- `no_active_plan` when the automation is maintenance-style or the prior plan completed
+
+Behavior rules:
+
+- a pinned plan is a strong default, not an unbreakable lock
+- switching plans should update automation-local continuity state without mutating repo plan priority order automatically
+- if the pinned plan completed since the last run, the panel should downgrade to `switch_plan` and offer the repo's highest-priority relevant active plan as the replacement
+- if the automation has no pinned plan, the app should surface the relevant active-plan shortlist rather than force repo-wide rediscovery
+
+This keeps plan continuity explicit while preserving repo authority over real plan progress and ordering.
+
+#### 8. Blocker carry-forward controls
+
+Blockers should be first-class resumable objects, not just text from the previous run summary. Each active blocker should expose:
+
+- blocker kind and severity
+- last checked timestamp
+- whether it is still believed active
+- retry action
+- dismiss or supersede action when conditions changed
+
+Minimum blocker actions:
+
+- `retry_now` for transient conditions like network/auth/tool availability
+- `defer_and_skip` when the blocker still makes the run non-viable
+- `mark_resolved` when the environment changed and the blocker should no longer carry forward
+- `waiting_on_user` when the blocker is a human decision, review, or merge event rather than a technical failure
+
+The UX should treat blocker carry-forward as a control surface, not just a warning banner. That is what prevents repeated doomed publish attempts and makes automation continuity materially better than a fresh thread.
 
 ### Phase 3 — Execution and writeback · ☐ 0/3 complete
 
@@ -264,6 +322,7 @@ A good default is "verify before expand": continuity state can nominate what to 
 | 2026-03-18 | Completed Define the automation continuity schema (codex-desktop-automation-continuity 1/11) |
 | 2026-03-18 | Completed Define separation of concerns (codex-desktop-automation-continuity 2/11) |
 | 2026-03-18 | Completed Define startup preload order for recurri (codex-desktop-automation-continuity 3/11) |
+| 2026-03-18 | Completed Design the run header panel (codex-desktop-automation-continuity 4/11) |
 
 ---
 
