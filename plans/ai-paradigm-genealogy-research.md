@@ -6,7 +6,7 @@ created: 2026-03-18
 last_verified: 2026-03-18
 trust: medium
 status: active
-next_action: "Begin Phase 4 — write knowledge/_unverified/ai-history/language-models/bert-gpt-and-the-scaling-laws-era.md"
+next_action: "Begin Phase 5 — write knowledge/_unverified/ai-history/frontier/multimodality-tool-use-and-reasoning-time-compute.md"
 ---
 
 # Research Plan: Genealogy of the Current AI Paradigm
@@ -47,67 +47,32 @@ Maintain a `SUMMARY.md` as files are written.
 Start with the prehistory of the modern neural paradigm: the first wave of optimism, the first hard limits, and the first major conceptual split.
 
 1. ☑ `origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md`
-   - McCulloch and Pitts, Hebbian intuitions, Rosenblatt's perceptron, and early hopes for learning machines
-   - What single-layer perceptrons could actually do, and why that already mattered
-   - The importance of hardware imaginaries, neuroscience analogies, and early pattern-recognition ambitions
-
 2. ☑ `origins/symbolic-ai-expert-systems-and-the-neural-winter.md`
-   - Minsky and Papert's critique of perceptrons, the limits of linear separability, and why this mattered historically
-   - The shift toward symbolic AI, search, expert systems, and hand-built knowledge representations
-   - Why neural approaches receded without disappearing, and what problems symbolic systems solved better in that era
 
 ---
 
 ### Phase 2 — Learning internal representations again (highest priority) · ☑ 3/3 complete
 
-This is the core conceptual hinge. The modern paradigm depends on the rediscovery that multi-layer systems can learn useful hidden representations if they can be trained effectively.
-
 3. ☑ `origins/backpropagation-and-the-pdp-revival.md`
-   - Rumelhart, Hinton, and Williams; parallel distributed processing; error propagation through hidden layers
-   - Why backprop was more than an optimization trick: it made feature learning inside the model tractable
-   - What remained hard even after backprop: vanishing gradients, data scarcity, compute limits, and brittle optimization
-
 4. ☑ `deep-learning/convnets-rnns-and-lstm-inductive-biases.md`
-   - Convolution as a solution to spatial locality and parameter sharing
-   - Recurrent networks as a solution to sequential structure, and LSTM/GRU as partial fixes for long-term dependency problems
-   - The larger lesson: architecture mattered because unconstrained learning was still too hard
-
 5. ☑ `language-models/statistical-nlp-word-embeddings-and-seq2seq.md`
-   - The statistical NLP era: n-grams, language modeling, distributed semantics, and the move away from symbolic pipelines
-   - Word embeddings and what they changed about representation in language
-   - Encoder-decoder and seq2seq models as the immediate prehistory of attention and modern language generation
 
 ---
 
 ### Phase 3 — Deep learning becomes dominant (high priority) · ☑ 2/2 complete
 
-The field's center of gravity shifts when neural methods stop being interesting alternatives and start winning benchmarks decisively.
-
 6. ☑ `deep-learning/gpus-imagenet-and-the-deep-learning-turn.md`
-   - AlexNet, ReLUs, dropout, GPU training, large labeled datasets, and why 2012 was a true inflection point
-   - How ImageNet changed institutional belief about scale, depth, and compute
-   - The feedback loop among benchmarks, hardware, industrial labs, and research prestige
-
 7. ☑ `language-models/attention-and-the-transformer-breakthrough.md`
-   - Bahdanau-style attention as the immediate conceptual precursor
-   - Why self-attention beat recurrence for long-range dependencies, parallelization, and scaling
-   - Transformers as an architectural simplification that unexpectedly opened the path to foundation models
 
 ---
 
-### Phase 4 — Foundation models and the LLM turn (high priority) · ☐ 0/2 complete
+### Phase 4 — Foundation models and the LLM turn (high priority) · ☑ 2/2 complete
 
-The transformer becomes a general-purpose substrate once pretraining and scale start to dominate task-specific design.
+8. ☑ `language-models/bert-gpt-and-the-scaling-laws-era.md`
+   - In-context learning, scaling laws (Kaplan 2020), Chinchilla compute-optimal training, emergent capabilities, encoder vs decoder pretraining strategies
 
-8. ☐ `language-models/bert-gpt-and-the-scaling-laws-era.md`
-   - BERT and GPT as two different uses of transformer pretraining
-   - In-context learning, few-shot behavior, scaling laws, Chinchilla-style compute optimality, and the growing centrality of unsupervised pretraining
-   - Why the field increasingly treated "just scale it" as a serious research strategy
-
-9. ☐ `frontier/instruction-tuning-rlhf-and-the-chat-model-turn.md`
-   - Instruction tuning and InstructGPT as the bridge from raw pretrained models to usable assistants
-   - RLHF / RLAIF, safety fine-tuning, preference modeling, and why post-training became its own layer of the stack
-   - The shift from benchmark model to product-facing conversational model
+9. ☑ `frontier/instruction-tuning-rlhf-and-the-chat-model-turn.md`
+   - SFT, RLHF (InstructGPT), Constitutional AI / RLAIF, DPO, ChatGPT launch, sycophancy and reward hacking
 
 ---
 
@@ -145,5 +110,6 @@ This phase covers the current frontier as a system, not just a base model: multi
 | 2026-03-18 | Phase 1 complete — wrote SUMMARY.md, cybernetics-perceptrons-and-the-first-connectionist-wave.md, symbolic-ai-expert-systems-and-the-neural-winter.md |
 | 2026-03-18 | Phase 2 complete — wrote backpropagation-and-the-pdp-revival.md, convnets-rnns-and-lstm-inductive-biases.md, statistical-nlp-word-embeddings-and-seq2seq.md |
 | 2026-03-18 | Phase 3 complete — wrote gpus-imagenet-and-the-deep-learning-turn.md, attention-and-the-transformer-breakthrough.md |
+| 2026-03-18 | Phase 4 complete — wrote bert-gpt-and-the-scaling-laws-era.md, instruction-tuning-rlhf-and-the-chat-model-turn.md |
 
 Last updated: 2026-03-18
