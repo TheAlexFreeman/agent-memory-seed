@@ -181,6 +181,33 @@ class GitRepo:
             )
         return commits
 
+    def current_head(self) -> str:
+        """Return the current HEAD commit SHA."""
+        result = self._run(["git", "rev-parse", "HEAD"])
+        return result.stdout.strip()
+
+    def inspect_commit(self, sha: str) -> dict[str, object]:
+        """Return structured metadata for a commit."""
+        resolved = self._run(["git", "rev-parse", "--verify", f"{sha}^{{commit}}"])
+        full_sha = resolved.stdout.strip()
+
+        show_result = self._run(["git", "show", "--quiet", "--format=%H%n%s%n%P", full_sha])
+        lines = show_result.stdout.splitlines()
+        if len(lines) < 3:
+            raise StagingError(f"Could not inspect commit metadata for {sha}")
+
+        files_result = self._run(
+            ["git", "diff-tree", "--no-commit-id", "--name-only", "--root", "-r", full_sha]
+        )
+        parents = [parent for parent in lines[2].split() if parent]
+        files_changed = [line.strip() for line in files_result.stdout.splitlines() if line.strip()]
+        return {
+            "sha": lines[0].strip(),
+            "message": lines[1].strip(),
+            "parents": parents,
+            "files_changed": files_changed,
+        }
+
     def revert(self, sha: str) -> str:
         """Create a revert commit for *sha*. Returns the new HEAD commit SHA."""
         self.ensure_author_identity()

@@ -115,6 +115,38 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         )
         return cast(dict[str, ToolCallable], tools)
 
+    def _write_and_commit(
+        self,
+        repo_root: Path,
+        files: dict[str, str],
+        message: str,
+    ) -> str:
+        for rel_path, content in files.items():
+            target = repo_root / rel_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+        subprocess.run(
+            ["git", "add", "."],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", message],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
     def test_memory_delete_uses_permission_hook_for_allowed_paths(self) -> None:
         repo_root = self._init_repo_with_file("plans/delete-me.md")
         calls: list[str] = []
@@ -812,6 +844,113 @@ Structured.
         entry = json.loads((repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip())
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
         self.assertEqual(entry["category"], "react-performance")
+
+    def test_memory_revert_commit_preview_returns_confirmation_metadata(self) -> None:
+        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            "[plan] Update demo plan",
+        )
+        head_before = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(tools["memory_revert_commit"](sha=target_sha))
+        payload = json.loads(raw)
+        new_state = payload["new_state"]
+
+        head_after = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        self.assertIsNone(payload["commit_sha"])
+        self.assertEqual(new_state["mode"], "preview")
+        self.assertTrue(new_state["eligible"])
+        self.assertEqual(new_state["resolved_sha"], target_sha)
+        self.assertEqual(new_state["preview_token"], head_before)
+        self.assertIn("plans/demo.md", new_state["files_changed"])
+        self.assertEqual(head_after, head_before)
+
+    def test_memory_revert_commit_confirm_requires_preview_token(self) -> None:
+        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            "[plan] Update demo plan",
+        )
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(tools["memory_revert_commit"](sha=target_sha, confirm=True))
+
+    def test_memory_revert_commit_confirm_reverts_previewed_commit(self) -> None:
+        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            "[plan] Update demo plan",
+        )
+        tools = self._create_tools(repo_root)
+
+        preview_raw = asyncio.run(tools["memory_revert_commit"](sha=target_sha))
+        preview = json.loads(preview_raw)
+        confirm_raw = asyncio.run(
+            tools["memory_revert_commit"](
+                sha=target_sha,
+                confirm=True,
+                preview_token=preview["new_state"]["preview_token"],
+            )
+        )
+        payload = json.loads(confirm_raw)
+
+        restored = (repo_root / "plans" / "demo.md").read_text(encoding="utf-8")
+        log_subject = subprocess.run(
+            ["git", "log", "-1", "--pretty=%s"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        self.assertEqual(payload["new_state"]["mode"], "confirm")
+        self.assertEqual(payload["new_state"]["reverted_sha"], target_sha)
+        self.assertIn("Original", restored)
+        self.assertNotIn("Updated", restored)
+        self.assertTrue(log_subject.startswith("Revert"))
+
+    def test_memory_revert_commit_blocks_non_memory_paths_on_confirm(self) -> None:
+        repo_root = self._init_repo({"tools/example.py": "print('before')\n"})
+        target_sha = self._write_and_commit(
+            repo_root,
+            {"tools/example.py": "print('after')\n"},
+            "[system] Update helper",
+        )
+        tools = self._create_tools(repo_root)
+
+        preview_raw = asyncio.run(tools["memory_revert_commit"](sha=target_sha))
+        preview = json.loads(preview_raw)
+
+        self.assertFalse(preview["new_state"]["eligible"])
+        self.assertIn("outside the governed memory surface", preview["warnings"][0])
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_revert_commit"](
+                    sha=target_sha,
+                    confirm=True,
+                    preview_token=preview["new_state"]["preview_token"],
+                )
+            )
 
     def test_memory_log_access_rejects_untracked_root(self) -> None:
         repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Scratch\n"})

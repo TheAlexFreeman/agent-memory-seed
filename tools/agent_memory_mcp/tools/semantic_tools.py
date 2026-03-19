@@ -14,10 +14,11 @@ MCP tools, to avoid coupling).
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import (
+    KNOWN_COMMIT_PREFIXES,
     forbid_prefix,
     require_under_prefix,
     resolve_repo_path,
@@ -42,6 +43,10 @@ _IDENTITY_CHURN_LIMIT = 5
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
+_REVERT_ALLOWED_TOP_LEVELS = frozenset(
+    {"identity", "knowledge", "skills", "plans", "chats", "meta", "scratchpad"}
+)
+_REVERT_ALLOWED_FILES = frozenset({"CHANGELOG.md"})
 
 
 def _plan_path(plan_id: str) -> str:
@@ -110,6 +115,61 @@ def _load_task_categories(root: Path) -> set[str]:
         if match:
             categories.add(match.group(1))
     return categories
+
+
+def _is_revertable_memory_path(rel_path: str) -> bool:
+    """Return True when the path is inside the governed memory surface."""
+    parts = PurePosixPath(rel_path).parts
+    if not parts:
+        return False
+    if len(parts) == 1 and parts[0] in _REVERT_ALLOWED_FILES:
+        return True
+    return parts[0] in _REVERT_ALLOWED_TOP_LEVELS
+
+
+def _build_revert_preview(repo, sha: str) -> dict[str, object]:
+    """Inspect a target commit and describe whether it is safe to confirm."""
+    from ..errors import ValidationError
+
+    try:
+        commit = repo.inspect_commit(sha)
+    except Exception as exc:  # pragma: no cover - normalized below
+        raise ValidationError(f"Commit not found or not inspectable: {sha}") from exc
+
+    resolved_sha = str(commit["sha"])
+    message = str(commit["message"])
+    parents = [str(parent) for parent in cast(list[object], commit["parents"])]
+    files_changed = [str(path) for path in cast(list[object], commit["files_changed"])]
+
+    prefix_match = re.match(r"^\[[^\]]+\]", message)
+    prefix = prefix_match.group(0) if prefix_match else None
+    disallowed_files = [path for path in files_changed if not _is_revertable_memory_path(path)]
+
+    reasons: list[str] = []
+    if len(parents) > 1:
+        reasons.append("merge commits are not supported")
+    if prefix is None:
+        reasons.append("commit message is missing a recognized [category] prefix")
+    elif prefix not in KNOWN_COMMIT_PREFIXES:
+        reasons.append(
+            f"commit prefix {prefix!r} is not in the allowed memory prefix set"
+        )
+    if disallowed_files:
+        reasons.append(
+            "commit touches files outside the governed memory surface: "
+            + ", ".join(disallowed_files)
+        )
+
+    return {
+        "resolved_sha": resolved_sha,
+        "target_message": message,
+        "target_prefix": prefix,
+        "target_parents": parents,
+        "files_changed": files_changed,
+        "preview_token": repo.current_head(),
+        "eligible": not reasons,
+        "policy_reasons": reasons,
+    }
 
 
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
@@ -1673,20 +1733,27 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     )
     async def memory_revert_commit(
         sha: str,
+        confirm: bool = False,
+        preview_token: str | None = None,
     ) -> str:
-        """Create a revert commit that undoes the changes introduced by *sha*.
+        """Preview or create a revert commit for a prior memory-domain commit.
 
-        Uses 'git revert --no-edit' — creates a new commit that inverts the
-        target commit. Does not amend or delete history; the original commit
-        and the revert commit both remain in the log.
+        Preview mode (default) inspects the target commit, reports the files
+        that would be affected, and returns a preview token tied to the current
+        HEAD. Confirm mode requires that preview token and will only proceed if
+        the repo has not moved since preview and the target commit passes the
+        memory-domain safety checks.
 
         Use memory_git_log first to identify the commit SHA you want to revert.
 
         Args:
-            sha: Full or abbreviated commit SHA to revert.
+            sha:           Full or abbreviated commit SHA to inspect or revert.
+            confirm:       False returns a preview only. True performs the revert.
+            preview_token: Required when confirm=True. Must match the HEAD SHA
+                           returned by the most recent preview.
 
         Returns:
-            MemoryWriteResult JSON with the new revert commit SHA.
+            MemoryWriteResult JSON with preview metadata or the new revert SHA.
         """
         import re as _re
 
@@ -1699,13 +1766,53 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
 
         repo = get_repo()
-        new_sha = repo.revert(sha)
+        preview = _build_revert_preview(repo, sha)
+
+        if not confirm:
+            result = MemoryWriteResult(
+                files_changed=cast(list[str], preview["files_changed"]),
+                commit_sha=None,
+                commit_message=None,
+                new_state={
+                    "mode": "preview",
+                    **preview,
+                },
+                warnings=cast(list[str], preview["policy_reasons"]),
+            )
+            return result.to_json()
+
+        if not preview_token:
+            raise ValidationError(
+                "preview_token is required when confirm=True. "
+                "Call memory_revert_commit with confirm=False first."
+            )
+
+        current_head = repo.current_head()
+        if preview_token != current_head:
+            raise ValidationError(
+                "Repository HEAD changed since preview. "
+                "Re-run memory_revert_commit with confirm=False and review the new preview."
+            )
+
+        policy_reasons = cast(list[str], preview["policy_reasons"])
+        if policy_reasons:
+            raise ValidationError(
+                "Commit cannot be reverted by memory_revert_commit: " + "; ".join(policy_reasons)
+            )
+
+        resolved_sha = str(preview["resolved_sha"])
+        new_sha = repo.revert(resolved_sha)
 
         result = MemoryWriteResult(
-            files_changed=[],
+            files_changed=cast(list[str], preview["files_changed"]),
             commit_sha=new_sha,
-            commit_message=f"Revert {sha}",
-            new_state={"reverted_sha": sha, "new_sha": new_sha},
+            commit_message=f"Revert {resolved_sha}",
+            new_state={
+                "mode": "confirm",
+                "reverted_sha": resolved_sha,
+                "new_sha": new_sha,
+                "preview_token": preview_token,
+            },
         )
         return result.to_json()
 
