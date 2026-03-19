@@ -8,32 +8,9 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-github-network-ergonomics.md`
-2. `django-stack-research.md`
-3. `react-stack-research.md`
-4. `devops-docker-research.md`
-5. `philosophy-history-survey.md`
-6. `lesswrong-rationalist-community-research.md`
-
-<!-- BEGIN: codex-desktop-github-network-ergonomics -->
-### `codex-desktop-github-network-ergonomics.md` · status: active · trust: medium
-
-Implementation plan for earlier GitHub, network, and runtime blocker detection in Codex desktop. Focus: preflight checks, task-aware readiness, blocker reporting, and recovery ergonomics.
-
-**Progress:** 0/11 tasks complete
-**Next action:** Phase 1 — define preflight checks for GitHub auth, network reachability, and local tooling availability
-<!-- END: codex-desktop-github-network-ergonomics -->
-
-<!-- BEGIN: philosophy-history-survey -->
-### `philosophy-history-survey.md` · status: active · trust: medium
-
-Broad survey of the history of philosophy — the overarching story of how ideas developed, what mattered in different times and places, how schools influenced one another. 26 output files planned across 7 phases + 4 synthesis files. Output goes to `knowledge/_unverified/philosophy/history/`.
-
-**Progress:** 0/26 files written (0/4 synthesis files)
-**Next action:** Begin Phase 1 — write `knowledge/_unverified/philosophy/history/ancient/pre-socratics.md`
-<!-- END: philosophy-history-survey -->
-
----
+1. `react-stack-research.md`
+2. `devops-docker-research.md`
+3. `lesswrong-rationalist-community-research.md`
 
 <!-- BEGIN: lesswrong-rationalist-community-research -->
 ### `lesswrong-rationalist-community-research.md` · status: active · trust: medium
@@ -43,17 +20,6 @@ Narrative research plan for understanding LessWrong and the Rationalist communit
 **Progress:** 0/11 files written
 **Next action:** Begin Phase 1 — write `knowledge/_unverified/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md`
 <!-- END: lesswrong-rationalist-community-research -->
-
----
-
-<!-- BEGIN: django-stack-research -->
-### `django-stack-research.md` · status: active · trust: medium
-
-Gaps and depth research for Alex's Django + Celery + Postgres + Redis + Docker stack. 10 files planned across 7 phases. Priority order: Celery Canvas in depth → Celery worker/beat ops → drf-spectacular → Django test data/factories → Django async → Django security → Django migrations advanced → gunicorn/uvicorn deployment → database connection pooling → django-storages. Output goes to `knowledge/_unverified/django/`.
-
-**Progress:** 4/10 files written
-**Next action:** Begin Phase 3 — write `knowledge/_unverified/django/django-async.md`
-<!-- END: django-stack-research -->
 
 ---
 
@@ -80,6 +46,39 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: django-stack-research -->
+### `django-stack-research.md` · status: complete · trust: medium
+
+Django stack depth research covering Celery Canvas, worker ops, DRF/spectacular, test data factories, async Django, security (allauth, Argon2, HSTS, CSP, rate limiting), advanced migrations (zero-downtime, squashing, large tables), gunicorn/uvicorn/Docker builds, database pooling (pgBouncer, pg_stat_statements), and file storage (S3, signed URLs, direct upload). All 10 files written in `knowledge/_unverified/django/`.
+
+**Progress:** 10/10 files written
+**Completed:** 2026-03-19
+<!-- END: django-stack-research -->
+
+---
+
+<!-- BEGIN: philosophy-history-survey -->
+### `philosophy-history-survey.md` · status: complete · trust: medium
+
+Broad narrative survey of the history of philosophy: 26 period/tradition files across 7 phases (ancient through contemporary + non-Western) plus 4 cross-cutting synthesis files (mind-body, language/meaning, the self, science/metaphysics/religion). All output in `knowledge/_unverified/philosophy/history/`.
+
+**Progress:** 30/30 files written (26 period + 4 synthesis)
+**Completed:** 2026-03-19
+<!-- END: philosophy-history-survey -->
+
+---
+
+<!-- BEGIN: codex-desktop-github-network-ergonomics -->
+### `codex-desktop-github-network-ergonomics.md` · status: complete · trust: medium
+
+Task-readiness support for Codex desktop is now prototyped through a repo-declared manifest plus executable resolver covering GitHub publish checks, runtime and package-manager readiness, blocker carry-forward, and structured UI feedback.
+
+**Progress:** 11/11 items complete
+**Completed:** 2026-03-18
+<!-- END: codex-desktop-github-network-ergonomics -->
+
+---
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: complete · trust: medium

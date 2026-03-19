@@ -38,6 +38,7 @@ def build_setup_repo(root: Path) -> None:
     for filename in (
         "README.md",
         "CHANGELOG.md",
+        "agent-bootstrap.toml",
         "setup.sh",
         "setup.html",
         "AGENTS.md",
@@ -49,7 +50,9 @@ def build_setup_repo(root: Path) -> None:
         shutil.copy2(REPO_ROOT / filename, root / filename)
 
     for dirname in (
+        ".codex",
         ".github",
+        ".vscode",
         "HUMANS",
         "setup",
         "meta",
@@ -59,6 +62,7 @@ def build_setup_repo(root: Path) -> None:
         "plans",
         "skills",
         "scratchpad",
+        "tools",
     ):
         shutil.copytree(
             REPO_ROOT / dirname,
@@ -143,6 +147,31 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertEqual("core", head_branch)
 
+    def test_setup_rewrites_codex_config_for_current_clone(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_setup_repo(root)
+
+            self.run_setup(
+                root,
+                "--non-interactive",
+                "--profile",
+                "software-developer",
+                "--platform",
+                "codex",
+            )
+
+            config_text = (root / ".codex" / "config.toml").read_text(encoding="utf-8")
+            escaped_root = str(root).replace("\\", "\\\\")
+            self.assertIn(escaped_root, config_text)
+            self.assertIn(
+                str(root / "HUMANS" / "tooling" / "scripts" / "memory_mcp.py").replace(
+                    "\\", "\\\\"
+                ),
+                config_text,
+            )
+            self.assertNotIn(str(REPO_ROOT).replace("\\", "\\\\"), config_text)
+
     def test_shell_and_browser_setup_sources_keep_profile_summary_copy_aligned(
         self,
     ) -> None:
@@ -172,6 +201,19 @@ class SetupFlowTests(unittest.TestCase):
         self.assertIn("getFullYear()", browser_text)
         self.assertIn("getMonth() + 1", browser_text)
         self.assertIn("getDate()", browser_text)
+
+    def test_browser_setup_collects_codex_paths_and_generates_config(self) -> None:
+        browser_text = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
+
+        self.assertIn('id="codex-repo-path"', browser_text)
+        self.assertIn('id="codex-python-path"', browser_text)
+        self.assertIn('id="codex-path-error"', browser_text)
+        self.assertIn("function makeCodexConfig", browser_text)
+        self.assertIn("function isAbsolutePath", browser_text)
+        self.assertIn("function setCodexPathError", browser_text)
+        self.assertIn("'.codex/config.toml'", browser_text)
+        self.assertNotIn("C:\\\\path\\\\to\\\\your\\\\repo", browser_text)
+        self.assertNotIn("C:\\\\path\\\\to\\\\python.exe", browser_text)
 
     def test_initial_commit_manifest_matches_tracked_repo_paths(self) -> None:
         manifest_paths = set(read_initial_commit_manifest(REPO_ROOT))
@@ -332,6 +374,7 @@ class SetupFlowTests(unittest.TestCase):
                 "git commit -m '[system] Initialize agent memory system' -m 'Created from agent-memory-seed template on",
                 result.stdout,
             )
+            self.assertIn("git status --short", result.stdout)
             self.assertNotIn("git add -A", result.stdout)
 
             staged_files = set(
@@ -350,6 +393,24 @@ class SetupFlowTests(unittest.TestCase):
             self.assertIn("plans/SUMMARY.md", staged_files)
             self.assertNotIn("notes.txt", staged_files)
             self.assertNotIn("system-prompt.txt", staged_files)
+
+    def test_generated_prompt_copy_mentions_semantic_default_and_deferred_file_blind_writes(
+        self,
+    ) -> None:
+        shell_text = (REPO_ROOT / "setup" / "setup.sh").read_text(encoding="utf-8")
+        browser_text = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
+
+        required_phrases = (
+            "default repo-local runtime is semantic/governed MCP",
+            "raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`",
+            "do not claim that ACCESS logging or governed writes happened; defer them",
+            "Identity changes are proposed changes",
+            "Plans may guide only their own scoped work",
+            "Append-only `CHANGELOG.md` updates are allowed without protected-file approval",
+        )
+        for phrase in required_phrases:
+            self.assertIn(phrase, shell_text)
+            self.assertIn(phrase, browser_text)
 
 
 if __name__ == "__main__":

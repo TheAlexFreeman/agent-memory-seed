@@ -1,16 +1,16 @@
 """
 Error taxonomy for the agent-memory MCP.
 
-All errors inherit from MemoryError so callers can catch them broadly
+All errors inherit from AgentMemoryError so callers can catch them broadly
 or narrowly depending on their needs.
 """
 
 
-class MemoryError(Exception):
+class AgentMemoryError(Exception):
     """Base class for all agent-memory errors."""
 
 
-class ConflictError(MemoryError):
+class ConflictError(AgentMemoryError):
     """Version token mismatch — file was modified since it was read.
 
     Attributes:
@@ -23,15 +23,15 @@ class ConflictError(MemoryError):
         self.current_token = current_token
 
 
-class NotFoundError(MemoryError):
+class NotFoundError(AgentMemoryError):
     """File, section, or plan item does not exist."""
 
 
-class ValidationError(MemoryError):
+class ValidationError(AgentMemoryError):
     """Frontmatter schema violation, broken invariant, or malformed content."""
 
 
-class AlreadyDoneError(MemoryError):
+class AlreadyDoneError(AgentMemoryError):
     """Idempotency: the operation is already in the target state.
 
     Distinct from success so callers can tell the difference between
@@ -39,7 +39,7 @@ class AlreadyDoneError(MemoryError):
     """
 
 
-class StagingError(MemoryError):
+class StagingError(AgentMemoryError):
     """git add/commit/mv/rm failed.
 
     Attributes:
@@ -51,7 +51,7 @@ class StagingError(MemoryError):
         self.stderr = stderr
 
 
-class MemoryPermissionError(MemoryError):
+class MemoryPermissionError(AgentMemoryError):
     """Operation is blocked by the directory restriction policy.
 
     Raised before any filesystem access when the target path is in a

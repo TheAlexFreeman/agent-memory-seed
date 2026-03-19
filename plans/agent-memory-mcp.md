@@ -561,6 +561,42 @@ The tool warns (not errors) if the message does not begin with a recognised `[{c
 
 ---
 
+### `memory_revert_commit` preview contract
+
+`memory_revert_commit` is a two-step operation:
+
+1. Preview: call with `sha` only, or with `confirm: false`
+2. Confirm: call again with `confirm: true` and the `preview_token` returned by preview
+
+Preview returns a `MemoryWriteResult` with `commit_sha: null` and the following `new_state` fields:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `mode` | `"preview"` | Indicates no revert has been applied yet |
+| `resolved_sha` | `str` | Full commit SHA after git resolves the user-supplied revision |
+| `target_message` | `str` | Commit subject line for the target commit |
+| `target_prefix` | `str \| null` | Parsed commit prefix such as `[plan]` or `[system]` |
+| `target_parents` | `list[str]` | Parent commit SHAs; merge commits have length > 1 |
+| `files_changed` | `list[str]` | Repo-relative files touched by the target commit |
+| `preview_token` | `str` | Current `HEAD` SHA; must be echoed back on confirm |
+| `applies_cleanly` | `bool` | Whether `git revert --no-commit` succeeds against current `HEAD` in dry-run preview |
+| `conflict_details` | `str` | Git output from the dry-run revert when conflicts or other apply problems occur |
+| `eligible` | `bool` | Whether confirm is currently allowed under all revert guardrails |
+| `policy_reasons` | `list[str]` | Human-readable rejection reasons used to explain ineligible previews |
+
+Confirm returns `MemoryWriteResult` with `new_state.mode = "confirm"`, `reverted_sha`, `new_sha`, and the `preview_token` that was accepted.
+
+Confirm is rejected when:
+
+- `preview_token` is missing
+- `HEAD` changed since preview
+- the preview reported `applies_cleanly: false`
+- the target commit is outside the governed memory revert surface
+
+Special handling for `[system]` commits: they are revertable only when every touched path stays inside governance files such as `meta/`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `CLAUDE.md`, or `agent-bootstrap.toml`.
+
+---
+
 ## Implementation stack
 
 - **Framework**: FastMCP (Python) — `@mcp.tool()` decorators, automatic schema generation from type hints and docstrings

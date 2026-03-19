@@ -19,8 +19,6 @@ Use this file as the operational router for every session:
 3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
 4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ---
 
 ## Context loading manifest

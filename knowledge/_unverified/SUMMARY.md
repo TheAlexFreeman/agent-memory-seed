@@ -24,7 +24,7 @@ This quarantine zone ensures that **all externally sourced content is visible, l
 <!-- section: django -->
 ### `django/` — Django 6.0 knowledge base (ingested 2026-03-18)
 
-Eleven files synthesized from current Django, DRF, Celery, pytest-django, structlog, Sentry, and related ecosystem documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
+Fourteen files synthesized from current Django, DRF, Celery, pytest-django, structlog, Sentry, Channels, and related ecosystem documentation plus practical integration research for Alex's stack. All carry `trust: low` pending Alex's review.
 
 - **`django-6.0-whats-new.md`** — Django 6.0 release-line overview, including the base December 3, 2025 release and later 6.0.1 / 6.0.3 patch-line notes that matter for upgrade planning.
 - **`django-tasks-framework.md`** — Corrected deep dive on `django.tasks`: built-in `ImmediateBackend` / `DummyBackend`, JSON-serialization limits, transaction caveats, and the boundary between Django tasks and Celery.
@@ -36,12 +36,27 @@ Eleven files synthesized from current Django, DRF, Celery, pytest-django, struct
 - **`celery-worker-beat-ops.md`** — Celery operations note covering worker pool types, queue/concurrency design, autoscaling, beat singleton requirements, `django-celery-beat`, routing, graceful shutdown, and retry-exhaustion patterns.
 - **`django-production-stack.md`** — Operational synthesis for Django + Postgres + Redis + Celery + Docker: service boundaries, migrations, startup ordering, storage, health checks, and observability.
 - **`drf-testing-pytest-django-perf-rec.md`** — DRF testing/API-contract guidance plus pytest-django fixture/database patterns and django-perf-rec's current maintenance-mode role for query/cache regression checks.
+- **`drf-spectacular.md`** — OpenAPI schema generation with DRF's current de facto standard: setup, `@extend_schema`, auth modeling, polymorphic responses, examples, enums, versioning, and CI validation.
+- **`django-test-data-factories.md`** — Factory-driven test data patterns with `factory_boy`, Celery task testing approaches, `freezegun`, outbound HTTP mocking, and database-isolation discipline.
 - **`django-observability-structlog-sentry.md`** — Observability guidance for this stack: structlog contextvars and Celery logging patterns, plus Sentry tracing, sampling, spans, and cache monitoring.
+- **`django-async.md`** — Django async request handling under ASGI, `sync_to_async`/`async_to_sync`, partial async ORM support, middleware adaptation, Channels/WebSockets, and the boundary with Celery.
 
 <!-- section: philosophy -->
 ### `philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18)
 
 Ten files synthesized from Alex's shared philosophical conversation and follow-up web research. All carry `trust: low` pending review. (The history of philosophy research plan has been promoted to `plans/philosophy-history-survey.md`.)
+
+### `philosophy/history/` — Broad survey of the history of philosophy (created 2026-03-19)
+
+Seven files covering Phase 1 (Greek foundation) and Phase 2 (Medieval synthesis) of the research plan. See `philosophy/history/SUMMARY.md` for the full index of all planned files (26 total across 7 phases).
+
+- **`ancient/pre-socratics.md`** — The shift from myth to logos; Thales, Anaximander, Heraclitus (flux, logos), Parmenides (being, the One), Zeno's paradoxes, Empedocles, Anaxagoras, Democritus (atoms and void). The founding opposition between permanence and change.
+- **`ancient/plato.md`** — Theory of Forms; epistemology (divided line, cave allegory); tripartite soul and city; eros and philosophical motivation (Symposium/Phaedrus); self-critique of Forms (Parmenides dialogue); Timaeus cosmology. The founding document of Western idealism.
+- **`ancient/aristotle.md`** — Hylomorphism; four causes and teleology; the Organon (first formal logic); De Anima (soul as form of body, active intellect); eudaimonia and virtue ethics; the Poetics as first narrative theory. The founding document of Western naturalism.
+- **`ancient/hellenistic.md`** — Philosophy as therapy: Epicureans (atoms, tranquility), Stoics (logos, virtue, dichotomy of control, Stoic logic/lekton), Pyrrhonian skeptics (epoché, five modes of Agrippa), Neo-Platonists (the One, emanation, contemplative return). Bridge to medieval thought.
+- **`medieval/augustine-neoplatonism.md`** — Augustine's Christianization of Neo-Platonism; distentio animi and time-consciousness (Confessions XI); privatio boni and the problem of evil; grace, free will, and predestination; the two cities; inner illumination theory. Template for medieval Christian philosophy.
+- **`medieval/islamic-jewish-transmission.md`** — Bayt al-Hikma and the translation movement; Al-Farabi's political philosophy; Avicenna's floating man thought experiment and necessary/possible being distinction; Averroes as The Commentator (monopsychism); Al-Ghazali's occasionalism; Maimonides's negative theology. The intellectual transmission that shaped Scholasticism.
+- **`medieval/scholasticism.md`** — Anselm's ontological argument; Aquinas's Five Ways, essence-existence distinction, hylomorphic psychology, and natural law; Duns Scotus on haecceity, univocity of being, and voluntarism; Ockham's nominalism and the dissolution of the Scholastic synthesis.
 
 - **`intelligence-dynamical-systems-conversation.md`** — Detailed notes from the Feb 28 conversation (https://claude.ai/share/3c3a22b3-946e-4a24-96df-2d812f159367). Cited by Alex as a philosophical foundation of the memory system project.
 - **`self-organized-criticality.md`** — Bak/Tang/Wiesenfeld SOC, Langton's edge of chaos, Kauffman's NK model, neural criticality hypothesis.

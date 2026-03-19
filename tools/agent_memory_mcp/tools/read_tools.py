@@ -20,24 +20,31 @@ import subprocess
 import sys
 from datetime import date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
+
+from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
 
-# Known commit-prefix categories (for memory_commit validation)
-KNOWN_PREFIXES = {
-    "[knowledge]", "[plan]", "[identity]", "[chat]",
-    "[curation]", "[scratchpad]", "[system]",
-}
+def _tool_annotations(**kwargs: object) -> Any:
+    """Return MCP tool annotations with a relaxed runtime-only type surface."""
+    return cast(Any, kwargs)
 
 # Trust decay thresholds (days) — defaults; runtime reads from quick-reference.md
 _DEFAULT_LOW_THRESHOLD = 120
 _DEFAULT_MEDIUM_THRESHOLD = 180
-_IGNORED_NAMES = frozenset({
-    ".git", ".claude", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-})
+_IGNORED_NAMES = frozenset(
+    {
+        ".git",
+        ".claude",
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+    }
+)
 _HUMANS_DIRNAME = "HUMANS"
 
 
@@ -92,13 +99,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_read_file",
-        annotations={
-            "title": "Read Memory File",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Read Memory File",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_read_file(path: str) -> str:
         """Read a file from the memory repository.
@@ -140,13 +147,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_list_folder",
-        annotations={
-            "title": "List Memory Folder",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="List Memory Folder",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_list_folder(
         path: str = ".",
@@ -183,11 +190,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 return False
             if not include_hidden and entry.name.startswith("."):
                 return False
-            if (
-                not explicit_humans_request
-                and not include_humans
-                and _is_humans_path(entry, root)
-            ):
+            if not explicit_humans_request and not include_humans and _is_humans_path(entry, root):
                 return False
             return True
 
@@ -213,13 +216,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_search",
-        annotations={
-            "title": "Search Memory Files",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Search Memory Files",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_search(
         query: str,
@@ -231,10 +234,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     ) -> str:
         """Search for a pattern across files in the memory repository.
 
+        Uses git grep for tracked files (fast — git maintains an index), then
+        falls back to a Python glob walk for any untracked files. Results are
+        grouped by file with line numbers.
+
         Args:
-            query:          Search string or Python regex.
+            query:          Search string or Python regex (POSIX ERE via git grep).
             path:           Folder to search within (default: '.').
-            glob_pattern:   File filter (default: '**/*.md').
+            glob_pattern:   File glob filter (default: '**/*.md').
             case_sensitive: Case-sensitive match (default: False).
             max_results:    Max matching lines to return (default: 30, max 100).
             include_humans: Include the human-facing HUMANS/ tree when searching
@@ -243,58 +250,138 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Returns:
             Matching lines grouped by file with line numbers, or a not-found message.
         """
+        from ..errors import StagingError
+
         root = get_root()
         search_root = (root / path).resolve()
         if not search_root.exists():
             return f"Error: Path not found: {path}"
 
+        # Validate regex early so we can report a helpful error before spawning git
         flags = 0 if case_sensitive else re.IGNORECASE
         try:
-            pattern = re.compile(query, flags)
+            python_pattern = re.compile(query, flags)
         except re.error as e:
             return f"Error: Invalid regex pattern: {e}"
 
         max_results = min(max_results, 100)
-        results: list[str] = []
-        total_matches = 0
         explicit_humans_search = _is_humans_path(search_root, root)
 
-        for file_path in sorted(search_root.glob(glob_pattern)):
-            if any(part in _IGNORED_NAMES for part in file_path.parts):
-                continue
-            if not file_path.is_file():
-                continue
-            if (
-                not explicit_humans_search
-                and not include_humans
-                and _is_humans_path(file_path, root)
-            ):
-                continue
-            try:
-                text = file_path.read_text(encoding="utf-8", errors="replace")
-            except OSError:
-                continue
+        # Build the git-grep path prefix (repo-relative) so git restricts the search scope
+        try:
+            scope_prefix = search_root.relative_to(root).as_posix()
+        except ValueError:
+            scope_prefix = "."
 
-            file_matches = []
-            for line_no, line in enumerate(text.splitlines(), 1):
-                if pattern.search(line):
-                    file_matches.append(f"  {line_no}: {line.rstrip()}")
+        # Derive a simple glob extension for git grep from glob_pattern
+        # e.g. "**/*.md" → "*.md"; "*.txt" → "*.txt"
+        simple_glob = glob_pattern.lstrip("*/")  # strip leading **/ or */
+        if not simple_glob:
+            simple_glob = "*"
+
+        # Build the path spec for git grep
+        if scope_prefix in (".", ""):
+            git_pathspec = simple_glob
+        else:
+            git_pathspec = f"{scope_prefix}/{simple_glob}"
+
+        # Try git grep first (fast path for tracked files)
+        repo = get_repo()
+        try:
+            raw_matches = repo.grep(
+                query,
+                glob=git_pathspec,
+                case_sensitive=case_sensitive,
+            )
+        except StagingError:
+            # git grep unavailable or failed — fall through to Python fallback
+            raw_matches = None
+
+        # Build per-file match groups from git grep output
+        results: list[str] = []
+        total_matches = 0
+        seen_files: set[str] = set()
+
+        if raw_matches is not None:
+            # Group matches by file
+            from itertools import groupby
+
+            for file_rel, file_matches_iter in groupby(raw_matches, key=lambda t: t[0]):
+                grouped_matches = list(file_matches_iter)
+                file_path = root / file_rel
+
+                # Apply HUMANS/ filter
+                if (
+                    not explicit_humans_search
+                    and not include_humans
+                    and _is_humans_path(file_path, root)
+                ):
+                    continue
+
+                # Apply _IGNORED_NAMES filter
+                if any(part in _IGNORED_NAMES for part in file_path.parts):
+                    continue
+
+                seen_files.add(file_rel)
+                file_output: list[str] = []
+                for _, line_no, line_text in grouped_matches:
+                    file_output.append(f"  {line_no}: {line_text.rstrip()}")
                     total_matches += 1
                     if total_matches >= max_results:
                         break
 
-            if file_matches:
-                rel = file_path.relative_to(root).as_posix()
-                results.append(f"\n**{rel}**")
-                results.extend(file_matches)
+                if file_output:
+                    results.append(f"\n**{file_rel}**")
+                    results.extend(file_output)
 
-            if total_matches >= max_results:
-                results.append(f"\n_(truncated at {max_results} matches)_")
-                break
+                if total_matches >= max_results:
+                    results.append(
+                        f"\n_(truncated at {max_results} matches — use a narrower query or path)_"
+                    )
+                    break
+
+        # Python fallback: search untracked files git grep wouldn't see
+        if total_matches < max_results:
+            for file_path in sorted(search_root.glob(glob_pattern)):
+                if any(part in _IGNORED_NAMES for part in file_path.parts):
+                    continue
+                if not file_path.is_file():
+                    continue
+                try:
+                    file_rel = file_path.relative_to(root).as_posix()
+                except ValueError:
+                    continue
+                if file_rel in seen_files:
+                    continue  # already handled by git grep
+                if (
+                    not explicit_humans_search
+                    and not include_humans
+                    and _is_humans_path(file_path, root)
+                ):
+                    continue
+                try:
+                    text = file_path.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+
+                file_output = []
+                for line_no, line in enumerate(text.splitlines(), 1):
+                    if python_pattern.search(line):
+                        file_output.append(f"  {line_no}: {line.rstrip()}")
+                        total_matches += 1
+                        if total_matches >= max_results:
+                            break
+
+                if file_output:
+                    results.append(f"\n**{file_rel}** _(untracked)_")
+                    results.extend(file_output)
+
+                if total_matches >= max_results:
+                    results.append(f"\n_(truncated at {max_results} matches)_")
+                    break
 
         if not results:
-            files_checked = len(list(search_root.glob(glob_pattern)))
-            return f"No matches found (searched {files_checked} files)."
+            return f"No matches found for {query!r} in {path!r}."
 
         return "\n".join(results)
 
@@ -303,13 +390,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_git_log",
-        annotations={
-            "title": "Git Log for Memory Repo",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Git Log for Memory Repo",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_git_log(n: int = 10) -> str:
         """Return recent commit history for the memory repository.
@@ -332,13 +419,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_diff",
-        annotations={
-            "title": "Working Tree Diff Status",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Working Tree Diff Status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_diff() -> str:
         """Show working tree status — staged, unstaged, and untracked files.
@@ -357,23 +444,26 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_audit_trust",
-        annotations={
-            "title": "Trust Decay Audit",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Trust Decay Audit",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_audit_trust(
         include_categories: str = "",
     ) -> str:
         """Audit trust decay across the memory repository.
 
-        Checks all files with frontmatter trust fields against the decay
-        thresholds from meta/quick-reference.md:
+                Checks all files with trust frontmatter against the decay thresholds
+                from meta/quick-reference.md, and treats files without frontmatter as
+                implicit medium-trust when a git-backed effective date is available:
           - low-trust files:    overdue at 120 days, flagged at 90 days
           - medium-trust files: overdue at 180 days, flagged at 150 days
+                    - frontmatterless tracked files: audited as implicit medium-trust
+                    - frontmatterless untracked files: reported as unevaluable
 
         Does not modify any files — pure read operation.
 
@@ -382,7 +472,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                  (e.g. 'knowledge,plans'). Empty = scan all.
 
         Returns:
-            JSON with overdue_low, overdue_medium, upcoming_low, upcoming_medium,
+            JSON with overdue/upcoming buckets plus unevaluable files,
             checked_at, and files_checked count.
         """
         from ..frontmatter_utils import read_with_frontmatter
@@ -401,7 +491,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         overdue_medium = []
         upcoming_low = []
         upcoming_medium = []
+        unevaluable = []
         files_checked = 0
+        repo = get_repo()
+        untracked_files = set(repo.diff_status()["untracked"])
 
         for cat in categories:
             cat_path = root / cat
@@ -415,17 +508,44 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 except Exception:
                     continue
 
+                rel = md_file.relative_to(root).as_posix()
                 trust = fm_dict.get("trust")
-                if trust not in ("low", "medium", "high"):
+                implicit_medium = False
+                if trust in ("low", "medium", "high"):
+                    pass
+                elif fm_dict:
                     continue
+                else:
+                    trust = "medium"
+                    implicit_medium = True
 
                 files_checked += 1
                 eff_date = _effective_date(fm_dict)
+                if eff_date is None and implicit_medium:
+                    if rel in untracked_files:
+                        unevaluable.append(
+                            {
+                                "path": rel,
+                                "trust": trust,
+                                "reason": "untracked_without_frontmatter",
+                                "implicit_trust": True,
+                            }
+                        )
+                        continue
+                    eff_date = repo.first_tracked_author_date(rel)
                 if eff_date is None:
+                    if implicit_medium:
+                        unevaluable.append(
+                            {
+                                "path": rel,
+                                "trust": trust,
+                                "reason": "missing_effective_date",
+                                "implicit_trust": True,
+                            }
+                        )
                     continue
 
                 days = (today - eff_date).days
-                rel = str(md_file.relative_to(root))
 
                 entry = {
                     "path": rel,
@@ -433,6 +553,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     "effective_date": str(eff_date),
                     "days_since_verified": days,
                 }
+                if implicit_medium:
+                    entry["implicit_trust"] = True
 
                 if trust == "low":
                     threshold = low_threshold
@@ -460,6 +582,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "overdue_medium": overdue_medium,
             "upcoming_low": upcoming_low,
             "upcoming_medium": upcoming_medium,
+            "unevaluable": unevaluable,
             "checked_at": str(today),
             "files_checked": files_checked,
             "thresholds": {
@@ -474,13 +597,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_validate",
-        annotations={
-            "title": "Validate Memory Repository",
-            "readOnlyHint": True,
-            "destructiveHint": False,
-            "idempotentHint": True,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Validate Memory Repository",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
     )
     async def memory_validate() -> str:
         """Run the structural validator against the memory repository.

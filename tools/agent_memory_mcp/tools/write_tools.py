@@ -8,43 +8,40 @@ These replace raw Edit/Write/Bash calls for memory writes. All tools:
   - Support an optional delete-permission hook for runtimes that need it
 
 Directory restrictions:
-  memory_delete and memory_move SOURCE paths may not target:
-    identity/, meta/, chats/, skills/
-  (hard PermissionError before any filesystem access)
+  ALL Tier 2 mutation tools (memory_write, memory_edit, memory_delete,
+  memory_move, memory_update_frontmatter) reject paths under protected
+  directories: identity/, meta/, chats/, skills/.
+  Use Tier 1 semantic tools for governed writes to protected directories.
 """
 
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Callable
-from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
+
+from ..path_policy import (
+    KNOWN_COMMIT_PREFIXES,
+    resolve_repo_path,
+    validate_raw_move_destination,
+    validate_raw_mutation_source,
+    validate_raw_write_target,
+)
+
+
+def _max_file_bytes() -> int:
+    """Return the configured file-size ceiling (default 512 KB)."""
+    return int(os.environ.get("MEMORY_MAX_FILE_BYTES", "512000"))
+
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
 
-# Directories protected from deletion/move-source
-_PROTECTED_DIRS = {"identity", "meta", "chats", "skills"}
-
-# Commit-prefix validation set (for memory_commit)
-_KNOWN_PREFIXES = {
-    "[knowledge]", "[plan]", "[identity]", "[chat]",
-    "[curation]", "[scratchpad]", "[system]",
-}
-
-
-def _check_protected(rel_path: str, operation: str = "delete") -> None:
-    """Raise MemoryPermissionError if path is in a protected top-level directory."""
-    from ..errors import MemoryPermissionError
-
-    top = Path(rel_path).parts[0] if Path(rel_path).parts else ""
-    if top in _PROTECTED_DIRS:
-        raise MemoryPermissionError(
-            f"Cannot {operation} '{rel_path}': '{top}/' is a protected directory. "
-            f"Protected directories: {sorted(_PROTECTED_DIRS)}",
-            path=rel_path,
-        )
+def _tool_annotations(**kwargs: object) -> Any:
+    """Return MCP tool annotations with a relaxed runtime-only type surface."""
+    return cast(Any, kwargs)
 
 
 def register(
@@ -60,13 +57,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_write",
-        annotations={
-            "title": "Write Memory File",
-            "readOnlyHint": False,
-            "destructiveHint": True,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Write Memory File",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_write(
         path: str,
@@ -77,6 +74,12 @@ def register(
         """Create or overwrite a file and stage it (no auto-commit).
 
         Call memory_commit when all related writes are staged.
+
+        DIRECTORY RESTRICTIONS: Writes to protected directories (identity/,
+        meta/, chats/, skills/) are blocked. Use the appropriate Tier 1
+        semantic tool instead (e.g. memory_update_identity_trait,
+        memory_record_chat_summary). Allowed targets: knowledge/, plans/,
+        scratchpad/, and top-level files.
 
         Args:
             path:          Repo-relative path (e.g. 'knowledge/_unverified/django/foo.md').
@@ -89,11 +92,20 @@ def register(
         Returns:
             MemoryWriteResult JSON with new_state.version_token for the written file.
         """
-        from ..errors import NotFoundError
+        from ..errors import NotFoundError, ValidationError
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = validate_raw_write_target(repo, path)
+
+        max_bytes = _max_file_bytes()
+        content_bytes = len(content.encode("utf-8"))
+        if content_bytes > max_bytes:
+            raise ValidationError(
+                f"Content is {content_bytes:,} bytes, which exceeds the "
+                f"{max_bytes:,}-byte limit (set MEMORY_MAX_FILE_BYTES to override). "
+                "Summarize or split the content before writing."
+            )
 
         if version_token is not None:
             if not abs_path.exists():
@@ -120,13 +132,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_edit",
-        annotations={
-            "title": "Edit Memory File (String Replace)",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Edit Memory File (String Replace)",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_edit(
         path: str,
@@ -136,6 +148,10 @@ def register(
         version_token: str | None = None,
     ) -> str:
         """Exact string replacement in a file, then stage (no auto-commit).
+
+        DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
+        (identity/, meta/, chats/, skills/) are blocked for raw edits. Use
+        Tier 1 semantic tools for governed modifications to those directories.
 
         Raises ValidationError if old_string is not found, or is not unique
         when replace_all=False.
@@ -154,7 +170,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = validate_raw_write_target(repo, path)
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
@@ -197,13 +213,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_delete",
-        annotations={
-            "title": "Delete Memory File",
-            "readOnlyHint": False,
-            "destructiveHint": True,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Delete Memory File",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_delete(
         path: str,
@@ -230,11 +246,12 @@ def register(
         from ..errors import NotFoundError, MemoryPermissionError
         from ..models import MemoryWriteResult
 
-        # Hard directory restriction — checked before any filesystem access
-        _check_protected(path, operation="delete")
-
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = validate_raw_mutation_source(
+            repo,
+            path,
+            operation="delete",
+        )
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
@@ -271,13 +288,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_move",
-        annotations={
-            "title": "Move/Rename Memory File",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Move/Rename Memory File",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_move(
         source: str,
@@ -289,7 +306,8 @@ def register(
 
         SOURCE PATH RESTRICTIONS: Same as memory_delete — source paths in
         identity/, meta/, chats/, or skills/ are blocked. Destination paths
-        are unrestricted (moving a file INTO a protected folder is additive).
+        in protected directories are also blocked; use Tier 1 semantic tools
+        for governed writes into those folders.
 
         The move is staged. Call memory_commit to finalise.
 
@@ -305,11 +323,13 @@ def register(
         from ..errors import NotFoundError
         from ..models import MemoryWriteResult
 
-        # Hard source path restriction
-        _check_protected(source, operation="move from")
-
         repo = get_repo()
-        abs_source = repo.abs_path(source)
+        source, abs_source = validate_raw_mutation_source(
+            repo,
+            source,
+            operation="move from",
+        )
+        dest, abs_dest = validate_raw_move_destination(repo, dest, field_name="dest")
 
         if not abs_source.exists():
             raise NotFoundError(f"Source file not found: {source}")
@@ -317,7 +337,6 @@ def register(
         repo.check_version_token(source, version_token)
 
         if create_dirs:
-            abs_dest = repo.abs_path(dest)
             abs_dest.parent.mkdir(parents=True, exist_ok=True)
 
         repo.mv(source, dest)
@@ -336,13 +355,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_update_frontmatter",
-        annotations={
-            "title": "Update File Frontmatter",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Update File Frontmatter",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_update_frontmatter(
         path: str,
@@ -350,6 +369,10 @@ def register(
         version_token: str | None = None,
     ) -> str:
         """Merge key-value pairs into a file's YAML frontmatter (no auto-commit).
+
+        DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
+        (identity/, meta/, chats/, skills/) are blocked for raw frontmatter
+        updates. Use Tier 1 semantic tools for governed modifications.
 
         Does not touch the file body. Always sets last_verified to today's date
         unless 'last_verified' is explicitly included in updates.
@@ -371,7 +394,7 @@ def register(
         from ..models import MemoryWriteResult
 
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        path, abs_path = validate_raw_write_target(repo, path)
 
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
@@ -402,13 +425,13 @@ def register(
     # ------------------------------------------------------------------
     @mcp.tool(
         name="memory_commit",
-        annotations={
-            "title": "Commit Staged Memory Changes",
-            "readOnlyHint": False,
-            "destructiveHint": False,
-            "idempotentHint": False,
-            "openWorldHint": False,
-        },
+        annotations=_tool_annotations(
+            title="Commit Staged Memory Changes",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
     )
     async def memory_commit(
         message: str,
@@ -446,19 +469,20 @@ def register(
 
         # Validate prefix (warn, don't error)
         import re
+
         prefix_match = re.match(r"^\[([^\]]+)\]", message)
         if not prefix_match:
             warnings.append(
                 f"Commit message '{message[:50]}...' does not start with a "
                 f"recognised [category] prefix. Known prefixes: "
-                f"{sorted(_KNOWN_PREFIXES)}"
+                f"{sorted(KNOWN_COMMIT_PREFIXES)}"
             )
         else:
             full_prefix = f"[{prefix_match.group(1)}]"
-            if full_prefix not in _KNOWN_PREFIXES:
+            if full_prefix not in KNOWN_COMMIT_PREFIXES:
                 warnings.append(
                     f"Unrecognised commit prefix '{full_prefix}'. "
-                    f"Known prefixes: {sorted(_KNOWN_PREFIXES)}. "
+                    f"Known prefixes: {sorted(KNOWN_COMMIT_PREFIXES)}. "
                     "Proceeding anyway."
                 )
 

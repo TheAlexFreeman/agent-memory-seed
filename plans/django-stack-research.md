@@ -1,12 +1,12 @@
 ---
-source: agent-generated
-type: research-plan
-origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
-last_verified: 2026-03-18
+last_verified: '2026-03-19'
+next_action: null
+origin_session: chats/2026/03/18/chat-001
+source: agent-generated
+status: complete
 trust: medium
-status: active
-next_action: "Begin Phase 3 — write knowledge/_unverified/django/django-async.md"
+type: research-plan
 ---
 
 # Research Plan: Django Stack — Gaps and Depth
@@ -87,11 +87,11 @@ The existing `django-react-drf.md` is solid on basics but `drf-spectacular` dese
 
 ---
 
-### Phase 3 — Django async · ☐ 0/1 complete
+### Phase 3 — Django async · ☑ 1/1 complete
 
 The async model is absent from the current knowledge base entirely. Relevant because Alex may want to use async views for real-time features or high-concurrency endpoints.
 
-5. ☐ `django-async.md`
+5. ☑ `django-async.md`
    - **Async view basics**: `async def` views, `asgiref`, running under Daphne/uvicorn vs. gunicorn (sync workers)
    - **`sync_to_async` / `async_to_sync`**: when each is needed, thread sensitivity, `thread_sensitive=True` default behavior
    - **ORM in async context**: `sync_to_async(queryset.get)`, the `_default_manager` caveat, the coming native async ORM (Django roadmap)
@@ -102,9 +102,9 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 
 ---
 
-### Phase 4 — Security · ☐ 0/1 complete
+### Phase 4 — Security · ☑ 1/1 complete
 
-6. ☐ `django-security.md`
+6. ☑ `django-security.md`
    - **Auth backends**: `ModelBackend`, custom auth backends, `authenticate()` / `get_user()` contract, `AUTHENTICATION_BACKENDS` multiple-backend chaining
    - **`django-allauth`**: setup for social auth (Google, GitHub), email verification flow, headless mode for DRF/SPA, account adapter customization
    - **Password security**: `PASSWORD_HASHERS`, Argon2 vs. PBKDF2, password validators
@@ -116,9 +116,9 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 
 ---
 
-### Phase 5 — Migrations depth · ☐ 0/1 complete
+### Phase 5 — Migrations depth · ☑ 1/1 complete
 
-7. ☐ `django-migrations-advanced.md`
+7. ☑ `django-migrations-advanced.md`
    - **`RunPython` data migrations**: forward and reverse functions, using `apps.get_model()` (not direct model imports), `atomic=False` for large tables
    - **`SeparateDatabaseAndState`**: zero-downtime rename pattern — add column in one deploy, backfill, switch code, drop old column
    - **Squashing migrations**: `squashmigrations` command, when to squash, `replaces` field, cleaning up squashed migrations after all instances upgraded
@@ -130,9 +130,9 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 
 ---
 
-### Phase 6 — Deployment and infrastructure · ☐ 0/2 complete
+### Phase 6 — Deployment and infrastructure · ☑ 2/2 complete
 
-8. ☐ `django-gunicorn-uvicorn.md`
+8. ☑ `django-gunicorn-uvicorn.md`
    - **gunicorn**: sync workers (`gthread`, `gevent`), `--workers` formula (2*CPU+1), `--timeout`, `--keep-alive`, `--max-requests` (memory leak mitigation), graceful reload with `HUP`
    - **uvicorn**: `uvicorn.workers.UvicornWorker` under gunicorn (recommended production pattern), `--loop`, `--http`, lifecycle events
    - **ASGI vs. WSGI**: when to switch to ASGI (websockets, async views, streaming responses), running Django in WSGI + Channels in ASGI side-by-side
@@ -140,7 +140,7 @@ The async model is absent from the current knowledge base entirely. Relevant bec
    - **Docker multi-stage builds**: base → deps → dev/prod split, non-root user, health check `CMD`, minimizing layer cache invalidation
    - **`django-environ`**: `.env` file pattern, `Env` object, casting types, `db_url()` / `cache_url()` / `email_url()`, CI/CD environment injection
 
-9. ☐ `django-database-pooling.md`
+9. ☑ `django-database-pooling.md`
    - **Why pooling**: Django opens a new DB connection per thread/process per request; high traffic → connection exhaustion
    - **`CONN_MAX_AGE`**: persistent connections, the `CONN_HEALTH_CHECKS` setting (Django 4.1), when persistent connections hurt (pgBouncer + persistent = bad)
    - **pgBouncer**: session vs. transaction vs. statement pooling, why transaction pooling breaks `SET` statements and prepared statements (`DISCARD ALL`), Django's pgBouncer compatibility setting (`DISABLE_SERVER_SIDE_CURSORS`)
@@ -151,9 +151,9 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 
 ---
 
-### Phase 7 — Storage and media files · ☐ 0/1 complete
+### Phase 7 — Storage and media files · ☑ 1/1 complete
 
-10. ☐ `django-storages.md`
+10. ☑ `django-storages.md`
     - **`django-storages`**: S3/GCS/Azure backends, `DEFAULT_FILE_STORAGE` / `STORAGES` dict (Django 4.2+ new style), `STATICFILES_STORAGE`
     - **S3 setup**: `boto3`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, `AWS_S3_CUSTOM_DOMAIN` for CDN, `AWS_DEFAULT_ACL`
     - **Signed URLs**: `generate_presigned_url()` via boto3, time-limited access for private files, DRF endpoint pattern for returning signed URLs
@@ -173,6 +173,8 @@ The async model is absent from the current knowledge base entirely. Relevant bec
 | 2026-03-18 | Wrote `knowledge/_unverified/django/celery-worker-beat-ops.md`; Phase 1 complete, next up is `drf-spectacular.md` |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/drf-spectacular.md`; covers setup, @extend_schema, JWT auth, enum/versioning/CI validation |
 | 2026-03-18 | Wrote `knowledge/_unverified/django/django-test-data-factories.md`; covers factory_boy 3.3, Celery mocking patterns, freezegun, responses; Phase 2 complete |
+| 2026-03-19 | Completed django-async.md (django-stack-research 5/10) |
+| 2026-03-19 | Wrote django-security.md (Phase 4); django-migrations-advanced.md (Phase 5); django-gunicorn-uvicorn.md, django-database-pooling.md (Phase 6); django-storages.md (Phase 7) — all 10/10 complete |
 
 ---
 

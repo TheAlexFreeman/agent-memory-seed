@@ -84,6 +84,8 @@ REQUIRED_OPERATION_KEYS = (
 )
 REQUIRED_RAW_FALLBACK_POLICY_KEYS = (
     "policy",
+    "runtime_export",
+    "opt_in_env_var",
     "requires_change_class",
     "preview_required_for",
     "read_only_mode",
@@ -473,6 +475,14 @@ def resolve_capabilities(
         errors.append(
             f"{MANIFEST_PATH}: raw_fallback_policy.policy must be 'inherit_operation_change_class'"
         )
+    if raw_fallback_policy.get("runtime_export") != "opt_in":
+        errors.append(
+            f"{MANIFEST_PATH}: raw_fallback_policy.runtime_export must be 'opt_in'"
+        )
+    if not isinstance(raw_fallback_policy.get("opt_in_env_var"), str):
+        errors.append(
+            f"{MANIFEST_PATH}: raw_fallback_policy.opt_in_env_var must be a string"
+        )
     if raw_fallback_policy.get("requires_change_class") is not True:
         errors.append(
             f"{MANIFEST_PATH}: raw_fallback_policy.requires_change_class must be true"
@@ -804,6 +814,7 @@ def resolve_capabilities(
         "raw_fallback": [],
         "semantic_extensions": [],
     }
+    unavailable_opt_in_raw_tools: list[str] = []
     missing_minimum_read_tools: list[str] = []
     missing_minimum_semantic_tools: list[str] = []
     contract_compatible = (
@@ -819,9 +830,14 @@ def resolve_capabilities(
         available_read_tools = sorted(read_support & runtime_tool_names)
         available_raw_tools = sorted(raw_fallback & runtime_tool_names)
         available_semantic_tools = sorted(semantic_extensions & runtime_tool_names)
+        raw_fallback_export_mode = raw_fallback_policy.get("runtime_export")
+        raw_fallback_is_opt_in = raw_fallback_export_mode == "opt_in"
+        raw_fallback_missing = sorted(raw_fallback - runtime_tool_names)
+        if raw_fallback_is_opt_in and not available_raw_tools:
+            unavailable_opt_in_raw_tools = raw_fallback_missing
         missing_declared_tools = {
             "read_support": sorted(read_support - runtime_tool_names),
-            "raw_fallback": sorted(raw_fallback - runtime_tool_names),
+            "raw_fallback": [] if unavailable_opt_in_raw_tools else raw_fallback_missing,
             "semantic_extensions": sorted(semantic_extensions - runtime_tool_names),
         }
         missing_minimum_read_tools = sorted(set(minimum_read_tools) - runtime_tool_names)
@@ -837,7 +853,10 @@ def resolve_capabilities(
         )
 
         if write_tools_present:
-            for tool_name in sorted(read_support | raw_fallback | semantic_extensions):
+            expected_runtime_tools = set(read_support) | set(semantic_extensions)
+            if available_raw_tools or not raw_fallback_is_opt_in:
+                expected_runtime_tools |= set(raw_fallback)
+            for tool_name in sorted(expected_runtime_tools):
                 if tool_name not in runtime_tool_names:
                     errors.append(
                         f"{MANIFEST_PATH}: declared tool {tool_name!r} is not exported by the MCP runtime"
@@ -852,6 +871,10 @@ def resolve_capabilities(
                 warnings.append(
                     f"{MANIFEST_PATH}: runtime is read-only and omits optional read tools {optional_read_tools!r}"
                 )
+        if unavailable_opt_in_raw_tools:
+            warnings.append(
+                f"{MANIFEST_PATH}: raw fallback tools are not exported by default; enable {raw_fallback_policy.get('opt_in_env_var')!r} for unmanaged fallback mode"
+            )
 
         partial_semantic_runtime = bool(available_semantic_tools) and bool(
             missing_minimum_semantic_tools
@@ -1047,6 +1070,8 @@ def resolve_capabilities(
             "available_read_tools": available_read_tools,
             "available_raw_tools": available_raw_tools,
             "available_semantic_tools": available_semantic_tools,
+            "raw_fallback_available": bool(available_raw_tools),
+            "unavailable_opt_in_raw_tools": unavailable_opt_in_raw_tools,
             "missing_declared_tools": missing_declared_tools,
             "missing_minimum_read_tools": missing_minimum_read_tools,
             "missing_minimum_semantic_tools": missing_minimum_semantic_tools,

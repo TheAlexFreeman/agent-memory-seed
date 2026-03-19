@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "agent-memory-mcp"
+version = "0.1.0"
+description = "Git-versioned Markdown memory system with MCP server for LLM agents"
+readme = "README.md"
+requires-python = ">=3.10"
+
+# Core runtime: only what the MCP server itself needs
+dependencies = []
+
+[project.optional-dependencies]
+# Install with: pip install -e ".[server]"
+server = [
+    "mcp>=1.0",
+    "python-frontmatter>=1.1",
+]
+
+# Install with: pip install -e ".[dev]"
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mcp>=1.0",
+    "python-frontmatter>=1.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tools*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["HUMANS/tooling/tests"]

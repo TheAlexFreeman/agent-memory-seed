@@ -12,10 +12,6 @@ An adaptive, self-organizing, version-controlled memory layer for AI agents. Any
 
 You are an AI agent reading this repository. Start every session with `meta/quick-reference.md`. Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review, or when you need the system architecture and governance reference.
 
-Compatible tooling may also read `agent-bootstrap.toml`, the machine-readable preload contract for this repo. Treat it as the tool-facing companion to `meta/quick-reference.md`, not a replacement for that Markdown router.
-
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Purpose
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
@@ -56,9 +52,6 @@ For the complete mapping of which files to load per session type, see `meta/quic
 
 ```
 /
-├── .codex/               ← Project-scoped Codex config preferring the local agent-memory MCP.
-│   └── config.toml       ← Launches `HUMANS/tooling/scripts/memory_mcp.py` against this repo.
-├── agent-bootstrap.toml   ← Repo-declared startup manifest for compatible tooling.
 ├── setup.sh               ← Repo-root compatibility wrapper for `setup/setup.sh`.
 ├── setup.html             ← Repo-root compatibility wrapper for `setup/setup.html`.
 ├── README.md              ← You are here. System architecture and protocols.
@@ -368,6 +361,26 @@ This memory system employs **defense-in-depth** against memory injection — the
 ### What this does not defend against
 
 If the user themselves is socially engineered into approving a malicious memory modification, the system will faithfully record the poisoned instruction with full provenance and `trust: high`. This is a human problem, not a system problem — but the CHANGELOG, belief-diff log, and git history make it **reversible**, since the user can trace back exactly when and why the change was made and revert the commit.
+
+### Reverting memory commits
+
+When using the MCP revert surface, treat revert as a two-step operation rather than a single destructive action:
+
+1. Call `memory_revert_commit` with `confirm: false` (or omit `confirm`) to preview the target commit.
+2. Review the returned `target_message`, `files_changed`, `applies_cleanly`, and `policy_reasons`.
+3. Call `memory_revert_commit` again with `confirm: true` and the returned `preview_token` only if the preview is still acceptable.
+
+The preview token is tied to the current `HEAD`. If the repository moves between preview and confirm, the confirm call is rejected and the agent must preview again.
+
+`memory_revert_commit` is intentionally scoped to memory-domain history. Confirm is rejected when any of the following are true:
+
+- the target is a merge commit
+- the commit prefix is not one of the known memory prefixes
+- the revert would not apply cleanly at the current `HEAD`
+- the commit touches files outside the governed memory surface
+- a `[system]` commit touches anything outside governance files such as `meta/`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `CLAUDE.md`, or `agent-bootstrap.toml`
+
+This keeps revert available for legitimate memory repair while avoiding use as a generic repo-history rollback tool.
 
 ### Repository integrity
 

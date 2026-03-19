@@ -12,11 +12,6 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 VALIDATOR_PATH = (
     REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
 )
-PROMPT_START_LINE = "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
-PROMPT_ROUTE_LINE = "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
-LIVE_CONFIG_LINE = "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
-ADAPTER_ROUTING_LINE = "follow the routing rules in `meta/quick-reference.md`"
-SETUP_GUIDANCE_LINE = "live routing in `meta/quick-reference.md`"
 
 SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
 assert SPEC is not None
@@ -24,6 +19,21 @@ validator = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 sys.modules[SPEC.name] = validator
 SPEC.loader.exec_module(validator)
+
+PROMPT_START_LINE = validator.PROMPT_START_LINE
+PROMPT_ROUTE_LINE = validator.PROMPT_ROUTE_LINE
+PROMPT_MCP_LINE = validator.PROMPT_MCP_LINE
+LIVE_CONFIG_LINE = validator.LIVE_CONFIG_LINE
+ADAPTER_ROUTING_LINE = validator.ADAPTER_ROUTING_PHRASE
+ADAPTER_MCP_LINE = validator.ADAPTER_MCP_PHRASE
+FIRST_RUN_MCP_LINE = validator.FIRST_RUN_MCP_PHRASE
+SESSION_CHECKLISTS_MCP_LINE = validator.SESSION_CHECKLISTS_MCP_PHRASE
+SKILLS_SUMMARY_MCP_LINE = validator.SKILLS_SUMMARY_MCP_PHRASE
+ONBOARDING_SKILL_MCP_LINE = validator.ONBOARDING_SKILL_MCP_PHRASE
+SESSION_START_SKILL_MCP_LINE = validator.SESSION_START_SKILL_MCP_PHRASE
+SESSION_SYNC_SKILL_MCP_LINE = validator.SESSION_SYNC_SKILL_MCP_PHRASE
+SESSION_WRAPUP_SKILL_MCP_LINE = validator.SESSION_WRAPUP_SKILL_MCP_PHRASE
+SETUP_GUIDANCE_LINE = "live routing in `meta/quick-reference.md`"
 
 
 VALID_QUICK_REFERENCE = textwrap.dedent(
@@ -389,6 +399,9 @@ VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
     cost = "light"
     """
 )
+VALID_TASK_READINESS_MANIFEST = (
+    REPO_ROOT / "HUMANS" / "tooling" / "agent-task-readiness.toml"
+).read_text(encoding="utf-8")
 
 
 def write(path: Path, content: str) -> None:
@@ -399,6 +412,14 @@ def write(path: Path, content: str) -> None:
 def build_minimal_repo(root: Path) -> None:
     write(root / "agent-bootstrap.toml", VALID_BOOTSTRAP_MANIFEST)
     write(
+        root / "HUMANS" / "tooling" / "agent-task-readiness.toml",
+        VALID_TASK_READINESS_MANIFEST,
+    )
+    write(
+        root / "HUMANS" / "tooling" / "scripts" / "resolve_task_readiness.py",
+        "#!/usr/bin/env python3\n",
+    )
+    write(
         root / "README.md",
         textwrap.dedent(
             """\
@@ -406,6 +427,7 @@ def build_minimal_repo(root: Path) -> None:
 
             Start every session with `meta/quick-reference.md`.
             Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review.
+            When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
             """
         ),
     )
@@ -431,6 +453,7 @@ def build_minimal_repo(root: Path) -> None:
             #!/usr/bin/env bash
             {PROMPT_START_LINE}
             {PROMPT_ROUTE_LINE}
+            {PROMPT_MCP_LINE}
             {LIVE_CONFIG_LINE}
             {SETUP_GUIDANCE_LINE}
             """
@@ -445,6 +468,7 @@ def build_minimal_repo(root: Path) -> None:
             <body>
             <p>{PROMPT_START_LINE}</p>
             <p>{PROMPT_ROUTE_LINE}</p>
+            <p>{PROMPT_MCP_LINE}</p>
             <p>{LIVE_CONFIG_LINE}</p>
             git remote setup stays manual
             </body>
@@ -454,7 +478,12 @@ def build_minimal_repo(root: Path) -> None:
     )
     write(
         root / "AGENTS.md",
-        f"# Agent Memory System\n\nThis repository is a persistent AI memory system. At the start of every session, {ADAPTER_ROUTING_LINE}. Do not duplicate the full rule list here — `README.md` and `meta/` are the single source of truth.\n",
+        (
+            "# Agent Memory System\n\n"
+            f"This repository is a persistent AI memory system. At the start of every session, {ADAPTER_ROUTING_LINE}. "
+            f"{ADAPTER_MCP_LINE}; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation. "
+            "Do not duplicate the full rule list here — `README.md` and `meta/` are the single source of truth.\n"
+        ),
     )
     write(root / "CLAUDE.md", (root / "AGENTS.md").read_text(encoding="utf-8"))
     write(root / ".cursorrules", (root / "AGENTS.md").read_text(encoding="utf-8"))
@@ -474,6 +503,7 @@ def build_minimal_repo(root: Path) -> None:
 
             {PROMPT_START_LINE}
             {PROMPT_ROUTE_LINE}
+            {PROMPT_MCP_LINE}
             {LIVE_CONFIG_LINE}
             {SETUP_GUIDANCE_LINE}
 
@@ -497,7 +527,10 @@ def build_minimal_repo(root: Path) -> None:
     )
 
     write(root / "meta" / "quick-reference.md", VALID_QUICK_REFERENCE)
-    write(root / "meta" / "first-run.md", "# First run\n")
+    write(
+        root / "meta" / "first-run.md",
+        f"# First run\n\n{FIRST_RUN_MCP_LINE}\n",
+    )
     write(
         root / "meta" / "curation-policy.md",
         "# Curation Policy\nUse `meta/quick-reference.md` for live thresholds.\n",
@@ -508,7 +541,11 @@ def build_minimal_repo(root: Path) -> None:
     )
     write(
         root / "meta" / "session-checklists.md",
-        "# Session checklists\nLoad this file on demand when you need more detail than the compact manifest in `meta/quick-reference.md`.\n",
+        (
+            "# Session checklists\n"
+            "Load this file on demand when you need more detail than the compact manifest in `meta/quick-reference.md`.\n\n"
+            f"{SESSION_CHECKLISTS_MCP_LINE}\n"
+        ),
     )
     write(root / "meta" / "review-queue.md", "# Review Queue\n\n_No pending items._\n")
     write(root / "meta" / "system-maturity.md", "# System maturity\n")
@@ -518,6 +555,47 @@ def build_minimal_repo(root: Path) -> None:
     for dirname in ("identity", "knowledge", "skills", "plans", "chats"):
         write(root / dirname / "SUMMARY.md", f"# {dirname} summary\n")
         write(root / dirname / "ACCESS.jsonl", "")
+
+    write(
+        root / "skills" / "SUMMARY.md",
+        f"# Skills summary\n\n{SKILLS_SUMMARY_MCP_LINE}\n",
+    )
+    write(
+        root / "skills" / "onboarding.md",
+        textwrap.dedent(
+            f"""\
+            ---
+            source: user-stated
+            origin_session: manual
+            created: 2026-03-16
+            last_verified: 2026-03-16
+            trust: high
+            ---
+
+            # Onboarding
+
+            {ONBOARDING_SKILL_MCP_LINE}
+            """
+        ),
+    )
+    write(
+        root / "skills" / "session-sync.md",
+        textwrap.dedent(
+            f"""\
+            ---
+            source: user-stated
+            origin_session: manual
+            created: 2026-03-16
+            last_verified: 2026-03-16
+            trust: high
+            ---
+
+            # Session sync
+
+            {SESSION_SYNC_SKILL_MCP_LINE}
+            """
+        ),
+    )
 
     write(
         root / "scratchpad" / "USER.md",
@@ -577,6 +655,63 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(
                 any("missing bootstrap manifest" in error for error in result.errors)
+            )
+
+    def test_missing_task_readiness_manifest_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "HUMANS" / "tooling" / "agent-task-readiness.toml").unlink()
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "missing task-readiness manifest" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_task_readiness_manifest_with_wrong_default_profile_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "HUMANS" / "tooling" / "agent-task-readiness.toml",
+                VALID_TASK_READINESS_MANIFEST.replace(
+                    'default_profile = "workspace_general"',
+                    'default_profile = "pull_request"',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "task_detection.default_profile must be 'workspace_general'"
+                    in error
+                    for error in result.errors
+                )
+            )
+
+    def test_task_readiness_manifest_with_unknown_check_reference_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "HUMANS" / "tooling" / "agent-task-readiness.toml",
+                VALID_TASK_READINESS_MANIFEST.replace(
+                    'checks = ["git_cli", "git_remote", "git_push_dry_run", "gh_auth", "remote_network"]',
+                    'checks = ["git_cli", "missing_check"]',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "references unknown check 'missing_check'" in error
+                    for error in result.errors
+                )
             )
 
     def test_bootstrap_manifest_with_wrong_router_fails(self) -> None:
@@ -985,7 +1120,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             write(
                 root / "skills" / "session-start.md",
                 textwrap.dedent(
-                    """\
+                    f"""\
                     ---
                     source: user-stated
                     origin_session: manual
@@ -995,6 +1130,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     ---
 
                     For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`. Load `meta/session-checklists.md` only when you want more detail than that compact path.
+                    {SESSION_START_SKILL_MCP_LINE}
 
                     Run at the beginning of returning sessions after the compact returning manifest in `meta/quick-reference.md` has oriented the agent.
 
@@ -1041,7 +1177,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             write(
                 root / "skills" / "session-wrapup.md",
                 textwrap.dedent(
-                    """\
+                    f"""\
                     ---
                     source: user-stated
                     origin_session: manual
@@ -1051,6 +1187,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     ---
 
                     Load `meta/session-checklists.md` only when you want the shorter session-end runbook there.
+                    {SESSION_WRAPUP_SKILL_MCP_LINE}
                     """
                 ),
             )
@@ -1208,6 +1345,118 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 any(
                     "quarantine file expected source: external-research" in w
                     for w in result.warnings
+                )
+            )
+
+    def test_single_quoted_frontmatter_dates_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: 'user-stated'
+                    origin_session: manual
+                    created: '2026-03-16'
+                    last_verified: '2026-03-16'
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+
+    def test_access_entry_with_path_traversal_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.jsonl",
+                '{"file":"../identity/profile.md","date":"2026-03-16","task":"test","helpfulness":0.7,"note":"used"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "file must be a repo-relative path inside the memory repo" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_access_entry_with_missing_live_target_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.jsonl",
+                '{"file":"skills/missing.md","date":"2026-03-16","task":"test","helpfulness":0.7,"note":"used"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "file references missing target 'skills/missing.md'" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_access_archive_missing_target_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.archive.jsonl",
+                '{"file":"skills/missing.md","date":"2026-03-16","task":"test","helpfulness":0.7,"note":"used"}',
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any(
+                    "file references missing target 'skills/missing.md'" in warning
+                    for warning in result.warnings
+                )
+            )
+
+    def test_chat_leaf_missing_reflection_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "chats" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+                "# Chat Summary\n\nSession notes.\n",
+            )
+
+            result = validator.validate_repo(root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any(
+                    "missing session reflection note" in warning
+                    for warning in result.warnings
+                )
+            )
+
+    def test_chat_leaf_summary_without_heading_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "chats" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+                "# Chat Log\n\nSession notes.\n",
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "chat leaf summaries must begin with '# Chat Summary'" in error
+                    for error in result.errors
                 )
             )
 

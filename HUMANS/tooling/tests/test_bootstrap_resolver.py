@@ -154,6 +154,32 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(mode, "first_run")
             self.assertEqual(source, "first_run_heuristic")
 
+    def test_first_run_detection_accepts_single_quoted_template_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_repo(root, first_run=True)
+            write(
+                root / "identity" / "profile.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: 'template'
+                    origin_session: manual
+                    created: '2026-03-18'
+                    trust: high
+                    ---
+
+                    # Profile
+                    """
+                ),
+            )
+
+            manifest = resolver.read_manifest(root)
+            mode, source = resolver.detect_mode(root, manifest)
+
+            self.assertEqual(mode, "first_run")
+            self.assertEqual(source, "first_run_heuristic")
+
     def test_returning_trace_skips_placeholders_and_no_active_plans(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)

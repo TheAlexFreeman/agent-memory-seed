@@ -17,6 +17,11 @@ from .tools import read_tools, semantic_tools, write_tools
 DeletePermissionHook = Callable[[str], None]
 
 
+def _env_flag_enabled(name: str) -> bool:
+    value = os.environ.get(name, "").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
 def resolve_repo_root(explicit_root: str | Path | None = None) -> Path:
     """Resolve the memory repo root, supporting old and new env var names."""
     if explicit_root is not None:
@@ -75,6 +80,7 @@ def _build_delete_permission_hook(root: Path) -> DeletePermissionHook | None:
 def create_mcp(
     repo_root: str | Path | None = None,
     delete_permission_hook: DeletePermissionHook | None = None,
+    enable_raw_write_tools: bool | None = None,
 ) -> tuple[FastMCP, dict[str, object], Path, GitRepo]:
     """Create the FastMCP app, register tools, and expose their callables."""
     root = resolve_repo_root(repo_root)
@@ -94,14 +100,20 @@ def create_mcp(
 
     tools: dict[str, object] = {}
     tools.update(read_tools.register(mcp, get_repo, get_root))
-    tools.update(
-        write_tools.register(
-            mcp,
-            get_repo,
-            get_root,
-            grant_delete_permission=delete_permission_hook,
-        )
+    raw_write_tools_enabled = (
+        enable_raw_write_tools
+        if enable_raw_write_tools is not None
+        else _env_flag_enabled("MEMORY_ENABLE_RAW_WRITE_TOOLS")
     )
+    if raw_write_tools_enabled:
+        tools.update(
+            write_tools.register(
+                mcp,
+                get_repo,
+                get_root,
+                grant_delete_permission=delete_permission_hook,
+            )
+        )
     tools.update(semantic_tools.register(mcp, get_repo, get_root))
     return mcp, tools, root, repo
 

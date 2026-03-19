@@ -1,5 +1,6 @@
 ---
-source: agent-generated
+source: external-research
+origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [gpt-3, bert, scaling-laws, in-context-learning, few-shot, chinchilla, pretraining, language-model, openai, kaplan, hoffmann]
