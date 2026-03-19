@@ -32,6 +32,20 @@ REQUIRED_INTEGRATION_BOUNDARY_KEYS = (
     "repo_local_mcp_owns",
     "native_fallback_owns",
 )
+REQUIRED_CAPABILITY_DISCOVERY_KEYS = (
+    "well_known_paths",
+    "requires_kind",
+    "supported_versions",
+    "requires_mcp_entrypoint",
+    "minimum_read_tools",
+    "minimum_semantic_tools",
+    "read_only_runtime_allowed",
+    "semantic_detection",
+    "read_only_detection",
+    "semantic_result",
+    "read_only_result",
+    "incompatible_result",
+)
 REQUIRED_CHANGE_CLASS_KEYS = (
     "approval",
     "user_awareness",
@@ -128,6 +142,8 @@ REQUIRED_NATIVE_FALLBACK_OWNERSHIP = {
     "raw_tool_orchestration",
     "deferred_action_summary",
 }
+EXPECTED_SEMANTIC_DETECTION = "manifest_and_minimum_semantic_tools"
+EXPECTED_READ_ONLY_DETECTION = "minimum_read_tools_without_write_tools"
 
 
 def load_manifest(repo_root: Path) -> dict[str, Any]:
@@ -157,6 +173,15 @@ def _ensure_bool(errors: list[str], label: str, value: Any) -> bool:
     if not isinstance(value, bool):
         errors.append(f"{label} must be a boolean")
         return False
+    return value
+
+
+def _ensure_int_list(errors: list[str], label: str, value: Any) -> list[int]:
+    if not isinstance(value, list) or not all(
+        isinstance(item, int) and not isinstance(item, bool) for item in value
+    ):
+        errors.append(f"{label} must be an array of integers")
+        return []
     return value
 
 
@@ -239,6 +264,114 @@ def resolve_capabilities(
         if missing_items:
             errors.append(
                 f"{MANIFEST_PATH}: integration_boundary.{key} is missing required ownership markers {missing_items!r}"
+            )
+
+    capability_discovery = manifest.get("capability_discovery")
+    if not isinstance(capability_discovery, dict):
+        errors.append(f"{MANIFEST_PATH}: capability_discovery must be a TOML table")
+        capability_discovery = {}
+    for key in REQUIRED_CAPABILITY_DISCOVERY_KEYS:
+        if key not in capability_discovery:
+            errors.append(f"{MANIFEST_PATH}: capability_discovery missing {key}")
+
+    well_known_paths = _ensure_string_list(
+        errors,
+        "capability_discovery.well_known_paths",
+        capability_discovery.get("well_known_paths"),
+    )
+    if MANIFEST_PATH.as_posix() not in well_known_paths:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.well_known_paths must include {MANIFEST_PATH.as_posix()!r}"
+        )
+
+    requires_kind = capability_discovery.get("requires_kind")
+    if not isinstance(requires_kind, str):
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.requires_kind must be a string"
+        )
+        requires_kind = ""
+    if manifest.get("kind") != requires_kind:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.requires_kind must match manifest kind"
+        )
+
+    supported_versions = _ensure_int_list(
+        errors,
+        "capability_discovery.supported_versions",
+        capability_discovery.get("supported_versions"),
+    )
+    if manifest.get("version") not in supported_versions:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.supported_versions must include the current manifest version"
+        )
+
+    requires_mcp_entrypoint = _ensure_bool(
+        errors,
+        "capability_discovery.requires_mcp_entrypoint",
+        capability_discovery.get("requires_mcp_entrypoint"),
+    )
+    entrypoint = manifest.get("mcp_entrypoint")
+    entrypoint_exists = False
+    if requires_mcp_entrypoint:
+        if not isinstance(entrypoint, str):
+            errors.append(f"{MANIFEST_PATH}: mcp_entrypoint must be a string")
+        else:
+            entrypoint_exists = (repo_root / entrypoint).is_file()
+            if not entrypoint_exists:
+                errors.append(
+                    f"{MANIFEST_PATH}: mcp_entrypoint does not exist at {entrypoint!r}"
+                )
+    elif isinstance(entrypoint, str):
+        entrypoint_exists = (repo_root / entrypoint).is_file()
+
+    minimum_read_tools = _ensure_string_list(
+        errors,
+        "capability_discovery.minimum_read_tools",
+        capability_discovery.get("minimum_read_tools"),
+    )
+    unknown_minimum_read_tools = sorted(set(minimum_read_tools) - read_support)
+    if unknown_minimum_read_tools:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.minimum_read_tools references undeclared read tools {unknown_minimum_read_tools!r}"
+        )
+
+    minimum_semantic_tools = _ensure_string_list(
+        errors,
+        "capability_discovery.minimum_semantic_tools",
+        capability_discovery.get("minimum_semantic_tools"),
+    )
+    unknown_minimum_semantic_tools = sorted(
+        set(minimum_semantic_tools) - semantic_extensions
+    )
+    if unknown_minimum_semantic_tools:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.minimum_semantic_tools references undeclared semantic tools {unknown_minimum_semantic_tools!r}"
+        )
+
+    read_only_runtime_allowed = _ensure_bool(
+        errors,
+        "capability_discovery.read_only_runtime_allowed",
+        capability_discovery.get("read_only_runtime_allowed"),
+    )
+
+    if capability_discovery.get("semantic_detection") != EXPECTED_SEMANTIC_DETECTION:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.semantic_detection must be {EXPECTED_SEMANTIC_DETECTION!r}"
+        )
+    if capability_discovery.get("read_only_detection") != EXPECTED_READ_ONLY_DETECTION:
+        errors.append(
+            f"{MANIFEST_PATH}: capability_discovery.read_only_detection must be {EXPECTED_READ_ONLY_DETECTION!r}"
+        )
+
+    expected_discovery_results = {
+        "semantic_result": REQUIRED_DEGRADATION_ORDER[0],
+        "read_only_result": REQUIRED_DEGRADATION_ORDER[1],
+        "incompatible_result": REQUIRED_DEGRADATION_ORDER[2],
+    }
+    for key, expected_value in expected_discovery_results.items():
+        if capability_discovery.get(key) != expected_value:
+            errors.append(
+                f"{MANIFEST_PATH}: capability_discovery.{key} must be {expected_value!r}"
             )
 
     for left_name, left, right_name, right in (
@@ -569,13 +702,100 @@ def resolve_capabilities(
             )
 
     runtime_tool_names: set[str] = set()
+    available_read_tools: list[str] = []
+    available_raw_tools: list[str] = []
+    available_semantic_tools: list[str] = []
+    missing_declared_tools = {
+        "read_support": [],
+        "raw_fallback": [],
+        "semantic_extensions": [],
+    }
+    missing_minimum_read_tools: list[str] = []
+    missing_minimum_semantic_tools: list[str] = []
+    contract_compatible = (
+        manifest.get("kind") == requires_kind
+        and manifest.get("version") in supported_versions
+        and (not requires_mcp_entrypoint or entrypoint_exists)
+    )
+    discovery_mode = "manifest_only"
+    selected_strategy = capability_discovery.get("semantic_result")
+    discovery_reason = "Runtime inspection was skipped."
     if include_runtime:
         runtime_tool_names = runtime_tools(repo_root)
-        for tool_name in sorted(read_support | raw_fallback | semantic_extensions):
-            if tool_name not in runtime_tool_names:
+        available_read_tools = sorted(read_support & runtime_tool_names)
+        available_raw_tools = sorted(raw_fallback & runtime_tool_names)
+        available_semantic_tools = sorted(semantic_extensions & runtime_tool_names)
+        missing_declared_tools = {
+            "read_support": sorted(read_support - runtime_tool_names),
+            "raw_fallback": sorted(raw_fallback - runtime_tool_names),
+            "semantic_extensions": sorted(semantic_extensions - runtime_tool_names),
+        }
+        missing_minimum_read_tools = sorted(set(minimum_read_tools) - runtime_tool_names)
+        missing_minimum_semantic_tools = sorted(
+            set(minimum_semantic_tools) - runtime_tool_names
+        )
+
+        write_tools_present = bool((raw_fallback | semantic_extensions) & runtime_tool_names)
+        read_only_runtime = (
+            read_only_runtime_allowed
+            and not write_tools_present
+            and not missing_minimum_read_tools
+        )
+
+        if write_tools_present:
+            for tool_name in sorted(read_support | raw_fallback | semantic_extensions):
+                if tool_name not in runtime_tool_names:
+                    errors.append(
+                        f"{MANIFEST_PATH}: declared tool {tool_name!r} is not exported by the MCP runtime"
+                    )
+        else:
+            for tool_name in missing_minimum_read_tools:
                 errors.append(
-                    f"{MANIFEST_PATH}: declared tool {tool_name!r} is not exported by the MCP runtime"
+                    f"{MANIFEST_PATH}: required read-only tool {tool_name!r} is not exported by the MCP runtime"
                 )
+            optional_read_tools = sorted(read_support - set(minimum_read_tools) - runtime_tool_names)
+            if optional_read_tools:
+                warnings.append(
+                    f"{MANIFEST_PATH}: runtime is read-only and omits optional read tools {optional_read_tools!r}"
+                )
+
+        partial_semantic_runtime = bool(available_semantic_tools) and bool(
+            missing_minimum_semantic_tools
+        )
+
+        if contract_compatible and not missing_minimum_read_tools and not missing_minimum_semantic_tools:
+            discovery_mode = "semantic"
+            selected_strategy = capability_discovery.get("semantic_result")
+            discovery_reason = (
+                "Manifest is compatible and the runtime exports the minimum semantic tool set."
+            )
+        elif contract_compatible and read_only_runtime:
+            discovery_mode = "read_only"
+            selected_strategy = capability_discovery.get("read_only_result")
+            discovery_reason = (
+                "Manifest is compatible and the runtime exports the minimum read tool set without write tools."
+            )
+        else:
+            discovery_mode = "fallback"
+            selected_strategy = capability_discovery.get("incompatible_result")
+            reason_parts: list[str] = []
+            if not contract_compatible:
+                reason_parts.append("manifest compatibility checks failed")
+            if missing_minimum_read_tools:
+                reason_parts.append(
+                    f"minimum read tools are missing: {missing_minimum_read_tools!r}"
+                )
+            if missing_minimum_semantic_tools and write_tools_present:
+                reason_parts.append(
+                    f"minimum semantic tools are missing: {missing_minimum_semantic_tools!r}"
+                )
+            if partial_semantic_runtime:
+                warnings.append(
+                    f"{MANIFEST_PATH}: runtime exports a partial semantic tool set; degrading to {selected_strategy!r}"
+                )
+            if not reason_parts:
+                reason_parts.append("runtime does not satisfy the capability discovery contract")
+            discovery_reason = "; ".join(reason_parts)
 
     return {
         "manifest_path": str(repo_root / MANIFEST_PATH),
@@ -587,6 +807,29 @@ def resolve_capabilities(
             "declared_gaps": sorted(declared_gaps),
         },
         "integration_boundary": integration_boundary,
+        "capability_discovery": {
+            "well_known_paths": well_known_paths,
+            "requires_kind": requires_kind,
+            "supported_versions": supported_versions,
+            "requires_mcp_entrypoint": requires_mcp_entrypoint,
+            "mcp_entrypoint": entrypoint,
+            "entrypoint_exists": entrypoint_exists,
+            "minimum_read_tools": minimum_read_tools,
+            "minimum_semantic_tools": minimum_semantic_tools,
+            "read_only_runtime_allowed": read_only_runtime_allowed,
+            "semantic_detection": capability_discovery.get("semantic_detection"),
+            "read_only_detection": capability_discovery.get("read_only_detection"),
+            "contract_compatible": contract_compatible,
+            "available_read_tools": available_read_tools,
+            "available_raw_tools": available_raw_tools,
+            "available_semantic_tools": available_semantic_tools,
+            "missing_declared_tools": missing_declared_tools,
+            "missing_minimum_read_tools": missing_minimum_read_tools,
+            "missing_minimum_semantic_tools": missing_minimum_semantic_tools,
+            "mode": discovery_mode,
+            "selected_strategy": selected_strategy,
+            "reason": discovery_reason,
+        },
         "raw_fallback_policy": raw_fallback_policy,
         "fallback_behavior": fallback_behavior,
         "approval_ux": {
