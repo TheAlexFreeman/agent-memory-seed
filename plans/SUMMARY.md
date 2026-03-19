@@ -18,8 +18,8 @@ Priority order for active work:
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
-**Progress:** 7/11 items complete
-**Next action:** Define interruption and retry semantics
+**Progress:** 8/11 items complete
+**Next action:** Add continuity-aware scheduling hooks
 <!-- END: codex-desktop-automation-continuity -->
 
 ---

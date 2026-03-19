@@ -1,7 +1,7 @@
 ---
 created: 2026-03-18
 last_verified: '2026-03-18'
-next_action: Define interruption and retry semantics
+next_action: Add continuity-aware scheduling hooks
 origin_session: manual
 source: agent-generated
 status: active
@@ -272,7 +272,7 @@ Minimum blocker actions:
 
 The UX should treat blocker carry-forward as a control surface, not just a warning banner. That is what prevents repeated doomed publish attempts and makes automation continuity materially better than a fresh thread.
 
-### Phase 3 — Execution and writeback · ☐ 1/3 complete
+### Phase 3 — Execution and writeback · ☐ 2/3 complete
 
 7. ☑ Define automatic writeback at run end
    - concise run summary
@@ -280,7 +280,7 @@ The UX should treat blocker carry-forward as a control surface, not just a warni
    - artifacts produced
    - branch / commit / PR state
 
-8. ☐ Define interruption and retry semantics
+8. ☑ Define interruption and retry semantics
    - partial run persistence
    - rerun on same branch
    - superseding old blockers
@@ -372,6 +372,7 @@ The scheduler should not make deep product decisions on its own. Its role is to 
 | 2026-03-18 | Completed Add plan pinning and resume affordances (codex-desktop-automation-continuity 5/11) |
 | 2026-03-18 | Completed Add blocker carry-forward controls (codex-desktop-automation-continuity 6/11) |
 | 2026-03-18 | Completed Define automatic writeback at run end (codex-desktop-automation-continuity 7/11) |
+| 2026-03-18 | Completed Define interruption and retry semantics (codex-desktop-automation-continuity 8/11) |
 
 ---
 
