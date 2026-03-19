@@ -37,6 +37,7 @@ Eleven files synthesized from current Django, DRF, Celery, pytest-django, struct
 - **`django-production-stack.md`** — Operational synthesis for Django + Postgres + Redis + Celery + Docker: service boundaries, migrations, startup ordering, storage, health checks, and observability.
 - **`drf-testing-pytest-django-perf-rec.md`** — DRF testing/API-contract guidance plus pytest-django fixture/database patterns and django-perf-rec's current maintenance-mode role for query/cache regression checks.
 - **`django-observability-structlog-sentry.md`** — Observability guidance for this stack: structlog contextvars and Celery logging patterns, plus Sentry tracing, sampling, spans, and cache monitoring.
+- **[django-async.md](knowledge/_unverified/django/django-async.md)** — Django async
 
 <!-- section: philosophy -->
 ### `philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18)
