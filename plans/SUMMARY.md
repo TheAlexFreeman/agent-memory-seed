@@ -8,23 +8,14 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-1. `codex-desktop-bootstrap-support.md`
-2. `codex-desktop-automation-continuity.md`
-3. `codex-desktop-github-network-ergonomics.md`
-4. `django-stack-research.md`
-5. `react-stack-research.md`
-6. `devops-docker-research.md`
-7. `philosophy-history-survey.md`
-8. `lesswrong-rationalist-community-research.md`
-9. `ai-paradigm-genealogy-research.md`
-
-<!-- BEGIN: codex-desktop-bootstrap-support -->
-### `codex-desktop-bootstrap-support.md` · status: complete · trust: medium
-**Progress:** 11/11 items complete
-**Next action:** (all complete)
-<!-- END: codex-desktop-bootstrap-support -->
-
----
+1. `codex-desktop-automation-continuity.md`
+2. `codex-desktop-github-network-ergonomics.md`
+3. `django-stack-research.md`
+4. `react-stack-research.md`
+5. `devops-docker-research.md`
+6. `philosophy-history-survey.md`
+7. `lesswrong-rationalist-community-research.md`
+8. `ai-paradigm-genealogy-research.md`
 
 <!-- BEGIN: codex-desktop-automation-continuity -->
 ### `codex-desktop-automation-continuity.md` · status: active · trust: medium
@@ -113,6 +104,17 @@ Docker, Vite, and DevOps tooling for the full Django + React + Celery + Redis + 
 ---
 
 ## Completed plans
+
+<!-- BEGIN: codex-desktop-bootstrap-support -->
+### `codex-desktop-bootstrap-support.md` · status: complete · trust: medium
+
+Concrete Codex desktop bootstrap roadmap completed: repo-declared startup manifest, mode detection, budget-aware preload ordering, startup panel UX contract, validation matrix, and staged rollout strategy.
+
+**Progress:** 11/11 items complete
+**Completed:** 2026-03-18
+<!-- END: codex-desktop-bootstrap-support -->
+
+---
 
 <!-- BEGIN: codex-desktop-governed-memory-writes -->
 ### `codex-desktop-governed-memory-writes.md` · status: complete · trust: medium
