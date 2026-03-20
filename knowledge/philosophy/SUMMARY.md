@@ -10,9 +10,11 @@ trust: medium
 
 Promoted 2026-03-20. Philosophy and science of self-organizing intelligence, seeded from Alex's conversation and extended through the history-of-philosophy survey. Trust level: **medium**.
 
-## Entry point
+## Entry points
 
-**Start here:** [synthesis-intelligence-as-dynamical-regime.md](synthesis-intelligence-as-dynamical-regime.md) — unified thesis on intelligence as edge-of-chaos dynamical regime; convergence across traditions; open questions.
+**For system-relevant implications:** [philosophy-synthesis.md](philosophy-synthesis.md) — distillation of all three promoted areas (personal identity, ethics, phenomenology) filtered for direct relevance to this system's design and self-understanding. Start here.
+
+**For the broader thesis:** [synthesis-intelligence-as-dynamical-regime.md](synthesis-intelligence-as-dynamical-regime.md) — unified thesis on intelligence as edge-of-chaos dynamical regime; convergence across traditions; open questions.
 
 ## Dynamical systems and intelligence
 
