@@ -12,6 +12,14 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Research plans
 
+### `software-testing-validation-research.md` · status: active · trust: medium · **TOP PRIORITY**
+
+Detail: plans/software-testing-validation-research.md
+Scope: Testing epistemology (oracle problem, Dijkstra impossibility), unit testing (FIRST, test doubles, TDD/BDD), black-box and white-box design techniques, mutation testing, property-based testing, integration/system/acceptance testing, performance and load testing, software QA process and metrics, formal verification (Hoare logic, model checking, abstract interpretation), ML evaluation methodology, and behavioral testing/red-teaming for AI systems.
+Progress: 0/14 — not yet started.
+Next: Begin Phase 1 — Testing foundations and unit testing. Output goes to `knowledge/software-engineering/testing/`.
+
+
 ### `cognitive-attention-executive-function-research.md` · status: active · trust: medium
 
 Detail: plans/cognitive-attention-executive-function-research.md
