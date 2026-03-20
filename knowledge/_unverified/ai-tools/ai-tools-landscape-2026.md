@@ -1,9 +1,11 @@
 ---
 source: external-research
 created: 2026-03-19
-trust: low
+last_verified: 2026-03-19
+trust: medium
 origin_session: chats/2026/03/19/chat-002
-topic: ai-tools
+type: knowledge
+domain: ai-tools
 ---
 
 # Practical AI Tools Landscape — Cutting-Edge Tools (2026)
