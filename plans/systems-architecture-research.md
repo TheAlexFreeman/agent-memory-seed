@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: '`git-worktrees-and-hooks.md`'
+next_action: '`git-plumbing-and-automation.md`'
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -39,7 +39,7 @@ All output files go to `knowledge/_unverified/systems-architecture/`.
 
 ## Research phases
 
-### Phase 1 — Git internals · ☐ 1/3 complete
+### Phase 1 — Git internals · ☐ 2/3 complete
 
 **Why first:** The entire system is built on git as its storage layer, and three open
 problems are directly rooted in incomplete understanding of git's internals: (1) the
@@ -71,7 +71,7 @@ which requires precise understanding of the orphan branch → worktree topology,
      server's `git_repo.py` cannot simply "write and commit atomically" — the staging
      step is load-bearing, not boilerplate.
 
-2. ☐ `git-worktrees-and-hooks.md`
+2. ☑ `git-worktrees-and-hooks.md`
 
    - **Worktree topology:** how `git worktree add` creates a linked worktree, the
      `.git/worktrees/<name>/` directory inside the main gitdir, the `gitdir` file in
@@ -526,4 +526,4 @@ until reviewed.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following discussion of git/filesystem/distributed-systems research areas relevant to memory system architecture |
-| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) |
+| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) |
