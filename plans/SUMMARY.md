@@ -8,6 +8,17 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
+<!-- BEGIN: mcp-reorganization -->
+### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
+
+Reorganize the MCP tooling out of `HUMANS/` and into a proper `mcp/` package with an installable CLI entrypoint. 41 items across 5 phases: rename `tools/` → `mcp/` and add `[project.scripts]` entrypoint (Phase 0); move `memory_mcp.py` and its tests into `mcp/` (Phase 1); update all 12 hardcoded path references across config, docs, and CI (Phase 2); split the 1,917-line `semantic_tools.py` monolith into four focused sub-modules (Phase 3); formalize the format/runtime layer boundary and add a `core` extras group (Phase 4); CI + validator verification (Phase 5).
+
+**Progress:** 0/41 items complete
+**Next action:** Phase 0, item 1 — rename `tools/` → `mcp/` at the repo root
+
+**Blocks:** `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md` (all add to files that will move in Phase 1–3; start after Phase 2 completes). Also blocks `worktree-integration.md` item 6 (adapter-file MCP path update depends on Phase 2 path changes).
+<!-- END: mcp-reorganization -->
+
 <!-- BEGIN: systems-architecture-research -->
 ### `systems-architecture-research.md` · status: active · trust: medium
 
@@ -24,6 +35,8 @@ Roadmap to enable agent-memory-seed to drop into an existing project as a git or
 
 **Progress:** 0/24 items complete
 **Next action:** Phase 0, item 1 — write init-worktree.sh scaffold
+
+**Partial block:** item 6 (write platform-specific MCP config referencing `memory_mcp.py`) depends on `mcp-reorganization.md` Phase 2 completing the path move. Phases 0–5 items 1–5 and 7–24 can proceed independently.
 <!-- END: worktree-integration -->
 
 <!-- BEGIN: access-log-tooling-improvements -->
@@ -33,6 +46,8 @@ Roadmap to improve the ACCESS.jsonl logging layer: batch writes, session-id wiri
 
 **Progress:** 0/12 items complete
 **Next action:** Phase 1, item 1 — implement `memory_log_access_batch` in `write_tools.py`
+
+**Blocked by:** `mcp-reorganization.md` — do not advance until Phase 2 of that plan is complete (files will move from `tools/` to `mcp/`).
 <!-- END: access-log-tooling-improvements -->
 
 <!-- BEGIN: mcp-semantic-tools-improvements -->
@@ -42,6 +57,8 @@ Roadmap to close five Tier 1 semantic tool gaps: expand `memory_append_scratchpa
 
 **Progress:** 0/22 items complete
 **Next action:** Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
+
+**Blocked by:** `mcp-reorganization.md` — do not advance until Phase 2 of that plan is complete (files will move from `tools/` to `mcp/`).
 <!-- END: mcp-semantic-tools-improvements -->
 
 <!-- BEGIN: mcp-read-tools-improvements -->
@@ -51,6 +68,8 @@ Roadmap to close three Tier 0 read tool gaps: add `since` and `path` filter para
 
 **Progress:** 0/13 items complete
 **Next action:** Phase 1, item 1 — add `since` and `path_filter` params to `memory_git_log` in `read_tools.py`
+
+**Blocked by:** `mcp-reorganization.md` — do not advance until Phase 2 of that plan is complete (files will move from `tools/` to `mcp/`).
 <!-- END: mcp-read-tools-improvements -->
 
 <!-- BEGIN: mcp-write-and-crosscutting-improvements -->
@@ -60,6 +79,8 @@ Roadmap for three cross-cutting improvements: `memory_update_frontmatter_bulk` t
 
 **Progress:** 0/15 items complete
 **Next action:** Phase 1, item 1 — implement `memory_update_frontmatter_bulk` in `write_tools.py`
+
+**Blocked by:** `mcp-reorganization.md` — do not advance until Phase 2 of that plan is complete (files will move from `tools/` to `mcp/`).
 <!-- END: mcp-write-and-crosscutting-improvements -->
 
 <!-- BEGIN: ai-frontier-research -->
