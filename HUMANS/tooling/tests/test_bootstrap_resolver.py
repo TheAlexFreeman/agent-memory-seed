@@ -7,7 +7,6 @@ import textwrap
 import unittest
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 RESOLVER_PATH = (
     REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_bootstrap_manifest.py"

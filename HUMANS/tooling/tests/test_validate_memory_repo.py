@@ -7,7 +7,6 @@ import textwrap
 import unittest
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 VALIDATOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
 
@@ -429,6 +428,9 @@ VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
 VALID_TASK_READINESS_MANIFEST = (
     REPO_ROOT / "HUMANS" / "tooling" / "agent-task-readiness.toml"
 ).read_text(encoding="utf-8")
+VALID_CAPABILITIES_MANIFEST = (
+    REPO_ROOT / "HUMANS" / "tooling" / "agent-memory-capabilities.toml"
+).read_text(encoding="utf-8")
 
 
 def write(path: Path, content: str) -> None:
@@ -446,6 +448,9 @@ def build_minimal_repo(root: Path) -> None:
         root / "HUMANS" / "tooling" / "scripts" / "resolve_task_readiness.py",
         "#!/usr/bin/env python3\n",
     )
+    write(root / "HUMANS" / "tooling" / "agent-memory-capabilities.toml", VALID_CAPABILITIES_MANIFEST)
+    write(root / "engram_mcp" / "__init__.py", "\n")
+    write(root / "engram_mcp" / "memory_mcp.py", "#!/usr/bin/env python3\n")
     write(
         root / "README.md",
         textwrap.dedent(
@@ -690,6 +695,46 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(any("missing bootstrap manifest" in error for error in result.errors))
+
+    def test_missing_mcp_entrypoint_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "engram_mcp" / "memory_mcp.py").unlink()
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("missing MCP entrypoint script" in error for error in result.errors)
+            )
+
+    def test_legacy_tools_runtime_directory_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            (root / "tools").mkdir(parents=True, exist_ok=True)
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("legacy tools/ runtime directory must not exist" in error for error in result.errors)
+            )
+
+    def test_capabilities_manifest_with_wrong_mcp_entrypoint_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "HUMANS" / "tooling" / "agent-memory-capabilities.toml",
+                VALID_CAPABILITIES_MANIFEST.replace(
+                    'mcp_entrypoint = "engram_mcp/memory_mcp.py"',
+                    'mcp_entrypoint = "HUMANS/tooling/scripts/memory_mcp.py"',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("mcp_entrypoint must be 'engram_mcp/memory_mcp.py'" in error for error in result.errors)
+            )
 
     def test_missing_task_readiness_manifest_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

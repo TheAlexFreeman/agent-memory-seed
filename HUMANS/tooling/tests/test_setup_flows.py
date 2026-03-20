@@ -7,7 +7,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
@@ -53,6 +52,7 @@ def build_setup_repo(root: Path) -> None:
         ".codex",
         ".github",
         ".vscode",
+        "engram_mcp",
         "HUMANS",
         "setup",
         "meta",
@@ -62,7 +62,6 @@ def build_setup_repo(root: Path) -> None:
         "plans",
         "skills",
         "scratchpad",
-        "tools",
     ):
         shutil.copytree(
             REPO_ROOT / dirname,

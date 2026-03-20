@@ -13,7 +13,6 @@ from ._session import (
     increment_identity_updates,
 )
 
-
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 

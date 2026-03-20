@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypedDict, cast
 
-
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 

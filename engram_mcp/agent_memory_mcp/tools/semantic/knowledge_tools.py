@@ -15,7 +15,6 @@ from ...path_policy import (
     validate_top_level_root,
 )
 
-
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 

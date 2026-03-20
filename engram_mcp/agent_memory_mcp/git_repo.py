@@ -25,7 +25,6 @@ from pathlib import Path
 
 from .errors import StagingError
 
-
 _FALLBACK_AUTHOR_NAME = "Claude"
 _FALLBACK_AUTHOR_EMAIL = "agent@agent-memory"
 _WRITE_LOCK_NAME = "agent-memory-write.lock"

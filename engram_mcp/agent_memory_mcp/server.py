@@ -13,7 +13,6 @@ from mcp.server.fastmcp import FastMCP
 from .git_repo import GitRepo
 from .tools import read_tools, semantic, write_tools
 
-
 DeletePermissionHook = Callable[[str], None]
 
 

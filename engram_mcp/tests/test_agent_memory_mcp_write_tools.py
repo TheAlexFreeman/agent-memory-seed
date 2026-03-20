@@ -13,7 +13,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, ClassVar, Coroutine, cast
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ToolCallable = Callable[..., Coroutine[Any, Any, str]]
 
@@ -1089,11 +1088,11 @@ Next: Original next action
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
 
         lines = [
-            l
-            for l in (repo_root / "knowledge" / "ACCESS.jsonl")
+            line
+            for line in (repo_root / "knowledge" / "ACCESS.jsonl")
             .read_text(encoding="utf-8")
             .splitlines()
-            if l.strip()
+            if line.strip()
         ]
         self.assertEqual(len(lines), 1)
         entry = json.loads(lines[0])

@@ -14,7 +14,6 @@ from ...path_policy import (
     validate_slug,
 )
 
-
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 

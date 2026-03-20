@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from ...path_policy import validate_session_id, validate_slug
 
-
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 

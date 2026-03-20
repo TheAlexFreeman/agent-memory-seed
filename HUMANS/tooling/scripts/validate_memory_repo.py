@@ -245,6 +245,11 @@ ROOT_SETUP_TARGETS = {
     Path("setup.html"): "setup/setup.html",
 }
 CANONICAL_SETUP_FILES = (Path("setup/setup.sh"), Path("setup/setup.html"))
+CAPABILITIES_MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
+EXPECTED_MCP_RUNTIME_DIR = Path("engram_mcp")
+EXPECTED_MCP_ENTRYPOINT = Path("engram_mcp/memory_mcp.py")
+LEGACY_MCP_RUNTIME_DIR = Path("tools")
+LEGACY_MCP_ENTRYPOINT = Path("HUMANS/tooling/scripts/memory_mcp.py")
 
 PROMPT_START_LINE = (
     "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
@@ -1224,6 +1229,54 @@ def validate_setup_entrypoints(root: Path, result: ValidationResult) -> None:
             result.error(f"{absolute}: missing canonical setup implementation")
 
 
+def validate_mcp_runtime_layout(root: Path, result: ValidationResult) -> None:
+    manifest_path = root / CAPABILITIES_MANIFEST_PATH
+    runtime_dir = root / EXPECTED_MCP_RUNTIME_DIR
+    entrypoint_path = root / EXPECTED_MCP_ENTRYPOINT
+    legacy_runtime_dir = root / LEGACY_MCP_RUNTIME_DIR
+    legacy_entrypoint_path = root / LEGACY_MCP_ENTRYPOINT
+
+    has_mcp_runtime = manifest_path.exists() or runtime_dir.exists() or entrypoint_path.exists()
+    if not has_mcp_runtime:
+        return
+
+    if not runtime_dir.is_dir():
+        result.error(f"{runtime_dir}: missing MCP runtime directory")
+
+    if not entrypoint_path.exists():
+        result.error(f"{entrypoint_path}: missing MCP entrypoint script")
+
+    if legacy_runtime_dir.exists():
+        result.error(
+            f"{legacy_runtime_dir}: legacy tools/ runtime directory must not exist after the engram_mcp migration"
+        )
+
+    if legacy_entrypoint_path.exists():
+        result.error(
+            f"{legacy_entrypoint_path}: stale MCP shim must not exist after the engram_mcp migration"
+        )
+
+    if not manifest_path.exists():
+        return
+
+    text = read_text(manifest_path, result)
+    if text is None:
+        return
+
+    try:
+        manifest = tomllib.loads(text)
+    except Exception as exc:
+        result.error(f"{manifest_path}: invalid TOML ({exc})")
+        return
+
+    mcp_entrypoint = manifest.get("mcp_entrypoint")
+    expected_entrypoint = EXPECTED_MCP_ENTRYPOINT.as_posix()
+    if mcp_entrypoint != expected_entrypoint:
+        result.error(
+            f"{manifest_path}: mcp_entrypoint must be {expected_entrypoint!r}, got {mcp_entrypoint!r}"
+        )
+
+
 def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
     for relative_path in ADAPTER_FILES:
         path = root / relative_path
@@ -1399,6 +1452,7 @@ def validate_repo(root: Path) -> ValidationResult:
     validate_compact_startup_contract(root, result)
     validate_runtime_guidance(root, result)
     validate_setup_entrypoints(root, result)
+    validate_mcp_runtime_layout(root, result)
     validate_adapter_routing(root, result)
     validate_prompt_copy(root, result)
     validate_setup_guidance(root, result)

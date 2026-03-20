@@ -10,14 +10,14 @@ from a repository checkout.
 from __future__ import annotations
 
 import sys
+from importlib import import_module
 from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from engram_mcp.agent_memory_mcp import server as _server
+_server = import_module("engram_mcp.agent_memory_mcp.server")
 
 __all__ = getattr(_server, "__all__", [])
 globals().update({name: getattr(_server, name) for name in __all__})
