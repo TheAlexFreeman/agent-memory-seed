@@ -29,6 +29,17 @@ trust: medium
 - **Documentation:** _[To be filled — e.g., Confluence, Google Docs, Notion]_
 - **Domain:** _[To be filled — e.g., software development, marketing, operations]_
 
+## Codebase context
+
+<!-- CODEBASE_CONTEXT_START -->
+- **project_name:** _[Set by init-worktree.sh in worktree mode or during onboarding]_
+- **tech_stack:** _[To be filled during onboarding — e.g., web app, data platform, internal tooling]_
+- **repo_url:** _[Optional — remote URL or canonical repo reference]_
+- **codebase_root:** _[Set by init-worktree.sh in worktree mode]_
+- **host_repo_root:** _[Set by init-worktree.sh in worktree mode]_
+- **memory_worktree_path:** _[Set by init-worktree.sh in worktree mode]_
+<!-- CODEBASE_CONTEXT_END -->
+
 ## Customize me
 
 The traits above are starting points. During onboarding, the agent will walk through each section and ask what fits, what doesn't, and what's missing. Blank fields will be filled from the conversation.

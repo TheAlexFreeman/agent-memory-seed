@@ -152,6 +152,14 @@ json_escape() {
     printf '%s\n' "$value"
 }
 
+sed_escape() {
+    local value="$1"
+    value="${value//\\/\\\\}"
+    value="${value//&/\\&}"
+    value="${value//|/\\|}"
+    printf '%s\n' "$value"
+}
+
 print_cmd() {
     printf '+ '
     printf '%q ' "$@"
@@ -218,14 +226,73 @@ write_identity_summary() {
     } > "$summary_path"
 }
 
+render_template_file() {
+    local template_path="$1"
+    local destination_path="$2"
+    local project_name="$3"
+    local host_root_native="$4"
+    local worktree_native="$5"
+    local branch_name="$6"
+
+    mkdir -p "$(dirname "$destination_path")"
+    sed \
+        -e "s|{{PROJECT_NAME}}|$(sed_escape "$project_name")|g" \
+        -e "s|{{HOST_REPO_ROOT}}|$(sed_escape "$host_root_native")|g" \
+        -e "s|{{MEMORY_WORKTREE_PATH}}|$(sed_escape "$worktree_native")|g" \
+        -e "s|{{MEMORY_BRANCH}}|$(sed_escape "$branch_name")|g" \
+        -e "s|{{TODAY}}|$(sed_escape "$TODAY")|g" \
+        "$template_path" > "$destination_path"
+}
+
 ensure_codebase_context() {
     local profile_path="$1"
     local host_root_native="$2"
     local worktree_native="$3"
+    local project_name="$4"
+    local host_root_for_awk
+    local worktree_for_awk
+
+    host_root_for_awk="${host_root_native//\\/\\\\}"
+    worktree_for_awk="${worktree_native//\\/\\\\}"
+
+    if grep -q '<!-- CODEBASE_CONTEXT_START -->' "$profile_path"; then
+        local temp_path
+        temp_path="$(mktemp)"
+        awk \
+            -v project_name="$project_name" \
+            -v host_root_native="$host_root_for_awk" \
+            -v worktree_native="$worktree_for_awk" \
+            '
+                BEGIN { in_block = 0 }
+                /<!-- CODEBASE_CONTEXT_START -->/ {
+                    print
+                    print "- **project_name:** " project_name
+                    print "- **tech_stack:** _[To be filled during onboarding or the first survey session]_"
+                    print "- **repo_url:** _[Optional - remote URL or canonical repo reference]_"
+                    print "- **codebase_root:** " host_root_native
+                    print "- **host_repo_root:** " host_root_native
+                    print "- **memory_worktree_path:** " worktree_native
+                    in_block = 1
+                    next
+                }
+                /<!-- CODEBASE_CONTEXT_END -->/ {
+                    in_block = 0
+                    print
+                    next
+                }
+                !in_block { print }
+            ' "$profile_path" > "$temp_path"
+        mv "$temp_path" "$profile_path"
+        return
+    fi
+
     cat >> "$profile_path" <<EOF
 
 ## Codebase context
 
+- **project_name:** $project_name
+- **tech_stack:** _[To be filled during onboarding or the first survey session]_
+- **repo_url:** _[Optional - remote URL or canonical repo reference]_
 - **codebase_root:** $host_root_native
 - **host_repo_root:** $host_root_native
 - **memory_worktree_path:** $worktree_native
@@ -237,6 +304,7 @@ install_profile() {
     local host_root_native="$2"
     local worktree_native="$3"
     local profile_name="$4"
+    local project_name="$5"
     local destination="$worktree_root/identity/profile.md"
 
     if [[ -n "$profile_name" ]]; then
@@ -265,7 +333,7 @@ No confirmed identity summary yet.
 Start onboarding from [profile.md](profile.md) in the memory worktree."
     fi
 
-    ensure_codebase_context "$destination" "$host_root_native" "$worktree_native"
+    ensure_codebase_context "$destination" "$host_root_native" "$worktree_native" "$project_name"
 }
 
 write_memory_stubs() {
@@ -308,6 +376,93 @@ Active thread placeholder for this worktree."
     write_text_file "$worktree_root/scratchpad/USER.md" "# User Scratchpad
 
 User-authored constraints and reminders for this codebase belong here."
+}
+
+write_worktree_hygiene_files() {
+    local worktree_root="$1"
+
+    write_text_file "$worktree_root/.ignore" "# Hide memory-content folders from host-repo search tools by default.
+# When working inside the memory worktree directly, use rg --no-ignore (or the
+# equivalent in your editor) if you need to search these folders intentionally.
+chats/
+identity/
+knowledge/
+meta/
+plans/
+scratchpad/
+skills/"
+
+    write_text_file "$worktree_root/.editorconfig" "root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = false
+
+[*.md]
+indent_style = space
+indent_size = 2
+
+[*.jsonl]
+indent_style = space
+indent_size = 2"
+}
+
+write_codebase_starters() {
+    local worktree_root="$1"
+    local host_root_native="$2"
+    local worktree_native="$3"
+    local branch_name="$4"
+    local project_name="$5"
+    local template_root="$SEED_REPO_ROOT/setup/templates"
+    local template_path
+
+    render_template_file \
+        "$template_root/codebase-survey-plan.md" \
+        "$worktree_root/plans/codebase-survey.md" \
+        "$project_name" \
+        "$host_root_native" \
+        "$worktree_native" \
+        "$branch_name"
+
+    for template_path in "$template_root"/knowledge/codebase/*.md; do
+        render_template_file \
+            "$template_path" \
+            "$worktree_root/knowledge/codebase/$(basename "$template_path")" \
+            "$project_name" \
+            "$host_root_native" \
+            "$worktree_native" \
+            "$branch_name"
+    done
+
+    write_text_file "$worktree_root/knowledge/SUMMARY.md" "# Knowledge Summary
+
+Starter codebase notes for $project_name live under [codebase/SUMMARY.md](codebase/SUMMARY.md).
+
+Begin with [codebase/architecture.md](codebase/architecture.md), then fill the
+data model, operations, and design-rationale stubs as the survey plan advances."
+
+    write_text_file "$worktree_root/plans/SUMMARY.md" "# Plans - Summary
+
+Compact returning-session view of multi-session work for this deployed memory worktree.
+
+## Active plans
+
+### Build plans
+
+### \`codebase-survey.md\` · status: active · trust: medium · **TOP PRIORITY**
+
+Detail: plans/codebase-survey.md
+Scope: Capture the architecture, interfaces, operations, and design rationale for $project_name.
+Progress: 0/12 complete
+Next: Phase 0, item 1 - identify the application entry points and boot sequence
+Blocks: none; survey templates are installed in knowledge/codebase/ and ready to fill.
+
+## Usage notes
+
+- Keep this file compact: active plans, next actions, and drill-down links only.
+- Update the survey plan as knowledge/codebase/ stubs are replaced with verified notes."
 }
 
 update_bootstrap_file() {
@@ -539,6 +694,7 @@ resolve_under_host_root() {
 WORKTREE_ABS="$(resolve_under_host_root "$WORKTREE_PATH")"
 WORKTREE_NATIVE="$(native_path "$WORKTREE_ABS")"
 HOST_ROOT_NATIVE="$(native_path "$HOST_REPO_ROOT")"
+PROJECT_NAME="$(basename "$HOST_REPO_ROOT")"
 CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || git rev-parse --short HEAD)"
 TEMP_WORKTREE="$HOST_REPO_ROOT/.git/agent-memory-seed-tmp-$BRANCH_NAME"
 WORKTREE_DISPLAY="$WORKTREE_PATH"
@@ -588,8 +744,10 @@ while IFS= read -r relative_path || [[ -n "$relative_path" ]]; do
 done < "$SEED_MANIFEST"
 
 write_memory_stubs "$TEMP_WORKTREE"
-install_profile "$TEMP_WORKTREE" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE" "$PROFILE"
+install_profile "$TEMP_WORKTREE" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE" "$PROFILE" "$PROJECT_NAME"
 update_bootstrap_file "$TEMP_WORKTREE/agent-bootstrap.toml" "$HOST_ROOT_NATIVE"
+write_worktree_hygiene_files "$TEMP_WORKTREE"
+write_codebase_starters "$TEMP_WORKTREE" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE" "$BRANCH_NAME" "$PROJECT_NAME"
 
 run_cmd git -C "$TEMP_WORKTREE" add --all
 run_cmd git -C "$TEMP_WORKTREE" commit -m "[system] Initialize agent memory worktree" -m "Seeded from agent-memory-seed on $TODAY."

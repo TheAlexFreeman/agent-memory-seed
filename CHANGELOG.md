@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Worktree deployment hygiene and survey scaffolds landed
+
+**Changed:**
+
+- **Added practical worktree integration guidance.** Replaced the generic integrations write-up in `HUMANS/docs/INTEGRATIONS.md` with a deployment-focused guide covering worktree-mode CI/CD exemptions, branch-protection expectations, PR/release-note noise reduction, and ready-to-paste ignore snippets for GitHub Actions, GitLab CI, Bitbucket Pipelines, ESLint, Prettier, Ruff, TypeScript, VS Code, JetBrains, and ripgrep.
+
+- **Extended `init-worktree.sh` with friction-reduction stubs.** Deployed worktrees now get a generated `.ignore` that keeps memory folders out of host-repo search by default, a root `.editorconfig` that pins neutral text-file defaults, a starter `plans/codebase-survey.md`, and a `knowledge/codebase/` skeleton so new codebase memory stores start with an actionable survey path instead of an empty shell.
+
+- **Updated onboarding templates and skill support for codebase mode.** The software-developer and project-manager profile templates now reserve a codebase-context block, a new protected skill (`skills/codebase-survey.md`) captures the expected module-survey workflow, and setup tests now assert that the worktree survey plan, codebase stubs, and hygiene files are actually present after initialization.
+
+- **Refreshed the canonical seed manifest.** Added the new survey templates and skill file to `setup/initial-commit-paths.txt` so the tracked setup contract stays aligned with the repository state.
+
+**Reasoning:** The worktree topology was functionally correct after Phase 2, but still too easy to misconfigure and too blank after first install. This change closes that gap by documenting how to keep the memory branch out of host automation, making host-tooling bleed less likely by default, and giving every new worktree a concrete codebase-survey scaffold that agents can advance immediately. That completes the friction-reduction slice before the remaining validator/CI enforcement work.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Host-repo freshness checks landed
 
 **Changed:**

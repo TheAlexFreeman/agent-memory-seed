@@ -12,9 +12,9 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 12/24 complete
-Next: Phase 3, item 13 — write CI/CD exemption guidance in `HUMANS/docs/INTEGRATIONS.md`
-Blocks: none; host-repo freshness tooling is in place, so Phase 3 documentation/templates are unblocked.
+Progress: 20/24 complete
+Next: Phase 5, item 21 — add worktree mode detection to `validate_memory_repo.py`
+Blocks: none; deployment scaffolding is now in place, so the remaining work is validator and CI enforcement.
 
 
 ### `access-log-tooling-improvements.md` · status: active · trust: medium

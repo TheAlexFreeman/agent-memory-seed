@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 3, item 13 — write CI/CD exemption guidance in HUMANS/docs/INTEGRATIONS.md"
+next_action: "Phase 5, item 21 — add worktree mode detection to validate_memory_repo.py"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -223,7 +223,7 @@ search tools, formatters, or linters.
 
 ### Items
 
-13. ☐ Write a CI/CD exemption guide in `HUMANS/docs/INTEGRATIONS.md`
+13. ☑ Write a CI/CD exemption guide in `HUMANS/docs/INTEGRATIONS.md`
 
     Add a "Worktree Mode" section covering:
     - How to add `branches-ignore: [agent-memory]` (or the configured branch name)
@@ -234,7 +234,7 @@ search tools, formatters, or linters.
       notes.
     - GitLab CI / Bitbucket Pipelines equivalents.
 
-14. ☐ Write a tooling-bleed prevention guide in `HUMANS/docs/INTEGRATIONS.md`
+14. ☑ Write a tooling-bleed prevention guide in `HUMANS/docs/INTEGRATIONS.md`
 
     Cover how to exclude the worktree path from:
     - ESLint / Prettier (`.eslintignore`, `.prettierignore`)
@@ -245,13 +245,13 @@ search tools, formatters, or linters.
 
     Include ready-to-paste config snippets for each.
 
-15. ☐ Add a `.ignore` file to the worktree seed (item 2)
+15. ☑ Add a `.ignore` file to the worktree seed (item 2)
 
     A `.ignore` file (used by ripgrep, fd, and many editors) at the worktree root
     prevents most search tools from indexing memory content during codebase search
     without requiring per-tool configuration.
 
-16. ☐ Add a `.editorconfig` stub to the worktree seed
+16. ☑ Add a `.editorconfig` stub to the worktree seed
 
     Prevents editors from applying the host project's indentation/line-ending rules
     to memory Markdown files.
@@ -265,7 +265,7 @@ plan to follow rather than having to design one from scratch.
 
 ### Items
 
-17. ☐ Add `setup/templates/codebase-survey-plan.md`
+17. ☑ Add `setup/templates/codebase-survey-plan.md`
 
     A template plan file that agents can instantiate with the host project's name.
     Pre-populated phases:
@@ -279,7 +279,7 @@ plan to follow rather than having to design one from scratch.
     Each phase item produces one knowledge file. The plan tracks completion and
     surfaces `next_action` for the next session.
 
-18. ☐ Add `setup/templates/knowledge/codebase/` starter structure
+18. ☑ Add `setup/templates/knowledge/codebase/` starter structure
 
     A minimal skeleton:
     - `codebase/SUMMARY.md` (describes the project at the architecture level)
@@ -291,7 +291,7 @@ plan to follow rather than having to design one from scratch.
     All stubs have `trust: low, source: template` frontmatter as placeholders.
     The init script copies this skeleton into the worktree during setup.
 
-19. ☐ Add `skills/codebase-survey.md`
+19. ☑ Add `skills/codebase-survey.md`
 
     A skill file (procedural, protected tier) describing the session workflow for
     systematic codebase exploration:
@@ -303,7 +303,7 @@ plan to follow rather than having to design one from scratch.
     - How to surface a source-file change (via `memory_check_knowledge_freshness`)
       as a review-queue item.
 
-20. ☐ Update `identity/profile.md` template to capture codebase context
+20. ☑ Update `identity/profile.md` template to capture codebase context
 
     Add a `codebase` section to the `software-developer` and `project-manager`
     profile templates with fields:
@@ -390,3 +390,4 @@ no change.
 | 2026-03-19 | Plan created following design discussion on orphan-branch worktree integration strategy |
 | 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 items 5-8 by writing host-root adapter files, preferring `engram-mcp` over the path-based script when available, formalizing optional `host_repo_root` support in the bootstrap resolver and validator, and updating `meta/quick-reference.md` for host-root worktree routing. Also completed Phase 2 item 9 by teaching `memory_git_log` to read from the configured host repo with path-safety checks. Next planned item: Phase 2 item 10 (`memory_check_knowledge_freshness`). |
 | 2026-03-20 | Completed Phase 2 items 10-12 by adding `memory_check_knowledge_freshness`, reusing the host-repo bootstrap contract to resolve related source files and compare them against host git history, and folding the same freshness signal into `memory_audit_trust` so stale host-backed notes are escalated by change activity while unchanged notes stay lower priority. Added targeted MCP coverage for stale, fresh, unknown-host, and export behavior; targeted tests passed (`98 passed`). Next planned item: Phase 3 item 13 (`HUMANS/docs/INTEGRATIONS.md` worktree guidance). |
+| 2026-03-20 | Completed Phase 3 items 13-16 by rewriting `HUMANS/docs/INTEGRATIONS.md` around actual worktree deployment concerns, adding CI/CD exemption and tooling-bleed guidance, and generating `.ignore` plus `.editorconfig` in deployed worktrees. Also completed Phase 4 items 17-20 by adding a starter `codebase-survey` plan template, `knowledge/codebase/` stub files, a `skills/codebase-survey.md` workflow, codebase-context placeholders in the setup profile templates, and setup-flow assertions that the new scaffolds appear after `init-worktree.sh`. Targeted setup regression coverage passed (`13 passed`). Next planned item: Phase 5 item 21 (`validate_memory_repo.py` worktree mode detection). |

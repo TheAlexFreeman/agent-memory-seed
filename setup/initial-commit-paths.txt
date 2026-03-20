@@ -81,6 +81,9 @@ engram_mcp/tests/test_core_boundary.py
 engram_mcp/tests/test_memory_mcp.py
 identity/ACCESS.jsonl
 identity/SUMMARY.md
+identity/engram-relationship.md
+identity/intellectual-portrait.md
+identity/literary-tastes.md
 identity/profile.md
 knowledge/ACCESS.jsonl
 knowledge/SUMMARY.md
@@ -307,6 +310,8 @@ scratchpad/2026-03-18-curation-improvements.md
 scratchpad/2026-03-18-proactive-agent-loop-research.md
 scratchpad/2026-03-19-mcp-tooling-development-notes.md
 scratchpad/2026-03-19-multi-agent-management-notes.md
+scratchpad/2026-03-20-architecture-review-notes.md
+scratchpad/2026-03-20-file-format-research.md
 scratchpad/CURRENT.md
 scratchpad/USER.md
 setup.html
@@ -314,6 +319,12 @@ setup.sh
 setup/init-worktree-paths.txt
 setup/init-worktree.sh
 setup/initial-commit-paths.txt
+setup/templates/codebase-survey-plan.md
+setup/templates/knowledge/codebase/SUMMARY.md
+setup/templates/knowledge/codebase/architecture.md
+setup/templates/knowledge/codebase/data-model.md
+setup/templates/knowledge/codebase/decisions.md
+setup/templates/knowledge/codebase/operations.md
 setup/setup.html
 setup/setup.sh
 setup/templates/profiles/README.md
@@ -322,6 +333,7 @@ setup/templates/profiles/researcher.md
 setup/templates/profiles/software-developer.md
 skills/ACCESS.jsonl
 skills/SUMMARY.md
+skills/codebase-survey.md
 skills/onboarding.md
 skills/session-start.md
 skills/session-sync.md

@@ -272,8 +272,21 @@ class SetupFlowTests(unittest.TestCase):
             profile_text = (worktree_root / "identity" / "profile.md").read_text(
                 encoding="utf-8"
             )
+            plans_summary = (worktree_root / "plans" / "SUMMARY.md").read_text(
+                encoding="utf-8"
+            )
             self.assertIn("**codebase_root:**", profile_text)
+            self.assertIn("**project_name:**", profile_text)
             self.assertIn(str(host_root), profile_text)
+            self.assertIn("codebase-survey.md", plans_summary)
+            self.assertTrue((worktree_root / ".ignore").is_file())
+            self.assertTrue((worktree_root / ".editorconfig").is_file())
+            self.assertTrue((worktree_root / "plans" / "codebase-survey.md").is_file())
+            self.assertTrue((worktree_root / "knowledge" / "codebase" / "architecture.md").is_file())
+            self.assertTrue((worktree_root / "knowledge" / "codebase" / "data-model.md").is_file())
+            self.assertTrue((worktree_root / "knowledge" / "codebase" / "operations.md").is_file())
+            self.assertTrue((worktree_root / "knowledge" / "codebase" / "decisions.md").is_file())
+            self.assertTrue((worktree_root / "skills" / "codebase-survey.md").is_file())
 
             codex_config = (host_root / ".codex" / "config.toml").read_text(encoding="utf-8")
             self.assertIn(str(worktree_root).replace("\\", "\\\\"), codex_config)
