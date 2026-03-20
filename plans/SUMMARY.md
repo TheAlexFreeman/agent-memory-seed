@@ -20,6 +20,11 @@ Progress: 0/14 — not yet started.
 Next: Begin Phase 1 — Testing foundations and unit testing. Output goes to `knowledge/software-engineering/testing/`.
 
 
+### `relevance-realization-research.md` · status: **complete** · trust: medium
+
+13/13 ✓ COMPLETE. Gestalt/frame-problem antecedents, opponent-processing theory, four kinds of knowing, aptitudes of intelligence, insight (behavioral/neural/mechanism), rationality (theoretical/practical/ecological), wisdom (philosophical traditions + empirical research), meaning crisis/psychotechnologies, synthesis + AI implications. 13 knowledge files in `knowledge/cognitive-science/relevance-realization/`.
+
+
 ### `cognitive-attention-executive-function-research.md` · status: **complete** · trust: medium
 
 11/11 ✓ COMPLETE. Attention selection models, attentional bottleneck/blink, FIT, dual-process, executive functions (Miyake), CLT, vigilance, mind-wandering, transformer comparison, synthesis. 11 knowledge files in `knowledge/cognitive-science/attention/`.
@@ -77,6 +82,7 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 ## Recent completions
 
+- [relevance-realization-research.md](relevance-realization-research.md) — completed 2026-03-20; 13/13 items across 4 phases (Gestalt/frame-problem antecedents, opponent-processing/four-kinds-of-knowing/aptitudes-of-intelligence, insight behavioral/neural/mechanism, rationality/wisdom/meaning-crisis/synthesis); 13 knowledge files in `knowledge/cognitive-science/relevance-realization/`; pending human review.
 - [cognitive-concepts-categorization-research.md](cognitive-concepts-categorization-research.md) — completed 2026-03-20; 12/12 items across 3 phases (classical/prototype/exemplar/theory-theory, conceptual spaces/embodied cognition/analogy, conceptual change/compilation/hygiene/synthesis); 12 knowledge files in `knowledge/cognitive-science/concepts/`; pending human review.
 - [cognitive-metacognition-calibration-research.md](cognitive-metacognition-calibration-research.md) — completed 2026-03-20; 10/10 items across 3 phases (monitoring/control framework, calibration failure modes, learning control/communication/synthesis); 10 knowledge files in `knowledge/cognitive-science/metacognition/`; pending human review.
 - [cognitive-attention-executive-function-research.md](cognitive-attention-executive-function-research.md) — completed 2026-03-20; 11/11 items across 3 phases (selection/capacity models, dual-process/executive function, sustained attention/synthesis); 11 knowledge files in `knowledge/cognitive-science/attention/`; pending human review.
