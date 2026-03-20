@@ -90,6 +90,7 @@ System-internal analysis files produced by the Engram agent analyzing its own ar
 - **`2026-03-20-git-session-followup.md`** — Follow-up notes on git session recovery.
 - **`environment-capability-asymmetry.md`** — Notes on capability asymmetry across environments.
 - **[memetic-security-mitigation-audit.md](knowledge/_unverified/system-notes/memetic-security-mitigation-audit.md)** — Comprehensive audit of Engram's five existing security mitigations — trust tiers, validator, identity anchors, git trail, human review gate — with gap analysis and cross-cutting defense-in-depth assessment.
+- **[memetic-security-comparative-analysis.md](knowledge/_unverified/system-notes/memetic-security-comparative-analysis.md)** — Comparative analysis of memory security across systems and literature — prompt injection state of art, Constitutional AI bright lines, multi-agent trust models, cognitive science parallels — positioning Engram's strengths and gaps against the field.
 
 <!-- section: ai-frontier -->
 ### `ai-frontier/` — Frontier AI technical knowledge base (created 2026-03-19)
