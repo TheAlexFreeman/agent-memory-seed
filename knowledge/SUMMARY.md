@@ -46,7 +46,7 @@ Key files:
 - `synthesis/how-the-current-ai-paradigm-formed.md` — Full causal synthesis: nine bottleneck-unlock transitions, four through-lines end-to-end, open assumptions
 
 <!-- section: ai-tools -->
-### `ai-tools/` — AI tools landscape and ecosystem positioning (promoted 2026-03-19, trust: medium)
+### `ai-tools/` — AI tools landscape and ecosystem positioning (promoted 2026-03-20, trust: medium)
 
 Two files covering the current AI tools landscape and where agent-memory-seed fits within it.
 
