@@ -57,9 +57,23 @@ def _plan_path(plan_id: str) -> str:
     return f"plans/{validate_slug(plan_id, field_name='plan_id')}.md"
 
 
+def _plan_summary_title(fm_dict: dict[str, object], body: str, plan_id: str) -> str:
+    """Resolve a human-readable plan title for plans/SUMMARY.md."""
+    title = fm_dict.get("title")
+    if isinstance(title, str) and title.strip():
+        return title.strip()
+
+    heading_match = re.search(r"(?m)^#\s+(.+?)\s*$", body)
+    if heading_match is not None:
+        return heading_match.group(1).strip()
+
+    return plan_id
+
+
 def _access_jsonl_for(rel_path: str) -> str | None:
     """Return the repo-relative ACCESS.jsonl path for a content file, or None."""
     from pathlib import PurePosixPath
+
     parts = PurePosixPath(rel_path).parts
     if not parts:
         return None
@@ -180,9 +194,7 @@ def _build_revert_preview(repo, sha: str) -> dict[str, object]:
     if prefix is None:
         reasons.append("commit message is missing a recognized [category] prefix")
     elif prefix not in KNOWN_COMMIT_PREFIXES:
-        reasons.append(
-            f"commit prefix {prefix!r} is not in the allowed memory prefix set"
-        )
+        reasons.append(f"commit prefix {prefix!r} is not in the allowed memory prefix set")
     if disallowed_files:
         reasons.append(
             "commit touches files outside the governed memory surface: "
@@ -286,7 +298,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.check_version_token(plan_path, version_token)
 
         content = abs_plan.read_text(encoding="utf-8")
-        fm_dict, _ = read_with_frontmatter(abs_plan)
+        fm_dict, body = read_with_frontmatter(abs_plan)
 
         # Mark item and get updated stats
         new_content, stats = mark_plan_item_complete(content, phase_index, item_index)
@@ -294,10 +306,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         # Determine item filename for commit message (extract from item text)
         # Re-parse to get item text
         from ..frontmatter_utils import parse_plan_items
+
         phases = parse_plan_items(content)
         item_text = phases[phase_index]["items"][item_index]["text"]
         # Extract likely filename (pattern: write knowledge/_unverified/foo/bar.md)
-        fn_match = re.search(r'[\w./_-]+\.(?:md|py|ts|js)\b', item_text)
+        fn_match = re.search(r"[\w./_-]+\.(?:md|py|ts|js)\b", item_text)
         item_filename = fn_match.group(0).split("/")[-1] if fn_match else item_text[:40]
 
         plan_done, plan_total = stats["plan_progress"]
@@ -317,6 +330,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         # Re-read frontmatter from new_content and apply updates
         import frontmatter as fmlib  # type: ignore[import-untyped]
+
         post = fmlib.loads(new_content)
         for k, v in fm_updates.items():
             if v is None:
@@ -335,9 +349,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             summary_content = abs_summary.read_text(encoding="utf-8")
             trust = fm_dict.get("trust", "medium")
             status_str = "complete" if all_complete else "active"
+            summary_title = _plan_summary_title(fm_dict, body, plan_id)
             new_block = build_plan_summary_block(
                 plan_id=plan_id,
-                title=plan_id,
+                title=summary_title,
                 status=status_str,
                 trust=trust,
                 next_action=stats["next_action"],
@@ -353,10 +368,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 abs_summary.write_text(updated_summary, encoding="utf-8")
                 repo.add(summary_path)
 
-        commit_msg = (
-            f"[plan] Mark {item_filename} complete "
-            f"({plan_id} {plan_done}/{plan_total})"
-        )
+        commit_msg = f"[plan] Mark {item_filename} complete ({plan_id} {plan_done}/{plan_total})"
         sha = repo.commit(commit_msg)
 
         new_state = {
@@ -509,10 +521,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 files_changed.append(target_summary_path)
 
         subject = infer_section_id_from_path(target_path)
-        commit_msg = (
-            f"[curation] Promote {filename} to knowledge/{subject}/ "
-            f"(trust: {trust_level})"
-        )
+        commit_msg = f"[curation] Promote {filename} to knowledge/{subject}/ (trust: {trust_level})"
         sha = repo.commit(commit_msg)
 
         result = MemoryWriteResult(
@@ -708,9 +717,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         filename = Path(source_path).name
         # Determine archive subfolder mirroring source structure
-        rel_to_knowledge = source_path[len("knowledge/"):]
+        rel_to_knowledge = source_path[len("knowledge/") :]
         if rel_to_knowledge.startswith("_unverified/"):
-            rel_to_knowledge = rel_to_knowledge[len("_unverified/"):]
+            rel_to_knowledge = rel_to_knowledge[len("_unverified/") :]
         archive_path = f"knowledge/_archive/{rel_to_knowledge}"
 
         # Update frontmatter
@@ -832,9 +841,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "Summarize or split the content before writing."
             )
         if abs_path.exists():
-            raise ValidationError(
-                f"File already exists: {path}. Use memory_write to overwrite."
-            )
+            raise ValidationError(f"File already exists: {path}. Use memory_write to overwrite.")
 
         # Build frontmatter
         today = today_str()
@@ -944,15 +951,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             if section_heading in existing:
                 idx = existing.index(section_heading)
                 # Find next ## heading or EOF
-                next_heading = re.search(r"\n## ", existing[idx + 1:])
+                next_heading = re.search(r"\n## ", existing[idx + 1 :])
                 if next_heading:
                     insert_at = idx + 1 + next_heading.start() + 1
                     new_content = (
-                        existing[:insert_at]
-                        + "\n"
-                        + content.strip()
-                        + "\n"
-                        + existing[insert_at:]
+                        existing[:insert_at] + "\n" + content.strip() + "\n" + existing[insert_at:]
                     )
                 else:
                     new_content = existing.rstrip() + "\n\n" + content.strip() + "\n"
@@ -1148,6 +1151,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             fm_dict["key_topics"] = topics
 
         import frontmatter as fmlib  # type: ignore[import-untyped]
+
         post = fmlib.Post(summary, **fm_dict)
         abs_session_summary.write_text(fmlib.dumps(post), encoding="utf-8")
         repo.add(session_summary_rel)
@@ -1243,6 +1247,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         fm_dict: dict[str, object] = {
             "source": "agent-generated",
             "type": plan_type,
+            "title": title,
             "created": today,
             "last_verified": today,
             "trust": "medium",
@@ -1252,6 +1257,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         }
 
         import frontmatter as fmlib  # type: ignore[import-untyped]
+
         post = fmlib.Post(content, **fm_dict)
         abs_plan.parent.mkdir(parents=True, exist_ok=True)
         abs_plan.write_text(fmlib.dumps(post), encoding="utf-8")
@@ -1347,6 +1353,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         # Update frontmatter only
         import frontmatter as fmlib  # type: ignore[import-untyped]
+
         text = abs_plan.read_text(encoding="utf-8")
         post = fmlib.loads(text)
         post.metadata["next_action"] = next_action
@@ -1363,15 +1370,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             summary_content = abs_summary.read_text(encoding="utf-8")
             content = abs_plan.read_text(encoding="utf-8")
             phases = parse_plan_items(content)
-            plan_done = sum(
-                1 for ph in phases for it in ph["items"] if it["done"]
-            )
+            plan_done = sum(1 for ph in phases for it in ph["items"] if it["done"])
             plan_total = sum(ph["total"] for ph in phases)
-            fm_dict, _ = read_with_frontmatter(abs_plan)
+            fm_dict, body = read_with_frontmatter(abs_plan)
+            summary_title = _plan_summary_title(fm_dict, body, plan_id)
 
             new_block = build_plan_summary_block(
                 plan_id=plan_id,
-                title=plan_id,
+                title=summary_title,
                 status=fm_dict.get("status", "active"),
                 trust=fm_dict.get("trust", "medium"),
                 next_action=next_action,
@@ -1539,9 +1545,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError("helpfulness must be a float between 0.0 and 1.0")
         helpfulness = float(helpfulness)
         if not (0.0 <= helpfulness <= 1.0):
-            raise ValidationError(
-                f"helpfulness must be between 0.0 and 1.0, got {helpfulness}"
-            )
+            raise ValidationError(f"helpfulness must be between 0.0 and 1.0, got {helpfulness}")
         if session_id is not None:
             validate_session_id(session_id)
         if category is not None:
@@ -1564,6 +1568,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         access_jsonl = _access_jsonl_for(file)
         if access_jsonl is None:
             from pathlib import PurePosixPath
+
             root_part = PurePosixPath(file).parts[0] if file else "(empty)"
             raise ValidationError(
                 f"Cannot log access for '{file}': '{root_part}/' is not an "
@@ -1589,7 +1594,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         # Append to ACCESS.jsonl
         existing = abs_access.read_text(encoding="utf-8") if abs_access.exists() else ""
         new_line = _json.dumps(entry, ensure_ascii=False)
-        updated = (existing.rstrip("\n") + "\n" + new_line + "\n") if existing.strip() else new_line + "\n"
+        updated = (
+            (existing.rstrip("\n") + "\n" + new_line + "\n")
+            if existing.strip()
+            else new_line + "\n"
+        )
         abs_access.write_text(updated, encoding="utf-8")
         repo.add(access_jsonl)
 
@@ -1655,14 +1664,16 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             plan_status = fm.get("status", "unknown")
             if status is not None and plan_status != status:
                 continue
-            plans.append({
-                "plan_id": plan_id,
-                "status": plan_status,
-                "trust": fm.get("trust", "unknown"),
-                "next_action": fm.get("next_action", ""),
-                "created": str(fm.get("created", "")),
-                "last_verified": str(fm.get("last_verified", "")),
-            })
+            plans.append(
+                {
+                    "plan_id": plan_id,
+                    "status": plan_status,
+                    "trust": fm.get("trust", "unknown"),
+                    "next_action": fm.get("next_action", ""),
+                    "created": str(fm.get("created", "")),
+                    "last_verified": str(fm.get("last_verified", "")),
+                }
+            )
 
         # Sort: active first, then alphabetically by plan_id
         plans.sort(key=lambda p: (0 if p["status"] == "active" else 1, p["plan_id"]))
@@ -1799,9 +1810,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         from ..models import MemoryWriteResult
 
         if not _re.fullmatch(r"[0-9a-f]{4,64}", sha, _re.IGNORECASE):
-            raise ValidationError(
-                f"Invalid SHA: {sha!r}. Must be a 4–64 character hex string."
-            )
+            raise ValidationError(f"Invalid SHA: {sha!r}. Must be a 4–64 character hex string.")
 
         repo = get_repo()
         preview = _build_revert_preview(repo, sha)
@@ -1834,11 +1843,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         if not bool(preview["applies_cleanly"]):
             conflict_details = str(preview["conflict_details"] or "")
-            detail_suffix = (
-                f" Details: {conflict_details}"
-                if conflict_details
-                else ""
-            )
+            detail_suffix = f" Details: {conflict_details}" if conflict_details else ""
             raise ValidationError(
                 "Revert preview indicates conflicts at the current HEAD. "
                 "Review conflict_details from preview output and re-run preview after resolving competing changes."
@@ -1891,11 +1896,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             JSON object with the reset state values.
         """
         import json as _json
+
         _session_state["identity_updates"] = 0
-        return _json.dumps({
-            "reset": True,
-            "identity_updates_this_session": 0,
-        })
+        return _json.dumps(
+            {
+                "reset": True,
+                "identity_updates_this_session": 0,
+            }
+        )
 
     return {
         "memory_mark_plan_item_complete": memory_mark_plan_item_complete,

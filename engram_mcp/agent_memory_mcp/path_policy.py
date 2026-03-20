@@ -44,8 +44,10 @@ def validate_raw_write_target(repo, raw_path: str, *, field_name: str = "path") 
     """Normalize and validate write targets against the protected-directory policy.
 
     Protected directories (identity/, meta/, chats/, skills/) are blocked for
-    raw Tier 2 writes.  Use Tier 1 semantic tools for governed writes to those
-    directories (e.g. memory_update_identity_trait, memory_record_chat_summary).
+    raw Tier 2 writes. Tier 2 writes must stay under knowledge/, plans/, or
+    scratchpad/. Use Tier 1 semantic tools for governed writes to protected
+    directories (e.g. memory_update_identity_trait,
+    memory_record_chat_summary).
 
     Returns the repo-relative path and absolute path on success.
     """
@@ -57,6 +59,13 @@ def validate_raw_write_target(repo, raw_path: str, *, field_name: str = "path") 
             f"Cannot raw-write to '{rel_path}': '{top}/' is a protected directory. "
             f"Use the appropriate Tier 1 semantic tool instead. "
             f"Protected directories: {sorted(_PROTECTED_ROOTS)}",
+            path=rel_path,
+        )
+
+    if top not in _RAW_MUTATION_ROOTS:
+        allowed = ", ".join(f"{root}/" for root in _RAW_MUTATION_ROOTS)
+        raise MemoryPermissionError(
+            f"Cannot raw-write to '{rel_path}': path must be under {allowed}.",
             path=rel_path,
         )
 

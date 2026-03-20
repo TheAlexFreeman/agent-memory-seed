@@ -249,6 +249,7 @@ Next: Do first step
         self.assertEqual(frontmatter["next_action"], "Do second step")
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
         self.assertIn("1. ☑ Do first step", body)
+        self.assertIn("### Test Plan · status: active · trust: medium", summary)
         self.assertIn("Progress: 1/2 complete", summary)
         self.assertIn("Next: Do second step", summary)
 
@@ -412,6 +413,42 @@ Next: Original next action
         with self.assertRaises(self.errors.MemoryPermissionError):
             asyncio.run(tools["memory_delete"](path="README.md"))
 
+    def test_memory_write_rejects_repo_root_files(self) -> None:
+        repo_root = self._init_repo_with_file("README.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(tools["memory_write"](path="README.md", content="# Rewritten\n"))
+
+    def test_memory_edit_rejects_repo_root_files(self) -> None:
+        repo_root = self._init_repo({"agent-bootstrap.toml": 'router = "README.md"\n'})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_edit"](
+                    path="agent-bootstrap.toml",
+                    old_string="README.md",
+                    new_string="meta/quick-reference.md",
+                )
+            )
+
+    def test_memory_update_frontmatter_rejects_repo_root_files(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "README.md": "---\ntitle: README\n---\n\n# Project\n",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.MemoryPermissionError):
+            asyncio.run(
+                tools["memory_update_frontmatter"](
+                    path="README.md",
+                    updates='{"title": "Updated"}',
+                )
+            )
+
     def test_memory_move_rejects_repo_root_source_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
@@ -485,6 +522,28 @@ Next: Original next action
 
         self.assertTrue((repo_root / "knowledge" / "new" / "note.md").exists())
 
+    def test_memory_delete_handles_dash_prefixed_filename(self) -> None:
+        repo_root = self._init_repo({"knowledge/-danger.md": "# Danger\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        asyncio.run(tools["memory_delete"](path="knowledge/-danger.md"))
+
+        self.assertFalse((repo_root / "knowledge" / "-danger.md").exists())
+
+    def test_memory_move_handles_dash_prefixed_filename(self) -> None:
+        repo_root = self._init_repo({"knowledge/-danger.md": "# Danger\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        asyncio.run(
+            tools["memory_move"](
+                source="knowledge/-danger.md",
+                dest="knowledge/archive/safe.md",
+            )
+        )
+
+        self.assertFalse((repo_root / "knowledge" / "-danger.md").exists())
+        self.assertTrue((repo_root / "knowledge" / "archive" / "safe.md").exists())
+
     def test_memory_add_knowledge_file_requires_low_trust_and_session_id(self) -> None:
         repo_root = self._init_repo(
             {
@@ -535,6 +594,30 @@ Next: Original next action
                     session_id="chat-001",
                 )
             )
+
+    def test_memory_create_plan_uses_human_title_in_summary(self) -> None:
+        repo_root = self._init_repo({"plans/SUMMARY.md": "# Plans\n\n## Active plans\n"})
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_create_plan"](
+                plan_id="test-plan",
+                title="Test Plan",
+                description="Investigate regressions",
+                content="# Test Plan\n\n## Context\n",
+                next_action="Do the first thing",
+                session_id="chats/2026/03/19/chat-001",
+            )
+        )
+
+        plan_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "plans" / "test-plan.md"
+        )
+        summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+
+        self.assertEqual(plan_frontmatter["title"], "Test Plan")
+        self.assertIn("### Test Plan · status: active · trust: medium", summary)
+        self.assertIn("Detail: plans/test-plan.md", summary)
 
     def test_memory_update_identity_trait_rejects_non_slug_filename(self) -> None:
         repo_root = self._init_repo(
@@ -656,6 +739,102 @@ Structured.
         self.assertIn(
             "original", (repo_root / "identity" / "profile.md").read_text(encoding="utf-8")
         )
+
+    def test_memory_commit_does_not_include_unrelated_pre_staged_changes(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "README.md": "# Project\n",
+                "knowledge/README.md": "# Knowledge\n",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        (repo_root / "README.md").write_text("# Unrelated staged change\n", encoding="utf-8")
+        subprocess.run(
+            ["git", "add", "README.md"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        asyncio.run(
+            tools["memory_write"](
+                path="knowledge/_unverified/test.md",
+                content="# Note\n",
+            )
+        )
+        asyncio.run(tools["memory_commit"](message="[knowledge] Add test note"))
+
+        head_files = subprocess.run(
+            ["git", "show", "--name-only", "--format=%s", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        still_staged = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+
+        self.assertIn("knowledge/_unverified/test.md", head_files)
+        self.assertNotIn("README.md", head_files)
+        self.assertIn("README.md", still_staged)
+
+    def test_memory_update_plan_next_action_uses_human_title_in_summary(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/test-plan.md": """---
+source: agent-generated
+type: implementation-plan
+title: Test Plan
+created: 2026-03-17
+last_verified: 2026-03-17
+trust: medium
+status: active
+next_action: Original next action
+---
+
+# Test Plan
+
+### Phase 1 — Build core flow · ☐ 0/1 complete
+
+1. ☐ Original next action
+
+## Progress log
+
+| Date | Action |
+|---|---|
+""",
+                "plans/SUMMARY.md": """# Plans — Summary
+
+## Active plans
+
+<!-- BEGIN: test-plan -->
+### `test-plan.md` · status: active · trust: medium
+Detail: plans/test-plan.md
+Progress: 0/1 complete
+Next: Original next action
+<!-- END: test-plan -->
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_update_plan_next_action"](
+                plan_id="test-plan",
+                next_action="Fresh next action",
+            )
+        )
+
+        summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+        self.assertIn("### Test Plan · status: active · trust: medium", summary)
+        self.assertIn("Next: Fresh next action", summary)
 
     def test_memory_write_allows_knowledge_path(self) -> None:
         """Sanity check: knowledge/ writes still work after the policy change."""

@@ -52,6 +52,13 @@ def register(
 ) -> dict[str, object]:
     """Register all Tier 2 low-level write tools and return their callables."""
 
+    tracked_paths: list[str] = []
+
+    def track_paths(*paths: str) -> None:
+        for path in paths:
+            if path not in tracked_paths:
+                tracked_paths.append(path)
+
     # ------------------------------------------------------------------
     # memory_write
     # ------------------------------------------------------------------
@@ -79,7 +86,7 @@ def register(
         meta/, chats/, skills/) are blocked. Use the appropriate Tier 1
         semantic tool instead (e.g. memory_update_identity_trait,
         memory_record_chat_summary). Allowed targets: knowledge/, plans/,
-        scratchpad/, and top-level files.
+        scratchpad/.
 
         Args:
             path:          Repo-relative path (e.g. 'knowledge/_unverified/django/foo.md').
@@ -117,6 +124,7 @@ def register(
 
         abs_path.write_text(content, encoding="utf-8")
         repo.add(path)
+        track_paths(path)
         new_token = repo.hash_object(path)
 
         result = MemoryWriteResult(
@@ -198,6 +206,7 @@ def register(
 
         abs_path.write_text(new_content, encoding="utf-8")
         repo.add(path)
+        track_paths(path)
         new_token = repo.hash_object(path)
 
         result = MemoryWriteResult(
@@ -269,6 +278,7 @@ def register(
 
         try:
             repo.rm(path)
+            track_paths(path)
         except Exception as e:
             raise MemoryPermissionError(
                 f"Could not delete {path}: {e}.",
@@ -340,6 +350,7 @@ def register(
             abs_dest.parent.mkdir(parents=True, exist_ok=True)
 
         repo.mv(source, dest)
+        track_paths(source, dest)
         new_token = repo.hash_object(dest)
 
         result = MemoryWriteResult(
@@ -411,6 +422,7 @@ def register(
 
         updated_fm = update_frontmatter_fields(abs_path, updates_dict)
         repo.add(path)
+        track_paths(path)
 
         result = MemoryWriteResult(
             files_changed=[path],
@@ -460,11 +472,24 @@ def register(
 
         repo = get_repo()
         warnings = []
+        pending_paths = list(tracked_paths)
 
-        if repo.nothing_staged() and not allow_empty:
+        if pending_paths:
+            if not repo.has_staged_changes(*pending_paths):
+                raise StagingError(
+                    "No Tier 2 staged changes remain for the tracked paths. "
+                    "Stage new Tier 2 changes before calling memory_commit."
+                )
+        elif repo.nothing_staged():
+            if not allow_empty:
+                raise StagingError(
+                    "Nothing staged to commit. Use memory_write/memory_edit/memory_delete "
+                    "first, then call memory_commit."
+                )
+        else:
             raise StagingError(
-                "Nothing staged to commit. Use memory_write/memory_edit/memory_delete "
-                "first, then call memory_commit."
+                "No Tier 2 changes are pending commit. memory_commit will not commit "
+                "unrelated pre-staged changes."
             )
 
         # Validate prefix (warn, don't error)
@@ -486,10 +511,16 @@ def register(
                     "Proceeding anyway."
                 )
 
-        sha = repo.commit(message)
+        if pending_paths:
+            sha = repo.commit(message, paths=pending_paths)
+            tracked_paths.clear()
+            files_changed = pending_paths
+        else:
+            sha = repo.commit(message, allow_empty=allow_empty)
+            files_changed = []
 
         result = MemoryWriteResult(
-            files_changed=[],  # already staged before this call
+            files_changed=files_changed,
             commit_sha=sha,
             commit_message=message,
             new_state={},

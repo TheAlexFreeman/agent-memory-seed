@@ -116,14 +116,14 @@ class GitRepo:
 
     def rm(self, rel_path: str) -> None:
         """Remove file from working tree and stage the deletion."""
-        self._run(["git", "rm", rel_path])
+        self._run(["git", "rm", "--", rel_path])
 
     def mv(self, rel_src: str, rel_dst: str) -> None:
         """Rename/move a file and stage the change (preserves history)."""
         # Ensure destination directory exists
         dst_abs = self.root / rel_dst
         dst_abs.parent.mkdir(parents=True, exist_ok=True)
-        self._run(["git", "mv", rel_src, rel_dst])
+        self._run(["git", "mv", "--", rel_src, rel_dst])
 
     # ------------------------------------------------------------------
     # Committing
@@ -134,10 +134,29 @@ class GitRepo:
         result = self._run(["git", "diff", "--cached", "--quiet"], check=False)
         return result.returncode == 0
 
-    def commit(self, message: str) -> str:
+    def has_staged_changes(self, *rel_paths: str) -> bool:
+        """True if the staging area contains changes for the given paths."""
+        if not rel_paths:
+            return not self.nothing_staged()
+        result = self._run(["git", "diff", "--cached", "--quiet", "--", *rel_paths], check=False)
+        return result.returncode == 1
+
+    def commit(
+        self,
+        message: str,
+        *,
+        paths: list[str] | None = None,
+        allow_empty: bool = False,
+    ) -> str:
         """Commit staged changes. Returns the new commit SHA."""
         self.ensure_author_identity()
-        self._run(["git", "commit", "-m", message])
+        cmd = ["git", "commit", "-m", message]
+        if allow_empty:
+            cmd.append("--allow-empty")
+        if paths:
+            deduped_paths = list(dict.fromkeys(paths))
+            cmd += ["--only", "--", *deduped_paths]
+        self._run(cmd)
         sha_result = self._run(["git", "rev-parse", "HEAD"])
         return sha_result.stdout.strip()
 

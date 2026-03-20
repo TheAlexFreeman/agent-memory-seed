@@ -317,9 +317,10 @@ def build_plan_summary_block(
     done, total = plan_progress
     status_str = status
     next_str = next_action or "(all complete)"
+    heading_title = title.strip() if title.strip() else plan_id
     lines = [
         f"<!-- BEGIN: {plan_id} -->",
-        f"### `{plan_id}.md` · status: {status_str} · trust: {trust}",
+        f"### {heading_title} · status: {status_str} · trust: {trust}",
         f"Detail: plans/{plan_id}.md",
     ]
     if description:
