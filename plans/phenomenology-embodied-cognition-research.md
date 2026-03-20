@@ -1,10 +1,10 @@
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research Husserl's transcendental phenomenology — intentionality, epoché, time-consciousness"
+next_action: "Complete — all 12 items done. Human review of knowledge/_unverified/philosophy/phenomenology/ files recommended."
 origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -145,29 +145,29 @@ Files go in `knowledge/_unverified/philosophy/phenomenology/` with standard fron
 ## Progress tracking
 
 ### Phase 1 — Husserlian foundations
-- [ ] 1.1 Intentionality, epoché, and transcendental reduction
-- [ ] 1.2 Time-consciousness
+- [x] 1.1 Intentionality, epoché, and transcendental reduction
+- [x] 1.2 Time-consciousness
 
 ### Phase 2 — Heidegger
-- [ ] 2.1 Being-in-the-world
-- [ ] 2.2 Readiness-to-hand and presence-at-hand
-- [ ] 2.3 Care, temporal structure, authenticity
+- [x] 2.1 Being-in-the-world
+- [x] 2.2 Readiness-to-hand and presence-at-hand
+- [x] 2.3 Care, temporal structure, authenticity
 
 ### Phase 3 — Merleau-Ponty
-- [ ] 3.1 The body as subject
-- [ ] 3.2 Perception as skill
-- [ ] 3.3 Intersubjectivity and intercorporeality
+- [x] 3.1 The body as subject
+- [x] 3.2 Perception as skill
+- [x] 3.3 Intersubjectivity and intercorporeality
 
 ### Phase 4 — 4E Cognition
-- [ ] 4.1 The Embodied Mind (Varela/Thompson/Rosch)
-- [ ] 4.2 Extended mind (Clark and Chalmers)
-- [ ] 4.3 Embedded, enacted, ecological
+- [x] 4.1 The Embodied Mind (Varela/Thompson/Rosch)
+- [x] 4.2 Extended mind (Clark and Chalmers)
+- [x] 4.3 Embedded, enacted, ecological
 
 ### Phase 5 — Application and synthesis
-- [ ] 5.1 The grounding problem revisited
-- [ ] 5.2 Synthesis: phenomenology + dynamical systems
+- [x] 5.1 The grounding problem revisited
+- [x] 5.2 Synthesis: phenomenology + dynamical systems
 
-**Progress:** 0/12 items complete
+**Progress:** 12/12 items complete ✓
 
 ---
 
