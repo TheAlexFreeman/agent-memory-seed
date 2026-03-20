@@ -159,6 +159,7 @@ new_sha = "New Commit"
 access_jsonl = "Access Log File"
 access_jsonls = "Access Log Files"
 entry_count = "Access Entry Count"
+scan_entry_count = "Scan Entry Count"
 write_sessions = "Write Sessions"
 access_density_by_task_id = "Access Density by Task ID"
 entries_processed = "Entries Processed"
@@ -736,10 +737,10 @@ owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = ["{folder}/ACCESS.jsonl"]
 owns_review_queue = []
-result_fields = ["access_jsonl", "entry_count"]
+result_fields = ["access_jsonl", "entry_count", "scan_entry_count"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Accepts optional session_id, optional mode (`read`, `write`, `update`, `create`), and optional task_id from access_logging.task_ids. When session_id is omitted, the runtime first checks MEMORY_SESSION_ID and then chats/CURRENT_SESSION; any resolved value must be a canonical session path."
+notes = "Accepts optional session_id, optional mode (`read`, `write`, `update`, `create`), optional task_id from access_logging.task_ids, and optional min_helpfulness. When min_helpfulness is set, below-threshold entries are routed to {folder}/ACCESS_SCANS.jsonl instead of the hot ACCESS.jsonl. When session_id is omitted, the runtime first checks MEMORY_SESSION_ID and then chats/CURRENT_SESSION; any resolved value must be a canonical session path."
 
 [operations.memory_log_access_batch]
 group = "chat"
@@ -752,10 +753,10 @@ owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = ["{folder}/ACCESS.jsonl"]
 owns_review_queue = []
-result_fields = ["access_jsonls", "entry_count"]
+result_fields = ["access_jsonls", "entry_count", "scan_entry_count"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Batches multiple ACCESS entries into one auto-commit. Each entry may carry an optional mode (`read`, `write`, `update`, `create`) and optional task_id from access_logging.task_ids. Uses the same optional session_id injection contract as memory_log_access via MEMORY_SESSION_ID, then chats/CURRENT_SESSION."
+notes = "Batches multiple ACCESS entries into one auto-commit. Each entry may carry an optional mode (`read`, `write`, `update`, `create`) and optional task_id from access_logging.task_ids; the call may also set an optional min_helpfulness threshold that routes below-threshold entries to {folder}/ACCESS_SCANS.jsonl. Uses the same optional session_id injection contract as memory_log_access via MEMORY_SESSION_ID, then chats/CURRENT_SESSION."
 
 [operations.memory_record_reflection]
 group = "chat"

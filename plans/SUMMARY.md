@@ -12,8 +12,8 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/access-log-tooling-improvements.md
 Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
-Progress: 6/13 complete
-Next: Phase 2, item 3 — add `min_helpfulness` routing to `ACCESS_SCANS.jsonl` sidecars
+Progress: 7/13 complete
+Next: Phase 2, item 4 — define archive segmentation and hot-log reset behavior
 Blocks: none; structural prerequisites are complete.
 
 

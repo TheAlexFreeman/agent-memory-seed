@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 2, item 3: add min_helpfulness routing to ACCESS_SCANS.jsonl sidecars"
+next_action: "Phase 2, item 4: define archive segmentation and hot-log reset behavior"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -102,7 +102,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [x] 1.3 Update capabilities contract
 - [x] 2.1 Add `mode` field + maturity signal update
 - [x] 2.2 Add `task_id` short code + maturity signal grouping
-- [ ] 2.3 Add `min_helpfulness` sweep filter + sidecar file
+- [x] 2.3 Add `min_helpfulness` sweep filter + sidecar file
 - [ ] 2.4 Define archive segmentation + materialized-summary refresh behavior
 - [ ] 3.1 Extend `memory_validate` with coverage check
 - [ ] 3.2 `memory_get_maturity_signals` fallback + coverage field
@@ -111,7 +111,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [x] 4.3 Update capabilities TOML tests
 - [ ] 4.4 Document new fields in CORE.md
 
-**Progress:** 6/13 items complete
+**Progress:** 7/13 items complete
 
 ---
 

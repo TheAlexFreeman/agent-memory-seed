@@ -1870,6 +1870,51 @@ Next: Original next action
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
         self.assertEqual(entry["task_id"], "plan-review")
 
+    def test_memory_log_access_routes_low_helpfulness_to_scans_sidecar(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "knowledge/ACCESS.jsonl": "",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/lit/foo.md",
+                task="plan sweep",
+                helpfulness=0.4,
+                note="below threshold should route to scans",
+                min_helpfulness=0.7,
+            )
+        )
+
+        payload = json.loads(raw)
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS_SCANS.jsonl")
+        self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
+        self.assertEqual((repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8"), "")
+
+        scan_entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        self.assertEqual(scan_entry["file"], "knowledge/lit/foo.md")
+        self.assertEqual(scan_entry["helpfulness"], 0.4)
+
+    def test_memory_log_access_rejects_invalid_min_helpfulness(self) -> None:
+        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_log_access"](
+                    file="knowledge/lit/foo.md",
+                    task="test",
+                    helpfulness=0.7,
+                    note="bad threshold",
+                    min_helpfulness=1.5,
+                )
+            )
+
     def test_memory_log_access_rejects_task_id_outside_manifest_vocabulary(self) -> None:
         repo_root = self._init_repo(
             {
@@ -2023,6 +2068,54 @@ Next: Original next action
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_log_access_batch"](access_entries=[]))
+
+    def test_memory_log_access_batch_routes_low_helpfulness_entries_to_scans_sidecar(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "plans/demo.md": "# Demo\n",
+                "chats/CURRENT_SESSION": "chats/2026/03/20/chat-016\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access_batch"](
+                access_entries=[
+                    {
+                        "file": "knowledge/lit/foo.md",
+                        "task": "batch test",
+                        "helpfulness": 0.9,
+                        "note": "keep in hot log",
+                    },
+                    {
+                        "file": "plans/demo.md",
+                        "task": "batch test",
+                        "helpfulness": 0.2,
+                        "note": "route to scans",
+                    },
+                ],
+                min_helpfulness=0.7,
+            )
+        )
+
+        payload = json.loads(raw)
+        self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
+        self.assertEqual(
+            sorted(payload["new_state"]["access_jsonls"]),
+            ["knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
+        )
+
+        knowledge_entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        plan_scan_entry = json.loads(
+            (repo_root / "plans" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
+        )
+
+        self.assertEqual(knowledge_entry["session_id"], "chats/2026/03/20/chat-016")
+        self.assertEqual(plan_scan_entry["session_id"], "chats/2026/03/20/chat-016")
+        self.assertEqual(plan_scan_entry["helpfulness"], 0.2)
 
     def test_memory_get_maturity_signals_reports_write_sessions(self) -> None:
         repo_root = self._init_repo(

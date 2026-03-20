@@ -27,6 +27,7 @@ def _tool_annotations(**kwargs: object) -> Any:
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 _ACCESS_MODES = frozenset({"read", "write", "update", "create"})
 _ACCESS_TASK_ID_MANIFEST = PurePosixPath("HUMANS/tooling/agent-memory-capabilities.toml")
+_ACCESS_SCANS_FILENAME = "ACCESS_SCANS.jsonl"
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
 _CURRENT_SESSION_SENTINEL = PurePosixPath("chats/CURRENT_SESSION")
@@ -128,6 +129,29 @@ def _load_access_task_ids(root: Path) -> set[str]:
     return {str(task_id).strip() for task_id in task_ids if str(task_id).strip()}
 
 
+def _normalize_min_helpfulness(min_helpfulness: object) -> float | None:
+    from ...errors import ValidationError
+
+    if min_helpfulness is None:
+        return None
+    if not isinstance(min_helpfulness, (int, float)):
+        raise ValidationError("min_helpfulness must be a float between 0.0 and 1.0")
+    threshold = float(min_helpfulness)
+    if not (0.0 <= threshold <= 1.0):
+        raise ValidationError(
+            f"min_helpfulness must be between 0.0 and 1.0, got {threshold}"
+        )
+    return threshold
+
+
+def _access_scans_jsonl_for(access_jsonl: str) -> str:
+    access_path = PurePosixPath(access_jsonl)
+    parent = access_path.parent.as_posix()
+    if parent == ".":
+        return _ACCESS_SCANS_FILENAME
+    return f"{parent}/{_ACCESS_SCANS_FILENAME}"
+
+
 def _append_markdown_block(existing: str, block: str) -> str:
     trimmed_existing = existing.rstrip()
     trimmed_block = block.strip()
@@ -221,7 +245,7 @@ def _normalize_access_entry(
     raw_entry: object,
     *,
     resolved_session_id: str | None,
-) -> tuple[str, str]:
+) -> tuple[str, str, bool]:
     import json as _json
 
     from ...errors import ValidationError
@@ -237,6 +261,7 @@ def _normalize_access_entry(
     category_value = raw_entry.get("category")
     mode_value = raw_entry.get("mode")
     task_id_value = raw_entry.get("task_id")
+    min_helpfulness_value = raw_entry.get("min_helpfulness")
 
     if not isinstance(task_value, str) or not task_value.strip():
         raise ValidationError("access entry task must be a non-empty string")
@@ -295,6 +320,8 @@ def _normalize_access_entry(
     else:
         task_id = None
 
+    min_helpfulness = _normalize_min_helpfulness(min_helpfulness_value)
+
     entry: dict[str, object] = {
         "file": file_path,
         "date": today_str(),
@@ -310,7 +337,9 @@ def _normalize_access_entry(
         entry["mode"] = mode
     if task_id is not None:
         entry["task_id"] = task_id
-    return access_jsonl, _json.dumps(entry, ensure_ascii=False)
+    routed_to_scans = min_helpfulness is not None and helpfulness < min_helpfulness
+    target_jsonl = _access_scans_jsonl_for(access_jsonl) if routed_to_scans else access_jsonl
+    return target_jsonl, _json.dumps(entry, ensure_ascii=False), routed_to_scans
 
 
 def _append_access_entries(
@@ -319,19 +348,22 @@ def _append_access_entries(
     access_entries: list[dict[str, object]] | None,
     *,
     session_id: str | None,
-) -> list[str]:
+) -> tuple[list[str], int]:
     if not access_entries:
-        return []
+        return [], 0
 
     grouped: dict[str, list[str]] = {}
+    scan_entry_count = 0
     for raw_entry in access_entries:
-        access_jsonl, line = _normalize_access_entry(
+        access_jsonl, line, routed_to_scans = _normalize_access_entry(
             repo,
             root,
             raw_entry,
             resolved_session_id=session_id,
         )
         grouped.setdefault(access_jsonl, []).append(line)
+        if routed_to_scans:
+            scan_entry_count += 1
 
     changed_files: list[str] = []
     for access_jsonl, lines in grouped.items():
@@ -345,7 +377,7 @@ def _append_access_entries(
         abs_access.write_text(updated, encoding="utf-8")
         repo.add(access_jsonl)
         changed_files.append(access_jsonl)
-    return changed_files
+    return changed_files, scan_entry_count
 
 
 def _normalize_aggregation_folders(folders: list[str] | None) -> list[str] | None:
@@ -1085,13 +1117,14 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         category: str | None = None,
         mode: str | None = None,
         task_id: str | None = None,
+        min_helpfulness: float | None = None,
     ) -> str:
         from ...models import MemoryWriteResult
 
         repo = get_repo()
         root = get_root()
         resolved_session_id = _resolve_access_session_id(root, session_id)
-        changed_files = _append_access_entries(
+        changed_files, scan_entry_count = _append_access_entries(
             repo,
             root,
             [
@@ -1103,6 +1136,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     "category": category,
                     "mode": mode,
                     "task_id": task_id,
+                    "min_helpfulness": min_helpfulness,
                 }
             ],
             session_id=resolved_session_id,
@@ -1114,7 +1148,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             files_changed=changed_files,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"access_jsonl": changed_files[0], "entry_count": 1},
+            new_state={
+                "access_jsonl": changed_files[0],
+                "entry_count": 1,
+                "scan_entry_count": scan_entry_count,
+            },
         )
         return result.to_json()
 
@@ -1131,6 +1169,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_log_access_batch(
         access_entries: list[dict[str, object]],
         session_id: str | None = None,
+        min_helpfulness: float | None = None,
     ) -> str:
         from ...errors import ValidationError
         from ...models import MemoryWriteResult
@@ -1142,10 +1181,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError("access_entries must be a non-empty list of access entry objects")
 
         resolved_session_id = _resolve_access_session_id(root, session_id)
-        changed_files = _append_access_entries(
+        threshold = _normalize_min_helpfulness(min_helpfulness)
+        normalized_entries = [{**entry, "min_helpfulness": threshold} for entry in access_entries]
+
+        changed_files, scan_entry_count = _append_access_entries(
             repo,
             root,
-            access_entries,
+            normalized_entries,
             session_id=resolved_session_id,
         )
 
@@ -1157,7 +1199,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             files_changed=changed_files,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"access_jsonls": changed_files, "entry_count": entry_count},
+            new_state={
+                "access_jsonls": changed_files,
+                "entry_count": entry_count,
+                "scan_entry_count": scan_entry_count,
+            },
         )
         return result.to_json()
 
@@ -1224,14 +1270,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 repo.add(chats_summary_rel)
                 files_changed.append(chats_summary_rel)
 
+        access_files_changed, _ = _append_access_entries(
+            repo,
+            root,
+            access_entries,
+            session_id=session_id,
+        )
+
         files_changed.extend(
             path
-            for path in _append_access_entries(
-                repo,
-                root,
-                access_entries,
-                session_id=session_id,
-            )
+            for path in access_files_changed
             if path not in files_changed
         )
 

@@ -409,7 +409,23 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertIn("memory_log_access_batch", manifest["tool_sets"]["semantic_extensions"])
         self.assertEqual(
             manifest["operations"]["memory_log_access_batch"]["result_fields"],
-            ["access_jsonls", "entry_count"],
+            ["access_jsonls", "entry_count", "scan_entry_count"],
+        )
+
+    def test_manifest_declares_access_scan_result_fields_and_notes(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            manifest["ui_feedback"]["result_field_labels"]["scan_entry_count"],
+            "Scan Entry Count",
+        )
+        self.assertIn(
+            "ACCESS_SCANS.jsonl",
+            manifest["operations"]["memory_log_access"]["notes"],
+        )
+        self.assertIn(
+            "min_helpfulness",
+            manifest["operations"]["memory_log_access_batch"]["notes"],
         )
 
     def test_manifest_declares_access_logging_task_id_vocabulary(self) -> None:
