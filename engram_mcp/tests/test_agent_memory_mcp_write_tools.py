@@ -1840,6 +1840,59 @@ Next: Original next action
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
         self.assertEqual(entry["mode"], "write")
 
+    def test_memory_log_access_accepts_task_id_from_manifest_vocabulary(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "knowledge/ACCESS.jsonl": "",
+                "HUMANS/tooling/agent-memory-capabilities.toml": (
+                    "[access_logging]\n"
+                    'task_ids = ["plan-review", "validation"]\n'
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/lit/foo.md",
+                task="test",
+                helpfulness=0.7,
+                note="task id should be persisted",
+                task_id="plan-review",
+            )
+        )
+
+        payload = json.loads(raw)
+        entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["task_id"], "plan-review")
+
+    def test_memory_log_access_rejects_task_id_outside_manifest_vocabulary(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "HUMANS/tooling/agent-memory-capabilities.toml": (
+                    "[access_logging]\n"
+                    'task_ids = ["plan-review", "validation"]\n'
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_log_access"](
+                    file="knowledge/lit/foo.md",
+                    task="test",
+                    helpfulness=0.7,
+                    note="task id should be rejected",
+                    task_id="research-write",
+                )
+            )
+
     def test_memory_log_access_uses_environment_session_id_when_missing(self) -> None:
         repo_root = self._init_repo(
             {
@@ -2025,6 +2078,61 @@ Next: Original next action
         self.assertEqual(payload["total_sessions"], 3)
         self.assertEqual(payload["write_sessions"], 2)
         self.assertEqual(payload["access_density"], 3)
+
+    def test_memory_get_maturity_signals_groups_access_density_by_task_id(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": "# Profile\n",
+                "knowledge/lit/foo.md": "# Foo\n",
+                "plans/demo.md": "# Demo\n",
+                "knowledge/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "knowledge/lit/foo.md",
+                                "date": "2026-03-20",
+                                "task": "plan sweep",
+                                "helpfulness": 0.8,
+                                "note": "plan review",
+                                "session_id": "chats/2026/03/20/chat-013",
+                                "task_id": "plan-review",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "file": "knowledge/lit/foo.md",
+                                "date": "2026-03-20",
+                                "task": "validation task",
+                                "helpfulness": 0.9,
+                                "note": "validation",
+                                "session_id": "chats/2026/03/20/chat-014",
+                                "task_id": "validation",
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "plans/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "plans/demo.md",
+                        "date": "2026-03-20",
+                        "task": "legacy task",
+                        "helpfulness": 0.6,
+                        "note": "no task id",
+                        "session_id": "chats/2026/03/20/chat-015",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_get_maturity_signals"]()))
+
+        self.assertEqual(
+            payload["access_density_by_task_id"],
+            {"plan-review": 1, "unspecified": 1, "validation": 1},
+        )
 
     def test_memory_revert_commit_preview_returns_confirmation_metadata(self) -> None:
         repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})

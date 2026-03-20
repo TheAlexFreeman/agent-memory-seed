@@ -400,6 +400,7 @@ def _compute_maturity_signals(
 
     session_ids: set[str] = set()
     write_session_ids: set[str] = set()
+    access_density_by_task_id: dict[str, int] = {}
     for entry in all_entries:
         sid = entry.get("session_id")
         if sid:
@@ -408,6 +409,9 @@ def _compute_maturity_signals(
             mode_value = entry.get("mode")
             if isinstance(mode_value, str) and mode_value in {"write", "update", "create"}:
                 write_session_ids.add(sid_str)
+        task_id_value = entry.get("task_id")
+        task_bucket = str(task_id_value).strip() if task_id_value else "unspecified"
+        access_density_by_task_id[task_bucket] = access_density_by_task_id.get(task_bucket, 0) + 1
     total_sessions = len(session_ids)
     write_sessions = len(write_session_ids)
 
@@ -488,6 +492,7 @@ def _compute_maturity_signals(
         "high_trust_files": high_trust_count,
         "identity_stability": identity_stability,
         "write_sessions": write_sessions,
+        "access_density_by_task_id": dict(sorted(access_density_by_task_id.items())),
         "mean_helpfulness": mean_helpfulness,
         "helpfulness_sample_size": len(helpfulness_values),
         "computed_at": str(date.today()),
@@ -1115,7 +1120,9 @@ def _suggest_freshness_action(
     return "reverify"
 
 
-def _build_knowledge_freshness_report(root: Path, repo, rel_path: str, abs_path: Path) -> dict[str, object]:
+def _build_knowledge_freshness_report(
+    root: Path, repo, rel_path: str, abs_path: Path
+) -> dict[str, object]:
     from ..frontmatter_utils import read_with_frontmatter
 
     fm_dict, _ = read_with_frontmatter(abs_path)
@@ -2315,6 +2322,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                               file has no tracked commit history
               write_sessions         (int)   Distinct session_id values with at
                                               least one non-read ACCESS entry
+              access_density_by_task_id (dict) ACCESS entry counts grouped by
+                                              task_id bucket; entries without
+                                              task_id are grouped under
+                                              "unspecified"
               mean_helpfulness        (float) Mean helpfulness score across all
                                               ACCESS entries that carry the field
               helpfulness_sample_size (int)   Number of entries with a

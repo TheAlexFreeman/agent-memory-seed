@@ -412,6 +412,18 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ["access_jsonls", "entry_count"],
         )
 
+    def test_manifest_declares_access_logging_task_id_vocabulary(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            manifest["access_logging"]["task_ids"],
+            ["plan-review", "research-write", "validation", "health-check"],
+        )
+        self.assertEqual(
+            manifest["ui_feedback"]["result_field_labels"]["access_density_by_task_id"],
+            "Access Density by Task ID",
+        )
+
     def test_resolver_returns_structured_ui_feedback_for_semantic_mode(self) -> None:
         resolution = resolver.resolve_capabilities(REPO_ROOT)
         ui_feedback = resolution["ui_feedback"]

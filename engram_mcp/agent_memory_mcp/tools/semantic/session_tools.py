@@ -26,6 +26,7 @@ def _tool_annotations(**kwargs: object) -> Any:
 
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 _ACCESS_MODES = frozenset({"read", "write", "update", "create"})
+_ACCESS_TASK_ID_MANIFEST = PurePosixPath("HUMANS/tooling/agent-memory-capabilities.toml")
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
 _CURRENT_SESSION_SENTINEL = PurePosixPath("chats/CURRENT_SESSION")
@@ -103,6 +104,28 @@ def _load_task_categories(root: Path) -> set[str]:
         if match:
             categories.add(match.group(1))
     return categories
+
+
+def _load_access_task_ids(root: Path) -> set[str]:
+    manifest_path = root / _ACCESS_TASK_ID_MANIFEST
+    if not manifest_path.exists():
+        return set()
+
+    try:
+        import tomllib
+
+        data = tomllib.loads(manifest_path.read_text(encoding="utf-8"))
+    except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
+        import tomli  # type: ignore[import-not-found]
+
+        data = tomli.loads(manifest_path.read_text(encoding="utf-8"))
+    access_logging = data.get("access_logging")
+    if not isinstance(access_logging, dict):
+        return set()
+    task_ids = access_logging.get("task_ids")
+    if not isinstance(task_ids, list):
+        return set()
+    return {str(task_id).strip() for task_id in task_ids if str(task_id).strip()}
 
 
 def _append_markdown_block(existing: str, block: str) -> str:
@@ -213,6 +236,7 @@ def _normalize_access_entry(
     note_value = raw_entry.get("note")
     category_value = raw_entry.get("category")
     mode_value = raw_entry.get("mode")
+    task_id_value = raw_entry.get("task_id")
 
     if not isinstance(task_value, str) or not task_value.strip():
         raise ValidationError("access entry task must be a non-empty string")
@@ -253,9 +277,23 @@ def _normalize_access_entry(
             raise ValidationError("access entry mode must be a non-empty string when provided")
         mode = mode_value.strip()
         if mode not in _ACCESS_MODES:
-            raise ValidationError(f"access entry mode must be one of {sorted(_ACCESS_MODES)}, got: {mode}")
+            raise ValidationError(
+                f"access entry mode must be one of {sorted(_ACCESS_MODES)}, got: {mode}"
+            )
     else:
         mode = None
+
+    if task_id_value is not None:
+        task_id = validate_slug(str(task_id_value), field_name="task_id")
+        task_ids = _load_access_task_ids(root)
+        if not task_ids:
+            raise ValidationError(
+                "task_id cannot be set until HUMANS/tooling/agent-memory-capabilities.toml defines access_logging.task_ids"
+            )
+        if task_id not in task_ids:
+            raise ValidationError(f"task_id must be one of {sorted(task_ids)}, got: {task_id}")
+    else:
+        task_id = None
 
     entry: dict[str, object] = {
         "file": file_path,
@@ -270,6 +308,8 @@ def _normalize_access_entry(
         entry["category"] = category
     if mode is not None:
         entry["mode"] = mode
+    if task_id is not None:
+        entry["task_id"] = task_id
     return access_jsonl, _json.dumps(entry, ensure_ascii=False)
 
 
@@ -1044,6 +1084,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         session_id: str | None = None,
         category: str | None = None,
         mode: str | None = None,
+        task_id: str | None = None,
     ) -> str:
         from ...models import MemoryWriteResult
 
@@ -1061,6 +1102,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     "note": note,
                     "category": category,
                     "mode": mode,
+                    "task_id": task_id,
                 }
             ],
             session_id=resolved_session_id,
