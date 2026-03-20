@@ -85,6 +85,7 @@ def create_mcp(
     """Create the FastMCP app, register tools, and expose their callables."""
     root = resolve_repo_root(repo_root)
     repo = GitRepo(root)
+    root = repo.root
     mcp = FastMCP("agent_memory_mcp")
     delete_permission_hook = (
         delete_permission_hook

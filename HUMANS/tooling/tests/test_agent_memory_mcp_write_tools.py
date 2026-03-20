@@ -115,6 +115,23 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         )
         return cast(dict[str, ToolCallable], tools)
 
+    def test_create_mcp_accepts_git_subdirectory_root(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/README.md": "# Knowledge\n",
+                "knowledge/topic/note.md": "# Note\n",
+            }
+        )
+        _, tools, resolved_root, repo = self.server.create_mcp(
+            repo_root=repo_root / "knowledge",
+            enable_raw_write_tools=True,
+        )
+
+        self.assertEqual(resolved_root, repo_root)
+        self.assertEqual(repo.root, repo_root)
+        payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/topic/note.md")))
+        self.assertIn("# Note", payload["content"])
+
     def _write_and_commit(
         self,
         repo_root: Path,
@@ -784,6 +801,33 @@ Structured.
         self.assertIn("knowledge/_unverified/test.md", head_files)
         self.assertNotIn("README.md", head_files)
         self.assertIn("README.md", still_staged)
+
+    def test_memory_commit_rejects_unstaged_changes_on_tracked_paths(self) -> None:
+        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        asyncio.run(
+            tools["memory_write"](
+                path="knowledge/_unverified/test.md",
+                content="# Staged version\n",
+            )
+        )
+        (repo_root / "knowledge" / "_unverified" / "test.md").write_text(
+            "# Unstaged version\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(self.errors.StagingError):
+            asyncio.run(tools["memory_commit"](message="[knowledge] Add test note"))
+
+        head_subject = subprocess.run(
+            ["git", "log", "-1", "--pretty=%s"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        self.assertEqual(head_subject, "seed")
 
     def test_memory_update_plan_next_action_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(

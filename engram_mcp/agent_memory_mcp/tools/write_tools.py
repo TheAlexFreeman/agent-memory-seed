@@ -473,8 +473,16 @@ def register(
         repo = get_repo()
         warnings = []
         pending_paths = list(tracked_paths)
+        staged_pending_paths = repo.staged_paths(*pending_paths) if pending_paths else []
+        tracked_paths[:] = staged_pending_paths
 
-        if pending_paths:
+        if staged_pending_paths:
+            if repo.has_unstaged_changes(*staged_pending_paths):
+                raise StagingError(
+                    "Tracked Tier 2 paths have unstaged working-tree changes. "
+                    "Stage or revert those edits before calling memory_commit."
+                )
+        elif pending_paths:
             if not repo.has_staged_changes(*pending_paths):
                 raise StagingError(
                     "No Tier 2 staged changes remain for the tracked paths. "
@@ -511,10 +519,10 @@ def register(
                     "Proceeding anyway."
                 )
 
-        if pending_paths:
-            sha = repo.commit(message, paths=pending_paths)
+        if staged_pending_paths:
+            sha = repo.commit(message, paths=staged_pending_paths)
             tracked_paths.clear()
-            files_changed = pending_paths
+            files_changed = staged_pending_paths
         else:
             sha = repo.commit(message, allow_empty=allow_empty)
             files_changed = []

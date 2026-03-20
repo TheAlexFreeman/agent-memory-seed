@@ -28,9 +28,21 @@ _FALLBACK_AUTHOR_EMAIL = "agent@agent-memory"
 
 class GitRepo:
     def __init__(self, root: Path) -> None:
-        self.root = Path(root).resolve()
-        if not (self.root / ".git").exists():
-            raise ValueError(f"Not a git repository: {self.root}")
+        candidate_root = Path(root).resolve()
+        if not candidate_root.is_dir():
+            raise ValueError(f"Not a git repository: {candidate_root}")
+
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=str(candidate_root),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        if result.returncode != 0:
+            raise ValueError(f"Not a git repository: {candidate_root}")
+
+        self.root = Path(result.stdout.strip()).resolve()
 
     # ------------------------------------------------------------------
     # Internal runner
@@ -139,6 +151,22 @@ class GitRepo:
         if not rel_paths:
             return not self.nothing_staged()
         result = self._run(["git", "diff", "--cached", "--quiet", "--", *rel_paths], check=False)
+        return result.returncode == 1
+
+    def staged_paths(self, *rel_paths: str) -> list[str]:
+        """Return staged paths, optionally filtered to a path subset."""
+        cmd = ["git", "diff", "--cached", "--name-only"]
+        if rel_paths:
+            cmd += ["--", *rel_paths]
+        result = self._run(cmd, check=False)
+        return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+    def has_unstaged_changes(self, *rel_paths: str) -> bool:
+        """True if the working tree has unstaged changes for the given paths."""
+        cmd = ["git", "diff", "--quiet"]
+        if rel_paths:
+            cmd += ["--", *rel_paths]
+        result = self._run(cmd, check=False)
         return result.returncode == 1
 
     def commit(
