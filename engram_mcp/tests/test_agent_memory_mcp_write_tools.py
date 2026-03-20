@@ -165,6 +165,38 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             text=True,
         ).stdout.strip()
 
+    def _init_host_repo(self, files: dict[str, str]) -> Path:
+        temp_root = Path(self._tmpdir.name) / (f"host_{id(files)}")
+        temp_root.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init"], cwd=temp_root, check=True, capture_output=True, text=True)
+        subprocess.run(
+            ["git", "config", "user.name", "Host User"],
+            cwd=temp_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "host@example.com"],
+            cwd=temp_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        for rel_path, content in files.items():
+            target = temp_root / rel_path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=temp_root, check=True, capture_output=True, text=True)
+        subprocess.run(
+            ["git", "commit", "-m", "host seed"],
+            cwd=temp_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return temp_root
+
     def test_memory_delete_uses_permission_hook_for_allowed_paths(self) -> None:
         repo_root = self._init_repo_with_file("plans/delete-me.md")
         calls: list[str] = []
@@ -2029,6 +2061,50 @@ Next: Original next action
             payload["unevaluable"][0]["reason"],
             "untracked_without_frontmatter",
         )
+
+    def test_memory_git_log_can_read_configured_host_repo(self) -> None:
+        host_root = self._init_host_repo({"src/app.py": "print('host')\n"})
+        self._write_and_commit(host_root, {"src/app.py": "print('host v2')\n"}, "host update")
+        repo_root = self._init_repo(
+            {
+                "agent-bootstrap.toml": (
+                    'version = 1\n'
+                    'router = "meta/quick-reference.md"\n'
+                    'default_mode = "returning"\n'
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
+                    f'host_repo_root = "{host_root.as_posix()}"\n'
+                ),
+                "meta/quick-reference.md": "# Quick Reference\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_git_log"](n=1, use_host_repo=True)))
+
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["message"], "host update")
+        self.assertIn("src/app.py", payload[0]["files_changed"])
+
+    def test_memory_git_log_rejects_host_repo_inside_memory_worktree(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "agent-bootstrap.toml": (
+                    'version = 1\n'
+                    'router = "meta/quick-reference.md"\n'
+                    'default_mode = "returning"\n'
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
+                    'host_repo_root = "./nested-host"\n'
+                ),
+                "meta/quick-reference.md": "# Quick Reference\n",
+            }
+        )
+        nested_host = repo_root / "nested-host"
+        nested_host.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init"], cwd=nested_host, check=True, capture_output=True, text=True)
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(tools["memory_git_log"](use_host_repo=True))
 
     def test_memory_check_aggregation_triggers_reports_above_and_near_thresholds(self) -> None:
         repo_root = self._init_repo(

@@ -943,6 +943,51 @@ def _is_humans_path(path: Path, root: Path) -> bool:
     return bool(relative.parts) and relative.parts[0] == _HUMANS_DIRNAME
 
 
+def _resolve_host_repo(root: Path) -> Path | None:
+    """Return the configured host repo root from agent-bootstrap.toml, if any."""
+    bootstrap_path = root / "agent-bootstrap.toml"
+    if not bootstrap_path.exists():
+        return None
+
+    match = re.search(
+        r'^host_repo_root\s*=\s*"(?P<path>[^"]+)"',
+        bootstrap_path.read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    if match is None:
+        return None
+
+    candidate = Path(match.group("path")).expanduser()
+    if not candidate.is_absolute():
+        candidate = (root / candidate).resolve()
+    return candidate.resolve()
+
+
+def _get_git_repo_for_log(root: Path, repo, *, use_host_repo: bool):
+    """Resolve the git repo to inspect for memory_git_log."""
+    if not use_host_repo:
+        return repo
+
+    from ..errors import ValidationError
+    from ..git_repo import GitRepo
+
+    host_root = _resolve_host_repo(root)
+    if host_root is None:
+        raise ValidationError("host_repo_root is not configured in agent-bootstrap.toml")
+
+    try:
+        host_root.relative_to(root)
+    except ValueError:
+        pass
+    else:
+        raise ValidationError("host_repo_root must not point inside the memory worktree")
+
+    try:
+        return GitRepo(host_root)
+    except ValueError as exc:
+        raise ValidationError(str(exc)) from exc
+
+
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     """Register all Tier 0 read tools and return their callables."""
 
@@ -1250,18 +1295,20 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             openWorldHint=False,
         ),
     )
-    async def memory_git_log(n: int = 10) -> str:
+    async def memory_git_log(n: int = 10, use_host_repo: bool = False) -> str:
         """Return recent commit history for the memory repository.
 
         Useful at session start to see what changed since the last session.
 
         Args:
             n: Number of commits to return (default: 10, max: 50).
+            use_host_repo: When true, read from host_repo_root in agent-bootstrap.toml.
 
         Returns:
             JSON list of commits, each with sha, message, date, files_changed.
         """
-        repo = get_repo()
+        root = get_root()
+        repo = _get_git_repo_for_log(root, get_repo(), use_host_repo=use_host_repo)
         n = min(n, 50)
         commits = repo.log(n)
         return json.dumps(commits, indent=2)
