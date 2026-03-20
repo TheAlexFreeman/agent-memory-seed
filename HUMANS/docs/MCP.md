@@ -32,7 +32,7 @@ These are the main files and entry points that define the MCP setup.
 | `HUMANS/tooling/agent-memory-capabilities.toml` | Capability manifest | Declares what the MCP surface supports, how clients should interpret it, and which approval rules apply. |
 | `HUMANS/tooling/mcp-config-example.json` | Example client config | Shows how a desktop MCP client can point at this repo. |
 | `engram_mcp/agent_memory_mcp/tools/read_tools.py` | Tier 0 read tools | Read, inspect, audit, and report on the memory repo without mutating it. |
-| `engram_mcp/agent_memory_mcp/tools/semantic_tools.py` | Tier 1 semantic tools | Perform named, governed write operations that own their invariants and auto-commit on success. |
+| `engram_mcp/agent_memory_mcp/tools/semantic/` | Tier 1 semantic tools | The semantic package is the stable Tier 1 surface, split by domain so governed write operations keep their own invariants and auto-commit behavior without a monolithic module. |
 | `engram_mcp/agent_memory_mcp/tools/write_tools.py` | Tier 2 raw fallback tools | Low-level staged mutation tools used only when the runtime explicitly enables raw fallback. |
 
 ## How the server is launched

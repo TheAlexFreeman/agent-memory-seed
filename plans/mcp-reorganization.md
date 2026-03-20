@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-20'
-next_action: Phase 3, item 28 — move the remaining session and governance tool registrations into semantic/session_tools.py, then simplify semantic_tools.py down to transitional shared helpers only.
+next_action: Phase 5, item 38 — update `.github/workflows/ci.yml` so CI installs the packaged runtime and validates the new `engram_mcp/` layout end-to-end.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -436,7 +436,7 @@ session state directly.
     `increment_identity_updates()` and `get_identity_updates()` instead of
     mutating `_session_state` directly.
 
-28. ☐ Move session/governance tools to `session_tools.py`
+28. ☑ Move session/governance tools to `session_tools.py`
 
     Move `memory_record_chat_summary`, `memory_record_reflection`,
     `memory_append_scratchpad`, `memory_log_access`, `memory_flag_for_review`,
@@ -445,7 +445,7 @@ session state directly.
     `_session.py` but its MCP registration can be handled here or in
     `__init__.py` — keep it in `_session.py` for co-location with the state.
 
-29. ☐ Write `semantic/__init__.py` as a compatibility re-export
+29. ☑ Write `semantic/__init__.py` as a compatibility re-export
 
     `server.py` currently does:
     ```python
@@ -461,12 +461,12 @@ session state directly.
     # New: from .tools import semantic   # semantic is now the package
     ```
 
-30. ☐ Delete `semantic_tools.py`
+30. ☑ Delete `semantic_tools.py`
 
-    Only after all tests pass with the new submodule structure. Keep the file
-    until then as a reference.
+    Completed by deleting the tracked shim now that the package surface and
+    manifest both point at `tools/semantic/` directly.
 
-31. ☐ Run full test suite — must be green. Address any regressions before
+31. ☑ Run full test suite — must be green. Address any regressions before
     marking Phase 3 complete.
 
 ---
@@ -479,7 +479,7 @@ guarantee formalized as a dependency constraint.
 
 ### Items
 
-32. ☐ Identify the zero-MCP-dependency modules
+32. ☑ Identify the zero-MCP-dependency modules
 
     The following modules in `engram_mcp/agent_memory_mcp/` have no `mcp` imports today
     and constitute the format/validation layer:
@@ -495,7 +495,7 @@ guarantee formalized as a dependency constraint.
     # run with mcp not installed — should succeed
     ```
 
-33. ☐ Add a `core` extras group to `pyproject.toml`
+33. ☑ Add a `core` extras group to `pyproject.toml`
 
     ```toml
     [project.optional-dependencies]
@@ -513,21 +513,21 @@ guarantee formalized as a dependency constraint.
     frontmatter_utils.py requires python-frontmatter). The key outcome is that
     the distinction is declared and enforced, not that the dependency list changes.
 
-34. ☐ Guard `mcp` imports in `server.py` behind `TYPE_CHECKING` where possible
+34. ☑ Guard `mcp` imports in `server.py` behind `TYPE_CHECKING` where possible
 
     Any `from mcp.server.fastmcp import FastMCP` that appears at module level in
     non-server files is a layering violation. Audit all files in
     `engram_mcp/agent_memory_mcp/` for top-level `mcp` imports — they should exist
     only in `server.py` and `server_main.py`.
 
-35. ☐ Update `validate_memory_repo.py` to import from `engram_mcp.agent_memory_mcp.core`
+35. ☑ Update `validate_memory_repo.py` to import from `engram_mcp.agent_memory_mcp.core`
     submodules if needed
 
     The validator currently does not import from `tools.*` (confirmed in Phase 0
-    reconnaissance). If it needs frontmatter utilities in the future, it should
+    reconnaissance), so no code change is required here. If it needs frontmatter utilities in the future, it should
     import from the core modules directly, not from the server.
 
-36. ☐ Document the layer boundary in `HUMANS/docs/DESIGN.md`
+36. ☑ Document the layer boundary in `HUMANS/docs/DESIGN.md`
 
     Add a section describing the two layers:
         - **Format layer** (`engram_mcp/agent_memory_mcp/{errors,frontmatter_utils,git_repo,
@@ -536,7 +536,13 @@ guarantee formalized as a dependency constraint.
         - **Runtime layer** (`engram_mcp/agent_memory_mcp/server.py`, `tools/`): requires
       `mcp[cli]>=1.0`, exposes the governed write surface to agents.
 
-37. ☐ Run full test suite — must be green.
+37. ☑ Run full test suite — must be green.
+
+### Phase 4 progress log
+
+| Date | Change | Validation |
+| --- | --- | --- |
+| 2026-03-20 | Added `engram_mcp.agent_memory_mcp.core` as an import-safe format-layer surface, made package-root runtime imports lazy, added a `core` optional dependency group, and documented the format/runtime boundary. Verified the `mcp` import audit still leaves real runtime imports in `server.py` only; tool modules keep `FastMCP` behind `TYPE_CHECKING`. | Focused MCP tests green (`82 passed`), full suite green (`193 passed`) |
 
 ---
 
@@ -633,6 +639,8 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 
 | Date | Action |
 |---|---|
+| 2026-03-20 | Completed Phase 3 items 28, 29, and 31: extracted the remaining session and governance tools into `semantic/session_tools.py`, made `semantic/__init__.py` the complete semantic registration surface, and restored a minimal `semantic_tools.py` shim so tracked-path setup-flow tests stay green until the final file-removal can happen in a commit-coordinated cleanup pass. Full suite green (`191 passed`). |
+| 2026-03-20 | Completed Phase 3 item 30: deleted the tracked `engram_mcp/agent_memory_mcp/tools/semantic_tools.py` shim, updated the setup manifest for the new `core/` files plus `test_core_boundary.py`, and refreshed MCP docs to point at the `semantic/` package instead of the removed compatibility file. |
 | 2026-03-20 | Completed Phase 3 items 25–27: extracted the plan, knowledge, and identity tool registrations into `semantic/plan_tools.py`, `semantic/knowledge_tools.py`, and `semantic/identity_tools.py`; wired `semantic/__init__.py` to compose them with shared session state; and kept focused regression slices green across plan, knowledge, identity, churn-reset, and export-surface checks (`18 passed`). |
 | 2026-03-20 | Completed Phase 3 item 24: moved `memory_reset_session_state` registration into `semantic/_session.py`, wired `semantic/__init__.py` to compose a shared per-server session state across the new package and legacy registrar, and kept focused regressions green (`3 passed`). |
 | 2026-03-20 | Completed Phase 2 item 22 and started Phase 3: added the `semantic/` package scaffold, routed `server.py` through the new package surface, extracted instance-scoped session-state helpers into `semantic/_session.py`, and kept the full suite green (`191 passed, 0 failed`). |

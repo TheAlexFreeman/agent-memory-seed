@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] MCP runtime boundary formalized and semantic shim removed
+
+**Changed:**
+
+- **Finished the semantic split cleanup.** Deleted the transitional `engram_mcp/agent_memory_mcp/tools/semantic_tools.py` shim after the `semantic/` package became the complete Tier 1 registration surface.
+
+- **Made the format/runtime boundary executable.** Added `engram_mcp/agent_memory_mcp/core/` as an import-safe namespace for the format and validation layer, made `engram_mcp.agent_memory_mcp` resolve runtime exports lazily, and added a `core` optional dependency group in `pyproject.toml`.
+
+- **Updated seed and documentation surfaces.** Refreshed `setup/initial-commit-paths.txt` to include the new `core/` modules and `engram_mcp/tests/test_core_boundary.py`, and updated the MCP architecture docs to point at the semantic package rather than the removed monolithic file.
+
+- **Added regression coverage for the boundary.** The new `engram_mcp/tests/test_core_boundary.py` asserts that the package root does not import the server eagerly and that the `core` namespace re-exports the format-layer modules consistently.
+
+**Reasoning:** The runtime split was already complete in practice, but the repo still carried a tracked compatibility shim and an implicit package boundary. Removing the shim in the same commit that updates the tracked-file manifest closes the last Phase 3 cleanup without breaking setup-flow invariants. Formalizing the `core` namespace and lazy package-root behavior makes the format/runtime separation structural, not just descriptive, which improves reuse by validator/setup tooling and reduces accidental `mcp` coupling.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-19] Compact bootstrap contract and validator enforcement
 
 **Changed:**

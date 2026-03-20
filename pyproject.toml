@@ -12,10 +12,14 @@ requires-python = ">=3.10"
 [project.scripts]
 engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
 
-# Core runtime: only what the MCP server itself needs
+# Base install stays empty so the format layer can be imported without pulling
+# in MCP runtime dependencies.
 dependencies = []
 
 [project.optional-dependencies]
+# Install with: pip install -e ".[core]"
+core = ["python-frontmatter>=1.1"]
+
 # Install with: pip install -e ".[server]"
 server = ["mcp>=1.0", "python-frontmatter>=1.1"]
 
