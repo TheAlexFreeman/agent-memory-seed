@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [concurrency, optimistic-locking, mvcc, actor-model, version-tokens, sqlite]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Concurrency Models for Local State

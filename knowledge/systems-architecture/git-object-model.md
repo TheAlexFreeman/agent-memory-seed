@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [git, object-model, blobs, trees, commits, tags, index, refs, reflog, packfiles, storage]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Git Object Model and Why It Matters Here
@@ -59,7 +60,7 @@ Conceptually:
 
 That means the index is not bookkeeping noise. It is the place where Git assembles the next snapshot before it becomes history.
 
-The current MCP implementation reflects that model directly. In [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py#L92), `add()` shells out to `git add`, and in [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py#L127), `commit()` shells out to `git commit -m`. The server is therefore dependent on the index path working correctly.
+The current MCP implementation reflects that model directly. In [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py), `add()` shells out to `git add`, and in [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py), `commit()` shells out to `git commit -m`. The server is therefore dependent on the index path working correctly.
 
 ## What `git add` actually does
 
@@ -149,7 +150,7 @@ One tempting but incorrect mental model is: "the server writes files, then commi
 
 So the staging step is not optional boilerplate. It is the mechanism that turns mutable working-tree bytes into a stable next snapshot.
 
-That is why [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py#L92) and [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py#L127) are more than simple shell wrappers: they encode the current transaction model of the whole system.
+That is why [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py) and [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py) are more than simple shell wrappers: they encode the current transaction model of the whole system.
 
 ## Architectural relevance for future work
 

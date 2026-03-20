@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [git, worktrees, orphan-branches, hooks, refs, governance, automation]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Git Worktrees, Orphan Branches, and Hooks
@@ -42,7 +43,7 @@ For agent-memory-seed, this means:
 
 ## The repo already depends on worktree behavior
 
-The current revert preview implementation in [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py#L212) creates a detached temporary worktree, runs `git revert --no-commit`, then removes the worktree. That code already relies on linked-worktree semantics:
+The current revert preview implementation in [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py) creates a detached temporary worktree, runs `git revert --no-commit`, then removes the worktree. That code already relies on linked-worktree semantics:
 
 - shared object store so the preview can see repository history cheaply
 - isolated `HEAD` and index so the preview does not contaminate the main checkout

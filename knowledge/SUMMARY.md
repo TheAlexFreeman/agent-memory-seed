@@ -48,6 +48,26 @@ Key files:
 - `chakra-ui-3-styling-system.md` — `createSystem`, tokens, semantic tokens, recipes, slot recipes, virtual colors, cascade layers, and CLI typegen
 - `chakra-ui-3-react-frontend-patterns.md` — Practical synthesis for building consistent, accessible, responsive, and mode-aware React frontends with Chakra 3
 
+<!-- section: systems-architecture -->
+### `systems-architecture/` — Git-backed systems architecture research (promoted 2026-03-19, trust: medium)
+
+Thirteen files covering the storage, concurrency, and data-modeling primitives underlying agent-memory-seed. Reviewed and promoted from `_unverified/` on 2026-03-19. See `systems-architecture/SUMMARY.md` for the full index.
+
+Key files:
+- `git-object-model.md` — Git's blob/tree/commit/tag object graph, the index as staging boundary, `index.lock`, refs, reflog, and packfiles, tied back to the current MCP server write path
+- `git-worktrees-and-hooks.md` — Linked worktree topology, shared versus per-worktree refs, orphan branch mechanics, hook execution model, and how those map onto the worktree integration roadmap
+- `git-plumbing-and-automation.md` — Plumbing versus porcelain, explicit commit publication primitives, `update-ref`, `cat-file`, `notes`, `bundle`, sparse checkout, and resilient automation patterns
+- `filesystem-atomicity-and-locking.md` — `rename()` atomicity, `O_CREAT|O_EXCL` lock acquisition, advisory locking limits, unlink failure modes, and the visibility/durability distinction
+- `filesystems-for-developers.md` — Journaling and copy-on-write filesystems, FUSE and network-share caveats, inotify watcher limitations, and environment-tier guidance for stateful tooling
+- `write-ahead-logging-and-wal-design.md` — WAL invariants, SQLite and PostgreSQL WAL behavior, Git staging as a mini-WAL, and staged-transaction requirements for multi-file MCP writes
+- `append-only-logs-and-compaction.md` — Log-structured storage, LSM/Kafka compaction ideas, event sourcing, archive segmentation, and ACCESS summary materialization
+- `concurrency-models-for-local-state.md` — Optimistic versus pessimistic control, version tokens as compare-and-swap, MVCC for derived SQLite state, and actor-model single-writer design
+- `crdts-and-collaborative-text.md` — CRDT guarantees and limits, Automerge/Yjs/OT comparison, and why governed Markdown files should prefer serialized writes over text convergence
+- `provenance-and-trust-models.md` — PROV-O, SLSA-style process trust, Biba integrity framing, and stronger provenance fields for governed memory artifacts
+- `temporal-data-modeling.md` — Transaction time versus valid time, verification-history trade-offs, event-time precision, and freshness modeling beyond date thresholds
+- `schema-evolution-strategies.md` — Protobuf/Avro compatibility lessons, expand-contract migrations, and explicit versioning boundaries for frontmatter, ACCESS, and MCP contracts
+- `content-addressable-storage-and-integrity.md` — CAS fundamentals, Git as a Merkle DAG, commit-SHA provenance, and integrity design grounded in Git's existing object model
+
 <!-- section: tooling -->
 ### `tooling/` — Codex and MCP runtime notes (ingested 2026-03-18, trust: medium)
 

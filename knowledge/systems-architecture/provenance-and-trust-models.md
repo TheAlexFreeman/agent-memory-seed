@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [provenance, trust, prov-o, slsa, biba, integrity, governance]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Provenance and Trust Models

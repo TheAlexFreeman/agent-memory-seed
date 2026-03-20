@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [crdt, automerge, yjs, ot, collaborative-editing, markdown, frontmatter]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # CRDTs and Collaborative Text in a Governed Markdown System

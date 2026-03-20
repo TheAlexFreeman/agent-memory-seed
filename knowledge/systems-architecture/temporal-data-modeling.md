@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [temporal, bitemporal, last-verified, freshness, event-sourcing, history]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Temporal Data Modeling for Trust and Freshness

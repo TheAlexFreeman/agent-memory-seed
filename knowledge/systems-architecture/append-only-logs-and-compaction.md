@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [logs, compaction, lsm, kafka, cqrs, access-jsonl, archival, summaries]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Append-Only Logs, Compaction, and Materialized Summaries

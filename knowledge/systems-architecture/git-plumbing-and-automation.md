@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [git, plumbing, porcelain, automation, update-index, commit-tree, update-ref, notes, bundle, sparse-checkout]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Git Plumbing for Automation and Failure Recovery
@@ -33,7 +34,7 @@ For this repository, the distinction is practical rather than ideological. A mem
 
 ## The current implementation is porcelain-heavy
 
-The wrapper in [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py#L92) currently uses:
+The wrapper in [tools/agent_memory_mcp/git_repo.py](tools/agent_memory_mcp/git_repo.py) currently uses:
 
 - `git add`
 - `git add -A`

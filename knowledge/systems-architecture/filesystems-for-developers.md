@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [filesystem, journaling, copy-on-write, fuse, inotify, nfs, smb, apfs, ext4, windows]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Filesystems for Developers Building Stateful Tools
@@ -52,7 +53,7 @@ From a developer's point of view:
 - APFS gives Apple-specific copy-on-write behavior and strong rename/save patterns
 - NTFS has different locking, sharing, and path-behavior semantics, especially when observed through POSIX-compatibility layers
 
-Since this workspace is on Windows, that last point matters directly. Even when tools expose a Unix-like shell, they may be operating through translation layers over NTFS semantics. Any repo feature that assumes pure POSIX behavior should be tested rather than presumed.
+On Windows environments, that point matters directly. Tools may expose a Unix-like shell while operating through translation layers over NTFS semantics. Any repo feature that assumes pure POSIX behavior should be tested rather than presumed in any POSIX-compatibility-layer environment.
 
 ## FUSE filesystems: user-space mediation changes the contract
 

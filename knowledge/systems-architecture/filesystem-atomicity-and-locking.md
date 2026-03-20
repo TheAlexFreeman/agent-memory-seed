@@ -4,8 +4,9 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [filesystem, atomicity, rename, locking, o-excl, flock, fsync, durability, fuse, nfs]
-trust: low
+trust: medium
 created: 2026-03-19
+last_verified: 2026-03-19
 ---
 
 # Filesystem Atomicity, Locking, and Durability

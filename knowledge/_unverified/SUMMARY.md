@@ -106,17 +106,6 @@ Four files synthesized from official React and Chakra documentation/blog posts. 
 - **`chakra-ui-3-styling-system.md`** — Chakra 3's token/semantic-token/recipe system, virtual colors, cascade layers, reusable style compositions, and CLI-assisted type safety.
 - **`chakra-ui-3-react-frontend-patterns.md`** — Practical frontend-quality patterns around accessibility, responsiveness, color mode, motion, composition, and React server/client boundaries.
 
-<!-- section: systems-architecture -->
-### `systems-architecture/` — Git-backed systems architecture research (started 2026-03-19)
-
-Five files written for the active systems architecture research plan. All carry `trust: low` pending review.
-
-- **`git-object-model.md`** — Git's blob/tree/commit/tag object graph, the index as staging boundary, `index.lock`, refs, reflog, and packfiles, tied back to the current MCP server write path.
-- **`git-worktrees-and-hooks.md`** — Linked worktree topology, shared versus per-worktree refs, orphan branch mechanics, hook execution model, and how those map onto the worktree integration roadmap.
-- **`git-plumbing-and-automation.md`** — Plumbing versus porcelain, explicit commit publication primitives, `update-ref`, `cat-file`, `notes`, `bundle`, sparse checkout, and resilient automation patterns for Git-backed tooling.
-- **`filesystem-atomicity-and-locking.md`** — `rename()` atomicity, `O_CREAT|O_EXCL` lock acquisition, advisory locking limits, unlink failure modes, and the distinction between atomic visibility and durable writes.
-- **`filesystems-for-developers.md`** — Journaling and copy-on-write filesystems, FUSE and network-share caveats, watcher limitations such as inotify overflow and rename races, and environment-tier guidance for stateful tooling.
-
 ## Usage patterns
 
 _No access data yet._ After aggregation, this section will contain:
