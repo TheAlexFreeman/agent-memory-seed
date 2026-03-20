@@ -82,6 +82,78 @@ Blocks: waits on `mcp-reorganization.md` Phase 2.
 
 
 
+### `phenomenology-embodied-cognition-research.md` · status: active · trust: medium
+
+Detail: plans/phenomenology-embodied-cognition-research.md
+Scope: Deep survey of phenomenology (Husserl, Heidegger, Merleau-Ponty) and 4E embodied cognition (Varela/Thompson/Rosch, Clark & Chalmers) with synthesis into the existing dynamical-systems and grounding-problem threads.
+Progress: 0/12 complete
+Next: Phase 1, item 1 — Husserl's intentionality, epoché, and transcendental reduction.
+Blocks: nothing.
+
+
+### `personal-identity-memory-research.md` · status: active · trust: medium
+
+Detail: plans/personal-identity-memory-research.md
+Scope: Philosophy of personal identity — Locke, Hume, Parfit's reductionism and what-matters-in-survival, narrative identity (Ricoeur, Schechtman) — applied to the design of this repo.
+Progress: 0/12 complete
+Next: Phase 1, item 1 — Locke's memory criterion and the early modern identity debate.
+Blocks: nothing.
+
+
+### `ethics-metaethics-research.md` · status: active · trust: medium
+
+Detail: plans/ethics-metaethics-research.md
+Scope: Systematic normative ethics (utilitarianism, Kant, virtue, contractualism), Parfit's Reasons and Persons in depth, metaethics (realism vs. expressivism), and applied AI ethics (moral status, responsibility, fairness).
+Progress: 0/13 complete
+Next: Phase 1, item 1 — classical utilitarianism from Bentham to Singer.
+Blocks: nothing.
+
+
+### `formal-logic-foundations-research.md` · status: active · trust: medium
+
+Detail: plans/formal-logic-foundations-research.md
+Scope: Classical logic, Gödel's incompleteness theorems, Turing undecidability, type theory and the Curry-Howard isomorphism, ZFC and category theory as alternative foundations.
+Progress: 0/11 complete
+Next: Phase 1, item 1 — propositional and first-order logic, completeness.
+Blocks: nothing.
+
+
+### `game-theory-mechanism-design-research.md` · status: active · trust: medium
+
+Detail: plans/game-theory-mechanism-design-research.md
+Scope: Game theory foundations (Nash equilibrium, prisoner's dilemma, coordination), evolutionary game theory, mechanism design (VCG, Gale-Shapley), social choice (Arrow's impossibility), signaling theory.
+Progress: 0/12 complete
+Next: Phase 1, item 1 — normal-form games and Nash equilibrium.
+Blocks: nothing.
+
+
+### `information-theory-stat-learning-research.md` · status: active · trust: medium
+
+Detail: plans/information-theory-stat-learning-research.md
+Scope: Shannon information theory (entropy, channel capacity, KL divergence), rate-distortion theory, MDL principle, PAC learning, VC dimension, double descent, and generalization via inductive bias.
+Progress: 0/12 complete
+Next: Phase 1, item 1 — Shannon entropy and the source coding theorem.
+Blocks: nothing.
+
+
+### `cognitive-neuroscience-memory-research.md` · status: active · trust: medium
+
+Detail: plans/cognitive-neuroscience-memory-research.md
+Scope: Memory systems taxonomy (episodic/semantic/procedural/working), hippocampal consolidation, sleep replay, reconsolidation, Ebbinghaus forgetting curves, false memory — with implications for this repo's curation design.
+Progress: 0/11 complete
+Next: Phase 1, item 1 — Tulving's episodic/semantic distinction, biological substrates.
+Blocks: nothing.
+
+
+### `cultural-evolution-epistemics-research.md` · status: active · trust: medium
+
+Detail: plans/cultural-evolution-epistemics-research.md
+Scope: Memetics (Dawkins, Blackmore), dual inheritance theory (Boyd/Richerson/Henrich), cultural transmission biases, cumulative culture and collective intelligence, epistemic injustice (Fricker), and how LLMs affect cultural evolution.
+Progress: 0/12 complete
+Next: Phase 1, item 1 — Dawkins' meme concept and the conditions for cultural replication.
+Blocks: nothing.
+
+
 ---
 
 ## Recent completions
