@@ -12,6 +12,30 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Research plans
 
+### `cognitive-attention-executive-function-research.md` · status: active · trust: medium
+
+Detail: plans/cognitive-attention-executive-function-research.md
+Scope: Attention models (early/late selection, attentional bottleneck/blink, Feature Integration Theory), dual-process theory (System 1/2), executive functions (Miyake unity-diversity), cognitive load theory (Sweller), vigilance decrement, mind-wandering and DMN.
+Progress: 0/11 — not yet started.
+Next: Begin Phase 1 — Attention and bottleneck models. Output goes to `knowledge/cognitive-science/attention/`.
+
+
+### `cognitive-metacognition-calibration-research.md` · status: active · trust: medium
+
+Detail: plans/cognitive-metacognition-calibration-research.md
+Scope: Nelson-Narens monitoring/control framework, FOK/JOL/TOT, calibration curves and overconfidence, Dunning-Kruger, illusion of knowing (IOED), source monitoring (Johnson Reality Monitoring), metacognitive control of learning, conflict monitoring, superforecasters.
+Progress: 0/10 — not yet started.
+Next: Begin Phase 1 — Metacognitive monitoring and control. Output goes to `knowledge/cognitive-science/metacognition/`.
+
+
+### `cognitive-concepts-categorization-research.md` · status: active · trust: medium
+
+Detail: plans/cognitive-concepts-categorization-research.md
+Scope: Classical theory failures (Wittgenstein, Putnam), prototype theory (Rosch, basic level), exemplar theory (GCM), theory-theory (Murphy-Medin), conceptual spaces (Gärdenfors), embodied/grounded cognition (Barsalou), structural alignment and analogy (Gentner), conceptual change (Chi, Vosniadou, Kuhn), knowledge compilation (ACT*), and conceptual hygiene across interdisciplinary knowledge.
+Progress: 0/12 — not yet started.
+Next: Begin Phase 1 — Classical theory failures and prototype theory. Output goes to `knowledge/cognitive-science/concepts/`.
+
+
 ### `information-theory-stat-learning-research.md` · status: complete · trust: medium · **COMPLETE**
 
 Detail: plans/information-theory-stat-learning-research.md
