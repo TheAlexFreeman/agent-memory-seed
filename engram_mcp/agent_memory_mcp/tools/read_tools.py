@@ -93,7 +93,9 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     tool_sets = manifest.get("tool_sets") if isinstance(manifest.get("tool_sets"), dict) else {}
     read_support = tool_sets.get("read_support") if isinstance(tool_sets, dict) else []
     raw_fallback = tool_sets.get("raw_fallback") if isinstance(tool_sets, dict) else []
-    semantic_extensions = tool_sets.get("semantic_extensions") if isinstance(tool_sets, dict) else []
+    semantic_extensions = (
+        tool_sets.get("semantic_extensions") if isinstance(tool_sets, dict) else []
+    )
     declared_gaps = tool_sets.get("declared_gaps") if isinstance(tool_sets, dict) else []
 
     read_tools = read_support if isinstance(read_support, list) else []
@@ -342,7 +344,9 @@ def _iter_markdown_links(text: str) -> list[tuple[int, str]]:
     return links
 
 
-def _resolve_repo_relative_target(root: Path, source_file: Path, target: str) -> tuple[str | None, str | None]:
+def _resolve_repo_relative_target(
+    root: Path, source_file: Path, target: str
+) -> tuple[str | None, str | None]:
     resolved = (source_file.parent / target).resolve()
     try:
         rel_target = resolved.relative_to(root).as_posix()
@@ -1753,9 +1757,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     file_line_cache[file_rel] = untracked_text.splitlines()
                 else:
                     try:
-                        file_line_cache[file_rel] = (root / file_rel).read_text(
-                            encoding="utf-8", errors="replace"
-                        ).splitlines()
+                        file_line_cache[file_rel] = (
+                            (root / file_rel)
+                            .read_text(encoding="utf-8", errors="replace")
+                            .splitlines()
+                        )
                     except OSError:
                         file_line_cache[file_rel] = []
             return file_line_cache[file_rel]
@@ -1977,7 +1983,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 summary_text = summary_path.read_text(encoding="utf-8")
                 linked_targets: set[str] = set()
                 for _, target in _iter_markdown_links(summary_text):
-                    resolved_target, reason = _resolve_repo_relative_target(root, summary_path, target)
+                    resolved_target, reason = _resolve_repo_relative_target(
+                        root, summary_path, target
+                    )
                     if resolved_target is not None:
                         linked_targets.add(resolved_target)
                     if reason is not None and not any(
@@ -2065,7 +2073,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         file_entries: list[str] = []
         subfolder_entries: list[str] = []
 
-        for entry in sorted(folder_path.iterdir(), key=lambda item: (item.is_file(), item.name.lower())):
+        for entry in sorted(
+            folder_path.iterdir(), key=lambda item: (item.is_file(), item.name.lower())
+        ):
             if entry.name.startswith(".") or entry.name in _IGNORED_NAMES:
                 continue
             if entry.is_dir():
@@ -2079,7 +2089,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 continue
 
             fm_dict, body = read_with_frontmatter(entry)
-            heading, description = _extract_heading_and_paragraph(body, entry.stem.replace("-", " ").title())
+            heading, description = _extract_heading_and_paragraph(
+                body, entry.stem.replace("-", " ").title()
+            )
             metadata = _build_summary_metadata(fm_dict)
             link_target = entry.name
             if style == "standard":
@@ -2271,7 +2283,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 )
                 continue
 
-            if access_count >= _CURATION_RETIREMENT_THRESHOLD and helpfulness_value <= _CURATION_RETIREMENT_MAX:
+            if (
+                access_count >= _CURATION_RETIREMENT_THRESHOLD
+                and helpfulness_value <= _CURATION_RETIREMENT_MAX
+            ):
                 retirement_candidate.append(category_payload)
                 suggested_actions.append(
                     {
@@ -2369,7 +2384,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
 
         current_branch_result = _git(["symbolic-ref", "--quiet", "--short", "HEAD"])
-        current_branch = current_branch_result.stdout.strip() if current_branch_result.returncode == 0 else "HEAD"
+        current_branch = (
+            current_branch_result.stdout.strip()
+            if current_branch_result.returncode == 0
+            else "HEAD"
+        )
 
         def _resolve_base_ref() -> str | None:
             local_result = _git(["rev-parse", "--verify", resolved_base])

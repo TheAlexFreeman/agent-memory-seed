@@ -581,11 +581,7 @@ result_fields = [
   "summary_updates",
 ]
 fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
-error_kinds = [
-  "NotFoundError",
-  "ValidationError",
-  "StagingError",
-]
+error_kinds = ["NotFoundError", "ValidationError", "StagingError"]
 
 [operations.memory_demote_knowledge]
 group = "knowledge"

@@ -53,7 +53,9 @@ def _normalize_batch_source_paths(raw_source_paths: str, repo, root: Path) -> li
             if child.name != "SUMMARY.md"
         ]
         if not paths:
-            raise ValidationError(f"No promotable markdown files found in folder: {normalized_path}")
+            raise ValidationError(
+                f"No promotable markdown files found in folder: {normalized_path}"
+            )
         return paths
 
     return [normalized_path]
@@ -149,7 +151,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     raise ValidationError(f"duplicate source path in batch: {source_path}")
                 seen_sources.add(source_path)
 
-                source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
+                source_path, abs_source = resolve_repo_path(
+                    repo, source_path, field_name="source_path"
+                )
                 require_under_prefix(source_path, "knowledge/_unverified", field_name="source_path")
                 if source_path.endswith("/SUMMARY.md") or Path(source_path).name == "SUMMARY.md":
                     raise ValidationError(f"Cannot batch-promote SUMMARY.md: {source_path}")
@@ -162,7 +166,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 inferred_target_folders.add(inferred_folder)
                 resolved_target_folder = explicit_target_folder or inferred_folder
                 target_path = f"{resolved_target_folder.rstrip('/')}/{abs_source.name}"
-                target_path, abs_target = resolve_repo_path(repo, target_path, field_name="target_path")
+                target_path, abs_target = resolve_repo_path(
+                    repo, target_path, field_name="target_path"
+                )
                 validate_top_level_root(
                     target_path,
                     allowed_roots=("knowledge",),
@@ -196,7 +202,8 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         if validation_errors:
             raise ValidationError(
-                "Batch promotion validation failed:\n" + "\n".join(f"- {msg}" for msg in validation_errors)
+                "Batch promotion validation failed:\n"
+                + "\n".join(f"- {msg}" for msg in validation_errors)
             )
 
         resolved_target_folder = explicit_target_folder or next(iter(inferred_target_folders))

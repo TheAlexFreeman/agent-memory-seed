@@ -8,40 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-### `access-log-tooling-improvements.md` · status: complete · trust: medium
-
-Detail: plans/access-log-tooling-improvements.md
-Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
-Progress: 13/13 complete
-Next: Human review of ACCESS analytics outputs or follow-on cleanup only.
-Blocks: none.
-
-
-### `mcp-read-tools-improvements.md` · status: complete · trust: medium
-
-Detail: plans/mcp-read-tools-improvements.md
-Scope: Collapse manual session-start reads and improve git-log and trust-audit visibility.
-Progress: 13/13 complete
-Next: Human review of the completed read-tool improvements and follow-on cleanup only.
-Blocks: none; structural prerequisites are complete.
-
-
-### `mcp-write-and-crosscutting-improvements.md` · status: complete · trust: medium
-
-Detail: plans/mcp-write-and-crosscutting-improvements.md
-Scope: Add frontmatter batch updates, native capability lookup, and richer search results.
-Progress: 15/15 complete
-Next: Human review of the completed write/read/search improvements and follow-on cleanup only.
-Blocks: none; structural prerequisites are complete.
-
-
-### `mcp-curation-and-analytics-tools.md` · status: complete · trust: medium
-
-Detail: plans/mcp-curation-and-analytics-tools.md
-Scope: Batch knowledge promotion, cross-reference validation, SUMMARY generation, ACCESS analytics, and branch diff tools.
-Progress: 22/22 complete
-Next: Human review of the completed curation and analytics tool suite.
-Blocks: none; structural scope is complete. Complements (does not duplicate) mcp-read-tools-improvements and mcp-write-and-crosscutting-improvements.
+- *(No active build plans. See recent completions below for the latest shipped build work.)*
 
 ### Research plans
 
@@ -88,6 +55,9 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 ## Recent completions
 
 - [mcp-read-tools-improvements.md](mcp-read-tools-improvements.md) — completed 2026-03-20; 13/13 items across 4 phases (git-log filters, session health check, trust-audit warning band, read-surface contract/test updates); `memory_git_log` now supports `since` and `path_filter`, `memory_session_health_check` collapses session-start maintenance checks, and `memory_audit_trust` now surfaces an `approaching` bucket via `warn_pct`.
+- [mcp-write-and-crosscutting-improvements.md](mcp-write-and-crosscutting-improvements.md) — completed 2026-03-20; 15/15 items across 3 phases (bulk frontmatter updates, capability discovery, richer search context); raw batch frontmatter updates, repo capability discovery, and contextual search rendering all landed with focused contract coverage.
+- [mcp-curation-and-analytics-tools.md](mcp-curation-and-analytics-tools.md) — completed 2026-03-20; 22/22 items across 5 phases (batch promotion, cross-reference validation, summary generation, access analytics, branch divergence); the governed read/write surface now covers the full curation loop from promotion through validation and review reporting.
+- [access-log-tooling-improvements.md](access-log-tooling-improvements.md) — completed 2026-03-20; 13/13 items across 3 phases (ACCESS routing cleanup, session identity propagation, batch logging support); ACCESS writes now support richer session-aware maintenance flows.
 - [ethics-metaethics-research.md](ethics-metaethics-research.md) — completed 2026-03-20; 13/13 items across 4 phases (classical frameworks, Parfit's Reasons and Persons, metaethics, applied AI ethics); 13 knowledge files in `_unverified/philosophy/ethics/`; pending human review.
 - [personal-identity-memory-research.md](personal-identity-memory-research.md) — completed 2026-03-20; 12/12 items across 4 phases (early modern debate, Parfit's reductionism, narrative identity, AI identity synthesis); 12 knowledge files in `_unverified/philosophy/personal-identity/`; pending human review.
 - [phenomenology-embodied-cognition-research.md](phenomenology-embodied-cognition-research.md) — completed 2026-03-20; 12/12 items across 5 phases (Husserlian foundations, Heidegger, Merleau-Ponty, 4E cognition, application/synthesis); 12 knowledge files in `_unverified/philosophy/phenomenology/`; pending human review.
@@ -101,7 +71,6 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 - [mcp-semantic-tools-improvements.md](mcp-semantic-tools-improvements.md) — completed 2026-03-20; Tier 1 semantic tool gaps closed across scratchpad targeting, review-queue lifecycle, skill updates, composite session recording, and ACCESS aggregation compaction.
 - [mcp-reorganization.md](mcp-reorganization.md) — completed 2026-03-20; Phase 5 validator/CI/layout verification finished and downstream MCP tooling plans unblocked.
 - [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; startup contract enforced and measured under budget.
-- [ai-frontier-research.md](ai-frontier-research.md) — completed 2026-03-19; frontier-AI knowledge set written.
 - [systems-architecture-research.md](systems-architecture-research.md) — completed 2026-03-19; storage and concurrency primitives captured.
 - [lesswrong-rationalist-community-research.md](lesswrong-rationalist-community-research.md) — completed 2026-03-19; community survey written.
 - [devops-docker-research.md](devops-docker-research.md) — completed 2026-03-19; Docker and DevOps stack research written.

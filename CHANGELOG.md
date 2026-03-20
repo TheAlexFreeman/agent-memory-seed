@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Curation and analytics surface completed and docs synchronized
+
+**Changed:**
+
+- **Completed the curation-and-analytics MCP plan.** The repo-local MCP surface now includes batch knowledge promotion, cross-reference validation, summary draft generation, ACCESS analytics, and branch divergence reporting across the governed read/write layers.
+
+- **Cleaned up the live plans summary.** `plans/SUMMARY.md` now separates active build work from completed build work, records the finished curation plan in recent completions, and removes the stale duplicate completion note for the still-active frontier-AI research plan.
+
+- **Synchronized the human-facing MCP guide with the manifest.** `HUMANS/docs/MCP.md` now lists the current Tier 0, Tier 1, and Tier 2 tools, including capability discovery, freshness checks, curation read tools, batch promotion, skill updates, session recording, batch ACCESS logging, review-item resolution, and bulk frontmatter fallback.
+
+**Reasoning:** The code surface had moved faster than the human-facing docs. Without this cleanup, returning sessions would see completed build plans mixed into the active stack, and the MCP guide would understate what the repo-local server can actually do. This change restores the summary as a live-priority view and makes the public tool inventory match the manifest again.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Read-tool git filters and session health check landed
 
 **Changed:**

@@ -115,9 +115,14 @@ These tools inspect or analyze the repo without changing it.
 
 **Core file and repo inspection**
 
+- `memory_get_capabilities`
 - `memory_read_file`
 - `memory_list_folder`
 - `memory_search`
+- `memory_check_cross_references`
+- `memory_generate_summary`
+- `memory_access_analytics`
+- `memory_diff_branch`
 - `memory_git_log`
 - `memory_diff`
 - `memory_validate`
@@ -127,6 +132,8 @@ These tools inspect or analyze the repo without changing it.
 
 **Maintenance and governance analysis**
 
+- `memory_session_health_check`
+- `memory_check_knowledge_freshness`
 - `memory_check_aggregation_triggers`
 - `memory_aggregate_access`
 - `memory_run_periodic_review`
@@ -149,24 +156,30 @@ These are the normal write path. Each tool represents a bounded operation with b
 **Knowledge lifecycle**
 
 - `memory_add_knowledge_file`
+- `memory_promote_knowledge_batch`
 - `memory_promote_knowledge`
 - `memory_demote_knowledge`
 - `memory_archive_knowledge`
 
-**Scratchpad and identity**
+**Scratchpad, skills, and identity**
 
 - `memory_append_scratchpad`
+- `memory_update_skill`
 - `memory_update_identity_trait`
 
 **Chats and session logging**
 
+- `memory_record_session`
+- `memory_run_aggregation`
 - `memory_record_chat_summary`
 - `memory_record_reflection`
 - `memory_log_access`
+- `memory_log_access_batch`
 
 **Governance and safety operations**
 
 - `memory_flag_for_review`
+- `memory_resolve_review_item`
 - `memory_record_periodic_review`
 - `memory_revert_commit`
 
@@ -181,6 +194,7 @@ These are low-level mutation tools:
 - `memory_delete`
 - `memory_move`
 - `memory_update_frontmatter`
+- `memory_update_frontmatter_bulk`
 - `memory_commit`
 
 They stage changes but do not auto-commit. They also reject protected directories such as `identity/`, `meta/`, `chats/`, and `skills/`.
