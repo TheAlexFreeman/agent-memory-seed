@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: Phase 0, item 4 — convert tools/agent_memory_mcp/__init__.py into the compatibility shim that re-exports from engram_mcp.agent_memory_mcp.
+next_action: Phase 1, item 7 — move HUMANS/tooling/scripts/memory_mcp.py → engram_mcp/memory_mcp.py and update its import to use engram_mcp.agent_memory_mcp.server directly.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -635,4 +635,5 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 | 2026-03-19 | Plan created following design discussion on MCP module growth and placement |
 | 2026-03-19 | Resolved the naming collision by adopting `engram-mcp` as the user-facing name and `engram_mcp/` as the Python package path for the reorganization plan |
 | 2026-03-19 | Started Phase 0 with an additive `engram_mcp` namespace bootstrap, added the `engram-mcp` CLI entrypoint in `pyproject.toml`, and verified the new import path plus the MCP-focused test suite (`58 passed`) |
+| 2026-03-20 | Completed Phase 0 item 4: `tools/agent_memory_mcp/__init__.py` converted to compat shim re-exporting from `engram_mcp.agent_memory_mcp`. Phase 0 fully complete. 190 tests green. |
 | 2026-03-20 | Completed Phase 0 items 1–3 and 5–6: physical files confirmed in `engram_mcp/agent_memory_mcp/`, `server_main.py` present, `pyproject.toml` updated (CLI entrypoint + both package paths in find config + `engram_mcp/tests` in pytest paths). Fixed 56 missing paths in `setup/initial-commit-paths.txt`, removed 12 stale promoted `_unverified/ai-history/` entries, fixed `origin_session` format in 21 knowledge files. 190 tests passing. `engram_mcp.agent_memory_mcp.server_main:main` importable. Remaining: item 4 (compat shim in `tools/`) before Phase 1 begins. |
