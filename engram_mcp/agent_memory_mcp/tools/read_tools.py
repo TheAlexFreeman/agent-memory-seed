@@ -56,6 +56,7 @@ _NEAR_TRIGGER_WINDOW = 3
 _PERIODIC_REVIEW_DAYS = 30
 _STAGE_ORDER = ("Exploration", "Calibration", "Consolidation")
 _CAPABILITIES_MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
+_MARKDOWN_LINK_RE = re.compile(r"(?<!\!)\[[^\]]+\]\(([^)]+)\)")
 
 try:
     tomllib = cast(Any, import_module("tomllib"))
@@ -234,6 +235,80 @@ def _load_access_entries(root: Path) -> tuple[list[dict[str, Any]], list[dict[st
         )
 
     return entries, counts
+
+
+def _list_tracked_markdown_files(root: Path, scope: str) -> list[Path]:
+    cmd = ["git", "ls-files"]
+    normalized_scope = scope.strip().replace("\\", "/")
+    if normalized_scope not in {"", "."}:
+        cmd += ["--", normalized_scope]
+
+    result = subprocess.run(
+        cmd,
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        check=False,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or "git ls-files failed"
+        raise RuntimeError(stderr)
+
+    tracked_files: list[Path] = []
+    for raw_path in result.stdout.splitlines():
+        rel_path = raw_path.strip().replace("\\", "/")
+        if not rel_path.lower().endswith(".md"):
+            continue
+        abs_path = (root / rel_path).resolve()
+        if abs_path.exists() and abs_path.is_file():
+            tracked_files.append(abs_path)
+    return sorted(set(tracked_files))
+
+
+def _normalize_markdown_link_target(raw_target: str) -> str | None:
+    target = raw_target.strip()
+    if not target:
+        return None
+    if target.startswith("<"):
+        closing = target.find(">")
+        if closing != -1:
+            target = target[1:closing].strip()
+    else:
+        target = target.split(maxsplit=1)[0].strip()
+
+    if not target or target.startswith("#"):
+        return None
+    if re.match(r"^[a-z][a-z0-9+.-]*:", target, re.IGNORECASE):
+        return None
+
+    if "#" in target:
+        target = target.split("#", 1)[0].strip()
+    if not target:
+        return None
+    return target
+
+
+def _iter_markdown_links(text: str) -> list[tuple[int, str]]:
+    links: list[tuple[int, str]] = []
+    for match in _MARKDOWN_LINK_RE.finditer(text):
+        target = _normalize_markdown_link_target(match.group(1))
+        if target is None:
+            continue
+        line_no = text.count("\n", 0, match.start()) + 1
+        links.append((line_no, target))
+    return links
+
+
+def _resolve_repo_relative_target(root: Path, source_file: Path, target: str) -> tuple[str | None, str | None]:
+    resolved = (source_file.parent / target).resolve()
+    try:
+        rel_target = resolved.relative_to(root).as_posix()
+    except ValueError:
+        return None, "target escapes repository root"
+    if not resolved.exists():
+        return rel_target, "target not found"
+    return rel_target, None
 
 
 def _filter_access_entries(
@@ -1683,6 +1758,148 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return "\n".join(results)
 
     # ------------------------------------------------------------------
+    # memory_check_cross_references
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_check_cross_references",
+        annotations=_tool_annotations(
+            title="Check Cross References",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_check_cross_references(
+        path: str = ".",
+        check_summaries: bool = True,
+        check_links: bool = True,
+    ) -> str:
+        """Scan tracked Markdown files for broken links and SUMMARY drift.
+
+        Uses git ls-files to enumerate tracked Markdown files within the
+        requested scope, then checks relative Markdown links and SUMMARY.md
+        coverage. External URLs and anchor-only links are ignored.
+
+        Args:
+            path: Repo-relative file or folder scope to scan (default: '.').
+            check_summaries: Report SUMMARY.md orphan and stale entries.
+            check_links: Report broken relative Markdown links.
+
+        Returns:
+            Structured JSON describing broken links, orphaned files, stale
+            summary entries, and scan statistics.
+        """
+        from ..errors import ValidationError
+
+        root = get_root()
+        requested_path = path.strip() or "."
+        scope_path = (root / requested_path).resolve()
+        try:
+            scope_path.relative_to(root)
+        except ValueError as exc:
+            raise ValidationError("path must stay within the repository root") from exc
+
+        if not scope_path.exists():
+            return f"Error: Path not found: {path}"
+
+        scope = scope_path.relative_to(root).as_posix() if scope_path != root else "."
+        tracked_files = _list_tracked_markdown_files(root, scope)
+        if len(tracked_files) > 500:
+            raise ValidationError(
+                "memory_check_cross_references scans at most 500 tracked Markdown files; narrow path"
+            )
+
+        broken_links: list[dict[str, Any]] = []
+        orphaned_files: list[dict[str, Any]] = []
+        stale_summary_entries: list[dict[str, Any]] = []
+        links_checked = 0
+
+        file_groups: dict[Path, list[Path]] = {}
+        summary_paths: list[Path] = []
+
+        for abs_path in tracked_files:
+            file_groups.setdefault(abs_path.parent, []).append(abs_path)
+            if abs_path.name == "SUMMARY.md":
+                summary_paths.append(abs_path)
+
+            text = abs_path.read_text(encoding="utf-8")
+            if not check_links:
+                continue
+
+            for line_no, target in _iter_markdown_links(text):
+                resolved_target, reason = _resolve_repo_relative_target(root, abs_path, target)
+                links_checked += 1
+                if reason is None:
+                    continue
+                broken_links.append(
+                    {
+                        "file": abs_path.relative_to(root).as_posix(),
+                        "line": line_no,
+                        "target": resolved_target or target,
+                        "reason": reason,
+                    }
+                )
+                if check_summaries and abs_path.name == "SUMMARY.md":
+                    stale_summary_entries.append(
+                        {
+                            "summary": abs_path.relative_to(root).as_posix(),
+                            "entry": target,
+                            "reason": reason,
+                        }
+                    )
+
+        if check_summaries:
+            for summary_path in summary_paths:
+                summary_rel = summary_path.relative_to(root).as_posix()
+                summary_text = summary_path.read_text(encoding="utf-8")
+                linked_targets: set[str] = set()
+                for _, target in _iter_markdown_links(summary_text):
+                    resolved_target, reason = _resolve_repo_relative_target(root, summary_path, target)
+                    if resolved_target is not None:
+                        linked_targets.add(resolved_target)
+                    if reason is not None and not any(
+                        item["summary"] == summary_rel and item["entry"] == target
+                        for item in stale_summary_entries
+                    ):
+                        stale_summary_entries.append(
+                            {
+                                "summary": summary_rel,
+                                "entry": target,
+                                "reason": reason,
+                            }
+                        )
+
+                for sibling in sorted(file_groups.get(summary_path.parent, [])):
+                    if sibling.name == "SUMMARY.md":
+                        continue
+                    sibling_rel = sibling.relative_to(root).as_posix()
+                    if sibling_rel in linked_targets or sibling.name in summary_text:
+                        continue
+                    orphaned_files.append(
+                        {
+                            "file": sibling_rel,
+                            "folder_summary": summary_rel,
+                            "reason": "not mentioned in SUMMARY.md",
+                        }
+                    )
+
+        result = {
+            "broken_links": broken_links,
+            "orphaned_files": orphaned_files,
+            "stale_summary_entries": stale_summary_entries,
+            "stats": {
+                "files_scanned": len(tracked_files),
+                "links_checked": links_checked,
+                "summaries_checked": len(summary_paths) if check_summaries else 0,
+                "issues_found": (
+                    len(broken_links) + len(orphaned_files) + len(stale_summary_entries)
+                ),
+            },
+        }
+        return json.dumps(result, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_git_log
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -2683,6 +2900,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_read_file": memory_read_file,
         "memory_list_folder": memory_list_folder,
         "memory_search": memory_search,
+        "memory_check_cross_references": memory_check_cross_references,
         "memory_git_log": memory_git_log,
         "memory_session_health_check": memory_session_health_check,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,

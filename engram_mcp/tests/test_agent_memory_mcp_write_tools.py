@@ -1014,6 +1014,88 @@ line 7
         self.assertNotIn("  6: line 6 other match", output)
         self.assertIn("truncated at 1 matches", output)
 
+    def test_memory_check_cross_references_reports_broken_links_and_summary_drift(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/linked.md": "# Linked\n",
+                "knowledge/topic/note.md": """# Note
+See [linked](linked.md).
+See [missing](missing.md).
+""",
+                "knowledge/topic/orphan.md": "# Orphan\n",
+                "knowledge/topic/SUMMARY.md": """# Topic Summary
+
+- [note](note.md)
+- [missing](missing.md)
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_check_cross_references"](path="knowledge/topic"))
+        )
+
+        self.assertEqual(payload["stats"]["files_scanned"], 4)
+        self.assertEqual(payload["stats"]["summaries_checked"], 1)
+        self.assertEqual(payload["stats"]["links_checked"], 4)
+        self.assertIn(
+            {
+                "file": "knowledge/topic/note.md",
+                "line": 3,
+                "target": "knowledge/topic/missing.md",
+                "reason": "target not found",
+            },
+            payload["broken_links"],
+        )
+        self.assertIn(
+            {
+                "summary": "knowledge/topic/SUMMARY.md",
+                "entry": "missing.md",
+                "reason": "target not found",
+            },
+            payload["stale_summary_entries"],
+        )
+        self.assertIn(
+            {
+                "file": "knowledge/topic/orphan.md",
+                "folder_summary": "knowledge/topic/SUMMARY.md",
+                "reason": "not mentioned in SUMMARY.md",
+            },
+            payload["orphaned_files"],
+        )
+
+    def test_memory_check_cross_references_can_skip_summary_checks(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/demo.md": "See [missing](missing.md).\n",
+                "plans/SUMMARY.md": "# Plans\n\n- [missing](missing.md)\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_check_cross_references"](
+                    path="plans",
+                    check_summaries=False,
+                )
+            )
+        )
+
+        self.assertEqual(payload["stats"]["summaries_checked"], 0)
+        self.assertEqual(payload["orphaned_files"], [])
+        self.assertEqual(payload["stale_summary_entries"], [])
+        self.assertEqual(len(payload["broken_links"]), 2)
+
+    def test_memory_check_cross_references_rejects_oversized_scan(self) -> None:
+        files = {f"knowledge/bulk/file-{idx:03d}.md": f"# File {idx}\n" for idx in range(501)}
+        repo_root = self._init_repo(files)
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(tools["memory_check_cross_references"](path="knowledge/bulk"))
+
     def test_memory_delete_rejects_repo_root_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)

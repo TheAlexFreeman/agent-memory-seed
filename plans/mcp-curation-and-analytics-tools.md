@@ -1,7 +1,7 @@
 ---
 created: 2026-03-20
 last_verified: 2026-03-20
-next_action: "Phase 2, item 1: implement memory_check_cross_references in read_tools.py"
+next_action: "Phase 3, item 1: implement memory_generate_summary in read_tools.py"
 origin_session: chats/2026/03/20/chat-002
 source: agent-generated
 status: active
@@ -360,9 +360,9 @@ Add to `read_tools.register()`. Add `readOnlyHint=True` annotation.
 - [x] 1.2 Validate-before-stage discipline
 - [x] 1.3 Batch size limit (50 files)
 - [x] 1.4 Register and update capabilities
-- [ ] 2.1 Implement `memory_check_cross_references` in `read_tools.py`
-- [ ] 2.2 Performance guard (git ls-files, 500-file cap)
-- [ ] 2.3 Register in read tools
+- [x] 2.1 Implement `memory_check_cross_references` in `read_tools.py`
+- [x] 2.2 Performance guard (git ls-files, 500-file cap)
+- [x] 2.3 Register in read tools
 - [ ] 3.1 Implement `memory_generate_summary` in `read_tools.py`
 - [ ] 3.2 Subfolder awareness
 - [ ] 3.3 Register in read tools
@@ -373,13 +373,13 @@ Add to `read_tools.register()`. Add `readOnlyHint=True` annotation.
 - [ ] 5.2 Handle missing base branch
 - [ ] 5.3 Register in read tools
 - [x] 6.1 Tests for batch promote
-- [ ] 6.2 Tests for cross-reference checker
+- [x] 6.2 Tests for cross-reference checker
 - [ ] 6.3 Tests for summary generator
 - [ ] 6.4 Tests for access analytics
 - [ ] 6.5 Tests for branch diff
-- [ ] 6.6 Capabilities TOML updates
+- [x] 6.6 Capabilities TOML updates
 
-**Progress:** 5/22 items complete
+**Progress:** 10/22 items complete
 
 ---
 
