@@ -19,6 +19,15 @@ Reorganize the MCP tooling out of `HUMANS/` and into a proper `mcp/` package wit
 **Blocks:** `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md` (all add to files that will move in Phase 1–3; start after Phase 2 completes). Also blocks `worktree-integration.md` item 6 (adapter-file MCP path update depends on Phase 2 path changes).
 <!-- END: mcp-reorganization -->
 
+<!-- BEGIN: compact-bootstrap-efficiency -->
+### `compact-bootstrap-efficiency.md` · status: active · trust: medium
+
+Roadmap to restore the compact returning-session bootstrap to a real compact operating mode and keep it there. Covers compact-summary migration for `plans/SUMMARY.md`, `meta/quick-reference.md`, `chats/SUMMARY.md`, and `scratchpad/CURRENT.md`; file-level and aggregate validator enforcement; startup-safe section decisions; and adjacent context-efficiency tooling. 22 items across 5 phases.
+
+**Progress:** 0/22 items complete
+**Next action:** Phase 1, item 1 — define the compact-path contract and target budget for each startup-loaded file
+<!-- END: compact-bootstrap-efficiency -->
+
 <!-- BEGIN: worktree-integration -->
 ### `worktree-integration.md` · status: active · trust: medium
 
