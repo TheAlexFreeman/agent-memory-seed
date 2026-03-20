@@ -2,7 +2,8 @@
 created: '2026-03-20'
 origin_session: chats/2026/03/20/chat-002
 source: agent-generated
-trust: low
+last_verified: '2026-03-20'
+trust: medium
 ---
 
 # Tulving's Episodic/Semantic Distinction
