@@ -20,9 +20,7 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = validator
 SPEC.loader.exec_module(validator)
 
-INSPECTOR_PATH = (
-    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "inspect_compact_budget.py"
-)
+INSPECTOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "inspect_compact_budget.py"
 INSPECTOR_SPEC = importlib.util.spec_from_file_location("inspect_compact_budget", INSPECTOR_PATH)
 assert INSPECTOR_SPEC is not None
 inspector = importlib.util.module_from_spec(INSPECTOR_SPEC)
@@ -466,7 +464,9 @@ def build_minimal_repo(root: Path) -> None:
         root / "HUMANS" / "tooling" / "scripts" / "resolve_task_readiness.py",
         "#!/usr/bin/env python3\n",
     )
-    write(root / "HUMANS" / "tooling" / "agent-memory-capabilities.toml", VALID_CAPABILITIES_MANIFEST)
+    write(
+        root / "HUMANS" / "tooling" / "agent-memory-capabilities.toml", VALID_CAPABILITIES_MANIFEST
+    )
     write(root / "engram_mcp" / "__init__.py", "\n")
     write(root / "engram_mcp" / "memory_mcp.py", "#!/usr/bin/env python3\n")
     write(
@@ -689,6 +689,16 @@ def add_host_repo_root(manifest_path: Path, host_root: Path) -> None:
     manifest_path.write_text(text, encoding="utf-8")
 
 
+def normalize_worktree_bootstrap_manifest(manifest_path: Path) -> None:
+    text = manifest_path.read_text(encoding="utf-8")
+    for block in (
+        '[[modes.full_bootstrap.steps]]\npath = "CHANGELOG.md"\nrole = "system-history"\nrequired = true\ncost = "medium"\n',
+        '[[modes.periodic_review.steps]]\npath = "CHANGELOG.md"\nrole = "system-history"\nrequired = true\ncost = "medium"\n',
+    ):
+        text = text.replace(block, "")
+    manifest_path.write_text(text, encoding="utf-8")
+
+
 def write_host_adapter_files(host_root: Path, *, duplicate_from: Path | None = None) -> None:
     for relative_path in ("AGENTS.md", "CLAUDE.md", ".cursorrules"):
         target = host_root / relative_path
@@ -734,12 +744,32 @@ def build_worktree_repo(
     build_minimal_repo(temp_worktree)
     if include_host_repo_root:
         add_host_repo_root(temp_worktree / "agent-bootstrap.toml", host_root)
+        normalize_worktree_bootstrap_manifest(temp_worktree / "agent-bootstrap.toml")
     write_host_adapter_files(host_root)
 
     git(temp_worktree, "add", "--all")
     git(temp_worktree, "commit", "-m", "seed memory")
     git(host_root, "worktree", "remove", "--force", str(temp_worktree))
     git(host_root, "worktree", "add", str(memory_root), "agent-memory")
+
+
+def strip_standalone_only_files(root: Path) -> None:
+    for relative_path in (
+        Path("CHANGELOG.md"),
+        Path("setup.sh"),
+        Path("setup.html"),
+        Path("setup"),
+        Path("HUMANS"),
+    ):
+        target = root / relative_path
+        if not target.exists():
+            continue
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+
+    normalize_worktree_bootstrap_manifest(root / "agent-bootstrap.toml")
 
 
 class ValidateMemoryRepoTests(unittest.TestCase):
@@ -809,7 +839,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("legacy tools/ runtime directory must not exist" in error for error in result.errors)
+                any(
+                    "legacy tools/ runtime directory must not exist" in error
+                    for error in result.errors
+                )
             )
 
     def test_capabilities_manifest_with_wrong_mcp_entrypoint_fails(self) -> None:
@@ -827,7 +860,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("mcp_entrypoint must be 'engram_mcp/memory_mcp.py'" in error for error in result.errors)
+                any(
+                    "mcp_entrypoint must be 'engram_mcp/memory_mcp.py'" in error
+                    for error in result.errors
+                )
             )
 
     def test_missing_task_readiness_manifest_fails(self) -> None:
@@ -954,7 +990,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(memory_root)
             self.assertTrue(
-                any("host_repo_root is required when validating a git worktree checkout" in error for error in result.errors)
+                any(
+                    "host_repo_root is required when validating a git worktree checkout" in error
+                    for error in result.errors
+                )
             )
 
     def test_worktree_host_repo_root_inside_memory_root_fails(self) -> None:
@@ -967,7 +1006,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(memory_root)
             self.assertTrue(
-                any("host_repo_root must not point inside the memory repo root" in error for error in result.errors)
+                any(
+                    "host_repo_root must not point inside the memory repo root" in error
+                    for error in result.errors
+                )
             )
 
     def test_worktree_shared_history_warns(self) -> None:
@@ -980,7 +1022,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(memory_root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
             self.assertTrue(
-                any("shares history with host default branch" in warning for warning in result.warnings)
+                any(
+                    "shares history with host default branch" in warning
+                    for warning in result.warnings
+                )
             )
 
     def test_worktree_duplicate_host_adapters_warn(self) -> None:
@@ -996,6 +1041,17 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             self.assertTrue(
                 any("duplicates host-root adapter file" in warning for warning in result.warnings)
             )
+
+    def test_deployed_worktree_profile_skips_standalone_only_contract_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            host_root = Path(tempdir) / "host"
+            memory_root = Path(tempdir) / "memory"
+            host_root.mkdir(parents=True, exist_ok=True)
+            build_worktree_repo(host_root, memory_root)
+            strip_standalone_only_files(memory_root)
+
+            result = validator.validate_repo(memory_root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
 
     def test_compact_startup_budget_overrun_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1104,10 +1160,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "must use skip_if = 'placeholder_or_empty'" in error
-                    for error in result.errors
-                )
+                any("must use skip_if = 'placeholder_or_empty'" in error for error in result.errors)
             )
 
     def test_compact_budget_inspector_reports_file_breakdown(self) -> None:
@@ -1116,7 +1169,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertIn("status", report)
         self.assertIn("total_tokens", report)
         self.assertIn("files", report)
-        self.assertTrue(any(entry["path"] == "meta/quick-reference.md" for entry in report["files"]))
+        self.assertTrue(
+            any(entry["path"] == "meta/quick-reference.md" for entry in report["files"])
+        )
         self.assertEqual(
             report["budget_limit"],
             validator.COMPACT_RETURNING_BUDGET,

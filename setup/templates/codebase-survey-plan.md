@@ -2,7 +2,7 @@
 created: {{TODAY}}
 last_verified: {{TODAY}}
 next_action: "Phase 0, item 1: identify the application entry points and boot sequence"
-origin_session: setup/init-worktree.sh
+origin_session: setup
 source: template
 status: active
 trust: medium

@@ -117,6 +117,12 @@ EXPECTED_PERIODIC_REVIEW_STEP_PATHS = EXPECTED_FULL_BOOTSTRAP_STEP_PATHS + (
     "meta/review-queue.md",
     "meta/integrity-checklist.md",
 )
+DEPLOYED_WORKTREE_FULL_BOOTSTRAP_STEP_PATHS = tuple(
+    path for path in EXPECTED_FULL_BOOTSTRAP_STEP_PATHS if path != "CHANGELOG.md"
+)
+DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS = tuple(
+    path for path in EXPECTED_PERIODIC_REVIEW_STEP_PATHS if path != "CHANGELOG.md"
+)
 EXPECTED_AUTOMATION_STEP_PATHS = (
     "meta/quick-reference.md",
     "scratchpad/USER.md",
@@ -128,6 +134,13 @@ EXPECTED_MODE_STEP_PATHS = {
     "returning": EXPECTED_RETURNING_STEP_PATHS,
     "full_bootstrap": EXPECTED_FULL_BOOTSTRAP_STEP_PATHS,
     "periodic_review": EXPECTED_PERIODIC_REVIEW_STEP_PATHS,
+    "automation": EXPECTED_AUTOMATION_STEP_PATHS,
+}
+DEPLOYED_WORKTREE_MODE_STEP_PATHS = {
+    "first_run": EXPECTED_FIRST_RUN_STEP_PATHS,
+    "returning": EXPECTED_RETURNING_STEP_PATHS,
+    "full_bootstrap": DEPLOYED_WORKTREE_FULL_BOOTSTRAP_STEP_PATHS,
+    "periodic_review": DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS,
     "automation": EXPECTED_AUTOMATION_STEP_PATHS,
 }
 EXPECTED_BOOTSTRAP_ON_DEMAND = ("knowledge/SUMMARY.md", "skills/SUMMARY.md")
@@ -355,7 +368,9 @@ def run_git_command(cwd: Path, *args: str) -> subprocess.CompletedProcess[str] |
 
 def is_git_repo(path: Path) -> bool:
     completed = run_git_command(path, "rev-parse", "--is-inside-work-tree")
-    return completed is not None and completed.returncode == 0 and completed.stdout.strip() == "true"
+    return (
+        completed is not None and completed.returncode == 0 and completed.stdout.strip() == "true"
+    )
 
 
 def is_git_worktree_root(path: Path) -> bool:
@@ -452,6 +467,24 @@ def validate_worktree_topology(
             result.warn(
                 f"{worktree_adapter}: duplicates host-root adapter file {host_adapter} in worktree mode; host and worktree adapters should differ"
             )
+
+
+def is_deployed_worktree_repo(root: Path) -> bool:
+    manifest_path = root / BOOTSTRAP_MANIFEST_PATH
+    if not manifest_path.exists():
+        return False
+
+    text = read_text(manifest_path, ValidationResult())
+    if text is None:
+        return False
+
+    try:
+        manifest = tomllib.loads(text)
+    except Exception:
+        return False
+
+    host_repo_root = manifest.get("host_repo_root")
+    return isinstance(host_repo_root, str) and bool(host_repo_root.strip()) and is_git_worktree_root(root)
 
 
 def read_text(path: Path, result: ValidationResult) -> str | None:
@@ -807,7 +840,9 @@ def find_repo_path_references(text: str, root: Path, prefixes: tuple[str, ...]) 
     return references
 
 
-def validate_plans_summary_shape(path: Path, text: str, root: Path, result: ValidationResult) -> None:
+def validate_plans_summary_shape(
+    path: Path, text: str, root: Path, result: ValidationResult
+) -> None:
     for heading in ("## Active plans", "## Recent completions"):
         if heading not in text:
             result.error(f"{path}: missing compact plans heading {heading!r}")
@@ -841,7 +876,9 @@ def validate_plans_summary_shape(path: Path, text: str, root: Path, result: Vali
             )
 
 
-def validate_chats_summary_shape(path: Path, text: str, root: Path, result: ValidationResult) -> None:
+def validate_chats_summary_shape(
+    path: Path, text: str, root: Path, result: ValidationResult
+) -> None:
     for heading in ("## Live themes", "## Recent continuity", "## Retrieval guide"):
         if heading not in text:
             result.error(f"{path}: missing compact chats heading {heading!r}")
@@ -861,7 +898,9 @@ def validate_chats_summary_shape(path: Path, text: str, root: Path, result: Vali
         result.error(f"{path}: must include at least one drill-down path into chats/")
 
 
-def validate_scratchpad_current_shape(path: Path, text: str, root: Path, result: ValidationResult) -> None:
+def validate_scratchpad_current_shape(
+    path: Path, text: str, root: Path, result: ValidationResult
+) -> None:
     for heading in (
         "## Active threads",
         "## Immediate next actions",
@@ -957,6 +996,11 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
         )
 
     host_repo_root = manifest.get("host_repo_root")
+    deployed_worktree = (
+        isinstance(host_repo_root, str)
+        and bool(host_repo_root.strip())
+        and is_git_worktree_root(root)
+    )
     if host_repo_root is not None:
         if not isinstance(host_repo_root, str) or not host_repo_root.strip():
             result.error(f"{path}: host_repo_root must be a non-empty string when present")
@@ -1078,7 +1122,10 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
                         f"{path}: modes.{mode_name}.steps[{index}] for {step_path!r} must use skip_if = {expected_skip_if!r}"
                     )
 
-        expected_step_paths = list(EXPECTED_MODE_STEP_PATHS[mode_name])
+        expected_mode_step_paths = (
+            DEPLOYED_WORKTREE_MODE_STEP_PATHS if deployed_worktree else EXPECTED_MODE_STEP_PATHS
+        )
+        expected_step_paths = list(expected_mode_step_paths[mode_name])
         if step_paths != expected_step_paths:
             result.error(
                 f"{path}: modes.{mode_name}.steps must load {expected_step_paths!r}, got {step_paths!r}"
@@ -1569,18 +1616,22 @@ def validate_quarantine(root: Path, result: ValidationResult) -> None:
 
 def validate_repo(root: Path) -> ValidationResult:
     result = ValidationResult()
+    deployed_worktree = is_deployed_worktree_repo(root)
 
     validate_agent_bootstrap_manifest(root, result)
-    validate_task_readiness_manifest(root, result)
+    if not deployed_worktree:
+        validate_task_readiness_manifest(root, result)
     validate_quick_reference(root, result)
     validate_compact_startup_contract(root, result)
-    validate_runtime_guidance(root, result)
-    validate_setup_entrypoints(root, result)
+    if not deployed_worktree:
+        validate_runtime_guidance(root, result)
+        validate_setup_entrypoints(root, result)
     validate_mcp_runtime_layout(root, result)
     validate_adapter_routing(root, result)
-    validate_prompt_copy(root, result)
-    validate_setup_guidance(root, result)
-    validate_onboarding_export_template(root, result)
+    if not deployed_worktree:
+        validate_prompt_copy(root, result)
+        validate_setup_guidance(root, result)
+        validate_onboarding_export_template(root, result)
     validate_contract_consistency(root, result)
     validate_quarantine(root, result)
     validate_chat_leaf_sessions(root, result)

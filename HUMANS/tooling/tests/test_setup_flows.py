@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import os
 import shutil
 import subprocess
@@ -8,6 +9,13 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+VALIDATOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
+
+SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
+assert SPEC is not None
+validator = importlib.util.module_from_spec(SPEC)
+assert SPEC.loader is not None
+SPEC.loader.exec_module(validator)
 
 
 def find_bash() -> str | None:
@@ -233,7 +241,10 @@ class SetupFlowTests(unittest.TestCase):
     def test_init_worktree_creates_orphan_branch_with_committed_memory_worktree(
         self,
     ) -> None:
-        with tempfile.TemporaryDirectory() as seed_tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+        with (
+            tempfile.TemporaryDirectory() as seed_tempdir,
+            tempfile.TemporaryDirectory() as host_tempdir,
+        ):
             seed_root = Path(seed_tempdir)
             host_root = Path(host_tempdir)
             build_setup_repo(seed_root)
@@ -269,12 +280,8 @@ class SetupFlowTests(unittest.TestCase):
             ).stdout.strip()
             self.assertEqual("agent-memory", branch_name)
 
-            profile_text = (worktree_root / "identity" / "profile.md").read_text(
-                encoding="utf-8"
-            )
-            plans_summary = (worktree_root / "plans" / "SUMMARY.md").read_text(
-                encoding="utf-8"
-            )
+            profile_text = (worktree_root / "identity" / "profile.md").read_text(encoding="utf-8")
+            plans_summary = (worktree_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
             bootstrap_text = (worktree_root / "agent-bootstrap.toml").read_text(encoding="utf-8")
             self.assertIn("**codebase_root:**", profile_text)
             self.assertIn("**project_name:**", profile_text)
@@ -285,7 +292,9 @@ class SetupFlowTests(unittest.TestCase):
             self.assertTrue((worktree_root / ".ignore").is_file())
             self.assertTrue((worktree_root / ".editorconfig").is_file())
             self.assertTrue((worktree_root / "plans" / "codebase-survey.md").is_file())
-            self.assertTrue((worktree_root / "knowledge" / "codebase" / "architecture.md").is_file())
+            self.assertTrue(
+                (worktree_root / "knowledge" / "codebase" / "architecture.md").is_file()
+            )
             self.assertTrue((worktree_root / "knowledge" / "codebase" / "data-model.md").is_file())
             self.assertTrue((worktree_root / "knowledge" / "codebase" / "operations.md").is_file())
             self.assertTrue((worktree_root / "knowledge" / "codebase" / "decisions.md").is_file())
@@ -310,8 +319,36 @@ class SetupFlowTests(unittest.TestCase):
             self.assertIn(".agent-memory/meta/quick-reference.md", host_cursor)
             self.assertNotEqual(worktree_agents, host_agents)
 
+    def test_init_worktree_end_to_end_validation_passes(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as seed_tempdir,
+            tempfile.TemporaryDirectory() as host_tempdir,
+        ):
+            seed_root = Path(seed_tempdir)
+            host_root = Path(host_tempdir)
+            build_setup_repo(seed_root)
+            self.init_host_repo(host_root)
+
+            self.run_init_worktree(
+                seed_root,
+                host_root,
+                "--non-interactive",
+                "--profile",
+                "software-developer",
+                "--platform",
+                "codex",
+            )
+
+            worktree_root = host_root / ".agent-memory"
+            result = validator.validate_repo(worktree_root)
+
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+
     def test_init_worktree_dry_run_prints_commands_without_mutating_repo(self) -> None:
-        with tempfile.TemporaryDirectory() as seed_tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+        with (
+            tempfile.TemporaryDirectory() as seed_tempdir,
+            tempfile.TemporaryDirectory() as host_tempdir,
+        ):
             seed_root = Path(seed_tempdir)
             host_root = Path(host_tempdir)
             build_setup_repo(seed_root)
@@ -340,7 +377,10 @@ class SetupFlowTests(unittest.TestCase):
             self.assertEqual("", branches)
 
     def test_init_worktree_prefers_engram_mcp_cli_when_available(self) -> None:
-        with tempfile.TemporaryDirectory() as seed_tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+        with (
+            tempfile.TemporaryDirectory() as seed_tempdir,
+            tempfile.TemporaryDirectory() as host_tempdir,
+        ):
             seed_root = Path(seed_tempdir)
             host_root = Path(host_tempdir)
             build_setup_repo(seed_root)

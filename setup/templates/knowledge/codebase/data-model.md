@@ -1,6 +1,6 @@
 ---
 source: template
-origin_session: setup/init-worktree.sh
+origin_session: setup
 created: {{TODAY}}
 trust: low
 ---

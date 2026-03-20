@@ -8,16 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-### `worktree-integration.md` · status: active · trust: medium · **TOP PRIORITY**
-
-Detail: plans/worktree-integration.md
-Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 23/24 complete
-Next: Phase 5, item 24 — decide whether deployed worktrees should satisfy the full validator contract or a worktree-specific CI contract
-Blocks: none; validator topology checks and targeted coverage are in place, but the final CI assertion still depends on how deployed worktrees should differ from the standalone seed contract.
-
-
-### `access-log-tooling-improvements.md` · status: active · trust: medium
+### `access-log-tooling-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/access-log-tooling-improvements.md
 Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
@@ -74,6 +65,7 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 
 ## Recent completions
 
+- [worktree-integration.md](worktree-integration.md) — completed 2026-03-20; worktree deployment flow now has a deployed-worktree validator profile, validator-backed init-worktree E2E coverage, and dedicated CI enforcement.
 - [mcp-semantic-tools-improvements.md](mcp-semantic-tools-improvements.md) — completed 2026-03-20; Tier 1 semantic tool gaps closed across scratchpad targeting, review-queue lifecycle, skill updates, composite session recording, and ACCESS aggregation compaction.
 - [mcp-reorganization.md](mcp-reorganization.md) — completed 2026-03-20; Phase 5 validator/CI/layout verification finished and downstream MCP tooling plans unblocked.
 - [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; startup contract enforced and measured under budget.

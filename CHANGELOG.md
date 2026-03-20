@@ -16,7 +16,7 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
-## [2026-03-20] Worktree validator topology checks landed
+## [2026-03-20] Worktree validator profile and CI enforcement landed
 
 **Changed:**
 
@@ -24,9 +24,11 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 - **Added adapter-duplication warnings.** In worktree mode, the validator now compares host-root adapter files against the worktree copies and warns when they are byte-for-byte duplicates, which catches a common setup mistake where the host root is not given worktree-specific routing guidance.
 
-- **Expanded regression coverage and CI for worktree setup.** Added targeted git-backed validator tests for valid, missing, nested, shared-history, and duplicate-adapter scenarios; added a dedicated Windows `worktree-e2e` CI job that runs the existing end-to-end init-worktree setup test; and fixed `setup/init-worktree.sh` so deployed bootstrap manifests insert `host_repo_root` at top level with normalized forward-slash paths.
+- **Finalized the deployed-worktree bootstrap contract.** Deployed worktree manifests now remove standalone `CHANGELOG.md` bootstrap steps, generated survey/template files use validator-compatible `origin_session: setup` provenance, and starter compact-summary placeholders now match the validator's compact-path rules.
 
-**Reasoning:** Worktree mode was usable after the deployment and survey-scaffold slices, but it still relied on convention rather than enforceable topology checks. This change closes most of that gap by teaching validation to understand host/memory structure, adding regression tests around the new invariants, and pinning a stable end-to-end setup contract into CI. The remaining open question is whether deployed worktrees should eventually satisfy the full standalone validator profile or keep a narrower worktree-specific contract.
+- **Expanded regression coverage and CI for worktree setup.** Added targeted git-backed validator tests for valid, missing, nested, shared-history, duplicate-adapter, and deployed-worktree-profile scenarios; restored the validator-backed `init-worktree.sh` end-to-end setup test; added a dedicated Windows `worktree-e2e` CI job; and fixed `setup/init-worktree.sh` so deployed bootstrap manifests insert `host_repo_root` at top level with normalized forward-slash paths.
+
+**Reasoning:** Worktree mode was usable after the deployment and survey-scaffold slices, but it still relied on convention rather than enforceable topology checks, and its bootstrap manifest still described standalone-only surfaces. This change closes that gap by formalizing a deployed-worktree validator profile, aligning generated starter files with that contract, and pinning the full init-worktree plus validator flow into CI. That completes the worktree-integration roadmap and leaves ACCESS-log tooling as the next build priority.
 
 **Approved by:** user
 
