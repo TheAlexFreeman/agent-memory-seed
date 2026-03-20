@@ -4,8 +4,9 @@ origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [multimodal, tool-use, rag, reasoning, chain-of-thought, gpt-4, gemini, mixture-of-experts, open-weights, agents, o1, reinforcement-learning, inference-time-compute]
-trust: low
+trust: medium
 created: 2026-03-18
+last_verified: 2026-03-19
 ---
 
 # Multimodality, Tool Use, and Reasoning-Time Compute

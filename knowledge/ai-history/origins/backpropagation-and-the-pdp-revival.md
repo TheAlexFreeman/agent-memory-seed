@@ -4,8 +4,9 @@ origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [backpropagation, pdp, rumelhart, hinton, williams, neural-networks, hidden-layers, representation-learning, gradient-descent]
-trust: low
+trust: medium
 created: 2026-03-18
+last_verified: 2026-03-19
 ---
 
 # Backpropagation and the PDP Revival

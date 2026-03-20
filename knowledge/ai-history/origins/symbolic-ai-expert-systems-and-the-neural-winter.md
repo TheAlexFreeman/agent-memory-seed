@@ -2,8 +2,11 @@
 source: external-research
 origin_session: chats/2026/03/18/chat-005
 created: 2026-03-18
-trust: low
+last_verified: 2026-03-19
+trust: medium
 tags: [ai-history, symbolic-ai, expert-systems, ai-winter, knowledge-representation]
+type: knowledge
+domain: ai-history
 period: 1956–1986
 bottleneck_addressed: How to make machines reason and represent knowledge explicitly
 next_bottleneck: The knowledge acquisition bottleneck — encoding expertise was expensive, brittle, and impossible to scale

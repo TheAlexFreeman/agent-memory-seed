@@ -48,6 +48,21 @@ Key files:
 - `chakra-ui-3-styling-system.md` — `createSystem`, tokens, semantic tokens, recipes, slot recipes, virtual colors, cascade layers, and CLI typegen
 - `chakra-ui-3-react-frontend-patterns.md` — Practical synthesis for building consistent, accessible, responsive, and mode-aware React frontends with Chakra 3
 
+<!-- section: ai-history -->
+### `ai-history/` — AI paradigm genealogy (promoted 2026-03-19, trust: medium)
+
+Eleven files tracing the causal history of the current AI paradigm from 1943 to 2025 across five subfolders: `origins/`, `deep-learning/`, `language-models/`, `frontier/`, and `synthesis/`. See `ai-history/SUMMARY.md` for the full index.
+
+Key files:
+- `origins/cybernetics-perceptrons-and-the-first-connectionist-wave.md` — McCulloch-Pitts, Rosenblatt, the first learning optimism, and the limit of linear separability (1943–1969)
+- `origins/backpropagation-and-the-pdp-revival.md` — The credit assignment unlock: Rumelhart/Hinton/Williams backprop, PDP program, vanishing gradients
+- `deep-learning/gpus-imagenet-and-the-deep-learning-turn.md` — ImageNet, CUDA, AlexNet, dropout, ReLU — the data/compute unlock (2012)
+- `language-models/attention-and-the-transformer-breakthrough.md` — Self-attention, multi-head attention, positional encoding, BERT, GPT (2017–2018)
+- `language-models/bert-gpt-and-the-scaling-laws-era.md` — GPT-3, in-context learning, Kaplan scaling laws, Chinchilla compute-optimal training
+- `frontier/instruction-tuning-rlhf-and-the-chat-model-turn.md` — InstructGPT, RLHF/PPO, Constitutional AI, DPO, ChatGPT launch (2022)
+- `frontier/multimodality-tool-use-and-reasoning-time-compute.md` — Vision-language, RAG, tool use/agents, MoE, open weights, o1 inference-time compute (2022–2026)
+- `synthesis/how-the-current-ai-paradigm-formed.md` — Full causal synthesis: nine bottleneck-unlock transitions, four through-lines end-to-end, open assumptions
+
 <!-- section: ai-tools -->
 ### `ai-tools/` — AI tools landscape and ecosystem positioning (promoted 2026-03-19, trust: medium)
 

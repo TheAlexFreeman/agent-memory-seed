@@ -4,8 +4,9 @@ origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [synthesis, paradigm, genealogy, deep-learning, transformers, scaling, alignment, representation-learning, bottlenecks]
-trust: low
+trust: medium
 created: 2026-03-18
+last_verified: 2026-03-19
 ---
 
 # How the Current AI Paradigm Formed

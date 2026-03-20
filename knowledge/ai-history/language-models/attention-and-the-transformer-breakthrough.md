@@ -4,8 +4,9 @@ origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [transformer, attention, self-attention, vaswani, bahdanau, bert, gpt, nlp, parallelization, positional-encoding, multi-head-attention, layer-norm]
-trust: low
+trust: medium
 created: 2026-03-18
+last_verified: 2026-03-19
 ---
 
 # Attention and the Transformer Breakthrough

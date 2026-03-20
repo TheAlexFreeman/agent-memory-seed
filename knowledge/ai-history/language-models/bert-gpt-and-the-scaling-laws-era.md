@@ -4,8 +4,9 @@ origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [gpt-3, bert, scaling-laws, in-context-learning, few-shot, chinchilla, pretraining, language-model, openai, kaplan, hoffmann]
-trust: low
+trust: medium
 created: 2026-03-18
+last_verified: 2026-03-19
 ---
 
 # BERT, GPT-3, and the Scaling Laws Era

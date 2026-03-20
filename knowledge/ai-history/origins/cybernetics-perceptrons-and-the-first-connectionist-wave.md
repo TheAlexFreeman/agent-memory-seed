@@ -2,8 +2,11 @@
 source: external-research
 origin_session: chats/2026/03/18/chat-005
 created: 2026-03-18
-trust: low
+last_verified: 2026-03-19
+trust: medium
 tags: [ai-history, connectionism, perceptrons, cybernetics, neural-networks]
+type: knowledge
+domain: ai-history
 period: 1943–1969
 bottleneck_addressed: How to make a machine learn from examples at all
 next_bottleneck: Linear separability — single-layer networks could not represent non-linearly separable functions

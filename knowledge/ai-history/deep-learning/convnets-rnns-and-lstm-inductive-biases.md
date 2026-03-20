@@ -4,8 +4,9 @@ origin_session: chats/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [convnets, cnn, rnn, lstm, gru, lenet, inductive-bias, spatial-structure, sequence-modeling, hochreiter, schmidhuber, lecun]
-trust: low
+trust: medium
 created: 2026-03-18
+last_verified: 2026-03-19
 ---
 
 # ConvNets, RNNs, and LSTM: The Case for Inductive Bias
