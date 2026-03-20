@@ -8,67 +8,88 @@ Read this section first during compact returning sessions when active plans exis
 
 Priority order for active work:
 
-<!-- BEGIN: mcp-reorganization -->
+
+
 ### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
+
 Detail: plans/mcp-reorganization.md
 Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
 Progress: 0/41 complete
 Next: Phase 0, item 1 — complete the physical move from `tools/` to `engram_mcp/` now that the additive namespace bootstrap is in place.
 Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6 after the reorganization reaches its path-update phase.
-<!-- END: mcp-reorganization -->
 
-<!-- BEGIN: worktree-integration -->
+
+
+
+
 ### `worktree-integration.md` · status: active · trust: medium
+
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
 Progress: 0/24 complete
 Next: Phase 0, item 1 — write init-worktree.sh scaffold
 Blocks: item 6 waits on `mcp-reorganization.md` Phase 2; the rest can proceed independently.
-<!-- END: worktree-integration -->
 
-<!-- BEGIN: access-log-tooling-improvements -->
+
+
+
+
 ### `access-log-tooling-improvements.md` · status: active · trust: medium
+
 Detail: plans/access-log-tooling-improvements.md
 Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
 Progress: 0/12 complete
 Next: Phase 1, item 1 — implement `memory_log_access_batch` in `write_tools.py`
 Blocks: waits on `mcp-reorganization.md` Phase 2.
-<!-- END: access-log-tooling-improvements -->
 
-<!-- BEGIN: mcp-semantic-tools-improvements -->
+
+
+
+
 ### `mcp-semantic-tools-improvements.md` · status: active · trust: medium
+
 Detail: plans/mcp-semantic-tools-improvements.md
 Scope: Close semantic-tooling gaps around scratchpad writes, review-queue lifecycle, skills updates, session recording, and aggregation.
 Progress: 0/22 complete
 Next: Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
 Blocks: waits on `mcp-reorganization.md` Phase 2.
-<!-- END: mcp-semantic-tools-improvements -->
 
-<!-- BEGIN: mcp-read-tools-improvements -->
+
+
+
+
 ### `mcp-read-tools-improvements.md` · status: active · trust: medium
+
 Detail: plans/mcp-read-tools-improvements.md
 Scope: Collapse manual session-start reads and improve git-log and trust-audit visibility.
 Progress: 0/13 complete
 Next: Phase 1, item 1 — add `since` and `path_filter` params to `memory_git_log` in `read_tools.py`
 Blocks: waits on `mcp-reorganization.md` Phase 2.
-<!-- END: mcp-read-tools-improvements -->
 
-<!-- BEGIN: mcp-write-and-crosscutting-improvements -->
+
+
+
+
 ### `mcp-write-and-crosscutting-improvements.md` · status: active · trust: medium
+
 Detail: plans/mcp-write-and-crosscutting-improvements.md
 Scope: Add frontmatter batch updates, native capability lookup, and richer search results.
 Progress: 0/15 complete
 Next: Phase 1, item 1 — implement `memory_update_frontmatter_bulk` in `write_tools.py`
 Blocks: waits on `mcp-reorganization.md` Phase 2.
-<!-- END: mcp-write-and-crosscutting-improvements -->
 
-<!-- BEGIN: ai-frontier-research -->
+
+
+
+
 ### `ai-frontier-research.md` · status: active · trust: medium
+
 Detail: plans/ai-frontier-research.md
 Scope: Build a deep knowledge base on frontier AI, from reasoning models through alignment, long-context systems, multi-agent coordination, and interpretability.
 Progress: 0/21 complete
 Next: Phase 1, item 1 — research reasoning models (o1/o3, DeepSeek R1, chain-of-thought, process reward models, test-time compute scaling)
-<!-- END: ai-frontier-research -->
+
+
 
 ---
 
@@ -97,3 +118,4 @@ Next: Phase 1, item 1 — research reasoning models (o1/o3, DeepSeek R1, chain-o
 - Log reads of `plans/*.md` in `plans/ACCESS.jsonl` when they materially inform a session. Do not log reads of this `SUMMARY.md`.
 - Routine progress updates are automatic. New plans, retirements, and major scope changes should still be surfaced to the user.
 - Keep active blocks compact. Extended rationale belongs in the plan file itself, not here.
+
