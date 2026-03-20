@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: '`filesystems-for-developers.md`'
+next_action: '`write-ahead-logging-and-wal-design.md`'
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -123,7 +123,7 @@ which requires precise understanding of the orphan branch → worktree topology,
 
 ---
 
-### Phase 2 — Filesystem semantics and OS-level locking · ☐ 1/2 complete
+### Phase 2 — Filesystem semantics and OS-level locking · ☑ 2/2 complete
 
 **Why second:** The index lock incident was a symptom of a deeper gap: the system
 makes assumptions about filesystem atomicity and POSIX locking semantics that do not
@@ -159,7 +159,7 @@ resilient by design rather than by luck.
      informs the design of the index-bypass commit path (Phase 1, item 3), the
      worktree init script's error handling, and any future locking in the MCP server.
 
-5. ☐ `filesystems-for-developers.md`
+5. ☑ `filesystems-for-developers.md`
 
    - **Journaling filesystems (ext4, NTFS, HFS+):** journal modes (writeback,
      ordered, data journaling), what each protects against on crash, why ordered mode
@@ -526,4 +526,4 @@ until reviewed.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following discussion of git/filesystem/distributed-systems research areas relevant to memory system architecture |
-| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) || 2026-03-19 | Completed git-plumbing-and-automation.md (systems-architecture-research 3/13) || 2026-03-19 | Completed filesystem-atomicity-and-locking.md (systems-architecture-research 4/13) |
+| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) || 2026-03-19 | Completed git-plumbing-and-automation.md (systems-architecture-research 3/13) || 2026-03-19 | Completed filesystem-atomicity-and-locking.md (systems-architecture-research 4/13) || 2026-03-19 | Completed filesystems-for-developers.md (systems-architecture-research 5/13) |

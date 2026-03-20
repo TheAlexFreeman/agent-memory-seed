@@ -10,8 +10,8 @@ Priority order for active work:
 
 <!-- BEGIN: systems-architecture-research -->
 ### `systems-architecture-research.md` · status: active · trust: medium
-**Progress:** 4/13 items complete
-**Next action:** `filesystems-for-developers.md`
+**Progress:** 5/13 items complete
+**Next action:** `write-ahead-logging-and-wal-design.md`
 <!-- END: systems-architecture-research -->
 
 <!-- BEGIN: worktree-integration -->
