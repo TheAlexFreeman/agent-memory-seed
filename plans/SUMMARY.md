@@ -39,8 +39,8 @@ Blocks: none; structural prerequisites are complete.
 
 Detail: plans/mcp-curation-and-analytics-tools.md
 Scope: Batch knowledge promotion, cross-reference validation, SUMMARY generation, ACCESS analytics, and branch diff tools.
-Progress: 0/22 complete
-Next: Phase 1, item 1 — implement `memory_promote_knowledge_batch` in `knowledge_tools.py`
+Progress: 5/22 complete
+Next: Phase 2, item 1 — implement `memory_check_cross_references` in `read_tools.py`
 Blocks: none; can begin immediately. Complements (does not duplicate) mcp-read-tools-improvements and mcp-write-and-crosscutting-improvements.
 
 ### Research plans

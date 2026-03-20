@@ -383,6 +383,175 @@ origin_session: manual
         self.assertNotIn("knowledge/_unverified/literature/test-note.md", unverified_summary)
         self.assertIn("knowledge/literature/test-note.md", verified_summary)
 
+    def test_promote_knowledge_batch_single_file_matches_single_promotion_behavior(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/literature/test-note.md": """---
+title: Test Note
+source: agent-generated
+created: 2026-03-17
+last_verified: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Test Note
+""",
+                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+
+<!-- section: literature -->
+### Literature
+- **[test-note.md](knowledge/_unverified/literature/test-note.md)** — Test Note
+
+---
+""",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: literature -->
+### Literature
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_batch"](
+                    source_paths='["knowledge/_unverified/literature/test-note.md"]',
+                    trust_level="high",
+                )
+            )
+        )
+
+        target_path = repo_root / "knowledge" / "literature" / "test-note.md"
+        frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(target_path)
+        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["new_state"]["promoted_count"], 1)
+        self.assertEqual(payload["new_state"]["target_folder"], "knowledge/literature")
+        self.assertEqual(payload["new_state"]["trust"], "high")
+        self.assertEqual(payload["new_state"]["promoted_files"], ["test-note.md"])
+        self.assertIn("knowledge/SUMMARY.md", payload["new_state"]["summary_updates"])
+        self.assertEqual(frontmatter["trust"], "high")
+        self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
+        self.assertIn("knowledge/literature/test-note.md", verified_summary)
+
+    def test_promote_knowledge_batch_folder_expansion_promotes_multiple_files(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mcp/a-note.md": """---
+title: A Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# A Note
+""",
+                "knowledge/_unverified/mcp/b-note.md": """---
+title: B Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# B Note
+""",
+                "knowledge/_unverified/mcp/SUMMARY.md": "# MCP folder\n",
+                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+
+<!-- section: mcp -->
+### MCP
+- **[a-note.md](knowledge/_unverified/mcp/a-note.md)** — A Note
+- **[b-note.md](knowledge/_unverified/mcp/b-note.md)** — B Note
+
+---
+""",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: tooling -->
+### Tooling
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_batch"](
+                    source_paths="knowledge/_unverified/mcp/",
+                    trust_level="medium",
+                    target_folder="knowledge/tooling",
+                )
+            )
+        )
+
+        self.assertEqual(payload["new_state"]["promoted_count"], 2)
+        self.assertEqual(payload["new_state"]["target_folder"], "knowledge/tooling")
+        self.assertTrue((repo_root / "knowledge" / "tooling" / "a-note.md").exists())
+        self.assertTrue((repo_root / "knowledge" / "tooling" / "b-note.md").exists())
+        self.assertFalse((repo_root / "knowledge" / "_unverified" / "mcp" / "a-note.md").exists())
+        self.assertFalse((repo_root / "knowledge" / "_unverified" / "mcp" / "b-note.md").exists())
+
+    def test_promote_knowledge_batch_validation_failure_rejects_entire_batch(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/literature/test-note.md": """---
+title: Test Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Test Note
+""",
+                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "knowledge/SUMMARY.md": "# Knowledge\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_promote_knowledge_batch"](
+                    source_paths='["knowledge/_unverified/literature/test-note.md", "plans/test-plan.md"]',
+                    trust_level="medium",
+                )
+            )
+
+        self.assertTrue(
+            (repo_root / "knowledge" / "_unverified" / "literature" / "test-note.md").exists()
+        )
+        self.assertFalse((repo_root / "knowledge" / "literature" / "test-note.md").exists())
+
+    def test_promote_knowledge_batch_rejects_oversized_batch(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/literature/test-note.md": "# Test\n",
+                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "knowledge/SUMMARY.md": "# Knowledge\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        oversized = json.dumps(
+            ["knowledge/_unverified/literature/test-note.md" for _ in range(51)]
+        )
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_promote_knowledge_batch"](
+                    source_paths=oversized,
+                    trust_level="medium",
+                )
+            )
+
     def test_memory_delete_blocks_protected_identity_paths(self) -> None:
         repo_root = self._init_repo(
             {

@@ -429,6 +429,28 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ["access_jsonls", "entry_count", "scan_entry_count"],
         )
 
+    def test_manifest_declares_batch_knowledge_promotion_operation(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+        self.assertIn(
+            "memory_promote_knowledge_batch",
+            manifest["tool_sets"]["semantic_extensions"],
+        )
+        self.assertEqual(
+            manifest["operations"]["memory_promote_knowledge_batch"]["result_fields"],
+            [
+                "promoted_count",
+                "target_folder",
+                "trust",
+                "promoted_files",
+                "summary_updates",
+            ],
+        )
+        self.assertEqual(
+            manifest["desktop_operations"]["promote_knowledge_batch"]["tool"],
+            "memory_promote_knowledge_batch",
+        )
+
     def test_manifest_declares_access_scan_result_fields_and_notes(self) -> None:
         manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
 

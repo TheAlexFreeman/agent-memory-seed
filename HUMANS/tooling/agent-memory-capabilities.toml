@@ -51,6 +51,7 @@ semantic_extensions = [
   "memory_mark_plan_item_complete",
   "memory_update_plan_next_action",
   "memory_add_knowledge_file",
+  "memory_promote_knowledge_batch",
   "memory_promote_knowledge",
   "memory_demote_knowledge",
   "memory_archive_knowledge",
@@ -154,9 +155,13 @@ new_path = "Knowledge Path"
 trust = "Trust"
 archive_path = "Archive Path"
 target = "Scratchpad Target"
+target_folder = "Target Folder"
 section = "Section"
 key = "Identity Key"
 mode = "Update Mode"
+promoted_count = "Promoted Count"
+promoted_files = "Promoted Files"
+summary_updates = "Summary Updates"
 identity_updates_this_session = "Identity Updates This Session"
 session_id = "Chat Session"
 flagged_path = "Flagged Path"
@@ -350,6 +355,13 @@ tier = "semantic"
 operation_group = "knowledge"
 change_class = "proposed"
 
+[desktop_operations.promote_knowledge_batch]
+status = "implemented"
+tool = "memory_promote_knowledge_batch"
+tier = "semantic"
+operation_group = "knowledge"
+change_class = "proposed"
+
 [desktop_operations.demote_knowledge]
 status = "implemented"
 tool = "memory_demote_knowledge"
@@ -536,6 +548,36 @@ result_fields = ["new_path", "trust"]
 fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
 error_kinds = [
   "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
+
+[operations.memory_promote_knowledge_batch]
+group = "knowledge"
+tier = "semantic"
+change_class = "proposed"
+commit_model = "auto_commit"
+commit_category_hint = "curation"
+writes = [
+  "knowledge/_unverified/**/{file}.md",
+  "knowledge/**/{file}.md",
+  "knowledge/_unverified/SUMMARY.md",
+  "knowledge/SUMMARY.md",
+]
+owns_frontmatter = ["knowledge/**/{file}.md"]
+owns_summaries = ["knowledge/_unverified/SUMMARY.md", "knowledge/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = [
+  "promoted_count",
+  "target_folder",
+  "trust",
+  "promoted_files",
+  "summary_updates",
+]
+fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
+error_kinds = [
   "NotFoundError",
   "ValidationError",
   "StagingError",
