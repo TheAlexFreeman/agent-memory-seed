@@ -1,10 +1,10 @@
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research propositional and predicate logic — syntax, semantics, proof systems, completeness"
+next_action: "Complete — all 11 items done. Human review of knowledge/_unverified/mathematics/logic-foundations/ files recommended."
 origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -138,25 +138,25 @@ Files go in `knowledge/_unverified/mathematics/logic-foundations/` with standard
 ## Progress tracking
 
 ### Phase 1 — Classical logic
-- [ ] 1.1 Propositional and first-order logic
-- [ ] 1.2 Compactness, Löwenheim-Skolem, and semantic limits
+- [x] 1.1 Propositional and first-order logic
+- [x] 1.2 Compactness, Löwenheim-Skolem, and semantic limits
 
 ### Phase 2 — Incompleteness and undecidability
-- [ ] 2.1 Gödel's first incompleteness theorem
-- [ ] 2.2 Second incompleteness and consequences
-- [ ] 2.3 Turing and undecidability
-- [ ] 2.4 Relationship to Kolmogorov complexity
+- [x] 2.1 Gödel's first incompleteness theorem
+- [x] 2.2 Second incompleteness and consequences
+- [x] 2.3 Turing and undecidability
+- [x] 2.4 Relationship to Kolmogorov complexity
 
 ### Phase 3 — Type theory
-- [ ] 3.1 Simple type theory and lambda calculus
-- [ ] 3.2 The Curry-Howard isomorphism
-- [ ] 3.3 Dependent types and proof assistants
+- [x] 3.1 Simple type theory and lambda calculus
+- [x] 3.2 The Curry-Howard isomorphism
+- [x] 3.3 Dependent types and proof assistants
 
 ### Phase 4 — Set theory and alternatives
-- [ ] 4.1 ZFC set theory
-- [ ] 4.2 Category theory as alternative foundation
+- [x] 4.1 ZFC set theory
+- [x] 4.2 Category theory as alternative foundation
 
-**Progress:** 0/11 items complete
+**Progress:** 11/11 items complete ✓
 
 ---
 

@@ -65,11 +65,11 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (cognitive-neuroscience grounds curation/retrieval, cultural-evolution extends memetic-security insights). Tier 2 builds core intellectual infrastructure. Tier 3 is important but less immediately actionable.
 
 **Tier 1 — System-Relevant**
-- *(All Tier 1 research plans complete. Next priority: Tier 2.)*
+- *(All original Tier 1 plans complete.)*
 
-**Tier 2 — Core Intellectual Infrastructure**
-- `formal-logic-foundations-research.md` — 0/11; next: propositional/first-order logic. Underpins reasoning capability analysis; connects to interpretability, incompleteness results, and AI limits.
-- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality. Grounds the embodiment critique; connects to dynamical-systems framework and LLM limitations analysis.
+**Tier 2 — Core Intellectual Infrastructure** ← **CURRENT PRIORITY**
+- `formal-logic-foundations-research.md` — 11/11 ✓ COMPLETE. Underpins reasoning capability analysis; connects to interpretability, incompleteness results, and AI limits.
+- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality. Grounds the embodiment critique; connects to dynamical-systems framework and LLM limitations analysis. **TOP PRIORITY** (next natural research plan after formal-logic completion).
 
 **Tier 3 — Rich but Lower Urgency**
 - `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion. Philosophical foundations for agent persistence and continuity of identity across sessions.
@@ -78,6 +78,7 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 ## Recent completions
 
+- [formal-logic-foundations-research.md](formal-logic-foundations-research.md) — completed 2026-03-20; 11/11 items across 4 phases (classical logic, incompleteness/undecidability, type theory, set theory/alternatives); 11 knowledge files in `_unverified/mathematics/logic-foundations/`; pending human review.
 - [information-theory-stat-learning-research.md](information-theory-stat-learning-research.md) — completed 2026-03-20; 12/12 items across 4 phases (Shannon info theory, rate-distortion, statistical learning theory, synthesis); 12 knowledge files in `_unverified/mathematics/information-theory/`; pending human review.
 - [cultural-evolution-epistemics-research.md](cultural-evolution-epistemics-research.md) — completed 2026-03-20; 12/12 items across 4 phases (foundations/memes, dual inheritance/transmission biases, cumulative culture/norms, epistemic communities/LLMs); 12 knowledge files in `_unverified/social-science/cultural-evolution/`; pending human review.
 - [cognitive-neuroscience-memory-research.md](cognitive-neuroscience-memory-research.md) — completed 2026-03-20; 11/11 items across 4 phases (memory taxonomy, hippocampal consolidation, reconsolidation, forgetting/false memory); 11 knowledge files in `_unverified/cognitive-science/memory/`; pending human review.
