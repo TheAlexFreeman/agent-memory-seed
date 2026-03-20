@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: '`filesystem-atomicity-and-locking.md`'
+next_action: '`filesystems-for-developers.md`'
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -123,7 +123,7 @@ which requires precise understanding of the orphan branch → worktree topology,
 
 ---
 
-### Phase 2 — Filesystem semantics and OS-level locking · ☐ 0/2 complete
+### Phase 2 — Filesystem semantics and OS-level locking · ☐ 1/2 complete
 
 **Why second:** The index lock incident was a symptom of a deeper gap: the system
 makes assumptions about filesystem atomicity and POSIX locking semantics that do not
@@ -131,7 +131,7 @@ hold uniformly across environments (sandboxed mounts, FUSE filesystems, network
 filesystems, Windows). Understanding the actual OS contracts makes the MCP server
 resilient by design rather than by luck.
 
-4. ☐ `filesystem-atomicity-and-locking.md`
+4. ☑ `filesystem-atomicity-and-locking.md`
 
    - **POSIX `rename()` atomicity:** the guarantee that `rename(src, dst)` is atomic
      with respect to other processes seeing either the old or new filename — never a
@@ -526,4 +526,4 @@ until reviewed.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following discussion of git/filesystem/distributed-systems research areas relevant to memory system architecture |
-| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) || 2026-03-19 | Completed git-plumbing-and-automation.md (systems-architecture-research 3/13) |
+| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) || 2026-03-19 | Completed git-plumbing-and-automation.md (systems-architecture-research 3/13) || 2026-03-19 | Completed filesystem-atomicity-and-locking.md (systems-architecture-research 4/13) |
