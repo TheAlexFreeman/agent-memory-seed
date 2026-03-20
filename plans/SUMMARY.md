@@ -9,9 +9,12 @@ Read this section first during compact returning sessions when active plans exis
 Priority order for active work:
 
 <!-- BEGIN: mcp-reorganization -->
-### `mcp-reorganization.md` · status: active · trust: medium
-**Progress:** 0/0 items complete
-**Next action:** Resolve the top-level `mcp` namespace collision before renaming `tools/`.
+### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
+Detail: plans/mcp-reorganization.md
+Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
+Progress: 0/41 complete
+Next: Phase 0, item 1 — rename `tools/` → `engram_mcp/` and update package metadata.
+Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6 after the reorganization reaches its path-update phase.
 <!-- END: mcp-reorganization -->
 
 <!-- BEGIN: worktree-integration -->

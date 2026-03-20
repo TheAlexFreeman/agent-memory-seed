@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: Resolve the top-level `mcp` namespace collision before renaming `tools/`.
+next_action: Phase 0, item 1 — rename `tools/` → `engram_mcp/` and update package metadata.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -37,11 +37,16 @@ ownership explicit rather than leave it implicit.
 
 ## Goals
 
-1. Rename `tools/` → `mcp/` so the directory name matches what it contains.
-2. Move the MCP entrypoint into `mcp/` so all MCP runtime code lives in one place.
-3. Move MCP-specific tests into `mcp/tests/` and keep only non-MCP tests in
+Naming decision: use `engram-mcp` as the user-facing system/package name, and
+`engram_mcp/` as the Python-importable package path on disk. The underscore form
+avoids both the third-party `mcp` namespace collision and the fact that Python
+import paths cannot contain hyphens.
+
+1. Rename `tools/` → `engram_mcp/` so the directory name matches what it contains.
+2. Move the MCP entrypoint into `engram_mcp/` so all MCP runtime code lives in one place.
+3. Move MCP-specific tests into `engram_mcp/tests/` and keep only non-MCP tests in
    `HUMANS/tooling/tests/`.
-4. Add a `[project.scripts]` CLI entrypoint so the server runs as `memory-mcp`
+4. Add a `[project.scripts]` CLI entrypoint so the server runs as `engram-mcp`
    after `pip install -e .[server]` — no path arithmetic required.
 5. Split `semantic_tools.py` into four focused submodules grouped by domain.
 6. Make the format/validation layer importable without the `mcp` dependency, with centralized schema-version and contract constants that adapters can expose consistently.
@@ -61,7 +66,7 @@ ownership explicit rather than leave it implicit.
 ## Resulting directory structure
 
 ```
-mcp/                                  ← renamed from tools/
+engram_mcp/                           ← renamed from tools/
   __init__.py
   agent_memory_mcp/
     __init__.py
@@ -88,10 +93,10 @@ mcp/                                  ← renamed from tools/
                                          append_scratchpad, log_access,
                                          flag_for_review, revert_commit,
                                          diff, audit_trust
-  tests/                              ← moved from HUMANS/tooling/tests/
-    __init__.py
-    test_memory_mcp.py
-    test_agent_memory_mcp_write_tools.py
+    tests/                              ← moved from HUMANS/tooling/tests/
+        __init__.py
+        test_memory_mcp.py
+        test_agent_memory_mcp_write_tools.py
 
 HUMANS/
   tooling/
@@ -115,46 +120,45 @@ HUMANS/
 
 ---
 
-## Phase 0: Rename `tools/` → `mcp/` and update package metadata
+## Phase 0: Rename `tools/` → `engram_mcp/` and update package metadata
 
 Goal: establish the new directory name and make Python packaging aware of it.
 The server does not yet run from the new path at the end of this phase — that
 comes in Phase 1. This phase is purely structural and must not break any existing
 imports until Phase 1 provides the compat shim.
 
-Blocking finding (2026-03-19): the repo already depends on the third-party
-`mcp` package (`mcp>=1.0` in `pyproject.toml`), and the active virtual
-environment resolves `import mcp` to site-packages. Creating a top-level local
-package named `mcp/` would shadow that dependency on `sys.path`, breaking
-imports like `from mcp.server.fastmcp import FastMCP`. Resolve this namespace
-collision before executing the rename as written.
+Resolved naming constraint (2026-03-19): the repo already depends on the
+third-party `mcp` package (`mcp>=1.0` in `pyproject.toml`), and the active
+virtual environment resolves `import mcp` to site-packages. The revised target
+name is therefore `engram_mcp/` on disk and `engram-mcp` in user-facing labels,
+which avoids both the namespace collision and invalid hyphenated Python imports.
 
 ### Items
 
 1. ☐ Rename the directory
 
-   `tools/` → `mcp/` (file copy + delete since the sandbox restricts `rename()`).
-   The subdirectory `tools/agent_memory_mcp/` becomes `mcp/agent_memory_mcp/`.
-   The top-level `tools/__init__.py` becomes `mcp/__init__.py`.
+    `tools/` → `engram_mcp/` (file copy + delete since the sandbox restricts `rename()`).
+    The subdirectory `tools/agent_memory_mcp/` becomes `engram_mcp/agent_memory_mcp/`.
+    The top-level `tools/__init__.py` becomes `engram_mcp/__init__.py`.
 
 2. ☐ Update `pyproject.toml` package discovery and add CLI entrypoint
 
    ```toml
    [tool.setuptools.packages.find]
    where = ["."]
-   include = ["mcp*"]          # was "tools*"
+     include = ["engram_mcp*"]   # was "tools*"
 
    [project.scripts]
-   memory-mcp = "mcp.agent_memory_mcp.server_main:main"
+     engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
 
    [tool.pytest.ini_options]
    testpaths = [
        "HUMANS/tooling/tests",
-       "mcp/tests",             # add new location
+             "engram_mcp/tests",      # add new location
    ]
    ```
 
-3. ☐ Write `mcp/agent_memory_mcp/server_main.py`
+3. ☐ Write `engram_mcp/agent_memory_mcp/server_main.py`
 
    A minimal module containing the `main()` function that `[project.scripts]`
    will call:
@@ -172,25 +176,25 @@ collision before executing the rename as written.
 
 4. ☐ Add a compat shim at `tools/__init__.py` (temporary)
 
-   After moving `tools/` to `mcp/`, any code that still imports from
+     After moving `tools/` to `engram_mcp/`, any code that still imports from
    `tools.agent_memory_mcp.*` would immediately break. To keep the test suite
    green throughout the transition, create a shim:
 
    ```
    tools/
-     __init__.py   ← "import mcp.agent_memory_mcp as agent_memory_mcp; ..."
+         __init__.py   ← "import engram_mcp.agent_memory_mcp as agent_memory_mcp; ..."
      agent_memory_mcp/
-       __init__.py ← re-export everything from mcp.agent_memory_mcp
+             __init__.py ← re-export everything from engram_mcp.agent_memory_mcp
    ```
 
    This shim is temporary and removed in Phase 3 once all direct `tools.*`
    imports are updated. Do not add new imports to the shim.
 
-5. ☐ Verify: install package, confirm `memory-mcp` command is present
+5. ☐ Verify: install package, confirm `engram-mcp` command is present
 
    ```bash
    pip install -e ".[server]" --break-system-packages
-   memory-mcp --help   # or: python -m mcp.agent_memory_mcp.server_main
+    engram-mcp --help   # or: python -m engram_mcp.agent_memory_mcp.server_main
    ```
 
 6. ☐ Run full test suite — must be green before proceeding to Phase 1.
@@ -199,60 +203,60 @@ collision before executing the rename as written.
 
 ## Phase 1: Relocate entrypoint and MCP-specific tests
 
-Goal: move `HUMANS/tooling/scripts/memory_mcp.py` into `mcp/` and move the two
-MCP-specific test files into `mcp/tests/`. After this phase, nothing MCP-runtime
+Goal: move `HUMANS/tooling/scripts/memory_mcp.py` into `engram_mcp/` and move the two
+MCP-specific test files into `engram_mcp/tests/`. After this phase, nothing MCP-runtime
 lives under `HUMANS/`.
 
 ### Items
 
-7. ☐ Move entrypoint: `HUMANS/tooling/scripts/memory_mcp.py` → `mcp/memory_mcp.py`
+7. ☐ Move entrypoint: `HUMANS/tooling/scripts/memory_mcp.py` → `engram_mcp/memory_mcp.py`
 
    Update the file to use the new import path:
 
    ```python
    # Old: _server = importlib.import_module("tools.agent_memory_mcp.server")
    # New: direct import — no sys.path manipulation needed once installed
-   from mcp.agent_memory_mcp import server as _server
+    from engram_mcp.agent_memory_mcp import server as _server
    ```
 
    The file is kept for backward compatibility with existing `.codex/config.toml`
    and `mcp-config-example.json` references. It is not removed — it is only
-   relocated. A deprecation comment is added noting that `memory-mcp` (the CLI
+    relocated. A deprecation comment is added noting that `engram-mcp` (the CLI
    entrypoint) is now the preferred invocation.
 
 8. ☐ Move MCP test files
 
-   - `HUMANS/tooling/tests/test_memory_mcp.py` → `mcp/tests/test_memory_mcp.py`
+     - `HUMANS/tooling/tests/test_memory_mcp.py` → `engram_mcp/tests/test_memory_mcp.py`
    - `HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py`
-     → `mcp/tests/test_agent_memory_mcp_write_tools.py`
-   - Create `mcp/tests/__init__.py`
+         → `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
+     - Create `engram_mcp/tests/__init__.py`
 
-   Update `SCRIPT_PATH` in `mcp/tests/test_memory_mcp.py`:
+     Update `SCRIPT_PATH` in `engram_mcp/tests/test_memory_mcp.py`:
 
    ```python
    # Old: SCRIPT_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "memory_mcp.py"
-   # New: SCRIPT_PATH = REPO_ROOT / "mcp" / "memory_mcp.py"
+    # New: SCRIPT_PATH = REPO_ROOT / "engram_mcp" / "memory_mcp.py"
    ```
 
-   Update `tools.agent_memory_mcp.*` imports in `mcp/tests/test_agent_memory_mcp_write_tools.py`
-   to `mcp.agent_memory_mcp.*`.
+    Update `tools.agent_memory_mcp.*` imports in `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
+    to `engram_mcp.agent_memory_mcp.*`.
 
 9. ☐ Update `test_setup_flows.py` entrypoint path assertion
 
    The setup flow test asserts that `setup.sh` generates a config containing the
    `memory_mcp.py` path. Update the expected path from
-   `HUMANS/tooling/scripts/memory_mcp.py` to `mcp/memory_mcp.py`:
+    `HUMANS/tooling/scripts/memory_mcp.py` to `engram_mcp/memory_mcp.py`:
 
    ```python
    # test_setup_flows.py line ~168
-   str(root / "mcp" / "memory_mcp.py").replace("\\", "\\\\")
+    str(root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\")
    ```
 
 10. ☐ Update `resolve_memory_capabilities.py` import
 
     ```python
     # Old: from tools.agent_memory_mcp.server import create_mcp
-    # New: from mcp.agent_memory_mcp.server import create_mcp
+    # New: from engram_mcp.agent_memory_mcp.server import create_mcp
     ```
 
 11. ☐ Run full test suite — must be green before proceeding to Phase 2.
@@ -263,7 +267,7 @@ lives under `HUMANS/`.
 
 Goal: every config file, setup script, adapter file, and documentation reference
 that embeds the old `HUMANS/tooling/scripts/memory_mcp.py` path is updated to
-`mcp/memory_mcp.py`. This is the user-visible change — existing `.codex/config.toml`
+`engram_mcp/memory_mcp.py`. This is the user-visible change — existing `.codex/config.toml`
 files generated by `setup.sh` will need to be regenerated by each user after
 upgrading.
 
@@ -275,7 +279,7 @@ upgrading.
     # Old:
     local memory_script="${repo_root_native%[\\/]}${sep}HUMANS${sep}tooling${sep}scripts${sep}memory_mcp.py"
     # New:
-    local memory_script="${repo_root_native%[\\/]}${sep}mcp${sep}memory_mcp.py"
+    local memory_script="${repo_root_native%[\\/]}${sep}engram_mcp${sep}memory_mcp.py"
     ```
 
 13. ☐ Update `setup/setup.html`
@@ -284,27 +288,27 @@ upgrading.
     // Old:
     var memoryScript = trimmedRepo + sep + 'HUMANS' + sep + 'tooling' + sep + 'scripts' + sep + 'memory_mcp.py'
     // New:
-    var memoryScript = trimmedRepo + sep + 'mcp' + sep + 'memory_mcp.py'
+    var memoryScript = trimmedRepo + sep + 'engram_mcp' + sep + 'memory_mcp.py'
     ```
 
 14. ☐ Update `HUMANS/tooling/mcp-config-example.json`
 
     ```json
     // Old: "args": ["~/code/personal/agent-memory-seed/HUMANS/tooling/scripts/memory_mcp.py"]
-    // New: "args": ["~/code/personal/agent-memory-seed/mcp/memory_mcp.py"]
+    // New: "args": ["~/code/personal/agent-memory-seed/engram_mcp/memory_mcp.py"]
     ```
 
 15. ☐ Update `HUMANS/tooling/agent-memory-capabilities.toml`
 
     ```toml
     # Old: mcp_entrypoint = "HUMANS/tooling/scripts/memory_mcp.py"
-    # New: mcp_entrypoint = "mcp/memory_mcp.py"
+    # New: mcp_entrypoint = "engram_mcp/memory_mcp.py"
     ```
 
 16. ☐ Update `.codex/config.toml`
 
     The committed config contains user-specific absolute paths. Update the
-    `args` path to point at `mcp/memory_mcp.py` and add a comment that this file
+    `args` path to point at `engram_mcp/memory_mcp.py` and add a comment that this file
     is regenerated by `setup.sh` and should not be edited by hand. (The committed
     version with absolute paths is a known issue tracked separately — see
     P3-C of the remediation plan.)
@@ -314,27 +318,27 @@ upgrading.
     The Python library import example:
     ```python
     # Old: from tools.agent_memory_mcp.server import create_mcp
-    # New: from mcp.agent_memory_mcp.server import create_mcp
+    # New: from engram_mcp.agent_memory_mcp.server import create_mcp
     ```
 
 18. ☐ Update `worktree-integration.md` plan references
 
     Phase 1, item 6 of the worktree plan references
     `<worktree-path>/HUMANS/tooling/scripts/memory_mcp.py` as the MCP entrypoint.
-    Update to `<worktree-path>/mcp/memory_mcp.py` and note that the preferred
-    invocation is `memory-mcp` (the CLI script) when installed.
+    Update to `<worktree-path>/engram_mcp/memory_mcp.py` and note that the preferred
+    invocation is `engram-mcp` (the CLI script) when installed.
 
 19. ☐ Update `setup/initial-commit-paths.txt`
 
     Remove: `tools/__init__.py`, `tools/agent_memory_mcp/*` entries
-    Add: `mcp/__init__.py`, `mcp/memory_mcp.py`, `mcp/agent_memory_mcp/*`,
-    `mcp/tests/__init__.py`, `mcp/tests/test_memory_mcp.py`,
-    `mcp/tests/test_agent_memory_mcp_write_tools.py`
+    Add: `engram_mcp/__init__.py`, `engram_mcp/memory_mcp.py`, `engram_mcp/agent_memory_mcp/*`,
+    `engram_mcp/tests/__init__.py`, `engram_mcp/tests/test_memory_mcp.py`,
+    `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
 
 20. ☐ Update CI workflow (``.github/workflows/ci.yml``)
 
     Update the `ruff` lint paths and any explicit file paths from
-    `tools/agent_memory_mcp/` to `mcp/agent_memory_mcp/`.
+    `tools/agent_memory_mcp/` to `engram_mcp/agent_memory_mcp/`.
 
 21. ☐ Remove the `tools/` compat shim (from Phase 0, item 4)
 
@@ -375,7 +379,7 @@ session state directly.
 
 ### Items
 
-23. ☐ Create `mcp/agent_memory_mcp/tools/semantic/` directory and stub files
+23. ☐ Create `engram_mcp/agent_memory_mcp/tools/semantic/` directory and stub files
 
     Create `__init__.py`, `_session.py`, `plan_tools.py`, `knowledge_tools.py`,
     `identity_tools.py`, `session_tools.py` — initially empty except for imports.
@@ -466,7 +470,7 @@ guarantee formalized as a dependency constraint.
 
 32. ☐ Identify the zero-MCP-dependency modules
 
-    The following modules in `mcp/agent_memory_mcp/` have no `mcp` imports today
+    The following modules in `engram_mcp/agent_memory_mcp/` have no `mcp` imports today
     and constitute the format/validation layer:
     - `errors.py` — exception types
     - `frontmatter_utils.py` — YAML frontmatter read/write
@@ -476,7 +480,7 @@ guarantee formalized as a dependency constraint.
 
     Verify this claim with:
     ```bash
-    python -c "import mcp.agent_memory_mcp.frontmatter_utils"
+    python -c "import engram_mcp.agent_memory_mcp.frontmatter_utils"
     # run with mcp not installed — should succeed
     ```
 
@@ -490,7 +494,7 @@ guarantee formalized as a dependency constraint.
     ]
     server = [
         "mcp>=1.0",
-        "agent-memory-mcp[core]",  # server depends on core
+        "engram-mcp[core]",  # server depends on core
     ]
     ```
 
@@ -502,10 +506,10 @@ guarantee formalized as a dependency constraint.
 
     Any `from mcp.server.fastmcp import FastMCP` that appears at module level in
     non-server files is a layering violation. Audit all files in
-    `mcp/agent_memory_mcp/` for top-level `mcp` imports — they should exist
+    `engram_mcp/agent_memory_mcp/` for top-level `mcp` imports — they should exist
     only in `server.py` and `server_main.py`.
 
-35. ☐ Update `validate_memory_repo.py` to import from `mcp.agent_memory_mcp.core`
+35. ☐ Update `validate_memory_repo.py` to import from `engram_mcp.agent_memory_mcp.core`
     submodules if needed
 
     The validator currently does not import from `tools.*` (confirmed in Phase 0
@@ -515,10 +519,10 @@ guarantee formalized as a dependency constraint.
 36. ☐ Document the layer boundary in `HUMANS/docs/DESIGN.md`
 
     Add a section describing the two layers:
-    - **Format layer** (`mcp/agent_memory_mcp/{errors,frontmatter_utils,git_repo,
+        - **Format layer** (`engram_mcp/agent_memory_mcp/{errors,frontmatter_utils,git_repo,
       models,path_policy}.py`): no `mcp` dependency, usable independently,
       importable by the validator and setup scripts.
-    - **Runtime layer** (`mcp/agent_memory_mcp/server.py`, `tools/`): requires
+        - **Runtime layer** (`engram_mcp/agent_memory_mcp/server.py`, `tools/`): requires
       `mcp[cli]>=1.0`, exposes the governed write surface to agents.
 
 37. ☐ Run full test suite — must be green.
@@ -534,33 +538,33 @@ accurate, and the validator understands the new layout.
 
 38. ☐ Update `.github/workflows/ci.yml`
 
-    - Change ruff lint paths from `tools/agent_memory_mcp/` to `mcp/agent_memory_mcp/`
-    - Change pytest paths to include both `HUMANS/tooling/tests` and `mcp/tests`
-    - Add a `pip install -e ".[dev]"` step before tests so the `memory-mcp`
+    - Change ruff lint paths from `tools/agent_memory_mcp/` to `engram_mcp/agent_memory_mcp/`
+    - Change pytest paths to include both `HUMANS/tooling/tests` and `engram_mcp/tests`
+    - Add a `pip install -e ".[dev]"` step before tests so the `engram-mcp`
       entrypoint is available
 
 39. ☐ Update `validate_memory_repo.py` to check the new structure
 
     Add checks:
-    - `mcp/` directory exists (if repo has MCP runtime)
-    - `mcp/memory_mcp.py` exists
+    - `engram_mcp/` directory exists (if repo has MCP runtime)
+    - `engram_mcp/memory_mcp.py` exists
     - `tools/` directory does NOT exist (catches incomplete migrations)
     - `HUMANS/tooling/scripts/memory_mcp.py` does NOT exist (catches stale shims)
-    - `agent-memory-capabilities.toml` `mcp_entrypoint` matches `mcp/memory_mcp.py`
+    - `agent-memory-capabilities.toml` `mcp_entrypoint` matches `engram_mcp/memory_mcp.py`
 
 40. ☐ Update `setup/initial-commit-paths.txt`
 
     Remove all `tools/` entries (they should have been removed in Phase 2,
-    item 19 — this is the verification pass). Confirm all `mcp/` entries are
+    item 19 — this is the verification pass). Confirm all `engram_mcp/` entries are
     present. Run `test_initial_commit_manifest_matches_tracked_repo_paths` to
     verify.
 
 41. ☐ Final test run: all tests green, ruff clean, validator passes
 
     ```bash
-    ruff check mcp/ HUMANS/tooling/scripts/ HUMANS/tooling/tests/
+    ruff check engram_mcp/ HUMANS/tooling/scripts/ HUMANS/tooling/tests/
     python HUMANS/tooling/scripts/validate_memory_repo.py
-    python -m pytest HUMANS/tooling/tests/ mcp/tests/ -v
+    python -m pytest HUMANS/tooling/tests/ engram_mcp/tests/ -v
     ```
 
 ---
@@ -570,8 +574,8 @@ accurate, and the validator understands the new layout.
 Each phase should be committed as a single atomic commit once its test run is
 green. Suggested commit messages:
 
-- Phase 0: `[refactor] Rename tools/ to mcp/, add server_main entrypoint, compat shim`
-- Phase 1: `[refactor] Relocate MCP entrypoint and tests into mcp/`
+- Phase 0: `[refactor] Rename tools/ to engram_mcp/, add server_main entrypoint, compat shim`
+- Phase 1: `[refactor] Relocate MCP entrypoint and tests into engram_mcp/`
 - Phase 2: `[refactor] Update all hardcoded memory_mcp.py path references`
 - Phase 3: `[refactor] Split semantic_tools.py into domain submodules`
 - Phase 4: `[refactor] Formalize format/runtime layer boundary`
@@ -619,4 +623,4 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following design discussion on MCP module growth and placement |
-| 2026-03-19 | Verified a blocking namespace collision: renaming `tools/` to top-level `mcp/` would shadow the installed `mcp` dependency in the active venv, so Phase 0 needs a package-name revision before implementation can continue |
+| 2026-03-19 | Resolved the naming collision by adopting `engram-mcp` as the user-facing name and `engram_mcp/` as the Python package path for the reorganization plan |
