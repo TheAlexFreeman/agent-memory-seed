@@ -130,6 +130,7 @@ class MemoryMCPTests(unittest.TestCase):
             "memory_get_capabilities",
             "memory_check_cross_references",
             "memory_generate_summary",
+            "memory_access_analytics",
             "memory_check_knowledge_freshness",
             "memory_check_aggregation_triggers",
             "memory_aggregate_access",

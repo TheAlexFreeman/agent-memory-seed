@@ -210,6 +210,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertIn("memory_get_capabilities", manifest["tool_sets"]["read_support"])
         self.assertIn("memory_check_cross_references", manifest["tool_sets"]["read_support"])
         self.assertIn("memory_generate_summary", manifest["tool_sets"]["read_support"])
+        self.assertIn("memory_access_analytics", manifest["tool_sets"]["read_support"])
         self.assertEqual(
             manifest["contract_versions"],
             {

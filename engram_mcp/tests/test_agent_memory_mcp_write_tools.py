@@ -1180,6 +1180,91 @@ Detailed descriptions should preserve the first paragraph.
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_generate_summary"](path="knowledge/topic", style="compact"))
 
+    def test_memory_access_analytics_classifies_policy_buckets(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "file": "knowledge/core.md",
+                                "task": "analysis",
+                                "helpfulness": 0.8,
+                            }
+                        )
+                        for _ in range(5)
+                    ]
+                    + [
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "file": "knowledge/retire.md",
+                                "task": "analysis",
+                                "helpfulness": 0.2,
+                            }
+                        )
+                        for _ in range(4)
+                    ]
+                    + [
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "file": "knowledge/gem.md",
+                                "task": "analysis",
+                                "helpfulness": 0.6,
+                            }
+                        )
+                        for _ in range(2)
+                    ]
+                )
+                + "\n",
+                "knowledge/core.md": "# Core\n",
+                "knowledge/retire.md": "# Retire\n",
+                "knowledge/gem.md": "# Gem\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_access_analytics"](folders="knowledge")))
+
+        self.assertEqual(payload["total_entries"], 11)
+        self.assertEqual(payload["unique_files"], 3)
+        self.assertIn(
+            {"file": "knowledge/core.md", "access_count": 5, "mean_helpfulness": 0.8},
+            payload["categories"]["core_memory"],
+        )
+        self.assertIn(
+            {"file": "knowledge/retire.md", "access_count": 4, "mean_helpfulness": 0.2},
+            payload["categories"]["retirement_candidate"],
+        )
+        self.assertIn(
+            {"file": "knowledge/gem.md", "access_count": 2, "mean_helpfulness": 0.6},
+            payload["categories"]["hidden_gem"],
+        )
+        self.assertIn(
+            {
+                "file": "knowledge/core.md",
+                "action": "enrich_cross_refs",
+                "reason": "Core memory: 5 accesses, 0.800 mean helpfulness",
+            },
+            payload["suggested_actions"],
+        )
+        self.assertEqual(payload["top_accessed"][0], {"file": "knowledge/core.md", "count": 5})
+        self.assertEqual(payload["thresholds"]["policy_source"], "meta/curation-policy.md")
+
+    def test_memory_access_analytics_handles_empty_logs(self) -> None:
+        repo_root = self._init_repo({"knowledge/ACCESS.jsonl": ""})
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_access_analytics"]()))
+
+        self.assertEqual(payload["total_entries"], 0)
+        self.assertEqual(payload["unique_files"], 0)
+        self.assertEqual(payload["categories"]["core_memory"], [])
+        self.assertEqual(payload["top_accessed"], [])
+        self.assertEqual(payload["least_accessed"], [])
+
     def test_memory_delete_rejects_repo_root_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)

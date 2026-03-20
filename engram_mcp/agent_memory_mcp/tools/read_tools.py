@@ -22,7 +22,7 @@ import re
 import subprocess
 import sys
 from importlib import import_module
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -57,6 +57,13 @@ _PERIODIC_REVIEW_DAYS = 30
 _STAGE_ORDER = ("Exploration", "Calibration", "Consolidation")
 _CAPABILITIES_MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
 _MARKDOWN_LINK_RE = re.compile(r"(?<!\!)\[[^\]]+\]\(([^)]+)\)")
+_CURATION_HIGH_ACCESS_THRESHOLD = 5
+_CURATION_RETIREMENT_THRESHOLD = 3
+_CURATION_HIGH_HELPFULNESS_THRESHOLD = 0.5
+_CURATION_NEAR_MISS_MIN = 0.2
+_CURATION_NEAR_MISS_MAX = 0.4
+_CURATION_FALSE_POSITIVE_MAX = 0.1
+_CURATION_RETIREMENT_MAX = 0.3
 
 try:
     tomllib = cast(Any, import_module("tomllib"))
@@ -235,6 +242,41 @@ def _load_access_entries(root: Path) -> tuple[list[dict[str, Any]], list[dict[st
         )
 
     return entries, counts
+
+
+def _iter_access_history_files(root: Path) -> list[Path]:
+    access_files: list[Path] = []
+    for access_file in root.rglob("*.jsonl"):
+        try:
+            rel = access_file.relative_to(root)
+        except ValueError:
+            continue
+        if rel.parts and rel.parts[0].startswith("."):
+            continue
+        if access_file.name == "ACCESS.jsonl" or re.match(
+            r"ACCESS\.archive\.\d{4}-\d{2}\.jsonl$",
+            access_file.name,
+        ):
+            access_files.append(access_file)
+    return sorted(access_files)
+
+
+def _load_access_history_entries(root: Path) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    for access_file in _iter_access_history_files(root):
+        try:
+            text = access_file.read_text(encoding="utf-8")
+        except OSError:
+            continue
+
+        rel_access_file = access_file.relative_to(root).as_posix()
+        for raw_line in text.splitlines():
+            entry = _parse_access_entry(raw_line)
+            if entry is None:
+                continue
+            entry["_access_file"] = rel_access_file
+            entries.append(entry)
+    return entries
 
 
 def _list_tracked_markdown_files(root: Path, scope: str) -> list[Path]:
@@ -2058,6 +2100,216 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return draft
 
     # ------------------------------------------------------------------
+    # memory_access_analytics
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_access_analytics",
+        annotations=_tool_annotations(
+            title="Access Analytics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_access_analytics(
+        folders: str | None = None,
+        window_days: int = 90,
+        top_n: int = 10,
+    ) -> str:
+        """Classify files using curation-policy ACCESS patterns.
+
+        Reads hot ACCESS logs and archive segments, filters entries to the
+        requested window and folder prefixes, then returns policy-aligned
+        categories plus suggested follow-up actions.
+        """
+        from ..errors import ValidationError
+
+        if window_days <= 0:
+            raise ValidationError("window_days must be >= 1")
+        if top_n <= 0:
+            raise ValidationError("top_n must be >= 1")
+
+        root = get_root()
+        folder_filters = _split_csv_or_lines(folders) if folders else []
+        for folder in folder_filters:
+            normalized = folder.replace("\\", "/").strip().rstrip("/")
+            if not normalized:
+                raise ValidationError("folders must contain non-empty repo-relative paths")
+            if normalized.startswith("/") or normalized.startswith("../") or "/../" in normalized:
+                raise ValidationError("folders must contain repo-relative paths")
+            if re.match(r"^[A-Za-z]:[/\\]", normalized):
+                raise ValidationError("folders must contain repo-relative paths")
+
+        end_date = date.today()
+        start_date = end_date - timedelta(days=window_days - 1)
+        all_entries = _load_access_history_entries(root)
+        filtered_entries: list[dict[str, Any]] = []
+        for entry in all_entries:
+            entry_date = _parse_iso_date(entry.get("date"))
+            if entry_date is None or entry_date < start_date or entry_date > end_date:
+                continue
+            file_path = str(entry.get("file", ""))
+            if folder_filters and not any(
+                file_path == folder.rstrip("/") or file_path.startswith(f"{folder.rstrip('/')}/")
+                for folder in folder_filters
+            ):
+                continue
+            filtered_entries.append(entry)
+
+        file_summaries = _summarize_access_by_file(filtered_entries)
+
+        core_memory: list[dict[str, Any]] = []
+        near_miss: list[dict[str, Any]] = []
+        false_positive_attractor: list[dict[str, Any]] = []
+        retirement_candidate: list[dict[str, Any]] = []
+        hidden_gem: list[dict[str, Any]] = []
+        suggested_actions: list[dict[str, Any]] = []
+
+        for item in file_summaries:
+            access_count = int(item["entry_count"])
+            mean_helpfulness = item.get("mean_helpfulness")
+            if mean_helpfulness is None:
+                continue
+
+            helpfulness_value = float(mean_helpfulness)
+            category_payload = {
+                "file": item["file"],
+                "access_count": access_count,
+                "mean_helpfulness": helpfulness_value,
+            }
+
+            if (
+                access_count >= _CURATION_HIGH_ACCESS_THRESHOLD
+                and helpfulness_value >= _CURATION_HIGH_HELPFULNESS_THRESHOLD
+            ):
+                core_memory.append(category_payload)
+                suggested_actions.append(
+                    {
+                        "file": item["file"],
+                        "action": "enrich_cross_refs",
+                        "reason": (
+                            f"Core memory: {access_count} accesses, {helpfulness_value:.3f} mean helpfulness"
+                        ),
+                    }
+                )
+                continue
+
+            if (
+                access_count >= _CURATION_HIGH_ACCESS_THRESHOLD
+                and _CURATION_NEAR_MISS_MIN <= helpfulness_value <= _CURATION_NEAR_MISS_MAX
+            ):
+                near_miss.append(category_payload)
+                suggested_actions.append(
+                    {
+                        "file": item["file"],
+                        "action": "split_or_retitle",
+                        "reason": (
+                            f"Near miss: {access_count} accesses, {helpfulness_value:.3f} mean helpfulness"
+                        ),
+                    }
+                )
+                continue
+
+            if (
+                access_count >= _CURATION_HIGH_ACCESS_THRESHOLD
+                and helpfulness_value <= _CURATION_FALSE_POSITIVE_MAX
+            ):
+                false_positive_attractor.append(category_payload)
+                suggested_actions.append(
+                    {
+                        "file": item["file"],
+                        "action": "retitle_or_retag",
+                        "reason": (
+                            "False-positive attractor: "
+                            f"{access_count} accesses, {helpfulness_value:.3f} mean helpfulness"
+                        ),
+                    }
+                )
+                continue
+
+            if (
+                access_count < _CURATION_RETIREMENT_THRESHOLD
+                and helpfulness_value >= _CURATION_HIGH_HELPFULNESS_THRESHOLD
+            ):
+                hidden_gem.append(category_payload)
+                suggested_actions.append(
+                    {
+                        "file": item["file"],
+                        "action": "improve_summary_placement",
+                        "reason": (
+                            f"Hidden gem: {access_count} accesses, {helpfulness_value:.3f} mean helpfulness"
+                        ),
+                    }
+                )
+                continue
+
+            if access_count >= _CURATION_RETIREMENT_THRESHOLD and helpfulness_value <= _CURATION_RETIREMENT_MAX:
+                retirement_candidate.append(category_payload)
+                suggested_actions.append(
+                    {
+                        "file": item["file"],
+                        "action": "flag_for_review",
+                        "reason": (
+                            "Retirement candidate: "
+                            f"{access_count} accesses, {helpfulness_value:.3f} mean helpfulness"
+                        ),
+                    }
+                )
+
+        top_accessed = [
+            {"file": item["file"], "count": int(item["entry_count"])}
+            for item in file_summaries[:top_n]
+        ]
+        least_accessed_source = sorted(
+            file_summaries,
+            key=lambda item: (
+                int(item["entry_count"]),
+                str(item.get("last_access_date") or ""),
+                str(item["file"]),
+            ),
+        )
+        least_accessed = [
+            {
+                "file": item["file"],
+                "count": int(item["entry_count"]),
+                "last_access": item.get("last_access_date"),
+            }
+            for item in least_accessed_source[:top_n]
+        ]
+
+        payload = {
+            "window": {
+                "start": str(start_date),
+                "end": str(end_date),
+                "days": window_days,
+            },
+            "thresholds": {
+                "high_access": _CURATION_HIGH_ACCESS_THRESHOLD,
+                "retirement_access": _CURATION_RETIREMENT_THRESHOLD,
+                "core_helpfulness_min": _CURATION_HIGH_HELPFULNESS_THRESHOLD,
+                "near_miss_range": [_CURATION_NEAR_MISS_MIN, _CURATION_NEAR_MISS_MAX],
+                "false_positive_max": _CURATION_FALSE_POSITIVE_MAX,
+                "retirement_max": _CURATION_RETIREMENT_MAX,
+                "policy_source": "meta/curation-policy.md",
+            },
+            "folders": folder_filters or None,
+            "total_entries": len(filtered_entries),
+            "unique_files": len(file_summaries),
+            "categories": {
+                "core_memory": core_memory,
+                "near_miss": near_miss,
+                "false_positive_attractor": false_positive_attractor,
+                "retirement_candidate": retirement_candidate,
+                "hidden_gem": hidden_gem,
+            },
+            "top_accessed": top_accessed,
+            "least_accessed": least_accessed,
+            "suggested_actions": suggested_actions,
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_git_log
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -3060,6 +3312,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_search": memory_search,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
+        "memory_access_analytics": memory_access_analytics,
         "memory_git_log": memory_git_log,
         "memory_session_health_check": memory_session_health_check,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,

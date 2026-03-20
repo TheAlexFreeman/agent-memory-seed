@@ -1,7 +1,7 @@
 ---
 created: 2026-03-20
 last_verified: 2026-03-20
-next_action: "Phase 4, item 1: implement memory_access_analytics in read_tools.py"
+next_action: "Phase 5, item 1: implement memory_diff_branch in read_tools.py"
 origin_session: chats/2026/03/20/chat-002
 source: agent-generated
 status: active
@@ -366,20 +366,20 @@ Add to `read_tools.register()`. Add `readOnlyHint=True` annotation.
 - [x] 3.1 Implement `memory_generate_summary` in `read_tools.py`
 - [x] 3.2 Subfolder awareness
 - [x] 3.3 Register in read tools
-- [ ] 4.1 Implement `memory_access_analytics` in `read_tools.py`
-- [ ] 4.2 Threshold alignment with curation policy
-- [ ] 4.3 Register in read tools
+- [x] 4.1 Implement `memory_access_analytics` in `read_tools.py`
+- [x] 4.2 Threshold alignment with curation policy
+- [x] 4.3 Register in read tools
 - [ ] 5.1 Implement `memory_diff_branch` in `read_tools.py`
 - [ ] 5.2 Handle missing base branch
 - [ ] 5.3 Register in read tools
 - [x] 6.1 Tests for batch promote
 - [x] 6.2 Tests for cross-reference checker
 - [x] 6.3 Tests for summary generator
-- [ ] 6.4 Tests for access analytics
+- [x] 6.4 Tests for access analytics
 - [ ] 6.5 Tests for branch diff
 - [x] 6.6 Capabilities TOML updates
 
-**Progress:** 14/22 items complete
+**Progress:** 18/22 items complete
 
 ---
 
