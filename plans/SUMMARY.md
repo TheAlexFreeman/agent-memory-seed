@@ -20,28 +20,19 @@ Progress: 0/14 — not yet started.
 Next: Begin Phase 1 — Testing foundations and unit testing. Output goes to `knowledge/software-engineering/testing/`.
 
 
-### `cognitive-attention-executive-function-research.md` · status: active · trust: medium
+### `cognitive-attention-executive-function-research.md` · status: **complete** · trust: medium
 
-Detail: plans/cognitive-attention-executive-function-research.md
-Scope: Attention models (early/late selection, attentional bottleneck/blink, Feature Integration Theory), dual-process theory (System 1/2), executive functions (Miyake unity-diversity), cognitive load theory (Sweller), vigilance decrement, mind-wandering and DMN.
-Progress: 0/11 — not yet started.
-Next: Begin Phase 1 — Attention and bottleneck models. Output goes to `knowledge/cognitive-science/attention/`.
+11/11 ✓ COMPLETE. Attention selection models, attentional bottleneck/blink, FIT, dual-process, executive functions (Miyake), CLT, vigilance, mind-wandering, transformer comparison, synthesis. 11 knowledge files in `knowledge/cognitive-science/attention/`.
 
 
-### `cognitive-metacognition-calibration-research.md` · status: active · trust: medium
+### `cognitive-metacognition-calibration-research.md` · status: **complete** · trust: medium
 
-Detail: plans/cognitive-metacognition-calibration-research.md
-Scope: Nelson-Narens monitoring/control framework, FOK/JOL/TOT, calibration curves and overconfidence, Dunning-Kruger, illusion of knowing (IOED), source monitoring (Johnson Reality Monitoring), metacognitive control of learning, conflict monitoring, superforecasters.
-Progress: 0/10 — not yet started.
-Next: Begin Phase 1 — Metacognitive monitoring and control. Output goes to `knowledge/cognitive-science/metacognition/`.
+10/10 ✓ COMPLETE. Nelson-Narens monitoring/control, FOK/JOL/TOT, calibration/overconfidence/hard-easy, Dunning-Kruger, illusion of knowing, source monitoring, metacognitive control of learning, conflict monitoring, calibrated uncertainty communication, synthesis. 10 knowledge files in `knowledge/cognitive-science/metacognition/`.
 
 
-### `cognitive-concepts-categorization-research.md` · status: active · trust: medium
+### `cognitive-concepts-categorization-research.md` · status: **complete** · trust: medium
 
-Detail: plans/cognitive-concepts-categorization-research.md
-Scope: Classical theory failures (Wittgenstein, Putnam), prototype theory (Rosch, basic level), exemplar theory (GCM), theory-theory (Murphy-Medin), conceptual spaces (Gärdenfors), embodied/grounded cognition (Barsalou), structural alignment and analogy (Gentner), conceptual change (Chi, Vosniadou, Kuhn), knowledge compilation (ACT*), and conceptual hygiene across interdisciplinary knowledge.
-Progress: 0/12 — not yet started.
-Next: Begin Phase 1 — Classical theory failures and prototype theory. Output goes to `knowledge/cognitive-science/concepts/`.
+12/12 ✓ COMPLETE. Classical theory failures, prototype theory, exemplar theory/GCM, theory-theory, Gärdenfors conceptual spaces, embodied/grounded cognition, structural alignment/analogy, conceptual change, ACT* knowledge compilation, basic level categories, conceptual hygiene, synthesis. 12 knowledge files in `knowledge/cognitive-science/concepts/`.
 
 
 ### `information-theory-stat-learning-research.md` · status: complete · trust: medium · **COMPLETE**
@@ -86,6 +77,9 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 ## Recent completions
 
+- [cognitive-concepts-categorization-research.md](cognitive-concepts-categorization-research.md) — completed 2026-03-20; 12/12 items across 3 phases (classical/prototype/exemplar/theory-theory, conceptual spaces/embodied cognition/analogy, conceptual change/compilation/hygiene/synthesis); 12 knowledge files in `knowledge/cognitive-science/concepts/`; pending human review.
+- [cognitive-metacognition-calibration-research.md](cognitive-metacognition-calibration-research.md) — completed 2026-03-20; 10/10 items across 3 phases (monitoring/control framework, calibration failure modes, learning control/communication/synthesis); 10 knowledge files in `knowledge/cognitive-science/metacognition/`; pending human review.
+- [cognitive-attention-executive-function-research.md](cognitive-attention-executive-function-research.md) — completed 2026-03-20; 11/11 items across 3 phases (selection/capacity models, dual-process/executive function, sustained attention/synthesis); 11 knowledge files in `knowledge/cognitive-science/attention/`; pending human review.
 - [game-theory-mechanism-design-research.md](game-theory-mechanism-design-research.md) — completed 2026-03-20; 12/12 items across 5 phases (normal-form games/Nash, Prisoner's Dilemma/coordination, extensive-form/backward induction, evolutionary game theory, evolution of cooperation/Axelrod, mechanism design/revelation principle, VCG mechanisms, matching markets/Gale-Shapley/Roth, Arrow's impossibility theorem, voting rules/Gibbard-Satterthwaite, costly signaling/Spence, cheap talk/Crawford-Sobel); 12 knowledge files in `_unverified/mathematics/game-theory/`; pending human review.
 - [mcp-read-tools-improvements.md](mcp-read-tools-improvements.md) — completed 2026-03-20; 13/13 items across 4 phases (git-log filters, session health check, trust-audit warning band, read-surface contract/test updates); `memory_git_log` now supports `since` and `path_filter`, `memory_session_health_check` collapses session-start maintenance checks, and `memory_audit_trust` now surfaces an `approaching` bucket via `warn_pct`.
 - [mcp-write-and-crosscutting-improvements.md](mcp-write-and-crosscutting-improvements.md) — completed 2026-03-20; 15/15 items across 3 phases (bulk frontmatter updates, capability discovery, richer search context); raw batch frontmatter updates, repo capability discovery, and contextual search rendering all landed with focused contract coverage.

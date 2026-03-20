@@ -6,15 +6,30 @@ last_verified: '2026-03-20'
 trust: medium
 ---
 
-# Cognitive Science — Memory Systems
+# Cognitive Science
 
-Promoted 2026-03-20 from `_unverified/cognitive-science/`. Generated from the cognitive-neuroscience-memory-research plan. Trust level: **medium**.
+Generated 2026-03-20. Trust level: **medium**. Covers memory systems, attention, metacognition, and concepts/categorization.
 
 ## Entry points
 
-**For system-relevant implications:** [cognitive-science-synthesis.md](cognitive-science-synthesis.md) — distillation of the full memory science corpus filtered for direct bearing on this system's design and operation. Start here.
+**For system-relevant implications:** [cognitive-science-synthesis.md](cognitive-science-synthesis.md) — distillation of the memory science corpus filtered for direct bearing on system design. Start here for memory.
 
-**For the foundational taxonomy:** [memory/tulving-episodic-semantic-distinction.md](memory/tulving-episodic-semantic-distinction.md) — the episodic/semantic/procedural distinction that structures the entire field.
+**For attention and executive function:** [attention/attention-synthesis-agent-implications.md](attention/attention-synthesis-agent-implications.md).
+
+**For metacognition and calibration:** [metacognition/metacognition-synthesis-agent-implications.md](metacognition/metacognition-synthesis-agent-implications.md).
+
+**For concepts and categorization:** [concepts/concepts-synthesis-agent-implications.md](concepts/concepts-synthesis-agent-implications.md).
+
+**For the foundational memory taxonomy:** [memory/tulving-episodic-semantic-distinction.md](memory/tulving-episodic-semantic-distinction.md).
+
+## Subfolders
+
+| Folder | Contents | Entry point |
+|--------|----------|-------------|
+| [memory/](memory/) | 11 files — memory taxonomy, consolidation, forgetting, reconstruction | `memory/tulving-episodic-semantic-distinction.md` |
+| [attention/](attention/) | 11 files — selection models, capacity, dual-process, executive function, vigilance | `attention/attention-synthesis-agent-implications.md` |
+| [metacognition/](metacognition/) | 10 files — monitoring, calibration, source monitoring, learning control | `metacognition/metacognition-synthesis-agent-implications.md` |
+| [concepts/](concepts/) | 12 files — classical/prototype/exemplar/theory-theory, analogy, conceptual change | `concepts/concepts-synthesis-agent-implications.md` |
 
 ## Memory systems
 
