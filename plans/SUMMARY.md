@@ -36,13 +36,13 @@ Blocks: none; structural prerequisites are complete.
 
 ### Research plans
 
-### `cognitive-neuroscience-memory-research.md` · status: not-started · trust: medium · **TOP PRIORITY**
+### `cultural-evolution-epistemics-research.md` · status: not-started · trust: medium · **TOP PRIORITY**
 
-Detail: plans/cognitive-neuroscience-memory-research.md
-Scope: Empirical memory science — encoding, consolidation, retrieval, episodic/semantic distinction, reconsolidation, false memory formation.
-Progress: 0/11
-Next: Phase 1, item 1.1 — Tulving's episodic/semantic distinction
-Blocks: none. Now highest-priority research after memetic-security completion; directly grounds trust-weighted retrieval and curation specs from memetic-security Phase 4.
+Detail: plans/cultural-evolution-epistemics-research.md
+Scope: Memetic propagation, cultural evolution, epistemic norms — natural companion to memetic-security and cognitive-neuroscience research.
+Progress: 0/12
+Next: Phase 1, item 1.1 — the meme concept (Dawkins through modern cultural evolution)
+Blocks: none.
 
 
 ### `ai-frontier-research.md` · status: active · trust: medium
@@ -73,6 +73,7 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 ## Recent completions
 
+- [cognitive-neuroscience-memory-research.md](cognitive-neuroscience-memory-research.md) — completed 2026-03-20; 11/11 items across 4 phases (memory taxonomy, hippocampal consolidation, reconsolidation, forgetting/false memory); 11 knowledge files in `_unverified/cognitive-science/memory/`; pending human review.
 - [memetic-security-research.md](memetic-security-research.md) — completed 2026-03-20; 18/18 items across 5 phases (threat taxonomy, mitigation audit, comparative analysis, design implications, irreducible core); 8 knowledge files in `_unverified/system-notes/` and `_unverified/ai-frontier/`; pending human review.
 - [ai-paradigm-genealogy-research.md](ai-paradigm-genealogy-research.md) — completed 2026-03-18; genealogy of AI paradigm formation (11 files, perceptrons through transformers); pending promotion review.
 - [worktree-integration.md](worktree-integration.md) — completed 2026-03-20; worktree deployment flow now has a deployed-worktree validator profile, validator-backed init-worktree E2E coverage, and dedicated CI enforcement.

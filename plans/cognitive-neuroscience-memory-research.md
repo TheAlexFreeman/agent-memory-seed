@@ -1,10 +1,10 @@
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research Tulving's episodic/semantic distinction — the founding papers and subsequent debate"
+next_action: "Complete — all 11 items done. Human review of knowledge/_unverified/cognitive-science/memory/ files recommended."
 origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -141,25 +141,25 @@ Files go in `knowledge/_unverified/cognitive-science/memory/` with standard fron
 ## Progress tracking
 
 ### Phase 1 — Memory taxonomy
-- [ ] 1.1 Tulving's episodic/semantic distinction
-- [ ] 1.2 Procedural memory, priming, conditioning
-- [ ] 1.3 Working memory (Baddeley)
+- [x] 1.1 Tulving's episodic/semantic distinction
+- [x] 1.2 Procedural memory, priming, conditioning
+- [x] 1.3 Working memory (Baddeley)
 
 ### Phase 2 — Hippocampus and consolidation
-- [ ] 2.1 Hippocampus and memory formation
-- [ ] 2.2 Standard model of consolidation
-- [ ] 2.3 Sleep and consolidation
+- [x] 2.1 Hippocampus and memory formation
+- [x] 2.2 Standard model of consolidation
+- [x] 2.3 Sleep and consolidation
 
 ### Phase 3 — Reconsolidation
-- [ ] 3.1 Discovery and mechanism
-- [ ] 3.2 Agent memory design implications
+- [x] 3.1 Discovery and mechanism
+- [x] 3.2 Agent memory design implications
 
 ### Phase 4 — Forgetting and false memory
-- [ ] 4.1 Ebbinghaus curves and the spacing effect
-- [ ] 4.2 False memory and constructive nature
-- [ ] 4.3 Motivated forgetting and RIF
+- [x] 4.1 Ebbinghaus curves and the spacing effect
+- [x] 4.2 False memory and constructive nature
+- [x] 4.3 Motivated forgetting and RIF
 
-**Progress:** 0/11 items complete
+**Progress:** 11/11 items ✓ COMPLETE
 
 ---
 

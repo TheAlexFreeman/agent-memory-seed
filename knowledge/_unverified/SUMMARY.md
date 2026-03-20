@@ -78,6 +78,23 @@ Seven files covering Phase 1 (Greek foundation) and Phase 2 (Medieval synthesis)
 - **`cognitive-linguistics-metaphor-blending.md`** — Deep dive into three foundational cognitive linguistics programs: Lakoff & Johnson's Conceptual Metaphor Theory (primary metaphors, embodied grounding, radial categories, basic-level categories); Fauconnier & Turner's Conceptual Blending Theory (mental spaces, four network types, vital relations, compression, optimality principles); Sweetser's polysemy and viewpoint work (three-domain model for modality/conjunctions/perception verbs, frame semantics, fictive motion, subjectivity, gesture). Includes synthesis of how all three connect to the dynamical systems framework and LLM implications.
 - **`blending-compression-coupling-construal.md`** — Focused synthesis on three themes and their convergence in narrative world-understanding: (1) blending-as-compression — the AIT/MDL parallel, the key divergence (observer-relative vs. objective), and how blending optimality maps onto narrative aesthetics; (2) structural coupling and metaphor — primary metaphors as coupling deposits, languaging as intersubjective coupling, narrative as transmission of coupling history, and the asymmetry problem; (3) subjective construal — Langacker's spectrum, subjectification, narrative focalization as multi-perspective blending, the immersion/distance dual-mode. Synthesis: narrative as cognitive triangulation (compression + coupling + construal), with the dark side.
 
+<!-- section: cognitive-science -->
+### `cognitive-science/memory/` — Cognitive neuroscience of memory (started 2026-03-20)
+
+Empirical memory science grounding the Engram system's curation design — temporal decay, consolidation, trust/retrieval weighting. All carry `trust: low`. See `plans/cognitive-neuroscience-memory-research.md` (completed 11/11).
+
+- **`tulving-episodic-semantic-distinction.md`** — Tulving's 1972 episodic/semantic distinction — dissociation evidence (H.M., semantic dementia), encoding specificity, autonoesis, and mapping to Engram's dual chat/knowledge storage.
+- **`procedural-memory-priming-conditioning.md`** — Procedural memory, priming, and conditioning — implicit learning systems, basal ganglia/cerebellar substrates, habit-flexibility tradeoff, and priming as a context-window influence mechanism.
+- **`working-memory-baddeley-model.md`** — Baddeley's working memory model — phonological loop, visuospatial sketchpad, episodic buffer, central executive, capacity limits (Miller/Cowan), intelligence correlation, and context window as working memory.
+- **`hippocampus-memory-formation.md`** — Hippocampal memory formation — H.M. case, complementary learning systems, pattern separation/completion, cognitive maps (place cells, grid cells), and parallels to Engram's episodic/consolidation architecture.
+- **`standard-model-consolidation.md`** — Standard consolidation model — hippocampal-cortical transfer, temporal gradient, competing models (SCT, Multiple Trace, Transformation), stability-plasticity dilemma, and validation of Engram's consolidation pipeline.
+- **`sleep-memory-consolidation.md`** — Sleep and memory consolidation — SWS replay, sharp-wave ripples, REM emotional processing, targeted memory reactivation, two-stage model, and case for scheduled agent offline consolidation.
+- **`reconsolidation-discovery-mechanism.md`** — Memory reconsolidation — Nader 2000, reconsolidation window, boundary conditions, clinical applications (PTSD, addiction), adaptive updating function, and implications for ACCESS tracking and session-end review.
+- **`reconsolidation-agent-design-implications.md`** — Agent-specific reconsolidation design — preserve originals via git, track access as reconsolidation, session boundaries as reconsolidation windows, prediction error signals, and connection to memetic security specs.
+- **`ebbinghaus-forgetting-spacing-effect.md`** — Ebbinghaus forgetting curves, power-law decay, the spacing effect, desirable difficulties, and empirical validation of Engram temporal decay policy with recommendations for data-driven thresholds and periodic review.
+- **`false-memory-constructive-nature.md`** — False memory and constructive memory — Bartlett's schemas, Loftus misinformation effect, DRM false recognition, source monitoring framework, and systematic distortion patterns in agent summarization.
+- **`motivated-forgetting-retrieval-induced.md`** — Motivated forgetting and RIF — inhibitory account, Think/No-Think suppression, functional forgetting, and implications for summarization-induced suppression, adaptive curation, and governance surface drift.
+
 <!-- section: system-notes -->
 ### `system-notes/` — Engram system analysis and design notes (started 2026-03-20)
 
