@@ -5,20 +5,15 @@ This folder contains structured information the user has accumulated or that the
 ## Current topics
 
 <!-- section: philosophy -->
-### `_unverified/philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, cognitive linguistics (ingested 2026-03-18, trust: low)
+### `philosophy/` — Intelligence, dynamical systems, consciousness, narrative cognition, history of ideas (promoted 2026-03-20, trust: medium)
 
-Ten files on the philosophy and science of self-organizing intelligence, seeded from a philosophical conversation Alex shared and extended through follow-up research. The synthesis file is the entry point. Output files for the history of philosophy survey will land in `_unverified/philosophy/history/` — see `plans/philosophy-history-survey.md` for the research plan.
+Forty-six files on the philosophy and science of self-organizing intelligence, plus a broad survey of the history of philosophy. Seeded from Alex's conversation and extended through `plans/philosophy-history-survey.md`. See `philosophy/SUMMARY.md` and `philosophy/history/SUMMARY.md` for the full index.
 
-Key files:
-- `synthesis-intelligence-as-dynamical-regime.md` — **Start here.** Unified thesis: intelligence as edge-of-chaos dynamical regime; convergence table across traditions; open questions.
-- `self-organized-criticality.md` — SOC, edge of chaos (Langton), Kauffman NK model, neural criticality
-- `compression-intelligence-ait.md` — Kolmogorov complexity, Solomonoff induction, Bateson, AIXI
-- `free-energy-autopoiesis-cybernetics.md` — Friston FEP, Maturana/Varela, Wiener/Ashby
-- `emergence-consciousness-iit.md` — Strong emergence, downward causation, IIT, GWT, Chalmers
-- `llm-vs-human-mind-comparative-analysis.md` — Three root divergences framework, comparative strengths/weaknesses, memory system implications
-- `narrative-cognition.md` — Narrative as constitutive cognitive structure: Bruner's two modes, Ricoeur's idem/ipse, Lakoff/Johnson image schemas, Jungian archetypes, DMN as narrative engine, LLM implications
-- `cognitive-linguistics-metaphor-blending.md` — Lakoff & Johnson's CMT, Fauconnier & Turner's blending theory, Sweetser's polysemy and viewpoint work. Synthesis with dynamical systems framework and LLM implications.
-- `blending-compression-coupling-construal.md` — Focused synthesis: blending-as-compression, structural coupling and metaphor, subjective construal and narrative viewpoint. Narrative as cognitive triangulation.
+Key entry points:
+- `synthesis-intelligence-as-dynamical-regime.md` — **Start here.** Unified thesis, convergence table, open questions
+- `history/` — Ancient through contemporary, Western and non-Western traditions, synthesis files
+- `narrative-cognition.md`, `cognitive-linguistics-metaphor-blending.md` — Cognition, metaphor, narrative
+- `llm-vs-human-mind-comparative-analysis.md` — LLM implications
 
 <!-- section: software-engineering -->
 ### `software-engineering/` — Django, React, DevOps stack (promoted 2026-03-20, trust: medium)

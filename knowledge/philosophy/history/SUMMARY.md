@@ -2,7 +2,8 @@
 source: agent-generated
 type: index
 created: 2026-03-19
-trust: low
+last_verified: 2026-03-20
+trust: medium
 ---
 
 # History of Philosophy — Broad Survey

@@ -3,10 +3,11 @@ title: "The Covenant of the Sons of Man — Collins Framework and Engram Governa
 category: knowledge
 tags: [philosophy, ai-governance, alignment, identity, memetics, engram-relevance]
 source: external-research
-trust: low
+trust: medium
 status: active
 origin_session: chats/2026/03/20/chat-001
 created: 2026-03-20
+last_verified: 2026-03-20
 confidence: medium
 ---
 

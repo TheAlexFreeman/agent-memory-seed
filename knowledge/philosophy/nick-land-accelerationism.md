@@ -3,7 +3,8 @@ source: agent-generated
 type: knowledge
 domain: philosophy
 created: 2026-03-19
-trust: low
+last_verified: 2026-03-20
+trust: medium
 tags: [nick-land, accelerationism, ccru, dark-enlightenment, neoreaction, hyperstition, techno-capital, singularity, deleuze, cybernetics, nrx, warwick]
 origin_session: chats/2026/03/19/chat-002
 related:

@@ -1,7 +1,8 @@
 ---
 source: external-research
 created: 2026-03-20
-trust: low
+last_verified: 2026-03-20
+trust: medium
 origin_session: chats/2026/03/20/chat-001
 type: knowledge
 domain: philosophy
