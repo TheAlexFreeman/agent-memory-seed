@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: What it means for a model to "know" something — dispositional knowledge, Chinese Room, stochastic parrots, world models, grounding
 trust: low

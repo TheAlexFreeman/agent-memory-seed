@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: Human-in-the-loop design — interruption, approval gates, reversibility, trust-building
 trust: low

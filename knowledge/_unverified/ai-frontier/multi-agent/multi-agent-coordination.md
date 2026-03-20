@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: Multi-agent coordination challenges — context sharing, tool conflict, trust hierarchies, prompt injection
 trust: low

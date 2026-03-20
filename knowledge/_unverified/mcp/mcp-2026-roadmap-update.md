@@ -2,7 +2,7 @@
 source: external-research
 created: 2026-03-20
 trust: low
-origin_session: chats/2026/03/20
+origin_session: chats/2026/03/20/chat-001
 topic: mcp-protocol
 type: knowledge
 domain: mcp
