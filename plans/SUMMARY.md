@@ -11,8 +11,8 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 ### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/mcp-reorganization.md
-Progress: 22/41 complete
-Next: Phase 3, item 24 — move the reset-tool registration into `semantic/_session.py`, then continue the semantic-tools split.
+Progress: 26/41 complete
+Next: Phase 3, item 28 — move the remaining session and governance tool registrations into `semantic/session_tools.py`, then simplify `semantic_tools.py` down to transitional shared helpers only.
 Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6.
 Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
 

@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-20'
-next_action: Phase 3, item 24 — finish moving the reset-tool registration into semantic/_session.py, then continue splitting domain tools out of semantic_tools.py.
+next_action: Phase 3, item 28 — move the remaining session and governance tool registrations into semantic/session_tools.py, then simplify semantic_tools.py down to transitional shared helpers only.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -395,7 +395,7 @@ session state directly.
     Create `__init__.py`, `_session.py`, `plan_tools.py`, `knowledge_tools.py`,
     `identity_tools.py`, `session_tools.py` — initially empty except for imports.
 
-24. ☐ Move session state to `_session.py`
+24. ☑ Move session state to `_session.py`
 
     Extract `_session_state`, `_IDENTITY_CHURN_LIMIT`, and the
     `memory_reset_session_state` tool registration from `semantic_tools.py` into
@@ -417,7 +417,7 @@ session state directly.
     state testable in isolation and eliminates the module-level global mutation
     that was flagged in the P1-A remediation item.
 
-25. ☐ Move plan tools to `plan_tools.py`
+25. ☑ Move plan tools to `plan_tools.py`
 
     Move `memory_create_plan`, `memory_mark_plan_item_complete`,
     `memory_update_plan_next_action`, `memory_list_plans` and all their
@@ -425,12 +425,12 @@ session state directly.
     get_root) -> dict[str, Callable]` function that returns the tool name →
     callable mapping.
 
-26. ☐ Move knowledge tools to `knowledge_tools.py`
+26. ☑ Move knowledge tools to `knowledge_tools.py`
 
     Move `memory_add_knowledge_file`, `memory_promote_knowledge`,
     `memory_demote_knowledge`, `memory_archive_knowledge` and their helpers.
 
-27. ☐ Move identity tools to `identity_tools.py`
+27. ☑ Move identity tools to `identity_tools.py`
 
     Move `memory_update_identity_trait`. This module imports `_session.py`'s
     `increment_identity_updates()` and `get_identity_updates()` instead of
@@ -633,6 +633,8 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 
 | Date | Action |
 |---|---|
+| 2026-03-20 | Completed Phase 3 items 25–27: extracted the plan, knowledge, and identity tool registrations into `semantic/plan_tools.py`, `semantic/knowledge_tools.py`, and `semantic/identity_tools.py`; wired `semantic/__init__.py` to compose them with shared session state; and kept focused regression slices green across plan, knowledge, identity, churn-reset, and export-surface checks (`18 passed`). |
+| 2026-03-20 | Completed Phase 3 item 24: moved `memory_reset_session_state` registration into `semantic/_session.py`, wired `semantic/__init__.py` to compose a shared per-server session state across the new package and legacy registrar, and kept focused regressions green (`3 passed`). |
 | 2026-03-20 | Completed Phase 2 item 22 and started Phase 3: added the `semantic/` package scaffold, routed `server.py` through the new package surface, extracted instance-scoped session-state helpers into `semantic/_session.py`, and kept the full suite green (`191 passed, 0 failed`). |
 | 2026-03-19 | Plan created following design discussion on MCP module growth and placement |
 | 2026-03-19 | Resolved the naming collision by adopting `engram-mcp` as the user-facing name and `engram_mcp/` as the Python package path for the reorganization plan |
