@@ -9,8 +9,9 @@ These replace raw Edit/Write/Bash calls for memory writes. All tools:
 
 Directory restrictions:
   ALL Tier 2 mutation tools (memory_write, memory_edit, memory_delete,
-  memory_move, memory_update_frontmatter) reject paths under protected
-  directories: identity/, meta/, chats/, skills/.
+    memory_move, memory_update_frontmatter, memory_update_frontmatter_bulk)
+    reject paths under protected directories: identity/, meta/, chats/,
+    skills/.
   Use Tier 1 semantic tools for governed writes to protected directories.
 """
 
@@ -28,6 +29,8 @@ from ..path_policy import (
     validate_raw_write_target,
 )
 
+_MAX_FRONTMATTER_BULK_UPDATES = 100
+
 
 def _max_file_bytes() -> int:
     """Return the configured file-size ceiling (default 512 KB)."""
@@ -41,6 +44,65 @@ if TYPE_CHECKING:
 def _tool_annotations(**kwargs: object) -> Any:
     """Return MCP tool annotations with a relaxed runtime-only type surface."""
     return cast(Any, kwargs)
+
+
+def _drop_tracked_paths(tracked_paths: list[str], *paths: str) -> None:
+    blocked = set(paths)
+    tracked_paths[:] = [path for path in tracked_paths if path not in blocked]
+
+
+def _normalize_frontmatter_bulk_entry(
+    entry: object, index: int
+) -> tuple[str, dict[str, Any], str | None]:
+    from ..errors import ValidationError
+
+    if not isinstance(entry, dict):
+        raise ValidationError(f"updates[{index}] must be an object")
+
+    path = entry.get("path")
+    fields = entry.get("fields")
+    version_token = entry.get("version_token")
+
+    if not isinstance(path, str) or not path.strip():
+        raise ValidationError(f"updates[{index}].path must be a non-empty string")
+    if not isinstance(fields, dict):
+        raise ValidationError(f"updates[{index}].fields must be an object")
+    if version_token is not None and not isinstance(version_token, str):
+        raise ValidationError(f"updates[{index}].version_token must be a string when provided")
+
+    return path, dict(fields), version_token
+
+
+def _merge_frontmatter_fields(
+    current_frontmatter: dict[str, Any],
+    updates: dict[str, Any],
+    *,
+    create_missing_keys: bool,
+) -> tuple[dict[str, Any], bool]:
+    from ..frontmatter_utils import today_str
+
+    merged = dict(current_frontmatter)
+    changed = False
+
+    for key, value in updates.items():
+        if key not in merged and not create_missing_keys:
+            continue
+        if value is None:
+            if key in merged:
+                merged.pop(key, None)
+                changed = True
+            continue
+        if merged.get(key) != value:
+            merged[key] = value
+            changed = True
+
+    if changed and "last_verified" not in updates:
+        current_last_verified = merged.get("last_verified")
+        new_last_verified = today_str()
+        if current_last_verified != new_last_verified:
+            merged["last_verified"] = new_last_verified
+
+    return merged, changed
 
 
 def register(
@@ -432,6 +494,147 @@ def register(
         return result.to_json()
 
     # ------------------------------------------------------------------
+    # memory_update_frontmatter_bulk
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_update_frontmatter_bulk",
+        annotations=_tool_annotations(
+            title="Update Frontmatter In Batch",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_update_frontmatter_bulk(
+        updates: list[dict[str, object]],
+        create_missing_keys: bool = True,
+    ) -> str:
+        """Apply frontmatter updates to multiple files as a single staged transaction.
+
+        DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
+        (identity/, meta/, chats/, skills/) are blocked for raw frontmatter
+        updates. Use Tier 1 semantic tools for governed modifications.
+
+        Every update object must contain:
+        - `path`: repo-relative file path
+        - `fields`: object of frontmatter key/value pairs to set
+
+        Optional per-entry field:
+        - `version_token`: optimistic-lock token previously returned by
+          memory_read_file for that file
+
+        The batch validates every entry before staging anything. If a later
+        write or `git add` fails, all touched paths are restored to HEAD and
+        the staged transaction is discarded.
+
+        Args:
+            updates: List of update objects.
+            create_missing_keys: Add keys that do not already exist in a file's
+                                 frontmatter (default: True).
+
+        Returns:
+            MemoryWriteResult JSON with per-batch counts and transaction state.
+        """
+        from ..errors import NotFoundError, ValidationError
+        from ..frontmatter_utils import read_with_frontmatter, write_with_frontmatter
+        from ..models import MemoryWriteResult
+
+        repo = get_repo()
+
+        if not isinstance(updates, list) or not updates:
+            raise ValidationError("updates must be a non-empty list of update objects")
+        if len(updates) > _MAX_FRONTMATTER_BULK_UPDATES:
+            raise ValidationError(
+                f"updates may contain at most {_MAX_FRONTMATTER_BULK_UPDATES} files per batch"
+            )
+
+        prepared_entries: list[dict[str, Any]] = []
+        validation_errors: list[str] = []
+        seen_paths: set[str] = set()
+
+        for index, entry in enumerate(updates):
+            try:
+                raw_path, fields, version_token = _normalize_frontmatter_bulk_entry(entry, index)
+                path, abs_path = validate_raw_write_target(repo, raw_path)
+
+                if path in seen_paths:
+                    raise ValidationError(f"duplicate path in batch: {path}")
+                seen_paths.add(path)
+
+                if not abs_path.exists():
+                    raise NotFoundError(f"File not found: {path}")
+                if repo.has_staged_changes(path) or repo.has_unstaged_changes(path):
+                    raise ValidationError(f"Path already has staged or unstaged changes: {path}")
+
+                repo.check_version_token(path, version_token)
+                current_frontmatter, body = read_with_frontmatter(abs_path)
+                merged_frontmatter, changed = _merge_frontmatter_fields(
+                    current_frontmatter,
+                    fields,
+                    create_missing_keys=create_missing_keys,
+                )
+                prepared_entries.append(
+                    {
+                        "path": path,
+                        "abs_path": abs_path,
+                        "body": body,
+                        "frontmatter": merged_frontmatter,
+                        "changed": changed,
+                    }
+                )
+            except Exception as exc:
+                label = (
+                    entry.get("path")
+                    if isinstance(entry, dict) and isinstance(entry.get("path"), str)
+                    else f"updates[{index}]"
+                )
+                validation_errors.append(f"{label}: {exc}")
+
+        if validation_errors:
+            joined = "\n".join(f"- {message}" for message in validation_errors)
+            raise ValidationError(f"Bulk frontmatter update validation failed:\n{joined}")
+
+        files_changed: list[str] = []
+        mutated_paths: list[str] = []
+        skipped_count = 0
+
+        try:
+            for entry in prepared_entries:
+                if not entry["changed"]:
+                    skipped_count += 1
+                    continue
+
+                path = cast(str, entry["path"])
+                abs_path = cast(Any, entry["abs_path"])
+                body = cast(str, entry["body"])
+                frontmatter = cast(dict[str, Any], entry["frontmatter"])
+
+                write_with_frontmatter(abs_path, frontmatter, body)
+                mutated_paths.append(path)
+                repo.add(path)
+                files_changed.append(path)
+        except Exception:
+            if mutated_paths:
+                repo.restore_paths(*mutated_paths)
+                _drop_tracked_paths(tracked_paths, *mutated_paths)
+            raise
+
+        track_paths(*files_changed)
+
+        result = MemoryWriteResult(
+            files_changed=files_changed,
+            commit_sha=None,
+            commit_message=None,
+            new_state={
+                "updated_count": len(files_changed),
+                "skipped_count": skipped_count,
+                "transaction_state": "staged",
+            },
+        )
+        return result.to_json()
+
+    # ------------------------------------------------------------------
     # memory_commit
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -541,5 +744,6 @@ def register(
         "memory_delete": memory_delete,
         "memory_move": memory_move,
         "memory_update_frontmatter": memory_update_frontmatter,
+        "memory_update_frontmatter_bulk": memory_update_frontmatter_bulk,
         "memory_commit": memory_commit,
     }

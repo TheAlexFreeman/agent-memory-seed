@@ -106,6 +106,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
                 "memory_edit",
                 "memory_move",
                 "memory_update_frontmatter",
+                "memory_update_frontmatter_bulk",
                 "memory_write",
             ],
         )

@@ -169,6 +169,25 @@ class GitRepo:
         """Stage all changes (git add -A)."""
         self._run(["git", "add", "-A"])
 
+    def restore_paths(
+        self,
+        *rel_paths: str,
+        staged: bool = True,
+        worktree: bool = True,
+        source: str = "HEAD",
+    ) -> None:
+        """Restore one or more paths from *source* into index and/or worktree."""
+        if not rel_paths:
+            return
+
+        cmd = ["git", "restore", f"--source={source}"]
+        if staged:
+            cmd.append("--staged")
+        if worktree:
+            cmd.append("--worktree")
+        cmd += ["--", *rel_paths]
+        self._run(cmd)
+
     def rm(self, rel_path: str) -> None:
         """Remove file from working tree and stage the deletion."""
         self._run(["git", "rm", "--", rel_path])

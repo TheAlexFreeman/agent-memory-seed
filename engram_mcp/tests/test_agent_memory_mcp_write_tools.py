@@ -478,6 +478,237 @@ Next: Original next action
 
         self.assertIn("memory_delete", tools)
         self.assertIn("memory_move", tools)
+        self.assertIn("memory_update_frontmatter_bulk", tools)
+
+    def test_memory_update_frontmatter_bulk_stages_single_file_with_version_token(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/test-plan.md": """---
+status: active
+next_action: Ship it
+last_verified: 2026-03-17
+---
+
+# Test Plan
+""",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="plans/test-plan.md")))
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_update_frontmatter_bulk"](
+                    updates=[
+                        {
+                            "path": "plans/test-plan.md",
+                            "fields": {"status": "complete"},
+                            "version_token": read_payload["version_token"],
+                        }
+                    ]
+                )
+            )
+        )
+
+        frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "plans/test-plan.md"
+        )
+        staged = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.splitlines()
+
+        self.assertEqual(payload["files_changed"], ["plans/test-plan.md"])
+        self.assertEqual(payload["new_state"]["updated_count"], 1)
+        self.assertEqual(payload["new_state"]["skipped_count"], 0)
+        self.assertEqual(payload["new_state"]["transaction_state"], "staged")
+        self.assertEqual(frontmatter["status"], "complete")
+        self.assertIn("plans/test-plan.md", staged)
+
+    def test_memory_update_frontmatter_bulk_stages_multiple_files_and_commit_finalizes(
+        self,
+    ) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/one.md": """---
+status: active
+---
+
+# One
+""",
+                "plans/two.md": """---
+status: active
+---
+
+# Two
+""",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_update_frontmatter_bulk"](
+                    updates=[
+                        {"path": "plans/one.md", "fields": {"status": "complete"}},
+                        {"path": "plans/two.md", "fields": {"status": "complete"}},
+                    ]
+                )
+            )
+        )
+        commit_payload = json.loads(
+            asyncio.run(tools["memory_commit"](message="[system] Bulk update frontmatter"))
+        )
+
+        self.assertEqual(payload["new_state"]["updated_count"], 2)
+        self.assertEqual(sorted(commit_payload["files_changed"]), ["plans/one.md", "plans/two.md"])
+        self.assertIsNotNone(commit_payload["commit_sha"])
+
+    def test_memory_update_frontmatter_bulk_skips_missing_keys_when_disabled(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/test-plan.md": """---
+status: active
+---
+
+# Test Plan
+""",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_update_frontmatter_bulk"](
+                    updates=[
+                        {
+                            "path": "plans/test-plan.md",
+                            "fields": {"status": "complete", "next_action": "Later"},
+                        }
+                    ],
+                    create_missing_keys=False,
+                )
+            )
+        )
+
+        frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "plans/test-plan.md"
+        )
+        self.assertEqual(payload["new_state"]["updated_count"], 1)
+        self.assertEqual(frontmatter["status"], "complete")
+        self.assertNotIn("next_action", frontmatter)
+
+    def test_memory_update_frontmatter_bulk_rejects_invalid_path_before_staging(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/test-plan.md": """---
+status: active
+---
+
+# Test Plan
+""",
+                "README.md": "# Root\n",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        with self.assertRaises(self.errors.ValidationError) as exc_info:
+            asyncio.run(
+                tools["memory_update_frontmatter_bulk"](
+                    updates=[
+                        {"path": "plans/test-plan.md", "fields": {"status": "complete"}},
+                        {"path": "README.md", "fields": {"title": "Blocked"}},
+                    ]
+                )
+            )
+
+        self.assertIn("README.md", str(exc_info.exception))
+        self.assertEqual(
+            subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip(),
+            "",
+        )
+
+    def test_memory_update_frontmatter_bulk_rolls_back_on_stage_failure(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "plans/one.md": """---
+status: active
+---
+
+# One
+""",
+                "plans/two.md": """---
+status: active
+---
+
+# Two
+""",
+            }
+        )
+        _, tools, _, repo = self.server.create_mcp(
+            repo_root=repo_root,
+            enable_raw_write_tools=True,
+        )
+        tools = cast(dict[str, ToolCallable], tools)
+        original_add = repo.add
+        calls = {"count": 0}
+
+        def flaky_add(*rel_paths: str) -> None:
+            calls["count"] += 1
+            if calls["count"] == 2:
+                raise self.errors.StagingError("simulated git add failure")
+            original_add(*rel_paths)
+
+        repo.add = flaky_add  # type: ignore[method-assign]
+        self.addCleanup(setattr, repo, "add", original_add)
+
+        with self.assertRaises(self.errors.StagingError):
+            asyncio.run(
+                tools["memory_update_frontmatter_bulk"](
+                    updates=[
+                        {"path": "plans/one.md", "fields": {"status": "complete"}},
+                        {"path": "plans/two.md", "fields": {"status": "complete"}},
+                    ]
+                )
+            )
+
+        one_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "plans/one.md"
+        )
+        two_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "plans/two.md"
+        )
+        self.assertEqual(one_frontmatter["status"], "active")
+        self.assertEqual(two_frontmatter["status"], "active")
+        self.assertEqual(
+            subprocess.run(
+                ["git", "diff", "--cached", "--name-only"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip(),
+            "",
+        )
+
+    def test_memory_update_frontmatter_bulk_rejects_oversized_batch(self) -> None:
+        repo_root = self._init_repo_with_file("plans/test-plan.md")
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        oversized = [
+            {"path": "plans/test-plan.md", "fields": {"status": "complete"}} for _ in range(101)
+        ]
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(tools["memory_update_frontmatter_bulk"](updates=oversized))
 
     def test_memory_delete_rejects_repo_root_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
@@ -2623,11 +2854,7 @@ Next: Original next action
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
                 "knowledge/approaching.md": (
-                    "---\n"
-                    "trust: medium\n"
-                    "last_verified: 2025-10-30\n"
-                    "---\n\n"
-                    "# Approaching\n"
+                    "---\ntrust: medium\nlast_verified: 2025-10-30\n---\n\n# Approaching\n"
                 ),
             },
             initial_commit_date="2025-10-30T00:00:00+00:00",
@@ -2654,11 +2881,7 @@ Next: Original next action
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
                 "knowledge/upcoming.md": (
-                    "---\n"
-                    "trust: medium\n"
-                    "last_verified: 2025-10-05\n"
-                    "---\n\n"
-                    "# Upcoming\n"
+                    "---\ntrust: medium\nlast_verified: 2025-10-05\n---\n\n# Upcoming\n"
                 ),
             },
             initial_commit_date="2025-10-05T00:00:00+00:00",
@@ -2687,9 +2910,7 @@ Next: Original next action
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
-            asyncio.run(
-                tools["memory_audit_trust"](include_categories="knowledge", warn_pct=1.0)
-            )
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge", warn_pct=1.0))
 
     def test_memory_audit_trust_reports_untracked_frontmatterless_file_as_unevaluable(self) -> None:
         repo_root = self._init_repo(

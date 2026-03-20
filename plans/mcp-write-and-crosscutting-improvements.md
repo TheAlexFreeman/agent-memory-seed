@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 1, item 1: implement memory_update_frontmatter_bulk in write_tools.py"
+last_verified: 2026-03-20
+next_action: "Phase 2, item 1: implement memory_get_capabilities in read_tools.py"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -179,10 +179,10 @@ Extend `test_memory_capabilities.py` to assert `memory_get_capabilities` is in `
 
 ## Progress tracking
 
-- [ ] 1.1 Implement `memory_update_frontmatter_bulk` in `write_tools.py`
-- [ ] 1.2 Enforce 100-file batch size limit
-- [ ] 1.3 Handle partial validation failure (fail-before-stage)
-- [ ] 1.4 Update capabilities TOML for bulk frontmatter tool
+- [x] 1.1 Implement `memory_update_frontmatter_bulk` in `write_tools.py`
+- [x] 1.2 Enforce 100-file batch size limit
+- [x] 1.3 Handle partial validation failure (fail-before-stage)
+- [x] 1.4 Update capabilities TOML for bulk frontmatter tool
 - [ ] 2.1 Implement `memory_get_capabilities` in `read_tools.py`
 - [ ] 2.2 Add `summary` field to capabilities output
 - [ ] 2.3 Register in `read_support` and capabilities contract
@@ -195,7 +195,7 @@ Extend `test_memory_capabilities.py` to assert `memory_get_capabilities` is in `
 - [ ] 4.3 Tests for `memory_search` context_lines
 - [ ] 4.4 Update capabilities TOML test suite
 
-**Progress:** 0/15 items complete
+**Progress:** 4/15 items complete
 
 ---
 

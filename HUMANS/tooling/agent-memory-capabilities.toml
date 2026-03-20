@@ -34,6 +34,8 @@ raw_fallback = [
   "memory_delete",
   "memory_move",
   "memory_update_frontmatter",
+  # memory_update_frontmatter_bulk caps batches at 100 files.
+  "memory_update_frontmatter_bulk",
   "memory_commit",
 ]
 semantic_extensions = [
