@@ -166,6 +166,9 @@ entries_processed = "Entries Processed"
 session_groups_processed = "Session Groups Processed"
 legacy_fallback_entries = "Legacy Fallback Entries"
 summary_update_targets = "Summary Update Targets"
+summary_materialization_targets = "Summary Materialization Targets"
+hot_access_targets = "Hot ACCESS Targets"
+hot_access_reset_targets = "Hot ACCESS Reset Targets"
 archive_targets = "Archive Targets"
 
 [shared_result]
@@ -685,11 +688,14 @@ result_fields = [
   "session_groups_processed",
   "legacy_fallback_entries",
   "summary_update_targets",
+  "summary_materialization_targets",
+  "hot_access_targets",
+  "hot_access_reset_targets",
   "archive_targets",
 ]
 fallback_tools = ["memory_edit", "memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Dry-run is the default preview path. Apply mode groups by session_id, falls back to date for legacy entries without session_id, updates Usage patterns sections, rotates immutable monthly archive segments, and clears the processed hot logs in one commit."
+notes = "Dry-run is the default preview path. Apply mode groups by session_id, falls back to date for legacy entries without session_id, treats Usage patterns sections as materialized summary views, rotates immutable monthly archive segments, and clears only the processed hot ACCESS.jsonl logs in one commit."
 
 [operations.memory_flag_for_review]
 group = "governance"

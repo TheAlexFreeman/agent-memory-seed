@@ -1192,8 +1192,17 @@ Old guidance.
         payload = json.loads(raw)
 
         self.assertIsNone(payload["commit_sha"])
+        self.assertEqual(payload["new_state"]["access_scope"], "hot_only")
         self.assertEqual(payload["new_state"]["entries_processed"], 9)
         self.assertEqual(payload["new_state"]["session_groups_processed"], 3)
+        self.assertEqual(
+            payload["new_state"]["hot_access_targets"],
+            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl", "skills/ACCESS.jsonl"],
+        )
+        self.assertEqual(
+            payload["new_state"]["summary_materialization_targets"],
+            ["knowledge/SUMMARY.md", "plans/SUMMARY.md", "skills/SUMMARY.md"],
+        )
         self.assertEqual(len(payload["new_state"]["clusters"]), 1)
         self.assertEqual(
             payload["new_state"]["clusters"][0]["files"],
@@ -1326,8 +1335,13 @@ Old guidance.
         self.assertEqual(
             payload["commit_message"], f"[curation] Aggregate ACCESS logs ({date.today()})"
         )
+        self.assertEqual(payload["new_state"]["access_scope"], "hot_only")
         self.assertEqual(payload["new_state"]["entries_processed"], 9)
         self.assertEqual(payload["new_state"]["legacy_fallback_entries"], 3)
+        self.assertEqual(
+            payload["new_state"]["hot_access_reset_targets"],
+            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl", "skills/ACCESS.jsonl"],
+        )
         self.assertIn(f"- Last aggregation: {date.today()}", knowledge_summary)
         self.assertIn(
             "knowledge/topic.md + plans/demo.md + skills/session-start.md", knowledge_summary
@@ -1337,6 +1351,54 @@ Old guidance.
         self.assertIn('"file": "knowledge/topic.md"', knowledge_archive)
         self.assertEqual(knowledge_access, "")
         self.assertEqual(log_count, "2")
+
+    def test_memory_get_maturity_signals_ignores_archive_segments_and_reports_hot_scope(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": "# Profile\n",
+                "knowledge/lit/foo.md": "# Foo\n",
+                "knowledge/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "knowledge/lit/foo.md",
+                        "date": "2026-03-20",
+                        "task": "hot log entry",
+                        "helpfulness": 0.8,
+                        "note": "hot",
+                        "session_id": "chats/2026/03/20/chat-017",
+                    }
+                )
+                + "\n",
+                "knowledge/ACCESS.archive.2026-03.jsonl": json.dumps(
+                    {
+                        "file": "knowledge/lit/foo.md",
+                        "date": "2026-03-01",
+                        "task": "archived entry",
+                        "helpfulness": 0.2,
+                        "note": "archived",
+                        "session_id": "chats/2026/03/01/chat-001",
+                    }
+                )
+                + "\n",
+                "knowledge/ACCESS_SCANS.jsonl": json.dumps(
+                    {
+                        "file": "knowledge/lit/foo.md",
+                        "date": "2026-03-20",
+                        "task": "scan entry",
+                        "helpfulness": 0.1,
+                        "note": "scan",
+                        "session_id": "chats/2026/03/20/chat-018",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_get_maturity_signals"]()))
+
+        self.assertEqual(payload["access_scope"], "hot_only")
+        self.assertEqual(payload["access_density"], 1)
+        self.assertEqual(payload["total_sessions"], 1)
 
     # ------------------------------------------------------------------
     # P0-1: memory_write / memory_edit protected-path enforcement

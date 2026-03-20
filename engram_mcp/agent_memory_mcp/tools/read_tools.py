@@ -110,7 +110,7 @@ def _effective_date(fm: dict) -> date | None:
 
 
 def _iter_live_access_files(root: Path) -> list[Path]:
-    """Return tracked live ACCESS.jsonl files, excluding archives and dot-dirs."""
+    """Return tracked hot ACCESS.jsonl files, excluding archives and dot-dirs."""
     access_files: list[Path] = []
     for access_file in root.rglob("ACCESS.jsonl"):
         try:
@@ -148,7 +148,7 @@ def _parse_iso_date(raw_date: object) -> date | None:
 
 
 def _load_access_entries(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Return parsed live ACCESS entries and per-file counts for reporting."""
+    """Return parsed hot ACCESS entries and per-file counts for reporting."""
     entries: list[dict[str, Any]] = []
     counts: list[dict[str, Any]] = []
 
@@ -483,6 +483,7 @@ def _compute_maturity_signals(
     mean_helpfulness = round(statistics.mean(helpfulness_values), 3) if helpfulness_values else 0.0
 
     return {
+        "access_scope": "hot_only",
         "total_sessions": total_sessions,
         "access_density": access_density,
         "file_coverage_pct": file_coverage_pct,
@@ -1551,10 +1552,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         ),
     )
     async def memory_check_aggregation_triggers() -> str:
-        """Report which live ACCESS logs are below, near, or above aggregation trigger.
+        """Report which hot ACCESS logs are below, near, or above aggregation trigger.
 
         Uses the active aggregation threshold from meta/quick-reference.md and
-        counts valid non-empty entries in each live ACCESS.jsonl file.
+        counts valid non-empty entries in each hot ACCESS.jsonl file.
 
         Returns:
             JSON with trigger metadata, per-log counts, and lists of files that
@@ -1620,7 +1621,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         min_helpfulness: float | None = None,
         max_helpfulness: float | None = None,
     ) -> str:
-        """Aggregate live ACCESS.jsonl entries into a maintenance report.
+        """Aggregate hot ACCESS.jsonl entries into a maintenance report.
 
         The first cut is read-only. It computes file-level access summaries,
         high-value and low-value candidates, same-session co-retrieval clusters,
@@ -1706,6 +1707,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         ]
 
         payload = {
+            "access_scope": "hot_only",
             "filters": {
                 "folder": folder or None,
                 "file_prefix": file_prefix or None,
@@ -2297,16 +2299,20 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         These signals drive the maturity stage assessment in
         meta/system-maturity.md and determine whether to retain the current
-        parameter set or transition to the next stage.  All values are derived
-        from ACCESS.jsonl files and content-file frontmatter — no network calls
+        parameter set or transition to the next stage. All values are derived
+        from hot ACCESS.jsonl files and content-file frontmatter; archive
+        segments and ACCESS_SCANS sidecars are excluded, and no network calls
         are made.
 
         Returns:
             JSON with the following keys:
+              access_scope            (str)   Always "hot_only"; archive
+                                              segments and ACCESS_SCANS sidecars
+                                              are excluded from these metrics
               total_sessions          (int)   Distinct session_id values across
-                                              all ACCESS.jsonl files
+                                              hot ACCESS.jsonl files
               access_density          (int)   Total ACCESS.jsonl entries across
-                                              all folders
+                                              hot logs across all folders
               file_coverage_pct       (float) % of content files accessed at
                                               least once (0–100)
               files_accessed          (int)   Count of distinct files in

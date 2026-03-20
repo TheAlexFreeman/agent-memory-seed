@@ -601,6 +601,10 @@ def _archive_segment_name(entries: list[dict[str, Any]]) -> str:
     return f"ACCESS.archive.{source_date[:7]}.jsonl"
 
 
+def _archive_target_for_access_file(access_file: str, entries: list[dict[str, Any]]) -> str:
+    return f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(entries)}"
+
+
 def _resolve_scratchpad_target(target: str) -> str:
     target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
     if target in target_map:
@@ -1370,9 +1374,14 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             for folder, folder_entries in sorted(entries_by_folder.items())
             if folder_entries and (root / folder / "SUMMARY.md").exists()
         ]
+        hot_access_targets = sorted(
+            access_file
+            for access_file, entries in entries_by_access_file.items()
+            if _filter_aggregation_entries(entries, selected_folders)
+        )
         archive_targets = sorted(
             {
-                f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(entries)}"
+                _archive_target_for_access_file(access_file, entries)
                 for access_file, entries in entries_by_access_file.items()
                 if _filter_aggregation_entries(entries, selected_folders)
             }
@@ -1380,18 +1389,22 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         preview_state = {
             "mode": "dry_run" if dry_run else "apply",
+            "access_scope": "hot_only",
             "folders": selected_folders or sorted(entries_by_folder),
             "entries_processed": len(filtered_entries),
             "session_groups_processed": session_group_count,
             "legacy_fallback_entries": legacy_fallback_entries,
             "summary_update_targets": summary_targets,
+            "summary_materialization_targets": summary_targets,
+            "hot_access_targets": hot_access_targets,
+            "hot_access_reset_targets": hot_access_targets,
             "archive_targets": archive_targets,
             "clusters": clusters,
         }
 
         if dry_run or not filtered_entries:
             result = MemoryWriteResult(
-                files_changed=summary_targets + archive_targets,
+                files_changed=summary_targets + archive_targets + hot_access_targets,
                 commit_sha=None,
                 commit_message=None,
                 new_state=preview_state,
@@ -1423,9 +1436,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             if not filtered_file_entries:
                 continue
             abs_access = root / access_file
-            archive_rel = (
-                f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(filtered_file_entries)}"
-            )
+            archive_rel = _archive_target_for_access_file(access_file, filtered_file_entries)
             abs_archive = root / archive_rel
             archive_existing = (
                 abs_archive.read_text(encoding="utf-8") if abs_archive.exists() else ""

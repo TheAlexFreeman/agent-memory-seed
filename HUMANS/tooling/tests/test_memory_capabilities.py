@@ -440,6 +440,31 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "Access Density by Task ID",
         )
 
+    def test_manifest_declares_hot_log_aggregation_result_fields(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            manifest["ui_feedback"]["result_field_labels"]["hot_access_targets"],
+            "Hot ACCESS Targets",
+        )
+        self.assertEqual(
+            manifest["operations"]["memory_run_aggregation"]["result_fields"],
+            [
+                "entries_processed",
+                "session_groups_processed",
+                "legacy_fallback_entries",
+                "summary_update_targets",
+                "summary_materialization_targets",
+                "hot_access_targets",
+                "hot_access_reset_targets",
+                "archive_targets",
+            ],
+        )
+        self.assertIn(
+            "materialized summary views",
+            manifest["operations"]["memory_run_aggregation"]["notes"],
+        )
+
     def test_resolver_returns_structured_ui_feedback_for_semantic_mode(self) -> None:
         resolution = resolver.resolve_capabilities(REPO_ROOT)
         ui_feedback = resolution["ui_feedback"]
