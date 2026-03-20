@@ -40,8 +40,8 @@ Blocks: none; structural prerequisites are complete.
 
 Detail: plans/memetic-security-research.md
 Scope: Memetic security surface of Engram — injection vectors, drift phenomenology, capability-robustness coupling, mitigation audit, design implications.
-Progress: 0/18
-Next: Phase 1, item 1.1 — map context injection vectors in a running Engram session
+Progress: 4/18 (Phase 1 complete)
+Next: Phase 2, item 2.1 — trust tier system audit
 
 
 ### `ai-frontier-research.md` · status: active · trust: medium
@@ -54,17 +54,25 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 
 ### Research queue
 
-- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality
-- `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion
-- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism
-- `formal-logic-foundations-research.md` — 0/11; next: propositional/first-order logic
-- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium
-- `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy
-- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic
-- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept
+Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design or feed into ongoing memetic-security work. Tier 2 plans build core intellectual infrastructure for the central intelligence question. Tier 3 plans are important but less immediately actionable.
+
+**Tier 1 — System-Relevant**
+- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic. Grounds curation design (trust decay, retrieval weighting, consolidation) in empirical memory science.
+- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept. Natural companion to memetic-security research; explains propagation mechanisms for memetic threats.
+
+**Tier 2 — Core Intellectual Infrastructure**
+- `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy. Mathematical substrate for the compression-intelligence thesis; connects to AIT, MDL, and model evaluation.
+- `formal-logic-foundations-research.md` — 0/11; next: propositional/first-order logic. Underpins reasoning capability analysis; connects to interpretability, incompleteness results, and AI limits.
+- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality. Grounds the embodiment critique; connects to dynamical-systems framework and LLM limitations analysis.
+
+**Tier 3 — Rich but Lower Urgency**
+- `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion. Philosophical foundations for agent persistence and continuity of identity across sessions.
+- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism. Normative frameworks and moral realism; relevant to alignment theory but less directly system-relevant.
+- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium. Mathematical foundations for multi-agent coordination and mechanism design.
 
 ## Recent completions
 
+- [ai-paradigm-genealogy-research.md](ai-paradigm-genealogy-research.md) — completed 2026-03-18; genealogy of AI paradigm formation (11 files, perceptrons through transformers); pending promotion review.
 - [worktree-integration.md](worktree-integration.md) — completed 2026-03-20; worktree deployment flow now has a deployed-worktree validator profile, validator-backed init-worktree E2E coverage, and dedicated CI enforcement.
 - [mcp-semantic-tools-improvements.md](mcp-semantic-tools-improvements.md) — completed 2026-03-20; Tier 1 semantic tool gaps closed across scratchpad targeting, review-queue lifecycle, skill updates, composite session recording, and ACCESS aggregation compaction.
 - [mcp-reorganization.md](mcp-reorganization.md) — completed 2026-03-20; Phase 5 validator/CI/layout verification finished and downstream MCP tooling plans unblocked.
