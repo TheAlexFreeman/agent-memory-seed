@@ -117,6 +117,7 @@ Twenty-one files covering the active frontier of AI research — mechanisms, tra
 - **`knowledge-and-knowing.md`** — Dispositional knowledge analysis, Chinese Room and modern reformulations, stochastic parrots vs. world models, distributional semantics and its limits, grounding and embodiment argument.
 - **`llms-as-dynamical-systems.md`** — LLMs as fixed-weight dynamical systems, activation trajectories, in-context learning as transient dynamics, reasoning as extended trajectory, attractor states in residual stream.
 - **`compression-and-intelligence.md`** — Next-token prediction as MDL compression, what LLMs compress (syntax, facts, world regularities), what cannot be compressed (counterfactuals, embodied knowledge), compression-confabulation link, limits of the compression-intelligence thesis. Cross-references `philosophy/compression-intelligence-ait.md`.
+- **[memetic-security-capability-robustness.md](knowledge/_unverified/ai-frontier/memetic-security-capability-robustness.md)** — Formalization of the capability-robustness coupling — the structural tradeoff between contextual reasoning ability and resistance to contextual manipulation — with literature connections (sycophancy, adversarial attacks, alignment) and Engram-specific implications.
 
 <!-- section: rationalist-community -->
 ### `rationalist-community/` — LessWrong and the Rationalist Community research (started 2026-03-19)
