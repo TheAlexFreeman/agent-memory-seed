@@ -1467,13 +1467,16 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         glob_pattern: str = "**/*.md",
         case_sensitive: bool = False,
         max_results: int = 30,
+        context_lines: int = 0,
         include_humans: bool = False,
     ) -> str:
         """Search for a pattern across files in the memory repository.
 
         Uses git grep for tracked files (fast — git maintains an index), then
         falls back to a Python glob walk for any untracked files. Results are
-        grouped by file with line numbers.
+        grouped by file with line numbers. When context_lines > 0, includes up
+        to that many surrounding lines before and after each match. Context
+        lines do not count toward max_results.
 
         Args:
             query:          Search string or Python regex (POSIX ERE via git grep).
@@ -1481,18 +1484,25 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             glob_pattern:   File glob filter (default: '**/*.md').
             case_sensitive: Case-sensitive match (default: False).
             max_results:    Max matching lines to return (default: 30, max 100).
+            context_lines:  Number of surrounding lines to include before and
+                            after each match (default: 0, max: 10).
             include_humans: Include the human-facing HUMANS/ tree when searching
                             broad scopes like '.' (default: False).
 
         Returns:
             Matching lines grouped by file with line numbers, or a not-found message.
         """
-        from ..errors import StagingError
+        from ..errors import StagingError, ValidationError
 
         root = get_root()
         search_root = (root / path).resolve()
         if not search_root.exists():
             return f"Error: Path not found: {path}"
+
+        if context_lines < 0:
+            raise ValidationError("context_lines must be >= 0")
+        if context_lines > 10:
+            raise ValidationError("context_lines must be <= 10")
 
         # Validate regex early so we can report a helpful error before spawning git
         flags = 0 if case_sensitive else re.IGNORECASE
@@ -1538,6 +1548,43 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         results: list[str] = []
         total_matches = 0
         seen_files: set[str] = set()
+        file_line_cache: dict[str, list[str]] = {}
+
+        def _get_file_lines(file_rel: str, *, untracked_text: str | None = None) -> list[str]:
+            if file_rel not in file_line_cache:
+                if untracked_text is not None:
+                    file_line_cache[file_rel] = untracked_text.splitlines()
+                else:
+                    try:
+                        file_line_cache[file_rel] = (root / file_rel).read_text(
+                            encoding="utf-8", errors="replace"
+                        ).splitlines()
+                    except OSError:
+                        file_line_cache[file_rel] = []
+            return file_line_cache[file_rel]
+
+        def _append_match_lines(
+            file_output: list[str],
+            *,
+            file_rel: str,
+            line_no: int,
+            line_text: str,
+            untracked_text: str | None = None,
+        ) -> None:
+            cached_lines = _get_file_lines(file_rel, untracked_text=untracked_text)
+            if not cached_lines:
+                file_output.append(f"  {line_no}: {line_text.rstrip()}")
+                return
+
+            start_index = max(0, line_no - 1 - context_lines)
+            end_index = min(len(cached_lines), line_no + context_lines)
+            for current_index in range(start_index, end_index):
+                rendered_line = cached_lines[current_index].rstrip()
+                rendered_no = current_index + 1
+                if rendered_no == line_no:
+                    file_output.append(f"  {rendered_no}: {rendered_line}")
+                else:
+                    file_output.append(f"  {rendered_no}| {rendered_line}")
 
         if raw_matches is not None:
             # Group matches by file
@@ -1562,7 +1609,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 seen_files.add(file_rel)
                 file_output: list[str] = []
                 for _, line_no, line_text in grouped_matches:
-                    file_output.append(f"  {line_no}: {line_text.rstrip()}")
+                    _append_match_lines(
+                        file_output,
+                        file_rel=file_rel,
+                        line_no=line_no,
+                        line_text=line_text,
+                    )
                     total_matches += 1
                     if total_matches >= max_results:
                         break
@@ -1601,10 +1653,18 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 except OSError:
                     continue
 
+                cached_lines = _get_file_lines(file_rel, untracked_text=text)
+
                 file_output = []
-                for line_no, line in enumerate(text.splitlines(), 1):
+                for line_no, line in enumerate(cached_lines, 1):
                     if python_pattern.search(line):
-                        file_output.append(f"  {line_no}: {line.rstrip()}")
+                        _append_match_lines(
+                            file_output,
+                            file_rel=file_rel,
+                            line_no=line_no,
+                            line_text=line,
+                            untracked_text=text,
+                        )
                         total_matches += 1
                         if total_matches >= max_results:
                             break

@@ -26,16 +26,16 @@ Next: Human review of the completed read-tool improvements and follow-on cleanup
 Blocks: none; structural prerequisites are complete.
 
 
-### `mcp-write-and-crosscutting-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
+### `mcp-write-and-crosscutting-improvements.md` · status: complete · trust: medium
 
 Detail: plans/mcp-write-and-crosscutting-improvements.md
 Scope: Add frontmatter batch updates, native capability lookup, and richer search results.
-Progress: 9/15 complete
-Next: Phase 3, item 1 — add `context_lines` param to `memory_search`
+Progress: 15/15 complete
+Next: Human review of the completed write/read/search improvements and follow-on cleanup only.
 Blocks: none; structural prerequisites are complete.
 
 
-### `mcp-curation-and-analytics-tools.md` · status: active · trust: medium
+### `mcp-curation-and-analytics-tools.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/mcp-curation-and-analytics-tools.md
 Scope: Batch knowledge promotion, cross-reference validation, SUMMARY generation, ACCESS analytics, and branch diff tools.

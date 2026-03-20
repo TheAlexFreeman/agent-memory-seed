@@ -755,6 +755,96 @@ declared_gaps = []
         self.assertEqual(payload["path"], "HUMANS/tooling/agent-memory-capabilities.toml")
         self.assertIn("kind = [", payload["raw"])
 
+    def test_memory_search_context_lines_default_output_unchanged(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/test.md": """# Title
+alpha
+beta match
+gamma
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        output = asyncio.run(tools["memory_search"](query="match", path="knowledge"))
+
+        self.assertIn("**knowledge/test.md**", output)
+        self.assertIn("  3: beta match", output)
+        self.assertNotIn("  2|", output)
+
+    def test_memory_search_context_lines_include_surrounding_lines(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/test.md": """line 1
+line 2
+line 3 match
+line 4
+line 5
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        output = asyncio.run(
+            tools["memory_search"](
+                query="match",
+                path="knowledge",
+                context_lines=2,
+            )
+        )
+
+        self.assertIn("  1| line 1", output)
+        self.assertIn("  2| line 2", output)
+        self.assertIn("  3: line 3 match", output)
+        self.assertIn("  4| line 4", output)
+        self.assertIn("  5| line 5", output)
+
+    def test_memory_search_rejects_context_lines_over_limit(self) -> None:
+        repo_root = self._init_repo({"knowledge/test.md": "match\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_search"](
+                    query="match",
+                    path="knowledge",
+                    context_lines=11,
+                )
+            )
+
+    def test_memory_search_context_lines_do_not_count_toward_max_results(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/test.md": """line 1
+line 2
+line 3 match
+line 4
+line 5
+line 6 other match
+line 7
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        output = asyncio.run(
+            tools["memory_search"](
+                query="match",
+                path="knowledge",
+                max_results=1,
+                context_lines=2,
+            )
+        )
+
+        self.assertIn("  1| line 1", output)
+        self.assertIn("  2| line 2", output)
+        self.assertIn("  3: line 3 match", output)
+        self.assertIn("  4| line 4", output)
+        self.assertIn("  5| line 5", output)
+        self.assertNotIn("  6: line 6 other match", output)
+        self.assertIn("truncated at 1 matches", output)
+
     def test_memory_delete_rejects_repo_root_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)

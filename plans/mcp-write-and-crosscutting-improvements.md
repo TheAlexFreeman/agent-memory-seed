@@ -1,10 +1,10 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 3, item 1: add context_lines param to memory_search"
+next_action: "Human review of the completed write/read/search improvements and follow-on cleanup only."
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 category: build
@@ -186,16 +186,16 @@ Extend `test_memory_capabilities.py` to assert `memory_get_capabilities` is in `
 - [x] 2.1 Implement `memory_get_capabilities` in `read_tools.py`
 - [x] 2.2 Add `summary` field to capabilities output
 - [x] 2.3 Register in `read_support` and capabilities contract
-- [ ] 3.1 Add `context_lines` param to `memory_search`
-- [ ] 3.2 Enforce context_lines ceiling of 10
-- [ ] 3.3 Output format with context line prefix `{line_no}|`
-- [ ] 3.4 Update max_results accounting to exclude context lines
-- [ ] 4.1 Tests for `memory_update_frontmatter_bulk`
+- [x] 3.1 Add `context_lines` param to `memory_search`
+- [x] 3.2 Enforce context_lines ceiling of 10
+- [x] 3.3 Output format with context line prefix `{line_no}|`
+- [x] 3.4 Update max_results accounting to exclude context lines
+- [x] 4.1 Tests for `memory_update_frontmatter_bulk`
 - [x] 4.2 Tests for `memory_get_capabilities`
-- [ ] 4.3 Tests for `memory_search` context_lines
+- [x] 4.3 Tests for `memory_search` context_lines
 - [x] 4.4 Update capabilities TOML test suite
 
-**Progress:** 9/15 items complete
+**Progress:** 15/15 items complete
 
 ---
 
