@@ -36,6 +36,14 @@ Blocks: none; structural prerequisites are complete.
 
 ### Research plans
 
+### `information-theory-stat-learning-research.md` · status: complete · trust: medium · **COMPLETE**
+
+Detail: plans/information-theory-stat-learning-research.md
+Scope: Shannon information theory, rate-distortion, MDL, PAC learning, VC dimension, modern generalization theory — mathematical substrate for the compression-intelligence thesis.
+Progress: 12/12 ✓ COMPLETE
+Next: Human review of knowledge/_unverified/mathematics/information-theory/ files recommended.
+
+
 ### `cultural-evolution-epistemics-research.md` · status: complete · trust: medium · **COMPLETE**
 
 Detail: plans/cultural-evolution-epistemics-research.md
@@ -57,7 +65,7 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (cognitive-neuroscience grounds curation/retrieval, cultural-evolution extends memetic-security insights). Tier 2 builds core intellectual infrastructure. Tier 3 is important but less immediately actionable.
 
 **Tier 1 — System-Relevant**
-- `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy. Mathematical substrate for the compression-intelligence thesis; connects to AIT, MDL, and model evaluation. **TOP PRIORITY** (cultural-evolution and cognitive-neuroscience now complete; this builds mathematical foundations referenced by both).
+- *(All Tier 1 research plans complete. Next priority: Tier 2.)*
 
 **Tier 2 — Core Intellectual Infrastructure**
 - `formal-logic-foundations-research.md` — 0/11; next: propositional/first-order logic. Underpins reasoning capability analysis; connects to interpretability, incompleteness results, and AI limits.
@@ -70,6 +78,7 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 ## Recent completions
 
+- [information-theory-stat-learning-research.md](information-theory-stat-learning-research.md) — completed 2026-03-20; 12/12 items across 4 phases (Shannon info theory, rate-distortion, statistical learning theory, synthesis); 12 knowledge files in `_unverified/mathematics/information-theory/`; pending human review.
 - [cultural-evolution-epistemics-research.md](cultural-evolution-epistemics-research.md) — completed 2026-03-20; 12/12 items across 4 phases (foundations/memes, dual inheritance/transmission biases, cumulative culture/norms, epistemic communities/LLMs); 12 knowledge files in `_unverified/social-science/cultural-evolution/`; pending human review.
 - [cognitive-neuroscience-memory-research.md](cognitive-neuroscience-memory-research.md) — completed 2026-03-20; 11/11 items across 4 phases (memory taxonomy, hippocampal consolidation, reconsolidation, forgetting/false memory); 11 knowledge files in `_unverified/cognitive-science/memory/`; pending human review.
 - [memetic-security-research.md](memetic-security-research.md) — completed 2026-03-20; 18/18 items across 5 phases (threat taxonomy, mitigation audit, comparative analysis, design implications, irreducible core); 8 knowledge files in `_unverified/system-notes/` and `_unverified/ai-frontier/`; pending human review.
