@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from datetime import date
 from pathlib import Path, PurePosixPath
@@ -26,6 +27,7 @@ def _tool_annotations(**kwargs: object) -> Any:
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
+_CURRENT_SESSION_SENTINEL = PurePosixPath("chats/CURRENT_SESSION")
 _REVIEW_QUEUE_HEADING_RE = re.compile(
     r"(?m)^### (?:\[(?P<date>\d{4}-\d{2}-\d{2})\] (?P<title>.+)|(?P<legacy_date>\d{4}-\d{2}-\d{2}) — (?P<legacy_title>.+))$"
 )
@@ -168,12 +170,33 @@ def _build_structured_reflection_content(
     return "".join(lines)
 
 
+def _resolve_access_session_id(root: Path, session_id: str | None) -> str | None:
+    if session_id is not None:
+        validate_session_id(session_id)
+        return session_id
+
+    env_session_id = os.environ.get("MEMORY_SESSION_ID", "").strip()
+    if env_session_id:
+        validate_session_id(env_session_id)
+        return env_session_id
+
+    sentinel_path = root / _CURRENT_SESSION_SENTINEL
+    if not sentinel_path.exists():
+        return None
+
+    sentinel_session_id = sentinel_path.read_text(encoding="utf-8").strip()
+    if not sentinel_session_id:
+        return None
+    validate_session_id(sentinel_session_id)
+    return sentinel_session_id
+
+
 def _normalize_access_entry(
     repo,
     root: Path,
     raw_entry: object,
     *,
-    forced_session_id: str,
+    resolved_session_id: str | None,
 ) -> tuple[str, str]:
     import json as _json
 
@@ -229,8 +252,9 @@ def _normalize_access_entry(
         "task": task_value.strip(),
         "helpfulness": round(helpfulness, 2),
         "note": note_value.strip(),
-        "session_id": forced_session_id,
     }
+    if resolved_session_id is not None:
+        entry["session_id"] = resolved_session_id
     if category is not None:
         entry["category"] = category
     return access_jsonl, _json.dumps(entry, ensure_ascii=False)
@@ -241,7 +265,7 @@ def _append_access_entries(
     root: Path,
     access_entries: list[dict[str, object]] | None,
     *,
-    session_id: str,
+    session_id: str | None,
 ) -> list[str]:
     if not access_entries:
         return []
@@ -252,7 +276,7 @@ def _append_access_entries(
             repo,
             root,
             raw_entry,
-            forced_session_id=session_id,
+            resolved_session_id=session_id,
         )
         grouped.setdefault(access_jsonl, []).append(line)
 
@@ -1008,77 +1032,78 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         session_id: str | None = None,
         category: str | None = None,
     ) -> str:
-        import json as _json
-
-        from ...errors import ValidationError
-        from ...frontmatter_utils import today_str
         from ...models import MemoryWriteResult
 
         repo = get_repo()
         root = get_root()
-        if not isinstance(task, str) or not task.strip():
-            raise ValidationError("task must be a non-empty string")
-        if not isinstance(note, str) or not note.strip():
-            raise ValidationError("note must be a non-empty string")
-        if not isinstance(helpfulness, (int, float)):
-            raise ValidationError("helpfulness must be a float between 0.0 and 1.0")
-        helpfulness = float(helpfulness)
-        if not (0.0 <= helpfulness <= 1.0):
-            raise ValidationError(f"helpfulness must be between 0.0 and 1.0, got {helpfulness}")
-        if session_id is not None:
-            validate_session_id(session_id)
-        if category is not None:
-            category = validate_slug(category, field_name="category")
-            categories = _load_task_categories(root)
-            if not categories:
-                raise ValidationError(
-                    "category cannot be set until meta/task-categories.md exists with a controlled vocabulary"
-                )
-            if category not in categories:
-                raise ValidationError(
-                    f"category must be one of {sorted(categories)}, got: {category}"
-                )
-
-        file, _ = resolve_repo_path(repo, file, field_name="file")
-        access_jsonl = _access_jsonl_for(file)
-        if access_jsonl is None:
-            root_part = PurePosixPath(file).parts[0] if file else "(empty)"
-            raise ValidationError(
-                f"Cannot log access for '{file}': '{root_part}/' is not an access-tracked directory. Supported roots: {sorted(_ACCESS_ROOTS)}"
-            )
-
-        abs_access = root / access_jsonl
-        abs_access.parent.mkdir(parents=True, exist_ok=True)
-        entry: dict[str, object] = {
-            "file": file,
-            "date": today_str(),
-            "task": task.strip(),
-            "helpfulness": round(helpfulness, 2),
-            "note": note.strip(),
-        }
-        if session_id is not None:
-            entry["session_id"] = session_id
-        if category is not None:
-            entry["category"] = category
-
-        existing = abs_access.read_text(encoding="utf-8") if abs_access.exists() else ""
-        new_line = _json.dumps(entry, ensure_ascii=False)
-        updated = (
-            (existing.rstrip("\n") + "\n" + new_line + "\n")
-            if existing.strip()
-            else new_line + "\n"
+        resolved_session_id = _resolve_access_session_id(root, session_id)
+        changed_files = _append_access_entries(
+            repo,
+            root,
+            [
+                {
+                    "file": file,
+                    "task": task,
+                    "helpfulness": helpfulness,
+                    "note": note,
+                    "category": category,
+                }
+            ],
+            session_id=resolved_session_id,
         )
-        abs_access.write_text(updated, encoding="utf-8")
-        repo.add(access_jsonl)
 
-        entry_count = updated.count("\n")
-        commit_msg = f"[access] Log retrieval of {Path(file).name} (h={entry['helpfulness']:.1f})"
+        commit_msg = f"[access] Log retrieval of {Path(file).name} (h={float(helpfulness):.1f})"
         commit_result = repo.commit(commit_msg)
         result = MemoryWriteResult.from_commit(
-            files_changed=[access_jsonl],
+            files_changed=changed_files,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"access_jsonl": access_jsonl, "entry_count": entry_count},
+            new_state={"access_jsonl": changed_files[0], "entry_count": 1},
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_log_access_batch",
+        annotations=_tool_annotations(
+            title="Log Memory File Access In Batch",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_log_access_batch(
+        access_entries: list[dict[str, object]],
+        session_id: str | None = None,
+    ) -> str:
+        from ...errors import ValidationError
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        if not isinstance(access_entries, list) or not access_entries:
+            raise ValidationError(
+                "access_entries must be a non-empty list of access entry objects"
+            )
+
+        resolved_session_id = _resolve_access_session_id(root, session_id)
+        changed_files = _append_access_entries(
+            repo,
+            root,
+            access_entries,
+            session_id=resolved_session_id,
+        )
+
+        entry_count = len(access_entries)
+        label = "entry" if entry_count == 1 else "entries"
+        commit_msg = f"[access] Log {entry_count} access {label}"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=changed_files,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"access_jsonls": changed_files, "entry_count": entry_count},
         )
         return result.to_json()
 
@@ -1570,6 +1595,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_flag_for_review": memory_flag_for_review,
         "memory_resolve_review_item": memory_resolve_review_item,
         "memory_log_access": memory_log_access,
+        "memory_log_access_batch": memory_log_access_batch,
         "memory_record_session": memory_record_session,
         "memory_run_aggregation": memory_run_aggregation,
         "memory_record_reflection": memory_record_reflection,

@@ -357,6 +357,10 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "chat",
         )
         self.assertEqual(
+            operations["memory_log_access_batch"]["commit_category_hint"],
+            "chat",
+        )
+        self.assertEqual(
             operations["memory_flag_for_review"]["commit_category_hint"],
             "curation",
         )
@@ -398,6 +402,15 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(discovery["selected_strategy"], "repo_local_semantic_mcp")
         self.assertEqual(discovery["missing_minimum_read_tools"], [])
         self.assertEqual(discovery["missing_minimum_semantic_tools"], [])
+
+    def test_manifest_declares_batch_access_logging_operation(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+        self.assertIn("memory_log_access_batch", manifest["tool_sets"]["semantic_extensions"])
+        self.assertEqual(
+            manifest["operations"]["memory_log_access_batch"]["result_fields"],
+            ["access_jsonls", "entry_count"],
+        )
 
     def test_resolver_returns_structured_ui_feedback_for_semantic_mode(self) -> None:
         resolution = resolver.resolve_capabilities(REPO_ROOT)

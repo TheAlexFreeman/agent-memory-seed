@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 1, item 1: implement memory_log_access_batch in write_tools.py"
+last_verified: 2026-03-20
+next_action: "Phase 2, item 1: add optional mode field and write_sessions reporting to memory_get_maturity_signals"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -38,8 +38,8 @@ Analysis of the full ACCESS.jsonl corpus (128 entries, 6 folders, 2026-03-16 to 
 
 ### Phase 1 — Batch write and session wiring (foundation)
 
-**1.1 `memory_log_access_batch`** *(write_tools.py)*
-Implement a new MCP tool that accepts a list of access entries and writes them all in a single git commit. Schema: `[{file, helpfulness, note, mode?, task_id?}]`. Reduces a 10-plan sweep from 10 round trips to 1. Register in `server.py`.
+**1.1 `memory_log_access_batch`** *(semantic/session_tools.py)*
+Implement a new MCP tool that accepts a list of access entries and writes them all in a single git commit. Schema: `[{file, helpfulness, note, mode?, task_id?}]`. Reduces a 10-plan sweep from 10 round trips to 1. Register it on the semantic session-tool surface exposed through the server bootstrap.
 
 **1.2 Session-id auto-injection**
 Update `memory_log_access` and the batch variant to accept an optional `session_id` param. If absent, attempt to read from a configurable env var (`MEMORY_SESSION_ID`) or a sentinel file (`chats/CURRENT_SESSION`). Document the injection contract in `HUMANS/tooling/agent-memory-capabilities.toml`.
@@ -94,13 +94,12 @@ Extend `test_memory_capabilities.py` to assert that `memory_log_access_batch` is
 **4.4 Update `HUMANS/docs/CORE.md`**
 Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl` sidecar convention.
 
----
 
 ## Progress tracking
 
-- [ ] 1.1 Implement `memory_log_access_batch` tool
-- [ ] 1.2 Session-id auto-injection (env var + sentinel file)
-- [ ] 1.3 Update capabilities contract
+- [x] 1.1 Implement `memory_log_access_batch` tool
+- [x] 1.2 Session-id auto-injection (env var + sentinel file)
+- [x] 1.3 Update capabilities contract
 - [ ] 2.1 Add `mode` field + maturity signal update
 - [ ] 2.2 Add `task_id` short code + maturity signal grouping
 - [ ] 2.3 Add `min_helpfulness` sweep filter + sidecar file
@@ -109,10 +108,10 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [ ] 3.2 `memory_get_maturity_signals` fallback + coverage field
 - [ ] 4.1 Tests for batch tool
 - [ ] 4.2 Tests for coverage validator
-- [ ] 4.3 Update capabilities TOML tests
+- [x] 4.3 Update capabilities TOML tests
 - [ ] 4.4 Document new fields in CORE.md
 
-**Progress:** 0/13 items complete
+**Progress:** 4/13 items complete
 
 ---
 
@@ -124,3 +123,4 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - `memory_log_access_batch` must use a single `auto_commit` (not one commit per entry).
 - `min_helpfulness` default is `None` (no filtering) to avoid breaking existing call sites.
 - `task_id` values are a controlled vocabulary defined in the TOML; free strings are rejected.
+

@@ -1800,6 +1800,137 @@ Next: Original next action
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
         self.assertEqual(entry["category"], "react-performance")
 
+    def test_memory_log_access_uses_environment_session_id_when_missing(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "knowledge/ACCESS.jsonl": "",
+            }
+        )
+        tools = self._create_tools(repo_root)
+        original = os.environ.get("MEMORY_SESSION_ID")
+
+        try:
+            os.environ["MEMORY_SESSION_ID"] = "chats/2026/03/20/chat-007"
+            raw = asyncio.run(
+                tools["memory_log_access"](
+                    file="knowledge/lit/foo.md",
+                    task="test",
+                    helpfulness=0.6,
+                    note="session id should come from env",
+                )
+            )
+        finally:
+            if original is None:
+                os.environ.pop("MEMORY_SESSION_ID", None)
+            else:
+                os.environ["MEMORY_SESSION_ID"] = original
+
+        payload = json.loads(raw)
+        entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["session_id"], "chats/2026/03/20/chat-007")
+
+    def test_memory_log_access_uses_current_session_sentinel_when_missing(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "knowledge/ACCESS.jsonl": "",
+                "chats/CURRENT_SESSION": "chats/2026/03/20/chat-008\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/lit/foo.md",
+                task="test",
+                helpfulness=0.6,
+                note="session id should come from sentinel",
+            )
+        )
+
+        payload = json.loads(raw)
+        entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["session_id"], "chats/2026/03/20/chat-008")
+
+    def test_memory_log_access_batch_writes_multiple_entries_in_single_commit(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "plans/demo.md": "# Demo\n",
+                "chats/CURRENT_SESSION": "chats/2026/03/20/chat-009\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+        before_count = int(
+            subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+
+        raw = asyncio.run(
+            tools["memory_log_access_batch"](
+                access_entries=[
+                    {
+                        "file": "knowledge/lit/foo.md",
+                        "task": "batch test",
+                        "helpfulness": 0.8,
+                        "note": "knowledge entry",
+                    },
+                    {
+                        "file": "plans/demo.md",
+                        "task": "batch test",
+                        "helpfulness": 0.4,
+                        "note": "plan entry",
+                    },
+                ]
+            )
+        )
+
+        after_count = int(
+            subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+        payload = json.loads(raw)
+
+        knowledge_entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        plan_entry = json.loads(
+            (repo_root / "plans" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+
+        self.assertEqual(after_count - before_count, 1)
+        self.assertEqual(payload["new_state"]["entry_count"], 2)
+        self.assertEqual(
+            sorted(payload["new_state"]["access_jsonls"]),
+            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl"],
+        )
+        self.assertEqual(knowledge_entry["session_id"], "chats/2026/03/20/chat-009")
+        self.assertEqual(plan_entry["session_id"], "chats/2026/03/20/chat-009")
+
+    def test_memory_log_access_batch_rejects_empty_entry_list(self) -> None:
+        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(tools["memory_log_access_batch"](access_entries=[]))
+
     def test_memory_revert_commit_preview_returns_confirmation_metadata(self) -> None:
         repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
         target_sha = self._write_and_commit(
