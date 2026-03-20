@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -439,6 +442,20 @@ def write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def git_available() -> bool:
+    return shutil.which("git") is not None
+
+
+def git(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
 def build_minimal_repo(root: Path) -> None:
     write(root / "agent-bootstrap.toml", VALID_BOOTSTRAP_MANIFEST)
     write(
@@ -649,6 +666,82 @@ def build_minimal_repo(root: Path) -> None:
     )
 
 
+def init_host_git_repo(root: Path) -> None:
+    git(root, "init", "--initial-branch=core")
+    git(root, "config", "user.name", "Test User")
+    git(root, "config", "user.email", "test@example.com")
+    write(root / "src" / "app.py", "print('host repo')\n")
+    git(root, "add", ".")
+    git(root, "commit", "-m", "host init")
+
+
+def add_host_repo_root(manifest_path: Path, host_root: Path) -> None:
+    text = manifest_path.read_text(encoding="utf-8")
+    host_line = f'host_repo_root = "{host_root.as_posix()}"'
+    if "host_repo_root = " in text:
+        text = re.sub(r'^host_repo_root = ".*"$', host_line, text, count=1, flags=re.MULTILINE)
+    else:
+        text = text.replace(
+            'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]',
+            'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n' + host_line,
+            1,
+        )
+    manifest_path.write_text(text, encoding="utf-8")
+
+
+def write_host_adapter_files(host_root: Path, *, duplicate_from: Path | None = None) -> None:
+    for relative_path in ("AGENTS.md", "CLAUDE.md", ".cursorrules"):
+        target = host_root / relative_path
+        if duplicate_from is not None:
+            target.write_text(
+                (duplicate_from / relative_path).read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+        else:
+            target.write_text(
+                f"# Host adapter\n\nThis host repo stores memory in a separate worktree. ({relative_path})\n",
+                encoding="utf-8",
+            )
+
+
+def build_worktree_repo(
+    host_root: Path,
+    memory_root: Path,
+    *,
+    orphan_branch: bool = True,
+    include_host_repo_root: bool = True,
+) -> None:
+    if not git_available():
+        raise unittest.SkipTest("git is not available in this environment")
+
+    init_host_git_repo(host_root)
+    temp_worktree = host_root / ".git" / "validator-memory-temp"
+
+    if orphan_branch:
+        git(host_root, "worktree", "add", "--detach", str(temp_worktree), "HEAD")
+        git(temp_worktree, "checkout", "--orphan", "agent-memory")
+    else:
+        git(host_root, "worktree", "add", "-b", "agent-memory", str(temp_worktree), "core")
+
+    subprocess.run(
+        ["git", "rm", "-rf", "--ignore-unmatch", "."],
+        cwd=temp_worktree,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    build_minimal_repo(temp_worktree)
+    if include_host_repo_root:
+        add_host_repo_root(temp_worktree / "agent-bootstrap.toml", host_root)
+    write_host_adapter_files(host_root)
+
+    git(temp_worktree, "add", "--all")
+    git(temp_worktree, "commit", "-m", "seed memory")
+    git(host_root, "worktree", "remove", "--force", str(temp_worktree))
+    git(host_root, "worktree", "add", str(memory_root), "agent-memory")
+
+
 class ValidateMemoryRepoTests(unittest.TestCase):
     def test_current_seed_repo_passes_validation(self) -> None:
         result = validator.validate_repo(REPO_ROOT)
@@ -839,6 +932,69 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(
                 any("host_repo_root must be an absolute path" in error for error in result.errors)
+            )
+
+    def test_valid_worktree_bootstrap_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            host_root = Path(tempdir) / "host"
+            memory_root = Path(tempdir) / "memory"
+            host_root.mkdir(parents=True, exist_ok=True)
+            build_worktree_repo(host_root, memory_root)
+
+            result = validator.validate_repo(memory_root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+
+    def test_worktree_without_host_repo_root_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            host_root = Path(tempdir) / "host"
+            memory_root = Path(tempdir) / "memory"
+            host_root.mkdir(parents=True, exist_ok=True)
+            build_worktree_repo(host_root, memory_root, include_host_repo_root=False)
+
+            result = validator.validate_repo(memory_root)
+            self.assertTrue(
+                any("host_repo_root is required when validating a git worktree checkout" in error for error in result.errors)
+            )
+
+    def test_worktree_host_repo_root_inside_memory_root_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            host_root = Path(tempdir) / "host"
+            memory_root = Path(tempdir) / "memory"
+            host_root.mkdir(parents=True, exist_ok=True)
+            build_worktree_repo(host_root, memory_root)
+            add_host_repo_root(memory_root / "agent-bootstrap.toml", memory_root / "knowledge")
+
+            result = validator.validate_repo(memory_root)
+            self.assertTrue(
+                any("host_repo_root must not point inside the memory repo root" in error for error in result.errors)
+            )
+
+    def test_worktree_shared_history_warns(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            host_root = Path(tempdir) / "host"
+            memory_root = Path(tempdir) / "memory"
+            host_root.mkdir(parents=True, exist_ok=True)
+            build_worktree_repo(host_root, memory_root, orphan_branch=False)
+
+            result = validator.validate_repo(memory_root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any("shares history with host default branch" in warning for warning in result.warnings)
+            )
+
+    def test_worktree_duplicate_host_adapters_warn(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            host_root = Path(tempdir) / "host"
+            memory_root = Path(tempdir) / "memory"
+            host_root.mkdir(parents=True, exist_ok=True)
+            build_worktree_repo(host_root, memory_root)
+            write_host_adapter_files(host_root, duplicate_from=memory_root)
+
+            result = validator.validate_repo(memory_root)
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertTrue(
+                any("duplicates host-root adapter file" in warning for warning in result.warnings)
             )
 
     def test_compact_startup_budget_overrun_fails(self) -> None:

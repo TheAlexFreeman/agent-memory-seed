@@ -17,7 +17,7 @@ See `meta/scratchpad-guidelines.md` for the full write protocol, promotion crite
 ## Immediate next actions
 
 - Aggregate `plans/ACCESS.jsonl` (100 entries, 6× over trigger — review-queue item from 2026-03-19).
-- Worktree integration Phase 5, item 21 is next: add validator-side worktree mode detection and host/memory topology checks.
+- Worktree integration Phase 5, item 24 is next: decide whether deployed worktrees should satisfy the full standalone validator contract or a worktree-specific CI contract.
 - Treat batch ACCESS logging and governed review-queue resolution as the most valuable follow-on MCP improvements.
 
 ## Open questions

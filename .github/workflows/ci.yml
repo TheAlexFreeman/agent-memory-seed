@@ -39,3 +39,24 @@ jobs:
         run: |
           sudo apt-get install -y shellcheck
           shellcheck setup.sh setup/setup.sh HUMANS/tooling/scripts/onboard-export.sh
+
+  worktree-e2e:
+    name: Worktree Init E2E
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package and dev dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run worktree init end-to-end test
+        run: >-
+          python -m pytest
+          HUMANS/tooling/tests/test_setup_flows.py::SetupFlowTests::test_init_worktree_creates_orphan_branch_with_committed_memory_worktree
+          -v

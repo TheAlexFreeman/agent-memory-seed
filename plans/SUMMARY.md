@@ -12,9 +12,9 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 20/24 complete
-Next: Phase 5, item 21 — add worktree mode detection to `validate_memory_repo.py`
-Blocks: none; deployment scaffolding is now in place, so the remaining work is validator and CI enforcement.
+Progress: 23/24 complete
+Next: Phase 5, item 24 — decide whether deployed worktrees should satisfy the full validator contract or a worktree-specific CI contract
+Blocks: none; validator topology checks and targeted coverage are in place, but the final CI assertion still depends on how deployed worktrees should differ from the standalone seed contract.
 
 
 ### `access-log-tooling-improvements.md` · status: active · trust: medium

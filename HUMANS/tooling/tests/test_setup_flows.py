@@ -275,9 +275,12 @@ class SetupFlowTests(unittest.TestCase):
             plans_summary = (worktree_root / "plans" / "SUMMARY.md").read_text(
                 encoding="utf-8"
             )
+            bootstrap_text = (worktree_root / "agent-bootstrap.toml").read_text(encoding="utf-8")
             self.assertIn("**codebase_root:**", profile_text)
             self.assertIn("**project_name:**", profile_text)
             self.assertIn(str(host_root), profile_text)
+            self.assertIn("host_repo_root = ", bootstrap_text)
+            self.assertIn(str(host_root).replace("\\", "/"), bootstrap_text)
             self.assertIn("codebase-survey.md", plans_summary)
             self.assertTrue((worktree_root / ".ignore").is_file())
             self.assertTrue((worktree_root / ".editorconfig").is_file())

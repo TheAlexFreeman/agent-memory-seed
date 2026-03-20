@@ -16,6 +16,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Worktree validator topology checks landed
+
+**Changed:**
+
+- **Made the validator worktree-aware.** `HUMANS/tooling/scripts/validate_memory_repo.py` now treats `host_repo_root` as a worktree-mode signal, verifies that the host path exists and is a git repo, rejects host paths nested under the memory worktree, requires the memory checkout itself to be a git worktree, and warns when the memory branch shares history with the host repo's default branch.
+
+- **Added adapter-duplication warnings.** In worktree mode, the validator now compares host-root adapter files against the worktree copies and warns when they are byte-for-byte duplicates, which catches a common setup mistake where the host root is not given worktree-specific routing guidance.
+
+- **Expanded regression coverage and CI for worktree setup.** Added targeted git-backed validator tests for valid, missing, nested, shared-history, and duplicate-adapter scenarios; added a dedicated Windows `worktree-e2e` CI job that runs the existing end-to-end init-worktree setup test; and fixed `setup/init-worktree.sh` so deployed bootstrap manifests insert `host_repo_root` at top level with normalized forward-slash paths.
+
+**Reasoning:** Worktree mode was usable after the deployment and survey-scaffold slices, but it still relied on convention rather than enforceable topology checks. This change closes most of that gap by teaching validation to understand host/memory structure, adding regression tests around the new invariants, and pinning a stable end-to-end setup contract into CI. The remaining open question is whether deployed worktrees should eventually satisfy the full standalone validator profile or keep a narrower worktree-specific contract.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Worktree deployment hygiene and survey scaffolds landed
 
 **Changed:**

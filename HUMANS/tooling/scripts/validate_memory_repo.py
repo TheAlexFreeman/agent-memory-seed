@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -337,6 +338,120 @@ def repo_root_from_argv(argv: list[str]) -> Path:
     if len(argv) > 1:
         return Path(argv[1]).resolve()
     return Path(__file__).resolve().parents[3]
+
+
+def run_git_command(cwd: Path, *args: str) -> subprocess.CompletedProcess[str] | None:
+    try:
+        return subprocess.run(
+            ["git", *args],
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return None
+
+
+def is_git_repo(path: Path) -> bool:
+    completed = run_git_command(path, "rev-parse", "--is-inside-work-tree")
+    return completed is not None and completed.returncode == 0 and completed.stdout.strip() == "true"
+
+
+def is_git_worktree_root(path: Path) -> bool:
+    return path.joinpath(".git").is_file() and is_git_repo(path)
+
+
+def current_git_branch(path: Path) -> str | None:
+    completed = run_git_command(path, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if completed is None or completed.returncode != 0:
+        return None
+    branch = completed.stdout.strip()
+    return branch or None
+
+
+def resolve_host_default_branch(path: Path) -> str | None:
+    remote_head = run_git_command(path, "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD")
+    if remote_head is not None and remote_head.returncode == 0:
+        ref = remote_head.stdout.strip()
+        if ref.startswith("refs/remotes/"):
+            return ref
+    return current_git_branch(path)
+
+
+def validate_worktree_topology(
+    root: Path,
+    manifest_path: Path,
+    host_repo_root: object,
+    result: ValidationResult,
+) -> None:
+    repo_is_worktree = is_git_worktree_root(root)
+    if host_repo_root is None:
+        if repo_is_worktree:
+            result.error(
+                f"{manifest_path}: host_repo_root is required when validating a git worktree checkout"
+            )
+        return
+
+    if not isinstance(host_repo_root, str) or not host_repo_root.strip():
+        return
+
+    host_root = Path(host_repo_root).resolve()
+    memory_root = root.resolve()
+
+    try:
+        host_root.relative_to(memory_root)
+        result.error(f"{manifest_path}: host_repo_root must not point inside the memory repo root")
+    except ValueError:
+        pass
+
+    if not host_root.exists():
+        result.error(f"{manifest_path}: host_repo_root does not exist: {host_repo_root!r}")
+        return
+
+    if not is_git_repo(host_root):
+        result.error(f"{manifest_path}: host_repo_root must point to a git repository")
+
+    if not repo_is_worktree:
+        result.error(
+            f"{manifest_path}: host_repo_root is set but the memory repo root is not a git worktree checkout"
+        )
+
+    if not (repo_is_worktree and is_git_repo(host_root)):
+        return
+
+    memory_branch = current_git_branch(root)
+    host_default_branch = resolve_host_default_branch(host_root)
+    if memory_branch and host_default_branch:
+        merge_base = run_git_command(host_root, "merge-base", memory_branch, host_default_branch)
+        if merge_base is None:
+            result.warn(
+                f"{manifest_path}: git executable unavailable while checking shared history between {memory_branch!r} and {host_default_branch!r}"
+            )
+        elif merge_base.returncode == 0 and merge_base.stdout.strip():
+            result.warn(
+                f"{manifest_path}: worktree branch {memory_branch!r} shares history with host default branch {host_default_branch!r}; orphan memory branches should not share host history"
+            )
+        elif merge_base.returncode not in (0, 1):
+            stderr = merge_base.stderr.strip()
+            suffix = f" ({stderr})" if stderr else ""
+            result.warn(
+                f"{manifest_path}: could not compare worktree branch {memory_branch!r} against host default branch {host_default_branch!r}{suffix}"
+            )
+
+    for relative_path in ADAPTER_FILES:
+        host_adapter = host_root / relative_path
+        worktree_adapter = root / relative_path
+        if not host_adapter.exists() or not worktree_adapter.exists():
+            continue
+        host_text = read_text(host_adapter, result)
+        worktree_text = read_text(worktree_adapter, result)
+        if host_text is None or worktree_text is None:
+            continue
+        if host_text == worktree_text:
+            result.warn(
+                f"{worktree_adapter}: duplicates host-root adapter file {host_adapter} in worktree mode; host and worktree adapters should differ"
+            )
 
 
 def read_text(path: Path, result: ValidationResult) -> str | None:
@@ -968,6 +1083,8 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
             result.error(
                 f"{path}: modes.{mode_name}.steps must load {expected_step_paths!r}, got {step_paths!r}"
             )
+
+    validate_worktree_topology(root, path, host_repo_root, result)
 
 
 def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> None:

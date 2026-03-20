@@ -468,15 +468,34 @@ Blocks: none; survey templates are installed in knowledge/codebase/ and ready to
 update_bootstrap_file() {
     local bootstrap_path="$1"
     local host_root_native="$2"
+    local host_root_toml
+    local temp_path
+
+    host_root_toml="${host_root_native//\\//}"
 
     if grep -q '^host_repo_root = ' "$bootstrap_path"; then
         return 0
     fi
 
-    cat >> "$bootstrap_path" <<EOF
-
-host_repo_root = "$(toml_escape "$host_root_native")"
-EOF
+    temp_path="$(mktemp)"
+    awk \
+        -v host_root_toml="$(toml_escape "$host_root_toml")" \
+        '
+            BEGIN { inserted = 0 }
+            /^adapter_files = / && !inserted {
+                print
+                print "host_repo_root = \"" host_root_toml "\""
+                inserted = 1
+                next
+            }
+            { print }
+            END {
+                if (!inserted) {
+                    print "host_repo_root = \"" host_root_toml "\""
+                }
+            }
+        ' "$bootstrap_path" > "$temp_path"
+    mv "$temp_path" "$bootstrap_path"
 }
 
 write_host_codex_config() {
