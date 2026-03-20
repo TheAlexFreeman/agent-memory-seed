@@ -27,6 +27,13 @@ from ..path_policy import (
     validate_slug,
     validate_top_level_root,
 )
+from .semantic._session import (
+    create_session_state,
+    get_identity_churn_limit,
+    get_identity_updates,
+    increment_identity_updates,
+    reset_session_state,
+)
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -36,9 +43,6 @@ def _tool_annotations(**kwargs: object) -> Any:
     """Return MCP tool annotations with a relaxed runtime-only type surface."""
     return cast(Any, kwargs)
 
-
-# Identity churn alarm threshold per session
-_IDENTITY_CHURN_LIMIT = 5
 
 # ACCESS log folders — these directories each contain an ACCESS.jsonl file
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
@@ -340,11 +344,7 @@ def _update_current_stage_block(
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     """Register all Tier 1 semantic tools and return their callables."""
 
-    # Per-server-instance state.  Resets each time create_mcp() is called
-    # (i.e. on server restart).  Agents should call memory_reset_session_state
-    # at the start of each session to ensure a clean slate in long-running
-    # server processes.
-    _session_state: dict[str, int] = {"identity_updates": 0}
+    session_state = create_session_state()
 
     # ------------------------------------------------------------------
     # memory_mark_plan_item_complete
@@ -1147,9 +1147,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError(f"mode must be 'upsert', 'append', or 'replace': {mode}")
 
         # Identity churn alarm
-        if _session_state["identity_updates"] >= _IDENTITY_CHURN_LIMIT:
+        if get_identity_updates(session_state) >= get_identity_churn_limit():
             raise ValidationError(
-                f"Identity churn alarm: {_IDENTITY_CHURN_LIMIT} trait updates this session — "
+                f"Identity churn alarm: {get_identity_churn_limit()} trait updates this session — "
                 "call memory_reset_session_state to acknowledge and reset the counter, "
                 "or restart the MCP server."
             )
@@ -1192,7 +1192,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             write_with_frontmatter(abs_path, fm_dict, body)
 
         repo.add(rel_path)
-        _session_state["identity_updates"] += 1
+        identity_updates = increment_identity_updates(session_state)
 
         commit_msg = f"[identity] Update {key} in identity/{file}.md"
         commit_result = repo.commit(commit_msg)
@@ -1204,7 +1204,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             new_state={
                 "key": key,
                 "mode": mode,
-                "identity_updates_this_session": _session_state["identity_updates"],
+                "identity_updates_this_session": identity_updates,
             },
         )
         return result.to_json()
@@ -2141,13 +2141,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         """
         import json as _json
 
-        _session_state["identity_updates"] = 0
-        return _json.dumps(
-            {
-                "reset": True,
-                "identity_updates_this_session": 0,
-            }
-        )
+        return _json.dumps(reset_session_state(session_state))
 
     return {
         "memory_mark_plan_item_complete": memory_mark_plan_item_complete,

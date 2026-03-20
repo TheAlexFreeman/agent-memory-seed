@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: '2026-03-19'
-next_action: Phase 1, item 7 — move HUMANS/tooling/scripts/memory_mcp.py → engram_mcp/memory_mcp.py and update its import to use engram_mcp.agent_memory_mcp.server directly.
+last_verified: '2026-03-20'
+next_action: Phase 3, item 24 — finish moving the reset-tool registration into semantic/_session.py, then continue splitting domain tools out of semantic_tools.py.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -339,7 +339,7 @@ upgrading.
     Update to `<worktree-path>/engram_mcp/memory_mcp.py` and note that the preferred
     invocation is `engram-mcp` (the CLI script) when installed.
 
-19. ☐ Update `setup/initial-commit-paths.txt`
+19. ☑ Update `setup/initial-commit-paths.txt`
 
     Remove: `tools/__init__.py`, `tools/agent_memory_mcp/*` entries
     Add: `engram_mcp/__init__.py`, `engram_mcp/memory_mcp.py`, `engram_mcp/agent_memory_mcp/*`,
@@ -351,7 +351,7 @@ upgrading.
     Update the `ruff` lint paths and any explicit file paths from
     `tools/agent_memory_mcp/` to `engram_mcp/agent_memory_mcp/`.
 
-21. ☐ Remove the `tools/` compat shim (from Phase 0, item 4)
+21. ☑ Remove the `tools/` compat shim (from Phase 0, item 4)
 
     Once all imports are updated, delete:
     - `tools/__init__.py`
@@ -363,7 +363,7 @@ upgrading.
     grep -r "import tools\." --include="*.py" .
     ```
 
-22. ☐ Run full test suite — must be green before proceeding to Phase 3.
+22. ☑ Run full test suite — must be green before proceeding to Phase 3.
 
 ---
 
@@ -390,7 +390,7 @@ session state directly.
 
 ### Items
 
-23. ☐ Create `engram_mcp/agent_memory_mcp/tools/semantic/` directory and stub files
+23. ☑ Create `engram_mcp/agent_memory_mcp/tools/semantic/` directory and stub files
 
     Create `__init__.py`, `_session.py`, `plan_tools.py`, `knowledge_tools.py`,
     `identity_tools.py`, `session_tools.py` — initially empty except for imports.
@@ -633,8 +633,11 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 
 | Date | Action |
 |---|---|
+| 2026-03-20 | Completed Phase 2 item 22 and started Phase 3: added the `semantic/` package scaffold, routed `server.py` through the new package surface, extracted instance-scoped session-state helpers into `semantic/_session.py`, and kept the full suite green (`191 passed, 0 failed`). |
 | 2026-03-19 | Plan created following design discussion on MCP module growth and placement |
 | 2026-03-19 | Resolved the naming collision by adopting `engram-mcp` as the user-facing name and `engram_mcp/` as the Python package path for the reorganization plan |
 | 2026-03-19 | Started Phase 0 with an additive `engram_mcp` namespace bootstrap, added the `engram-mcp` CLI entrypoint in `pyproject.toml`, and verified the new import path plus the MCP-focused test suite (`58 passed`) |
 | 2026-03-20 | Completed Phase 0 item 4: `tools/agent_memory_mcp/__init__.py` converted to compat shim re-exporting from `engram_mcp.agent_memory_mcp`. Phase 0 fully complete. 190 tests green. |
 | 2026-03-20 | Completed Phase 0 items 1–3 and 5–6: physical files confirmed in `engram_mcp/agent_memory_mcp/`, `server_main.py` present, `pyproject.toml` updated (CLI entrypoint + both package paths in find config + `engram_mcp/tests` in pytest paths). Fixed 56 missing paths in `setup/initial-commit-paths.txt`, removed 12 stale promoted `_unverified/ai-history/` entries, fixed `origin_session` format in 21 knowledge files. 190 tests passing. `engram_mcp.agent_memory_mcp.server_main:main` importable. Remaining: item 4 (compat shim in `tools/`) before Phase 1 begins. |
+| 2026-03-20 | Completed Phase 2 items 19 and 21: refreshed `setup/initial-commit-paths.txt`, removed the dead `tools/` compat package, and dropped the transitional `tools*` setuptools package discovery entry. Full suite now reaches `190 passed, 1 failed`; the remaining failure is the pre-existing validator test for oversized `plans/SUMMARY.md` and invalid `origin_session` values on unrelated research plans. |
+| 2026-03-19 | Completed Phase 1 items 7–10 and most of Phase 2 path updates: moved the path-based entrypoint to `engram_mcp/memory_mcp.py`, relocated MCP tests to `engram_mcp/tests/`, updated setup/config/doc/worktree references, refreshed the initial-commit manifest, and verified the focused MCP + setup-flow test slice (`90 passed`). Remaining: item 19/21 manifest-shim cleanup and a full-suite run after unrelated validator errors are resolved. |

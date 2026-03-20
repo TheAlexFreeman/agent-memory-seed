@@ -25,7 +25,7 @@ Both tiers use **version tokens** for optimistic locking and return structured s
 
 ## Current status
 
-The enhanced implementation now lives in `tools/agent_memory_mcp/` and is re-exported from `HUMANS/tooling/scripts/memory_mcp.py` so the canonical script path still works. `memory_delete` now supports an optional runtime permission hook via `MEMORY_DELETE_PERMISSION_HELPER`; local runtimes without that helper proceed directly with the protected-directory checks already enforced in the package.
+The enhanced implementation now lives in `engram_mcp/agent_memory_mcp/`, and the path-based compatibility entrypoint now lives at `engram_mcp/memory_mcp.py`. `memory_delete` now supports an optional runtime permission hook via `MEMORY_DELETE_PERMISSION_HELPER`; local runtimes without that helper proceed directly with the protected-directory checks already enforced in the package.
 
 ---
 
@@ -667,5 +667,5 @@ Special handling for `[system]` commits: they are revertable only when every tou
 | 2026-03-18 | `memory_delete` scope locked down to `knowledge/`, `plans/`, and `scratchpad/`; protected directories reject deletion before filesystem access. Automatic cowork permission handoff remains pending |
 | 2026-03-18 | Anchor design resolved and migration applied: BEGIN/END pairs in `plans/SUMMARY.md`; `<!-- section: {id} -->` anchors in `knowledge/SUMMARY.md` and `knowledge/_unverified/SUMMARY.md` |
 | 2026-03-18 | Commit message conventions expanded: verb vocabulary, Tier 1 templates, agent body format, granularity guidance, `memory_commit` validation behaviour |
-| 2026-03-18 | Reviewed implementation against repo state: 16/17 planned milestones are now coded; renamed the package to `tools/agent_memory_mcp/`, wired the shipped `memory_mcp.py` entrypoint to it, preserved HUMANS discovery guardrails, and added MCP integration coverage in CI |
+| 2026-03-18 | Reviewed implementation against repo state: 16/17 planned milestones are now coded; renamed the package to `engram_mcp/agent_memory_mcp/`, wired the shipped `engram_mcp/memory_mcp.py` entrypoint to it, preserved HUMANS discovery guardrails, and added MCP integration coverage in CI |
 | 2026-03-18 | Finished the remaining milestone: `memory_delete` now accepts an injected/runtime permission hook, focused delete-path tests cover allow and reject flows, and the plan is complete |

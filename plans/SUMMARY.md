@@ -1,6 +1,6 @@
 # Plans — Summary
 
-Compact returning-session view of multi-session work. Read this file for active plan priority, short scope, next actions, and recent completions. Open individual plan files only when the compact block is insufficient.
+Compact returning-session view of multi-session work. Read this file for live priorities, immediate next actions, and drill-down paths only.
 
 Plans are categorized as **build** (code/infrastructure changes with a defined done-state) or **research** (knowledge-base work with an open or survey scope). Each category maintains its own priority stack. Within a session, pick the highest-priority item from whichever category fits the task at hand.
 
@@ -11,11 +11,10 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 ### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/mcp-reorganization.md
-Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
-Progress: 6/41 complete (Phase 0 done)
-Next: Phase 1, item 7 — move `HUMANS/tooling/scripts/memory_mcp.py` → `engram_mcp/memory_mcp.py` and update its import.
+Progress: 22/41 complete
+Next: Phase 3, item 24 — move the reset-tool registration into `semantic/_session.py`, then continue the semantic-tools split.
 Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6.
-
+Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
 
 ### `worktree-integration.md` · status: active · trust: medium
 
@@ -67,30 +66,31 @@ Blocks: waits on `mcp-reorganization.md` Phase 2.
 
 Detail: plans/ai-frontier-research.md
 Scope: Frontier AI survey — reasoning, alignment, interpretability, multi-agent, retrieval/memory, emerging architectures.
-Progress: Phase 1 complete (21 files); Phase 2 pending.
-Next: Phase 2 — agentic frameworks, inference-time compute, governance, hardware/efficiency.
+Progress: Phase 1 complete; Phase 2 extension complete (4/4)
+Next: Consider Phase 3 extension (RAG details, ColPali, late-chunking) or deeper agentic-framework follow-on work.
 
 
----
+### Research queue
+
+- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality; detail: plans/phenomenology-embodied-cognition-research.md
+- `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion; detail: plans/personal-identity-memory-research.md
+- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism; detail: plans/ethics-metaethics-research.md
+- `formal-logic-foundations-research.md` — 0/11; next: propositional and first-order logic; detail: plans/formal-logic-foundations-research.md
+- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium; detail: plans/game-theory-mechanism-design-research.md
+- `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy; detail: plans/information-theory-stat-learning-research.md
+- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic distinction; detail: plans/cognitive-neuroscience-memory-research.md
+- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept; detail: plans/cultural-evolution-epistemics-research.md
 
 ## Recent completions
 
-- [ai-frontier-research.md](ai-frontier-research.md) — completed 2026-03-19; 21 knowledge files covering reasoning models, alignment, retrieval/memory, multi-agent coordination, interpretability, emerging architectures, and AI epistemology.
-- [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; compact startup contract enforced, drill-down references required, helper added, measured at 5705/7000 tokens with 1295 headroom.
-- [systems-architecture-research.md](systems-architecture-research.md) — completed 2026-03-19; storage, concurrency, and data-model primitives for the memory system.
-- [lesswrong-rationalist-community-research.md](lesswrong-rationalist-community-research.md) — completed 2026-03-19; LessWrong and rationalist-community narrative survey.
-- [devops-docker-research.md](devops-docker-research.md) — completed 2026-03-19; Docker and DevOps stack research for the Django/React/Celery system.
-- [react-stack-research.md](react-stack-research.md) — completed 2026-03-19; React 19 + Chakra UI + TanStack depth research.
-- [django-stack-research.md](django-stack-research.md) — completed 2026-03-19; advanced Django, DRF, async, security, and operations research.
-- [philosophy-history-survey.md](philosophy-history-survey.md) — completed 2026-03-19; broad history-of-philosophy survey and synthesis.
-- [codex-desktop-github-network-ergonomics.md](codex-desktop-github-network-ergonomics.md) — completed 2026-03-18; task-readiness manifest and resolver prototype.
-- [codex-desktop-automation-continuity.md](codex-desktop-automation-continuity.md) — completed 2026-03-18; recurring-run continuity support.
-- [codex-desktop-bootstrap-support.md](codex-desktop-bootstrap-support.md) — completed 2026-03-18; repo-declared startup manifest and resolver direction.
-- [ai-paradigm-genealogy-research.md](ai-paradigm-genealogy-research.md) — completed 2026-03-18; genealogy of the modern AI paradigm.
-- [codex-desktop-governed-memory-writes.md](codex-desktop-governed-memory-writes.md) — completed 2026-03-18; governed-write capability contract prototype.
-- [agent-memory-mcp.md](agent-memory-mcp.md) — completed 2026-03-18; shipped MCP entrypoint and write surface.
-
----
+- [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; startup contract enforced and measured under budget.
+- [ai-frontier-research.md](ai-frontier-research.md) — completed 2026-03-19; frontier-AI knowledge set written.
+- [systems-architecture-research.md](systems-architecture-research.md) — completed 2026-03-19; storage and concurrency primitives captured.
+- [lesswrong-rationalist-community-research.md](lesswrong-rationalist-community-research.md) — completed 2026-03-19; community survey written.
+- [devops-docker-research.md](devops-docker-research.md) — completed 2026-03-19; Docker and DevOps stack research written.
+- [react-stack-research.md](react-stack-research.md) — completed 2026-03-19; React, Chakra UI, and TanStack research written.
+- [django-stack-research.md](django-stack-research.md) — completed 2026-03-19; advanced Django research written.
+- [philosophy-history-survey.md](philosophy-history-survey.md) — completed 2026-03-19; broad philosophy survey written.
 
 ## Usage notes
 

@@ -78,8 +78,8 @@ Goal: one command turns any git repo into a host with a live memory worktree.
    - `identity/`, `knowledge/`, `plans/`, `skills/`, `scratchpad/`, `chats/` (with
      their `SUMMARY.md` and `ACCESS.jsonl` stubs)
    - `meta/` (all governance docs)
-   - `tools/agent_memory_mcp/` (the MCP server package)
-   - `HUMANS/tooling/scripts/memory_mcp.py` (the entrypoint)
+   - `engram_mcp/agent_memory_mcp/` (the MCP server package)
+   - `engram_mcp/memory_mcp.py` (the path-based entrypoint; prefer `engram-mcp` when installed)
    - `agent-bootstrap.toml`
    - `pyproject.toml` (server extras only)
    - `.gitattributes`
@@ -135,8 +135,9 @@ work correctly when the memory store is a worktree inside a larger project.
 6. ☐ Extend `setup/init-worktree.sh` to write platform-specific MCP config
 
    For each supported platform (Codex, Claude Cowork, generic):
-   - Write the MCP server config pointing at `<worktree-path>/HUMANS/tooling/scripts/
-     memory_mcp.py` and `repo_root = <worktree-path>`.
+   - Write the MCP server config pointing at `<worktree-path>/engram_mcp/memory_mcp.py`
+     and `repo_root = <worktree-path>`. When the package is installed inside the
+     worktree, prefer the `engram-mcp` CLI.
    - On Codex platform: write `.codex/config.toml` in the host root, not in the
      worktree.
    - For other platforms: write an `mcp-config-example.json` referencing the worktree
