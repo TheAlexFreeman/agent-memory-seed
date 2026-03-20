@@ -24,7 +24,7 @@ Both tiers use **version tokens** for optimistic locking and return structured s
 
 ## Current status
 
-The enhanced implementation now lives in `tools/agent_memory_mcp/` and is re-exported from `HUMANS/tooling/scripts/memory_mcp.py` so the canonical script path still works. `memory_delete` now supports an optional runtime permission hook via `MEMORY_DELETE_PERMISSION_HELPER`; local runtimes without that helper proceed directly with the protected-directory checks already enforced in the package.
+The enhanced implementation now lives in `engram_mcp/agent_memory_mcp/` and the path-based compatibility entrypoint now lives at `engram_mcp/memory_mcp.py`. `memory_delete` now supports an optional runtime permission hook via `MEMORY_DELETE_PERMISSION_HELPER`; local runtimes without that helper proceed directly with the protected-directory checks already enforced in the package.
 
 ---
 

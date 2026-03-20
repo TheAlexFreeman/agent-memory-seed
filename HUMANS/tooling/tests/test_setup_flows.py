@@ -116,9 +116,7 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertIn("**User:** Alex", summary)
             self.assertIn("**Uses AI for:** Writing code and debugging", summary)
-            self.assertIn(
-                "Template-based profile — pending onboarding confirmation.", summary
-            )
+            self.assertIn("Template-based profile — pending onboarding confirmation.", summary)
             self.assertNotIn("last_verified:", profile)
             self.assertIn("created:", profile)
 
@@ -165,9 +163,7 @@ class SetupFlowTests(unittest.TestCase):
             escaped_root = str(root).replace("\\", "\\\\")
             self.assertIn(escaped_root, config_text)
             self.assertIn(
-                str(root / "HUMANS" / "tooling" / "scripts" / "memory_mcp.py").replace(
-                    "\\", "\\\\"
-                ),
+                str(root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\"),
                 config_text,
             )
             self.assertNotIn(str(REPO_ROOT).replace("\\", "\\\\"), config_text)

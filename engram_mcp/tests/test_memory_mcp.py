@@ -14,8 +14,8 @@ from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-SCRIPT_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "memory_mcp.py"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_PATH = REPO_ROOT / "engram_mcp" / "memory_mcp.py"
 VENV_PYTHON = REPO_ROOT / ".venv" / "Scripts" / "python.exe"
 
 

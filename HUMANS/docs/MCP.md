@@ -27,7 +27,7 @@ These are the main files and entry points that define the MCP setup.
 
 | Resource | Role | Why it matters |
 | --- | --- | --- |
-| `HUMANS/tooling/scripts/memory_mcp.py` | Compatibility entrypoint script | The simplest way to launch the repo-local MCP server. |
+| `engram_mcp/memory_mcp.py` | Compatibility entrypoint script | The simplest path-based way to launch the repo-local MCP server. |
 | `engram_mcp/agent_memory_mcp/server.py` | Runtime bootstrap | Builds the FastMCP server, resolves the repo root, and registers tools. |
 | `HUMANS/tooling/agent-memory-capabilities.toml` | Capability manifest | Declares what the MCP surface supports, how clients should interpret it, and which approval rules apply. |
 | `HUMANS/tooling/mcp-config-example.json` | Example client config | Shows how a desktop MCP client can point at this repo. |
@@ -37,13 +37,14 @@ These are the main files and entry points that define the MCP setup.
 
 ## How the server is launched
 
-The canonical script is:
+The canonical path-based script is:
 
 ```bash
-python HUMANS/tooling/scripts/memory_mcp.py
+python engram_mcp/memory_mcp.py
 ```
 
-That wrapper imports the repo-local server and runs it.
+That wrapper imports the repo-local server and runs it. When the package is
+installed, prefer `engram-mcp` instead.
 
 ### How the repo root is resolved
 
@@ -61,13 +62,13 @@ If none of those are set, the runtime falls back to file-relative detection from
 
 ```bash
 cd agent-memory-seed
-python HUMANS/tooling/scripts/memory_mcp.py
+python engram_mcp/memory_mcp.py
 ```
 
 **Run it from somewhere else**
 
 ```bash
-MEMORY_REPO_ROOT=/path/to/agent-memory-seed python /path/to/agent-memory-seed/HUMANS/tooling/scripts/memory_mcp.py
+MEMORY_REPO_ROOT=/path/to/agent-memory-seed python /path/to/agent-memory-seed/engram_mcp/memory_mcp.py
 ```
 
 **Embed it in Python**
@@ -87,7 +88,7 @@ The repo already includes an example client config in `HUMANS/tooling/mcp-config
 	"mcpServers": {
 		"agent-memory": {
 			"command": "python",
-			"args": ["C:/path/to/agent-memory-seed/HUMANS/tooling/scripts/memory_mcp.py"],
+				"args": ["C:/path/to/agent-memory-seed/engram_mcp/memory_mcp.py"],
 			"env": {
 				"AGENT_MEMORY_ROOT": "C:/path/to/agent-memory-seed"
 			}
