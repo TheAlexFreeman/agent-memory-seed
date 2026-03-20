@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "All 7 phases + Phase 2 infrastructure extension complete (25/25). Optional Phase 3 extension (RAG depth/ColPali, agentic framework deep-dives) — pursue when frontier AI is the session focus"
+next_action: "All 7 phases + Phases 2 and 3 extensions complete (25/25 + 9 total). Phase 3 extension (5 files): ColPali, late chunking, agentic RAG patterns, HyDE, reranking. No further active items. Archive or extend as needed."
 origin_session: chats/2026/03/19/chat-002
 source: agent-generated
 status: active
@@ -314,6 +314,15 @@ knowledge/_unverified/ai-frontier/
 - [x] AI hardware and efficiency trends (H100/B200/TPUs/custom silicon, MoE, power constraints)
 
 **Extension progress:** 4/4 items complete
+
+### Phase 3 extension — RAG depth and retrieval advanced techniques (2026-03-20)
+- [x] ColPali — visual document retrieval with vision-language models, bypassing OCR (`retrieval-memory/colpali-visual-document-retrieval.md`)
+- [x] Late chunking and contextual embeddings — JinaAI technique; full-document encoding then boundary pooling (`retrieval-memory/late-chunking-contextual-embeddings.md`)
+- [x] Agentic RAG patterns — query decomposition, FLARE, CRAG, SELF-RAG, RAGAS evaluation (`retrieval-memory/agentic-rag-patterns.md`)
+- [x] HyDE query expansion — hypothetical document embeddings, query-document asymmetry (`retrieval-memory/hyde-query-expansion.md`)
+- [x] Reranking and two-stage retrieval — cross-encoder rerankers, cascade architecture, position bias (`retrieval-memory/reranking-two-stage-retrieval.md`)
+
+**Extension progress:** 5/5 items complete
 
 ---
 

@@ -32,8 +32,8 @@ Next: Human review of knowledge/_unverified/social-science/cultural-evolution/ f
 
 Detail: plans/ai-frontier-research.md
 Scope: Frontier AI survey — reasoning, alignment, interpretability, multi-agent, retrieval/memory, architectures.
-Progress: All 7 phases + Phase 2 infrastructure extension complete (25/25 ✓). Optional Phase 3 extension (RAG depth/ColPali, agentic frameworks) not yet written.
-Next: Phase 3 extension items are discretionary — pursue when frontier AI is the session focus.
+Progress: All 7 phases + Phase 2 infrastructure extension + Phase 3 retrieval extension complete (25/25 base + 9 extension items). Phase 3 extension: ColPali, late chunking, agentic RAG patterns, HyDE, reranking (5 files added to `retrieval-memory/`).
+Next: No active items. Archive when reviewed, or add further extension phases.
 
 
 ### Research queue
