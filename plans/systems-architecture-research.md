@@ -8,6 +8,7 @@ source: agent-generated
 status: complete
 trust: medium
 type: research-plan
+category: research
 ---
 
 # Research Plan: Systems Architecture for Agent Memory

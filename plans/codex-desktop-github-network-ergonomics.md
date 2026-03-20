@@ -1,6 +1,7 @@
 ---
 source: agent-generated
 type: implementation-plan
+category: build
 origin_session: manual
 created: 2026-03-18
 last_verified: 2026-03-18

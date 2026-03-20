@@ -1,6 +1,7 @@
 ---
 source: agent-generated
 type: research-plan
+category: research
 origin_session: chats/2026/03/18/chat-001
 created: 2026-03-18
 last_verified: 2026-03-18

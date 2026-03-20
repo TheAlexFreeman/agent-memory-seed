@@ -1,12 +1,13 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: Phase 2, item 21 — remove the tools/ compat shim, then run the full suite once the remaining historical tools/ path references are reconciled.
+next_action: Phase 1, item 7 — move HUMANS/tooling/scripts/memory_mcp.py → engram_mcp/memory_mcp.py and update its import to use engram_mcp.agent_memory_mcp.server directly.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Implementation Plan: MCP Module Reorganization
@@ -219,7 +220,7 @@ lives under `HUMANS/`.
 
 ### Items
 
-7. ☑ Move entrypoint: `HUMANS/tooling/scripts/memory_mcp.py` → `engram_mcp/memory_mcp.py`
+7. ☐ Move entrypoint: `HUMANS/tooling/scripts/memory_mcp.py` → `engram_mcp/memory_mcp.py`
 
    Update the file to use the new import path:
 
@@ -234,7 +235,7 @@ lives under `HUMANS/`.
     relocated. A deprecation comment is added noting that `engram-mcp` (the CLI
    entrypoint) is now the preferred invocation.
 
-8. ☑ Move MCP test files
+8. ☐ Move MCP test files
 
      - `HUMANS/tooling/tests/test_memory_mcp.py` → `engram_mcp/tests/test_memory_mcp.py`
    - `HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py`
@@ -251,7 +252,7 @@ lives under `HUMANS/`.
     Update `tools.agent_memory_mcp.*` imports in `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
     to `engram_mcp.agent_memory_mcp.*`.
 
-9. ☑ Update `test_setup_flows.py` entrypoint path assertion
+9. ☐ Update `test_setup_flows.py` entrypoint path assertion
 
    The setup flow test asserts that `setup.sh` generates a config containing the
    `memory_mcp.py` path. Update the expected path from
@@ -262,7 +263,7 @@ lives under `HUMANS/`.
     str(root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\")
    ```
 
-10. ☑ Update `resolve_memory_capabilities.py` import
+10. ☐ Update `resolve_memory_capabilities.py` import
 
     ```python
     # Old: from tools.agent_memory_mcp.server import create_mcp
@@ -283,7 +284,7 @@ upgrading.
 
 ### Items
 
-12. ☑ Update `setup/setup.sh`
+12. ☐ Update `setup/setup.sh`
 
     ```bash
     # Old:
@@ -292,7 +293,7 @@ upgrading.
     local memory_script="${repo_root_native%[\\/]}${sep}engram_mcp${sep}memory_mcp.py"
     ```
 
-13. ☑ Update `setup/setup.html`
+13. ☐ Update `setup/setup.html`
 
     ```javascript
     // Old:
@@ -301,21 +302,21 @@ upgrading.
     var memoryScript = trimmedRepo + sep + 'engram_mcp' + sep + 'memory_mcp.py'
     ```
 
-14. ☑ Update `HUMANS/tooling/mcp-config-example.json`
+14. ☐ Update `HUMANS/tooling/mcp-config-example.json`
 
     ```json
     // Old: "args": ["~/code/personal/agent-memory-seed/HUMANS/tooling/scripts/memory_mcp.py"]
     // New: "args": ["~/code/personal/agent-memory-seed/engram_mcp/memory_mcp.py"]
     ```
 
-15. ☑ Update `HUMANS/tooling/agent-memory-capabilities.toml`
+15. ☐ Update `HUMANS/tooling/agent-memory-capabilities.toml`
 
     ```toml
     # Old: mcp_entrypoint = "HUMANS/tooling/scripts/memory_mcp.py"
     # New: mcp_entrypoint = "engram_mcp/memory_mcp.py"
     ```
 
-16. ☑ Update `.codex/config.toml`
+16. ☐ Update `.codex/config.toml`
 
     The committed config contains user-specific absolute paths. Update the
     `args` path to point at `engram_mcp/memory_mcp.py` and add a comment that this file
@@ -323,7 +324,7 @@ upgrading.
     version with absolute paths is a known issue tracked separately — see
     P3-C of the remediation plan.)
 
-17. ☑ Update `HUMANS/docs/INTEGRATIONS.md`
+17. ☐ Update `HUMANS/docs/INTEGRATIONS.md`
 
     The Python library import example:
     ```python
@@ -331,7 +332,7 @@ upgrading.
     # New: from engram_mcp.agent_memory_mcp.server import create_mcp
     ```
 
-18. ☑ Update `worktree-integration.md` plan references
+18. ☐ Update `worktree-integration.md` plan references
 
     Phase 1, item 6 of the worktree plan references
     `<worktree-path>/HUMANS/tooling/scripts/memory_mcp.py` as the MCP entrypoint.
@@ -345,7 +346,7 @@ upgrading.
     `engram_mcp/tests/__init__.py`, `engram_mcp/tests/test_memory_mcp.py`,
     `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
 
-20. ☑ Update CI workflow (``.github/workflows/ci.yml``)
+20. ☐ Update CI workflow (``.github/workflows/ci.yml``)
 
     Update the `ruff` lint paths and any explicit file paths from
     `tools/agent_memory_mcp/` to `engram_mcp/agent_memory_mcp/`.
@@ -637,4 +638,3 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 | 2026-03-19 | Started Phase 0 with an additive `engram_mcp` namespace bootstrap, added the `engram-mcp` CLI entrypoint in `pyproject.toml`, and verified the new import path plus the MCP-focused test suite (`58 passed`) |
 | 2026-03-20 | Completed Phase 0 item 4: `tools/agent_memory_mcp/__init__.py` converted to compat shim re-exporting from `engram_mcp.agent_memory_mcp`. Phase 0 fully complete. 190 tests green. |
 | 2026-03-20 | Completed Phase 0 items 1–3 and 5–6: physical files confirmed in `engram_mcp/agent_memory_mcp/`, `server_main.py` present, `pyproject.toml` updated (CLI entrypoint + both package paths in find config + `engram_mcp/tests` in pytest paths). Fixed 56 missing paths in `setup/initial-commit-paths.txt`, removed 12 stale promoted `_unverified/ai-history/` entries, fixed `origin_session` format in 21 knowledge files. 190 tests passing. `engram_mcp.agent_memory_mcp.server_main:main` importable. Remaining: item 4 (compat shim in `tools/`) before Phase 1 begins. |
-| 2026-03-19 | Completed Phase 1 items 7–10 and most of Phase 2 path updates: moved the path-based entrypoint to `engram_mcp/memory_mcp.py`, relocated MCP tests to `engram_mcp/tests/`, updated setup/config/doc/worktree references, refreshed the initial-commit manifest, and verified the focused MCP + setup-flow test slice (`90 passed`). Remaining: item 19/21 manifest-shim cleanup and a full-suite run after unrelated validator errors are resolved. |

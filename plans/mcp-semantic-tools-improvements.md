@@ -7,6 +7,7 @@ source: agent-generated
 status: active
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Implementation Plan: MCP Tier 1 Semantic Tool Improvements

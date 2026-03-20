@@ -1,12 +1,13 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research reasoning models — o1/o3, DeepSeek R1, chain-of-thought vs. process reward models, test-time compute scaling"
+next_action: "Phase 2 — agentic frameworks, inference-time compute, foundation model governance, hardware/efficiency topics"
 origin_session: chats/2026/03/19/chat-002
 source: agent-generated
 status: active
 trust: medium
 type: research-plan
+category: research
 ---
 
 # Research Plan: Frontier AI Topics
