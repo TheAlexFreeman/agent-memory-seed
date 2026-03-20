@@ -36,12 +36,13 @@ Blocks: none; structural prerequisites are complete.
 
 ### Research plans
 
-### `memetic-security-research.md` · status: active · trust: medium · **TOP PRIORITY**
+### `cognitive-neuroscience-memory-research.md` · status: not-started · trust: medium · **TOP PRIORITY**
 
-Detail: plans/memetic-security-research.md
-Scope: Memetic security surface of Engram — injection vectors, drift phenomenology, capability-robustness coupling, mitigation audit, design implications.
-Progress: 4/18 (Phase 1 complete)
-Next: Phase 2, item 2.1 — trust tier system audit
+Detail: plans/cognitive-neuroscience-memory-research.md
+Scope: Empirical memory science — encoding, consolidation, retrieval, episodic/semantic distinction, reconsolidation, false memory formation.
+Progress: 0/11
+Next: Phase 1, item 1.1 — Tulving's episodic/semantic distinction
+Blocks: none. Now highest-priority research after memetic-security completion; directly grounds trust-weighted retrieval and curation specs from memetic-security Phase 4.
 
 
 ### `ai-frontier-research.md` · status: active · trust: medium
@@ -54,11 +55,11 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 
 ### Research queue
 
-Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design or feed into ongoing memetic-security work. Tier 2 plans build core intellectual infrastructure for the central intelligence question. Tier 3 plans are important but less immediately actionable.
+Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (cognitive-neuroscience grounds curation/retrieval, cultural-evolution extends memetic-security insights). Tier 2 builds core intellectual infrastructure. Tier 3 is important but less immediately actionable.
 
 **Tier 1 — System-Relevant**
-- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic. Grounds curation design (trust decay, retrieval weighting, consolidation) in empirical memory science.
-- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept. Natural companion to memetic-security research; explains propagation mechanisms for memetic threats.
+- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic. Grounds curation design (trust decay, retrieval weighting, consolidation) in empirical memory science. Priority increased: memetic-security design specs (Phase 4) reference trust-weighted retrieval and consolidation models that this plan would empirically ground.
+- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept. Natural companion to the now-complete memetic-security research; explains propagation mechanisms for memetic threats.
 
 **Tier 2 — Core Intellectual Infrastructure**
 - `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy. Mathematical substrate for the compression-intelligence thesis; connects to AIT, MDL, and model evaluation.
@@ -72,6 +73,7 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design or 
 
 ## Recent completions
 
+- [memetic-security-research.md](memetic-security-research.md) — completed 2026-03-20; 18/18 items across 5 phases (threat taxonomy, mitigation audit, comparative analysis, design implications, irreducible core); 8 knowledge files in `_unverified/system-notes/` and `_unverified/ai-frontier/`; pending human review.
 - [ai-paradigm-genealogy-research.md](ai-paradigm-genealogy-research.md) — completed 2026-03-18; genealogy of AI paradigm formation (11 files, perceptrons through transformers); pending promotion review.
 - [worktree-integration.md](worktree-integration.md) — completed 2026-03-20; worktree deployment flow now has a deployed-worktree validator profile, validator-backed init-worktree E2E coverage, and dedicated CI enforcement.
 - [mcp-semantic-tools-improvements.md](mcp-semantic-tools-improvements.md) — completed 2026-03-20; Tier 1 semantic tool gaps closed across scratchpad targeting, review-queue lifecycle, skill updates, composite session recording, and ACCESS aggregation compaction.

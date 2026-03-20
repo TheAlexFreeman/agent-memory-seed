@@ -1,10 +1,10 @@
 ---
 created: 2026-03-20
 last_verified: 2026-03-20
-next_action: "Phase 2, item 2.1 — trust tier system audit: document what the current trust tier system enforces and what it doesn't"
+next_action: "Complete — all 18 items done. Human review of knowledge/_unverified/system-notes/memetic-security-*.md files recommended."
 origin_session: chats/2026/03/20/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 category: research
@@ -297,31 +297,31 @@ What cannot be engineered away.
 - [x] 1.4 The memory system as specific amplifier
 
 ### Phase 2 — Existing Mitigations and Their Limits
-- [ ] 2.1 Trust tier system audit
-- [ ] 2.2 Validator and test suite coverage
-- [ ] 2.3 Identity anchor files as attack targets
-- [ ] 2.4 Git audit trail: what it provides and what it requires
-- [ ] 2.5 Human review gate: actual vs. designed protection
+- [x] 2.1 Trust tier system audit
+- [x] 2.2 Validator and test suite coverage
+- [x] 2.3 Identity anchor files as attack targets
+- [x] 2.4 Git audit trail: what it provides and what it requires
+- [x] 2.5 Human review gate: actual vs. designed protection
 
 ### Phase 3 — Comparative Analysis
-- [ ] 3.1 Prompt injection defenses in production systems
-- [ ] 3.2 Constitutional AI and bright lines
-- [ ] 3.3 Multi-agent trust and federated coordination
-- [ ] 3.4 Memory system security in the literature
+- [x] 3.1 Prompt injection defenses in production systems
+- [x] 3.2 Constitutional AI and bright lines
+- [x] 3.3 Multi-agent trust and federated coordination
+- [x] 3.4 Memory system security in the literature
 
 ### Phase 4 — Design Implications
-- [ ] 4.1 Contradiction detection on write (spec)
-- [ ] 4.2 Trust-weighted retrieval (spec)
-- [ ] 4.3 Identity file integrity check (spec)
-- [ ] 4.4 Curation norm as security practice
-- [ ] 4.5 Session write review (spec)
+- [x] 4.1 Contradiction detection on write (spec)
+- [x] 4.2 Trust-weighted retrieval (spec)
+- [x] 4.3 Identity file integrity check (spec)
+- [x] 4.4 Curation norm as security practice
+- [x] 4.5 Session write review (spec)
 
 ### Phase 5 — The Irreducible Core
-- [ ] 5.1 Capability-robustness tradeoff (formal statement attempt)
-- [ ] 5.2 Social and institutional residual
-- [ ] 5.3 The self-referential problem
+- [x] 5.1 Capability-robustness tradeoff (formal statement attempt)
+- [x] 5.2 Social and institutional residual
+- [x] 5.3 The self-referential problem
 
-**Progress:** 4/18 items
+**Progress:** 18/18 items ✓ COMPLETE
 
 ---
 
