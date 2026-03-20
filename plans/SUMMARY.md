@@ -73,11 +73,12 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 **Tier 3 — Rich but Lower Urgency** ← **CURRENT PRIORITY**
 - `personal-identity-memory-research.md` — 12/12 ✓ COMPLETE. Locke → Hume → four-dimensionalism → Parfit → Ricoeur → MacIntyre → Schechtman → AI identity synthesis/failure modes/design recommendations.
-- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism. Normative frameworks and moral realism; relevant to alignment theory but less directly system-relevant. **TOP PRIORITY** (next natural research plan after personal-identity completion).
-- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium. Mathematical foundations for multi-agent coordination and mechanism design.
+- `ethics-metaethics-research.md` — 13/13 ✓ COMPLETE. Classical frameworks (utilitarianism, Kantian deontology, virtue ethics, contractualism), Parfit's *Reasons and Persons* (self-defeating theories, consequentialism, population ethics, collective action), metaethics (moral realism, anti-realism/expressivism, moral epistemology), applied AI ethics (moral status/welfare, responsibility attribution, algorithmic fairness).
+- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium. Mathematical foundations for multi-agent coordination and mechanism design. **TOP PRIORITY** (next natural research plan after ethics-metaethics completion).
 
 ## Recent completions
 
+- [ethics-metaethics-research.md](ethics-metaethics-research.md) — completed 2026-03-20; 13/13 items across 4 phases (classical frameworks, Parfit's Reasons and Persons, metaethics, applied AI ethics); 13 knowledge files in `_unverified/philosophy/ethics/`; pending human review.
 - [personal-identity-memory-research.md](personal-identity-memory-research.md) — completed 2026-03-20; 12/12 items across 4 phases (early modern debate, Parfit's reductionism, narrative identity, AI identity synthesis); 12 knowledge files in `_unverified/philosophy/personal-identity/`; pending human review.
 - [phenomenology-embodied-cognition-research.md](phenomenology-embodied-cognition-research.md) — completed 2026-03-20; 12/12 items across 5 phases (Husserlian foundations, Heidegger, Merleau-Ponty, 4E cognition, application/synthesis); 12 knowledge files in `_unverified/philosophy/phenomenology/`; pending human review.
 - [formal-logic-foundations-research.md](formal-logic-foundations-research.md) — completed 2026-03-20; 11/11 items across 4 phases (classical logic, incompleteness/undecidability, type theory, set theory/alternatives); 11 knowledge files in `_unverified/mathematics/logic-foundations/`; pending human review.

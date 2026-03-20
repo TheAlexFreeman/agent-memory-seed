@@ -1,10 +1,10 @@
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research classical utilitarian foundations — Bentham, Mill, the greatest-happiness principle"
+next_action: "Complete — all 13 items done. Human review of knowledge/_unverified/philosophy/ethics/ files recommended."
 origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -154,28 +154,28 @@ Files go in `knowledge/_unverified/philosophy/ethics/` with standard frontmatter
 ## Progress tracking
 
 ### Phase 1 — Classical frameworks
-- [ ] 1.1 Utilitarianism: Bentham to Singer
-- [ ] 1.2 Kantian deontology
-- [ ] 1.3 Virtue ethics
-- [ ] 1.4 Contractualism
+- [x] 1.1 Utilitarianism: Bentham to Singer
+- [x] 1.2 Kantian deontology
+- [x] 1.3 Virtue ethics
+- [x] 1.4 Contractualism
 
 ### Phase 2 — Parfit
-- [ ] 2.1 Self-defeating theories
-- [ ] 2.2 Consequentialism implications
-- [ ] 2.3 Population ethics
-- [ ] 2.4 What we together do
+- [x] 2.1 Self-defeating theories
+- [x] 2.2 Consequentialism implications
+- [x] 2.3 Population ethics
+- [x] 2.4 What we together do
 
 ### Phase 3 — Metaethics
-- [ ] 3.1 Moral realism
-- [ ] 3.2 Anti-realism: expressivism and error theory
-- [ ] 3.3 Moral epistemology
+- [x] 3.1 Moral realism
+- [x] 3.2 Anti-realism: expressivism and error theory
+- [x] 3.3 Moral epistemology
 
 ### Phase 4 — Applied AI ethics
-- [ ] 4.1 Moral status and AI welfare
-- [ ] 4.2 Responsibility attribution
-- [ ] 4.3 Algorithmic fairness
+- [x] 4.1 Moral status and AI welfare
+- [x] 4.2 Responsibility attribution
+- [x] 4.3 Algorithmic fairness
 
-**Progress:** 0/13 items complete
+**Progress:** 13/13 items complete
 
 ---
 
