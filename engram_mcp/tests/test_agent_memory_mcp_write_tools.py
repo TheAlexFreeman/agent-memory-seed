@@ -713,6 +713,75 @@ Structured.
                 )
             )
 
+    def test_memory_record_session_writes_summary_reflection_and_access_in_one_commit(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "chats/SUMMARY.md": "# Chats\n## Structure\n",
+                "knowledge/topic.md": "# Topic\n",
+                "plans/demo.md": "# Demo\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_record_session"](
+                session_id="chats/2026/03/20/chat-002",
+                summary="# Session Summary\n\nDid the work.\n",
+                reflection="Observed a cleaner wrap-up path.",
+                key_topics="semantic-tools,wrapup",
+                access_entries=[
+                    {
+                        "file": "knowledge/topic.md",
+                        "task": "session wrap-up",
+                        "helpfulness": 0.8,
+                        "note": "Relevant context for summary.",
+                    },
+                    {
+                        "file": "plans/demo.md",
+                        "task": "session wrap-up",
+                        "helpfulness": 0.6,
+                        "note": "Referenced current work.",
+                    },
+                ],
+            )
+        )
+        payload = json.loads(raw)
+
+        session_summary = (
+            repo_root / "chats" / "2026" / "03" / "20" / "chat-002" / "SUMMARY.md"
+        ).read_text(encoding="utf-8")
+        reflection = (
+            repo_root / "chats" / "2026" / "03" / "20" / "chat-002" / "reflection.md"
+        ).read_text(encoding="utf-8")
+        chats_summary = (repo_root / "chats" / "SUMMARY.md").read_text(encoding="utf-8")
+        knowledge_access = [
+            json.loads(line)
+            for line in (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        plans_access = [
+            json.loads(line)
+            for line in (repo_root / "plans" / "ACCESS.jsonl").read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        log_count = subprocess.run(
+            ["git", "rev-list", "--count", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        self.assertEqual(payload["commit_message"], "[chat] Record session chats/2026/03/20/chat-002")
+        self.assertEqual(payload["new_state"]["session_id"], "chats/2026/03/20/chat-002")
+        self.assertIn("key_topics:", session_summary)
+        self.assertIn("semantic-tools", session_summary)
+        self.assertIn("## Session reflection\n\nObserved a cleaner wrap-up path.\n", reflection)
+        self.assertIn("chats/2026/03/20/chat-002/", chats_summary)
+        self.assertEqual(knowledge_access[0]["session_id"], "chats/2026/03/20/chat-002")
+        self.assertEqual(plans_access[0]["session_id"], "chats/2026/03/20/chat-002")
+        self.assertEqual(log_count, "2")
+
     def test_memory_append_scratchpad_accepts_dated_slug_and_creates_file(self) -> None:
         repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Current\n"})
         tools = self._create_tools(repo_root)

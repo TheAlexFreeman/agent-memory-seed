@@ -111,6 +111,167 @@ def _append_markdown_block(existing: str, block: str) -> str:
     return trimmed_existing + "\n\n---\n\n" + trimmed_block + "\n"
 
 
+def _build_chat_summary_content(session_id: str, summary: str, key_topics: str = "") -> str:
+    from ...frontmatter_utils import today_str
+
+    today = today_str()
+    fm_dict: dict[str, object] = {
+        "session": session_id,
+        "date": today,
+        "trust": "medium",
+        "source": "agent-generated",
+    }
+    topics = [topic.strip() for topic in key_topics.split(",") if topic.strip()]
+    if topics:
+        fm_dict["key_topics"] = topics
+
+    import frontmatter as fmlib  # type: ignore[import-untyped]
+
+    post = fmlib.Post(summary, **fm_dict)
+    return fmlib.dumps(post)
+
+
+def _update_chats_summary_index(content: str, session_id: str, recorded_date: str) -> str | None:
+    if session_id in content:
+        return None
+    mention = f"\nSee `{session_id}/` for session recorded {recorded_date}.\n"
+    if "## Structure" in content:
+        return content.replace("## Structure", mention + "\n## Structure", 1)
+    return content.rstrip() + mention
+
+
+def _build_reflection_content(reflection: str) -> str:
+    trimmed = reflection.strip()
+    if trimmed.startswith("## "):
+        return trimmed + "\n"
+    return "## Session reflection\n\n" + trimmed + "\n"
+
+
+def _build_structured_reflection_content(
+    memory_retrieved: str,
+    memory_influence: str,
+    outcome_quality: str,
+    gaps_noticed: str,
+    system_observations: str = "",
+) -> str:
+    lines = [
+        "## Session reflection\n",
+        "\n",
+        f"**Memory retrieved:** {memory_retrieved}\n",
+        f"**Memory influence:** {memory_influence}\n",
+        f"**Outcome quality:** {outcome_quality}\n",
+        f"**Gaps noticed:** {gaps_noticed}\n",
+    ]
+    if system_observations:
+        lines.append(f"**System observations:** {system_observations}\n")
+    return "".join(lines)
+
+
+def _normalize_access_entry(
+    repo,
+    root: Path,
+    raw_entry: object,
+    *,
+    forced_session_id: str,
+) -> tuple[str, str]:
+    import json as _json
+
+    from ...errors import ValidationError
+    from ...frontmatter_utils import today_str
+
+    if not isinstance(raw_entry, dict):
+        raise ValidationError("access_entries must contain objects with file/task/helpfulness/note")
+
+    file_value = raw_entry.get("file")
+    task_value = raw_entry.get("task")
+    helpfulness_value = raw_entry.get("helpfulness")
+    note_value = raw_entry.get("note")
+    category_value = raw_entry.get("category")
+
+    if not isinstance(task_value, str) or not task_value.strip():
+        raise ValidationError("access entry task must be a non-empty string")
+    if not isinstance(note_value, str) or not note_value.strip():
+        raise ValidationError("access entry note must be a non-empty string")
+    if not isinstance(helpfulness_value, (int, float)):
+        raise ValidationError("access entry helpfulness must be a float between 0.0 and 1.0")
+    helpfulness = float(helpfulness_value)
+    if not (0.0 <= helpfulness <= 1.0):
+        raise ValidationError(
+            f"access entry helpfulness must be between 0.0 and 1.0, got {helpfulness}"
+        )
+
+    if not isinstance(file_value, str) or not file_value.strip():
+        raise ValidationError("access entry file must be a non-empty repo-relative path")
+    file_path, _ = resolve_repo_path(repo, file_value, field_name="file")
+    access_jsonl = _access_jsonl_for(file_path)
+    if access_jsonl is None:
+        root_part = PurePosixPath(file_path).parts[0] if file_path else "(empty)"
+        raise ValidationError(
+            f"Cannot log access for '{file_path}': '{root_part}/' is not an access-tracked directory. Supported roots: {sorted(_ACCESS_ROOTS)}"
+        )
+
+    if category_value is not None:
+        category = validate_slug(str(category_value), field_name="category")
+        categories = _load_task_categories(root)
+        if not categories:
+            raise ValidationError(
+                "category cannot be set until meta/task-categories.md exists with a controlled vocabulary"
+            )
+        if category not in categories:
+            raise ValidationError(f"category must be one of {sorted(categories)}, got: {category}")
+    else:
+        category = None
+
+    entry: dict[str, object] = {
+        "file": file_path,
+        "date": today_str(),
+        "task": task_value.strip(),
+        "helpfulness": round(helpfulness, 2),
+        "note": note_value.strip(),
+        "session_id": forced_session_id,
+    }
+    if category is not None:
+        entry["category"] = category
+    return access_jsonl, _json.dumps(entry, ensure_ascii=False)
+
+
+def _append_access_entries(
+    repo,
+    root: Path,
+    access_entries: list[dict[str, object]] | None,
+    *,
+    session_id: str,
+) -> list[str]:
+    if not access_entries:
+        return []
+
+    grouped: dict[str, list[str]] = {}
+    for raw_entry in access_entries:
+        access_jsonl, line = _normalize_access_entry(
+            repo,
+            root,
+            raw_entry,
+            forced_session_id=session_id,
+        )
+        grouped.setdefault(access_jsonl, []).append(line)
+
+    changed_files: list[str] = []
+    for access_jsonl, lines in grouped.items():
+        abs_access = root / access_jsonl
+        abs_access.parent.mkdir(parents=True, exist_ok=True)
+        existing = abs_access.read_text(encoding="utf-8") if abs_access.exists() else ""
+        payload = "\n".join(lines)
+        updated = (
+            existing.rstrip("\n") + "\n" + payload + "\n"
+            if existing.strip()
+            else payload + "\n"
+        )
+        abs_access.write_text(updated, encoding="utf-8")
+        repo.add(access_jsonl)
+        changed_files.append(access_jsonl)
+    return changed_files
+
+
 def _resolve_scratchpad_target(target: str) -> str:
     target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
     if target in target_map:
@@ -421,6 +582,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_record_chat_summary(
         session_id: str, summary: str, key_topics: str = ""
     ) -> str:
+        """Record a chat summary.
+
+        For full session wrap-up, prefer memory_record_session so summary,
+        reflection, and ACCESS writes land in a single commit.
+        """
         from ...frontmatter_utils import today_str
         from ...models import MemoryWriteResult
 
@@ -435,20 +601,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         abs_session_summary.parent.mkdir(parents=True, exist_ok=True)
 
         today = today_str()
-        fm_dict: dict[str, object] = {
-            "session": session_id,
-            "date": today,
-            "trust": "medium",
-            "source": "agent-generated",
-        }
-        topics = [topic.strip() for topic in key_topics.split(",") if topic.strip()]
-        if topics:
-            fm_dict["key_topics"] = topics
-
-        import frontmatter as fmlib  # type: ignore[import-untyped]
-
-        post = fmlib.Post(summary, **fm_dict)
-        abs_session_summary.write_text(fmlib.dumps(post), encoding="utf-8")
+        abs_session_summary.write_text(
+            _build_chat_summary_content(session_id, summary, key_topics),
+            encoding="utf-8",
+        )
         repo.add(session_summary_rel)
 
         files_changed = [session_summary_rel]
@@ -456,15 +612,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         abs_chats_summary = root / chats_summary_rel
         if abs_chats_summary.exists():
             chats_content = abs_chats_summary.read_text(encoding="utf-8")
-            if session_id not in chats_content:
-                mention = f"\nSee `{session_id}/` for session recorded {today}.\n"
-                if "## Structure" in chats_content:
-                    chats_content = chats_content.replace(
-                        "## Structure", mention + "\n## Structure", 1
-                    )
-                else:
-                    chats_content = chats_content.rstrip() + mention
-                abs_chats_summary.write_text(chats_content, encoding="utf-8")
+            updated_chats_content = _update_chats_summary_index(chats_content, session_id, today)
+            if updated_chats_content is not None:
+                abs_chats_summary.write_text(updated_chats_content, encoding="utf-8")
                 repo.add(chats_summary_rel)
                 files_changed.append(chats_summary_rel)
 
@@ -713,6 +863,90 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return result.to_json()
 
     @mcp.tool(
+        name="memory_record_session",
+        annotations=_tool_annotations(
+            title="Record Full Session",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_record_session(
+        session_id: str,
+        summary: str,
+        reflection: str | None = None,
+        key_topics: str = "",
+        access_entries: list[dict[str, object]] | None = None,
+    ) -> str:
+        """Record a full session in one commit.
+
+        Writes the session summary, optional reflection, chat index update,
+        and optional ACCESS entries atomically under a single [chat] commit.
+        """
+        from ...frontmatter_utils import today_str
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        validate_session_id(session_id)
+        session_summary_rel, abs_session_summary = resolve_repo_path(
+            repo, f"{session_id}/SUMMARY.md", field_name="session_id"
+        )
+        abs_session_summary.parent.mkdir(parents=True, exist_ok=True)
+
+        files_changed = [session_summary_rel]
+        abs_session_summary.write_text(
+            _build_chat_summary_content(session_id, summary, key_topics),
+            encoding="utf-8",
+        )
+        repo.add(session_summary_rel)
+
+        reflection_rel: str | None = None
+        if reflection is not None and reflection.strip():
+            reflection_rel = f"{session_id}/reflection.md"
+            reflection_abs = root / reflection_rel
+            reflection_abs.parent.mkdir(parents=True, exist_ok=True)
+            reflection_abs.write_text(_build_reflection_content(reflection), encoding="utf-8")
+            repo.add(reflection_rel)
+            files_changed.append(reflection_rel)
+
+        chats_summary_rel = "chats/SUMMARY.md"
+        abs_chats_summary = root / chats_summary_rel
+        if abs_chats_summary.exists():
+            updated_chats_content = _update_chats_summary_index(
+                abs_chats_summary.read_text(encoding="utf-8"),
+                session_id,
+                today_str(),
+            )
+            if updated_chats_content is not None:
+                abs_chats_summary.write_text(updated_chats_content, encoding="utf-8")
+                repo.add(chats_summary_rel)
+                files_changed.append(chats_summary_rel)
+
+        files_changed.extend(
+            path
+            for path in _append_access_entries(
+                repo,
+                root,
+                access_entries,
+                session_id=session_id,
+            )
+            if path not in files_changed
+        )
+
+        commit_msg = f"[chat] Record session {session_id}"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=files_changed,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"session_id": session_id},
+        )
+        return result.to_json()
+
+    @mcp.tool(
         name="memory_record_reflection",
         annotations=_tool_annotations(
             title="Record Session Reflection",
@@ -730,6 +964,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         gaps_noticed: str,
         system_observations: str = "",
     ) -> str:
+        """Record a structured reflection.
+
+        For full session wrap-up, prefer memory_record_session so summary,
+        reflection, and ACCESS writes land in a single commit.
+        """
         from ...errors import ValidationError
         from ...models import MemoryWriteResult
 
@@ -750,18 +989,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 f"Reflection already exists for {session_id}. Edit it directly with memory_edit if an update is needed."
             )
 
-        lines = [
-            "## Session reflection\n",
-            "\n",
-            f"**Memory retrieved:** {memory_retrieved}\n",
-            f"**Memory influence:** {memory_influence}\n",
-            f"**Outcome quality:** {outcome_quality}\n",
-            f"**Gaps noticed:** {gaps_noticed}\n",
-        ]
-        if system_observations:
-            lines.append(f"**System observations:** {system_observations}\n")
-
-        reflection_abs.write_text("".join(lines), encoding="utf-8")
+        reflection_abs.write_text(
+            _build_structured_reflection_content(
+                memory_retrieved,
+                memory_influence,
+                outcome_quality,
+                gaps_noticed,
+                system_observations,
+            ),
+            encoding="utf-8",
+        )
         repo.add(reflection_rel)
         commit_msg = f"[chat] Add session reflection for {session_id}"
         commit_result = repo.commit(commit_msg)
@@ -963,6 +1200,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_flag_for_review": memory_flag_for_review,
         "memory_resolve_review_item": memory_resolve_review_item,
         "memory_log_access": memory_log_access,
+        "memory_record_session": memory_record_session,
         "memory_record_reflection": memory_record_reflection,
         "memory_record_periodic_review": memory_record_periodic_review,
         "memory_revert_commit": memory_revert_commit,

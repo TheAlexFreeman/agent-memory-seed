@@ -41,6 +41,7 @@ semantic_extensions = [
   "memory_append_scratchpad",
   "memory_update_skill",
   "memory_update_identity_trait",
+  "memory_record_session",
   "memory_record_chat_summary",
   "memory_record_reflection",
   "memory_record_periodic_review",
@@ -358,6 +359,14 @@ tool = "memory_record_chat_summary"
 tier = "semantic"
 operation_group = "chat"
 change_class = "automatic"
+notes = "Superseded for full wrap-up by memory_record_session; kept for summary-only writes."
+
+[desktop_operations.record_session]
+status = "implemented"
+tool = "memory_record_session"
+tier = "semantic"
+operation_group = "chat"
+change_class = "automatic"
 
 [desktop_operations.flag_for_review]
 status = "implemented"
@@ -388,6 +397,7 @@ tool = "memory_record_reflection"
 tier = "semantic"
 operation_group = "chat"
 change_class = "automatic"
+notes = "Superseded for full wrap-up by memory_record_session; kept for reflection-only writes."
 
 [desktop_operations.record_periodic_review]
 status = "implemented"
@@ -598,6 +608,27 @@ owns_review_queue = []
 result_fields = ["session_id"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["StagingError"]
+superseded_by = "memory_record_session"
+
+[operations.memory_record_session]
+group = "chat"
+tier = "semantic"
+change_class = "automatic"
+commit_model = "auto_commit"
+commit_category_hint = "chat"
+writes = [
+  "chats/YYYY/MM/DD/chat-NNN/SUMMARY.md",
+  "chats/YYYY/MM/DD/chat-NNN/reflection.md",
+  "chats/SUMMARY.md",
+  "{folder}/ACCESS.jsonl",
+]
+owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
+owns_summaries = ["chats/SUMMARY.md"]
+owns_access_logs = ["{folder}/ACCESS.jsonl"]
+owns_review_queue = []
+result_fields = ["session_id"]
+fallback_tools = ["memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
 
 [operations.memory_flag_for_review]
 group = "governance"
@@ -658,6 +689,7 @@ owns_review_queue = []
 result_fields = ["reflection_path"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
+superseded_by = "memory_record_session"
 
 [operations.memory_record_periodic_review]
 group = "governance"

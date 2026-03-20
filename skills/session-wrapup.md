@@ -2,7 +2,7 @@
 source: user-stated
 origin_session: manual
 created: 2026-03-16
-last_verified: 2026-03-16
+last_verified: 2026-03-20
 trust: high
 ---
 
@@ -21,9 +21,11 @@ When local agent-memory MCP tools are available, prefer them for memory reads, s
 
 ## Steps
 
-### 1. Write the chat summary
+### 1. Record the session atomically
 
-- Prefer local agent-memory MCP write tools when they can perform the needed write cleanly; otherwise use direct file writes.
+- Prefer `memory_record_session` when the local agent-memory MCP surface is available. It should write the session `SUMMARY.md`, optional `reflection.md`, update `chats/SUMMARY.md`, and append ACCESS entries in one commit.
+- If the composite tool is unavailable, fall back to the individual governed writes or direct file writes as needed.
+
 Create the session's chat folder if it doesn't exist: `chats/YYYY/MM/DD/chat-NNN/`.
 
 Write `SUMMARY.md` following the compression hierarchy in README.md § "Summaries":
@@ -32,26 +34,22 @@ Write `SUMMARY.md` following the compression hierarchy in README.md § "Summarie
 - Action items (for the user or for future sessions).
 - Notable context that a future agent should know.
 
-### 2. Write the reflection note
+If writing a reflection, follow the canonical format in README.md § "Session reflection".
 
-Write `reflection.md` in the same chat folder, following the canonical format in README.md § "Session reflection".
+When ACCESS entries are available, include them in the same composite call so `session_id` is injected automatically.
 
-### 3. Flush ACCESS entries
-
-Append entries to the appropriate `ACCESS.jsonl` files for every content file retrieved during this session. Include `session_id` now that the chat folder path is known. Follow the format and helpfulness scoring in README.md § "Memory curation".
-
-### 4. Update summaries if warranted
+### 2. Update summaries if warranted
 
 If this session produced significant new knowledge, identity changes, or skill refinements:
 - Update the relevant folder's `SUMMARY.md` to reflect the new content.
 - For identity or meta changes, ensure they were proposed and approved per `meta/update-guidelines.md`.
 
-### 5. Check for system maintenance
+### 3. Check for system maintenance
 
 - If any ACCESS.jsonl has hit the aggregation trigger (see `meta/quick-reference.md`), load `meta/curation-algorithms.md` and run aggregation now, or flag it for the next session start.
 - If periodic review is overdue, add a reminder to `meta/review-queue.md`.
 
-### 6. Produce deferred actions (if read-only)
+### 4. Produce deferred actions (if read-only)
 
 If write access is unavailable, produce a deferred-action summary listing:
 - All ACCESS entries that should be appended.
@@ -60,7 +58,7 @@ If write access is unavailable, produce a deferred-action summary listing:
 
 Present this using the format in `meta/update-guidelines.md` § "How to communicate deferred actions". If this is your first read-only session, load `meta/deferred-action-template.md` for a worked example. (`HUMANS/tooling/scripts/onboard-export.sh` is for first-session onboarding only; it does not apply here.)
 
-### 7. Sign off
+### 5. Sign off
 
 Brief, warm sign-off. Reference something specific from the session to demonstrate continuity — not a generic "have a great day."
 
