@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: Phase 0, item 1 — rename `tools/` → `engram_mcp/` and update package metadata.
+next_action: Phase 0, item 1 — complete the physical move from `tools/` to `engram_mcp/` now that the additive namespace bootstrap is in place.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -133,20 +133,29 @@ virtual environment resolves `import mcp` to site-packages. The revised target
 name is therefore `engram_mcp/` on disk and `engram-mcp` in user-facing labels,
 which avoids both the namespace collision and invalid hyphenated Python imports.
 
+Implementation note: begin Phase 0 with an additive `engram_mcp/` namespace
+bootstrap that re-exports the current `tools.agent_memory_mcp` runtime. Once the
+new import path, CLI entrypoint, and test paths are stable, complete the physical
+move and invert the compatibility shim so `tools/` becomes the temporary alias.
+
 ### Items
 
-1. ☐ Rename the directory
+1. ☐ Bootstrap the new namespace and complete the directory rename
 
-    `tools/` → `engram_mcp/` (file copy + delete since the sandbox restricts `rename()`).
-    The subdirectory `tools/agent_memory_mcp/` becomes `engram_mcp/agent_memory_mcp/`.
-    The top-level `tools/__init__.py` becomes `engram_mcp/__init__.py`.
+    Start by creating `engram_mcp/` and `engram_mcp/agent_memory_mcp/` as a
+    forward-compat namespace that re-exports `tools.agent_memory_mcp`.
+    Then perform the physical move: `tools/` → `engram_mcp/` (file copy + delete
+    since the sandbox restricts `rename()`). The subdirectory
+    `tools/agent_memory_mcp/` becomes `engram_mcp/agent_memory_mcp/`. The
+    top-level `tools/__init__.py` becomes the temporary compatibility shim once
+    the new path is authoritative.
 
 2. ☐ Update `pyproject.toml` package discovery and add CLI entrypoint
 
    ```toml
    [tool.setuptools.packages.find]
    where = ["."]
-     include = ["engram_mcp*"]   # was "tools*"
+    include = ["tools*", "engram_mcp*"]   # transitional; remove tools* after cutover
 
    [project.scripts]
      engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
@@ -174,11 +183,12 @@ which avoids both the namespace collision and invalid hyphenated Python imports.
        main()
    ```
 
-4. ☐ Add a compat shim at `tools/__init__.py` (temporary)
+4. ☐ Flip compatibility after the new path is authoritative
 
-     After moving `tools/` to `engram_mcp/`, any code that still imports from
-   `tools.agent_memory_mcp.*` would immediately break. To keep the test suite
-   green throughout the transition, create a shim:
+    After the `engram_mcp.*` import path is live and the underlying files have
+    moved, any code that still imports from `tools.agent_memory_mcp.*` would
+    immediately break. To keep the test suite green throughout the transition,
+    create a shim:
 
    ```
    tools/
@@ -624,3 +634,4 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 |---|---|
 | 2026-03-19 | Plan created following design discussion on MCP module growth and placement |
 | 2026-03-19 | Resolved the naming collision by adopting `engram-mcp` as the user-facing name and `engram_mcp/` as the Python package path for the reorganization plan |
+| 2026-03-19 | Started Phase 0 with an additive `engram_mcp` namespace bootstrap, added the `engram-mcp` CLI entrypoint in `pyproject.toml`, and verified the new import path plus the MCP-focused test suite (`58 passed`) |

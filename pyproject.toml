@@ -9,27 +9,22 @@ description = "Git-versioned Markdown memory system with MCP server for LLM agen
 readme = "README.md"
 requires-python = ">=3.10"
 
+[project.scripts]
+engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
+
 # Core runtime: only what the MCP server itself needs
 dependencies = []
 
 [project.optional-dependencies]
 # Install with: pip install -e ".[server]"
-server = [
-    "mcp>=1.0",
-    "python-frontmatter>=1.1",
-]
+server = ["mcp>=1.0", "python-frontmatter>=1.1"]
 
 # Install with: pip install -e ".[dev]"
-dev = [
-    "pytest>=8.0",
-    "ruff>=0.4",
-    "mcp>=1.0",
-    "python-frontmatter>=1.1",
-]
+dev = ["pytest>=8.0", "ruff>=0.4", "mcp>=1.0", "python-frontmatter>=1.1"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["tools*"]
+include = ["tools*", "engram_mcp*"]
 
 [tool.ruff]
 line-length = 100
@@ -40,4 +35,4 @@ select = ["E", "F", "W", "I"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-testpaths = ["HUMANS/tooling/tests"]
+testpaths = ["HUMANS/tooling/tests", "engram_mcp/tests"]
