@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 2, item 1: add optional mode field and write_sessions reporting to memory_get_maturity_signals"
+next_action: "Phase 2, item 2: add task_id field and access-density grouping to memory_get_maturity_signals"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -100,7 +100,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [x] 1.1 Implement `memory_log_access_batch` tool
 - [x] 1.2 Session-id auto-injection (env var + sentinel file)
 - [x] 1.3 Update capabilities contract
-- [ ] 2.1 Add `mode` field + maturity signal update
+- [x] 2.1 Add `mode` field + maturity signal update
 - [ ] 2.2 Add `task_id` short code + maturity signal grouping
 - [ ] 2.3 Add `min_helpfulness` sweep filter + sidecar file
 - [ ] 2.4 Define archive segmentation + materialized-summary refresh behavior
@@ -111,7 +111,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [x] 4.3 Update capabilities TOML tests
 - [ ] 4.4 Document new fields in CORE.md
 
-**Progress:** 4/13 items complete
+**Progress:** 5/13 items complete
 
 ---
 

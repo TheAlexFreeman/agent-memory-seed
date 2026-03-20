@@ -399,11 +399,17 @@ def _compute_maturity_signals(
         all_entries, _ = _load_access_entries(root)
 
     session_ids: set[str] = set()
+    write_session_ids: set[str] = set()
     for entry in all_entries:
         sid = entry.get("session_id")
         if sid:
-            session_ids.add(str(sid))
+            sid_str = str(sid)
+            session_ids.add(sid_str)
+            mode_value = entry.get("mode")
+            if isinstance(mode_value, str) and mode_value in {"write", "update", "create"}:
+                write_session_ids.add(sid_str)
     total_sessions = len(session_ids)
+    write_sessions = len(write_session_ids)
 
     access_density = len(all_entries)
 
@@ -481,6 +487,7 @@ def _compute_maturity_signals(
         "confirmation_ratio": confirmation_ratio,
         "high_trust_files": high_trust_count,
         "identity_stability": identity_stability,
+        "write_sessions": write_sessions,
         "mean_helpfulness": mean_helpfulness,
         "helpfulness_sample_size": len(helpfulness_values),
         "computed_at": str(date.today()),
@@ -2306,6 +2313,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                               Sessions since last change to
                                               identity/profile.md; null if the
                                               file has no tracked commit history
+              write_sessions         (int)   Distinct session_id values with at
+                                              least one non-read ACCESS entry
               mean_helpfulness        (float) Mean helpfulness score across all
                                               ACCESS entries that carry the field
               helpfulness_sample_size (int)   Number of entries with a

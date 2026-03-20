@@ -176,7 +176,9 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             text=True,
         ).stdout.strip()
 
-    def _init_host_repo(self, files: dict[str, str], *, initial_commit_date: str | None = None) -> Path:
+    def _init_host_repo(
+        self, files: dict[str, str], *, initial_commit_date: str | None = None
+    ) -> Path:
         temp_root = Path(self._tmpdir.name) / (f"host_{id(files)}")
         temp_root.mkdir(parents=True, exist_ok=True)
         subprocess.run(["git", "init"], cwd=temp_root, check=True, capture_output=True, text=True)
@@ -198,7 +200,9 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             target = temp_root / rel_path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
-        subprocess.run(["git", "add", "."], cwd=temp_root, check=True, capture_output=True, text=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=temp_root, check=True, capture_output=True, text=True
+        )
         commit_env = None
         if initial_commit_date is not None:
             commit_env = {
@@ -807,12 +811,16 @@ Structured.
         chats_summary = (repo_root / "chats" / "SUMMARY.md").read_text(encoding="utf-8")
         knowledge_access = [
             json.loads(line)
-            for line in (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").splitlines()
+            for line in (repo_root / "knowledge" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
             if line.strip()
         ]
         plans_access = [
             json.loads(line)
-            for line in (repo_root / "plans" / "ACCESS.jsonl").read_text(encoding="utf-8").splitlines()
+            for line in (repo_root / "plans" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
             if line.strip()
         ]
         log_count = subprocess.run(
@@ -823,7 +831,9 @@ Structured.
             text=True,
         ).stdout.strip()
 
-        self.assertEqual(payload["commit_message"], "[chat] Record session chats/2026/03/20/chat-002")
+        self.assertEqual(
+            payload["commit_message"], "[chat] Record session chats/2026/03/20/chat-002"
+        )
         self.assertEqual(payload["new_state"]["session_id"], "chats/2026/03/20/chat-002")
         self.assertIn("key_topics:", session_summary)
         self.assertIn("semantic-tools", session_summary)
@@ -846,9 +856,9 @@ Structured.
         )
         payload = json.loads(raw)
 
-        scratchpad = (
-            repo_root / "scratchpad" / "2026-03-20-worklog.md"
-        ).read_text(encoding="utf-8")
+        scratchpad = (repo_root / "scratchpad" / "2026-03-20-worklog.md").read_text(
+            encoding="utf-8"
+        )
         self.assertEqual(
             payload["new_state"]["target"],
             "scratchpad/2026-03-20-worklog.md",
@@ -1301,9 +1311,9 @@ Old guidance.
         knowledge_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
         plans_summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
         skills_summary = (repo_root / "skills" / "SUMMARY.md").read_text(encoding="utf-8")
-        knowledge_archive = (
-            repo_root / "knowledge" / "ACCESS.archive.2026-03.jsonl"
-        ).read_text(encoding="utf-8")
+        knowledge_archive = (repo_root / "knowledge" / "ACCESS.archive.2026-03.jsonl").read_text(
+            encoding="utf-8"
+        )
         knowledge_access = (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8")
         log_count = subprocess.run(
             ["git", "rev-list", "--count", "HEAD"],
@@ -1313,11 +1323,15 @@ Old guidance.
             text=True,
         ).stdout.strip()
 
-        self.assertEqual(payload["commit_message"], f"[curation] Aggregate ACCESS logs ({date.today()})")
+        self.assertEqual(
+            payload["commit_message"], f"[curation] Aggregate ACCESS logs ({date.today()})"
+        )
         self.assertEqual(payload["new_state"]["entries_processed"], 9)
         self.assertEqual(payload["new_state"]["legacy_fallback_entries"], 3)
         self.assertIn(f"- Last aggregation: {date.today()}", knowledge_summary)
-        self.assertIn("knowledge/topic.md + plans/demo.md + skills/session-start.md", knowledge_summary)
+        self.assertIn(
+            "knowledge/topic.md + plans/demo.md + skills/session-start.md", knowledge_summary
+        )
         self.assertIn(f"- Last aggregation: {date.today()}", plans_summary)
         self.assertIn(f"- Last aggregation: {date.today()}", skills_summary)
         self.assertIn('"file": "knowledge/topic.md"', knowledge_archive)
@@ -1800,6 +1814,32 @@ Next: Original next action
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
         self.assertEqual(entry["category"], "react-performance")
 
+    def test_memory_log_access_persists_mode_field(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/lit/foo.md": "# Foo\n",
+                "knowledge/ACCESS.jsonl": "",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_log_access"](
+                file="knowledge/lit/foo.md",
+                task="test",
+                helpfulness=0.7,
+                note="mode should be persisted",
+                mode="write",
+            )
+        )
+
+        payload = json.loads(raw)
+        entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
+        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["mode"], "write")
+
     def test_memory_log_access_uses_environment_session_id_when_missing(self) -> None:
         repo_root = self._init_repo(
             {
@@ -1930,6 +1970,61 @@ Next: Original next action
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_log_access_batch"](access_entries=[]))
+
+    def test_memory_get_maturity_signals_reports_write_sessions(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": "# Profile\n",
+                "knowledge/lit/foo.md": "# Foo\n",
+                "plans/demo.md": "# Demo\n",
+                "knowledge/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "knowledge/lit/foo.md",
+                                "date": "2026-03-20",
+                                "task": "read test",
+                                "helpfulness": 0.8,
+                                "note": "baseline read",
+                                "session_id": "chats/2026/03/20/chat-010",
+                                "mode": "read",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "file": "knowledge/lit/foo.md",
+                                "date": "2026-03-20",
+                                "task": "write test",
+                                "helpfulness": 0.9,
+                                "note": "knowledge write",
+                                "session_id": "chats/2026/03/20/chat-011",
+                                "mode": "write",
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "plans/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "plans/demo.md",
+                        "date": "2026-03-20",
+                        "task": "plan update",
+                        "helpfulness": 0.6,
+                        "note": "plan updated",
+                        "session_id": "chats/2026/03/20/chat-012",
+                        "mode": "update",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_get_maturity_signals"]()))
+
+        self.assertEqual(payload["total_sessions"], 3)
+        self.assertEqual(payload["write_sessions"], 2)
+        self.assertEqual(payload["access_density"], 3)
 
     def test_memory_revert_commit_preview_returns_confirmation_metadata(self) -> None:
         repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
@@ -2218,7 +2313,7 @@ Next: Original next action
         repo_root = self._init_repo(
             {
                 "agent-bootstrap.toml": (
-                    'version = 1\n'
+                    "version = 1\n"
                     'router = "meta/quick-reference.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
@@ -2239,7 +2334,7 @@ Next: Original next action
         repo_root = self._init_repo(
             {
                 "agent-bootstrap.toml": (
-                    'version = 1\n'
+                    "version = 1\n"
                     'router = "meta/quick-reference.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
@@ -2277,7 +2372,7 @@ Next: Original next action
         repo_root = self._init_repo(
             {
                 "agent-bootstrap.toml": (
-                    'version = 1\n'
+                    "version = 1\n"
                     'router = "meta/quick-reference.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
@@ -2363,7 +2458,7 @@ Next: Original next action
         repo_root = self._init_repo(
             {
                 "agent-bootstrap.toml": (
-                    'version = 1\n'
+                    "version = 1\n"
                     'router = "meta/quick-reference.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
@@ -2414,7 +2509,7 @@ Next: Original next action
         repo_root = self._init_repo(
             {
                 "agent-bootstrap.toml": (
-                    'version = 1\n'
+                    "version = 1\n"
                     'router = "meta/quick-reference.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'

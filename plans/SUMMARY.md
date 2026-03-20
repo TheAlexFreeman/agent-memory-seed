@@ -12,8 +12,8 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/access-log-tooling-improvements.md
 Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
-Progress: 4/13 complete
-Next: Phase 2, item 1 — add optional `mode` field and `write_sessions` reporting to `memory_get_maturity_signals`
+Progress: 5/13 complete
+Next: Phase 2, item 2 — add `task_id` field and access-density grouping to `memory_get_maturity_signals`
 Blocks: none; structural prerequisites are complete.
 
 

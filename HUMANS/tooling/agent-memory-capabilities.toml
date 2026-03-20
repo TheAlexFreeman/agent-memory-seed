@@ -159,6 +159,7 @@ new_sha = "New Commit"
 access_jsonl = "Access Log File"
 access_jsonls = "Access Log Files"
 entry_count = "Access Entry Count"
+write_sessions = "Write Sessions"
 entries_processed = "Entries Processed"
 session_groups_processed = "Session Groups Processed"
 legacy_fallback_entries = "Legacy Fallback Entries"
@@ -593,7 +594,12 @@ owns_access_logs = []
 owns_review_queue = []
 result_fields = ["section", "mode"]
 fallback_tools = []
-error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+error_kinds = [
+  "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
 
 [operations.memory_update_identity_trait]
 group = "identity"
@@ -659,7 +665,10 @@ writes = [
 ]
 owns_frontmatter = []
 owns_summaries = ["{folder}/SUMMARY.md"]
-owns_access_logs = ["{folder}/ACCESS.jsonl", "{folder}/ACCESS.archive.YYYY-MM.jsonl"]
+owns_access_logs = [
+  "{folder}/ACCESS.jsonl",
+  "{folder}/ACCESS.archive.YYYY-MM.jsonl",
+]
 owns_review_queue = []
 result_fields = [
   "entries_processed",
@@ -700,7 +709,12 @@ owns_access_logs = []
 owns_review_queue = ["meta/review-queue.md"]
 result_fields = ["item_id"]
 fallback_tools = ["memory_edit", "memory_commit"]
-error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+error_kinds = [
+  "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
 
 [operations.memory_log_access]
 group = "chat"
@@ -716,7 +730,7 @@ owns_review_queue = []
 result_fields = ["access_jsonl", "entry_count"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Accepts optional session_id. When omitted, the runtime first checks MEMORY_SESSION_ID and then chats/CURRENT_SESSION; any resolved value must be a canonical session path."
+notes = "Accepts optional session_id and optional mode (`read`, `write`, `update`, `create`). When session_id is omitted, the runtime first checks MEMORY_SESSION_ID and then chats/CURRENT_SESSION; any resolved value must be a canonical session path."
 
 [operations.memory_log_access_batch]
 group = "chat"
@@ -732,7 +746,7 @@ owns_review_queue = []
 result_fields = ["access_jsonls", "entry_count"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Batches multiple ACCESS entries into one auto-commit. Uses the same optional session_id injection contract as memory_log_access via MEMORY_SESSION_ID, then chats/CURRENT_SESSION."
+notes = "Batches multiple ACCESS entries into one auto-commit. Each entry may carry an optional mode (`read`, `write`, `update`, `create`). Uses the same optional session_id injection contract as memory_log_access via MEMORY_SESSION_ID, then chats/CURRENT_SESSION."
 
 [operations.memory_record_reflection]
 group = "chat"

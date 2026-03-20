@@ -25,6 +25,7 @@ def _tool_annotations(**kwargs: object) -> Any:
 
 
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
+_ACCESS_MODES = frozenset({"read", "write", "update", "create"})
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
 _CURRENT_SESSION_SENTINEL = PurePosixPath("chats/CURRENT_SESSION")
@@ -211,6 +212,7 @@ def _normalize_access_entry(
     helpfulness_value = raw_entry.get("helpfulness")
     note_value = raw_entry.get("note")
     category_value = raw_entry.get("category")
+    mode_value = raw_entry.get("mode")
 
     if not isinstance(task_value, str) or not task_value.strip():
         raise ValidationError("access entry task must be a non-empty string")
@@ -246,6 +248,15 @@ def _normalize_access_entry(
     else:
         category = None
 
+    if mode_value is not None:
+        if not isinstance(mode_value, str) or not mode_value.strip():
+            raise ValidationError("access entry mode must be a non-empty string when provided")
+        mode = mode_value.strip()
+        if mode not in _ACCESS_MODES:
+            raise ValidationError(f"access entry mode must be one of {sorted(_ACCESS_MODES)}, got: {mode}")
+    else:
+        mode = None
+
     entry: dict[str, object] = {
         "file": file_path,
         "date": today_str(),
@@ -257,6 +268,8 @@ def _normalize_access_entry(
         entry["session_id"] = resolved_session_id
     if category is not None:
         entry["category"] = category
+    if mode is not None:
+        entry["mode"] = mode
     return access_jsonl, _json.dumps(entry, ensure_ascii=False)
 
 
@@ -287,9 +300,7 @@ def _append_access_entries(
         existing = abs_access.read_text(encoding="utf-8") if abs_access.exists() else ""
         payload = "\n".join(lines)
         updated = (
-            existing.rstrip("\n") + "\n" + payload + "\n"
-            if existing.strip()
-            else payload + "\n"
+            existing.rstrip("\n") + "\n" + payload + "\n" if existing.strip() else payload + "\n"
         )
         abs_access.write_text(updated, encoding="utf-8")
         repo.add(access_jsonl)
@@ -406,7 +417,9 @@ def _build_phase1_clusters(
         supporting_session_groups: set[str] = set()
         for index, left in enumerate(clique_files):
             for right in clique_files[index + 1 :]:
-                sessions = pair_sessions.get((left, right)) or pair_sessions.get((right, left)) or set()
+                sessions = (
+                    pair_sessions.get((left, right)) or pair_sessions.get((right, left)) or set()
+                )
                 pair_counts.append(len(sessions))
                 supporting_session_groups.update(sessions)
         clusters.append(
@@ -986,8 +999,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         status_match = _REVIEW_QUEUE_FIELD_RE.findall(matched_block["raw"])
         field_map = {
-            key.strip().lower().replace(" ", "_"): value.strip()
-            for key, value in status_match
+            key.strip().lower().replace(" ", "_"): value.strip() for key, value in status_match
         }
         if field_map.get("status") != "pending":
             raise ValidationError(f"Review queue item is not pending: {item_id}")
@@ -1031,6 +1043,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         note: str,
         session_id: str | None = None,
         category: str | None = None,
+        mode: str | None = None,
     ) -> str:
         from ...models import MemoryWriteResult
 
@@ -1047,6 +1060,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     "helpfulness": helpfulness,
                     "note": note,
                     "category": category,
+                    "mode": mode,
                 }
             ],
             session_id=resolved_session_id,
@@ -1083,9 +1097,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
 
         if not isinstance(access_entries, list) or not access_entries:
-            raise ValidationError(
-                "access_entries must be a non-empty list of access entry objects"
-            )
+            raise ValidationError("access_entries must be a non-empty list of access entry objects")
 
         resolved_session_id = _resolve_access_session_id(root, session_id)
         changed_files = _append_access_entries(
@@ -1217,11 +1229,17 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo = get_repo()
         root = get_root()
         selected_folders = _normalize_aggregation_folders(folders)
-        default_access_folders = ["identity", "knowledge", "knowledge/_unverified", "skills", "plans", "chats"]
+        default_access_folders = [
+            "identity",
+            "knowledge",
+            "knowledge/_unverified",
+            "skills",
+            "plans",
+            "chats",
+        ]
 
         access_files = [
-            f"{folder}/ACCESS.jsonl"
-            for folder in (selected_folders or default_access_folders)
+            f"{folder}/ACCESS.jsonl" for folder in (selected_folders or default_access_folders)
         ]
 
         raw_entries: list[dict[str, Any]] = []
@@ -1315,9 +1333,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             if not filtered_file_entries:
                 continue
             abs_access = root / access_file
-            archive_rel = f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(filtered_file_entries)}"
+            archive_rel = (
+                f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(filtered_file_entries)}"
+            )
             abs_archive = root / archive_rel
-            archive_existing = abs_archive.read_text(encoding="utf-8") if abs_archive.exists() else ""
+            archive_existing = (
+                abs_archive.read_text(encoding="utf-8") if abs_archive.exists() else ""
+            )
             hot_content = abs_access.read_text(encoding="utf-8")
             appended_archive = (
                 archive_existing.rstrip("\n") + "\n" + hot_content.strip("\n") + "\n"
