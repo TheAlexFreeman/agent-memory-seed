@@ -1,10 +1,10 @@
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research Darwinian foundations of cultural evolution — Dawkins, meme concept, replication/variation/selection applied to ideas"
+next_action: "Complete — all 12 items done. Human review of knowledge/_unverified/social-science/cultural-evolution/ files recommended."
 origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -140,26 +140,26 @@ Files go in `knowledge/_unverified/social-science/cultural-evolution/` with stan
 ## Progress tracking
 
 ### Phase 1 — Foundations of cultural evolution
-- [ ] 1.1 Dawkins and the meme concept
-- [ ] 1.2 Blackmore: the meme machine
-- [ ] 1.3 Hull: replicator/interactor distinction
+- [x] 1.1 Dawkins and the meme concept
+- [x] 1.2 Blackmore: the meme machine
+- [x] 1.3 Hull: replicator/interactor distinction
 
 ### Phase 2 — Dual inheritance and transmission
-- [ ] 2.1 Boyd, Richerson, and dual inheritance theory
-- [ ] 2.2 Transmission biases and content biases
-- [ ] 2.3 Prestige, dominance, and trickle-down dynamics
+- [x] 2.1 Boyd, Richerson, and dual inheritance theory
+- [x] 2.2 Transmission biases and content biases
+- [x] 2.3 Prestige, dominance, and trickle-down dynamics
 
 ### Phase 3 — Cumulative culture
-- [ ] 3.1 Henrich: the secret of our success
-- [ ] 3.2 Cumulative culture and the ratchet
-- [ ] 3.3 Evolution of norms and punishment
+- [x] 3.1 Henrich: the secret of our success
+- [x] 3.2 Cumulative culture and the ratchet
+- [x] 3.3 Evolution of norms and punishment
 
 ### Phase 4 — Epistemic communities
-- [ ] 4.1 Fitness vs. truth: epistemically fit vs. propagation-fit ideas
-- [ ] 4.2 Fricker: epistemic injustice
-- [ ] 4.3 How LLMs affect cultural evolution
+- [x] 4.1 Fitness vs. truth: epistemically fit vs. propagation-fit ideas
+- [x] 4.2 Fricker: epistemic injustice
+- [x] 4.3 How LLMs affect cultural evolution
 
-**Progress:** 0/12 items complete
+**Progress:** 12/12 ✓ COMPLETE
 
 ---
 
