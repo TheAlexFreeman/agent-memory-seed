@@ -48,6 +48,15 @@ Key files:
 - `chakra-ui-3-styling-system.md` — `createSystem`, tokens, semantic tokens, recipes, slot recipes, virtual colors, cascade layers, and CLI typegen
 - `chakra-ui-3-react-frontend-patterns.md` — Practical synthesis for building consistent, accessible, responsive, and mode-aware React frontends with Chakra 3
 
+<!-- section: ai-tools -->
+### `ai-tools/` — AI tools landscape and ecosystem positioning (promoted 2026-03-19, trust: medium)
+
+Two files covering the current AI tools landscape and where agent-memory-seed fits within it.
+
+Key files:
+- `ai-tools-landscape-2026.md` — Survey of AI coding environments, CLI agents, autonomous agents, orchestration frameworks, research tools, infrastructure, and local inference as of early 2026; frontier model comparison table and 7 key ecosystem trends
+- `agent-memory-in-ai-ecosystem.md` — How agent-memory-seed is positioned relative to vector RAG, Claude.ai Projects, LangGraph checkpointing, and LLM-native memory systems; why the git-backed governed-memory approach is distinctive; how it connects to current trends (agentic loops, vibe coding debt, multi-agent coordination)
+
 <!-- section: systems-architecture -->
 ### `systems-architecture/` — Git-backed systems architecture research (promoted 2026-03-19, trust: medium)
 
