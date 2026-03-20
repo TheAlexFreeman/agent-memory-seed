@@ -188,15 +188,13 @@ def load_manifest(repo_root: Path) -> dict[str, Any]:
 def runtime_tools(repo_root: Path) -> set[str]:
     if str(repo_root) not in sys.path:
         sys.path.insert(0, str(repo_root))
-    from tools.agent_memory_mcp.server import create_mcp
+    from engram_mcp.agent_memory_mcp.server import create_mcp
 
     _, tools, _, _ = create_mcp(repo_root=repo_root)
     return set(tools)
 
 
-def _ensure_string_list(
-    errors: list[str], label: str, value: Any
-) -> list[str]:
+def _ensure_string_list(errors: list[str], label: str, value: Any) -> list[str]:
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         errors.append(f"{label} must be an array of strings")
         return []
@@ -230,9 +228,7 @@ def _pick_highlight_fields(result_fields: list[str]) -> list[str]:
     return result_fields[:1]
 
 
-def resolve_capabilities(
-    repo_root: Path, *, include_runtime: bool = True
-) -> dict[str, Any]:
+def resolve_capabilities(repo_root: Path, *, include_runtime: bool = True) -> dict[str, Any]:
     manifest = load_manifest(repo_root)
     errors: list[str] = []
     warnings: list[str] = []
@@ -331,9 +327,7 @@ def resolve_capabilities(
 
     requires_kind = capability_discovery.get("requires_kind")
     if not isinstance(requires_kind, str):
-        errors.append(
-            f"{MANIFEST_PATH}: capability_discovery.requires_kind must be a string"
-        )
+        errors.append(f"{MANIFEST_PATH}: capability_discovery.requires_kind must be a string")
         requires_kind = ""
     if manifest.get("kind") != requires_kind:
         errors.append(
@@ -363,9 +357,7 @@ def resolve_capabilities(
         else:
             entrypoint_exists = (repo_root / entrypoint).is_file()
             if not entrypoint_exists:
-                errors.append(
-                    f"{MANIFEST_PATH}: mcp_entrypoint does not exist at {entrypoint!r}"
-                )
+                errors.append(f"{MANIFEST_PATH}: mcp_entrypoint does not exist at {entrypoint!r}")
     elif isinstance(entrypoint, str):
         entrypoint_exists = (repo_root / entrypoint).is_file()
 
@@ -385,9 +377,7 @@ def resolve_capabilities(
         "capability_discovery.minimum_semantic_tools",
         capability_discovery.get("minimum_semantic_tools"),
     )
-    unknown_minimum_semantic_tools = sorted(
-        set(minimum_semantic_tools) - semantic_extensions
-    )
+    unknown_minimum_semantic_tools = sorted(set(minimum_semantic_tools) - semantic_extensions)
     if unknown_minimum_semantic_tools:
         errors.append(
             f"{MANIFEST_PATH}: capability_discovery.minimum_semantic_tools references undeclared semantic tools {unknown_minimum_semantic_tools!r}"
@@ -415,9 +405,7 @@ def resolve_capabilities(
     }
     for key, expected_value in expected_discovery_results.items():
         if capability_discovery.get(key) != expected_value:
-            errors.append(
-                f"{MANIFEST_PATH}: capability_discovery.{key} must be {expected_value!r}"
-            )
+            errors.append(f"{MANIFEST_PATH}: capability_discovery.{key} must be {expected_value!r}")
 
     for left_name, left, right_name, right in (
         ("read_support", read_support, "raw_fallback", raw_fallback),
@@ -434,9 +422,7 @@ def resolve_capabilities(
     if not isinstance(shared_result, dict):
         errors.append(f"{MANIFEST_PATH}: shared_result must be a TOML table")
         shared_result = {}
-    shared_fields = _ensure_string_list(
-        errors, "shared_result.fields", shared_result.get("fields")
-    )
+    shared_fields = _ensure_string_list(errors, "shared_result.fields", shared_result.get("fields"))
     if shared_fields != [
         "files_changed",
         "commit_sha",
@@ -454,9 +440,7 @@ def resolve_capabilities(
         change_classes = {}
     for class_name, config in change_classes.items():
         if not isinstance(config, dict):
-            errors.append(
-                f"{MANIFEST_PATH}: change_classes.{class_name} must be a TOML table"
-            )
+            errors.append(f"{MANIFEST_PATH}: change_classes.{class_name} must be a TOML table")
             continue
         for key in REQUIRED_CHANGE_CLASS_KEYS:
             if not isinstance(config.get(key), str):
@@ -476,17 +460,11 @@ def resolve_capabilities(
             f"{MANIFEST_PATH}: raw_fallback_policy.policy must be 'inherit_operation_change_class'"
         )
     if raw_fallback_policy.get("runtime_export") != "opt_in":
-        errors.append(
-            f"{MANIFEST_PATH}: raw_fallback_policy.runtime_export must be 'opt_in'"
-        )
+        errors.append(f"{MANIFEST_PATH}: raw_fallback_policy.runtime_export must be 'opt_in'")
     if not isinstance(raw_fallback_policy.get("opt_in_env_var"), str):
-        errors.append(
-            f"{MANIFEST_PATH}: raw_fallback_policy.opt_in_env_var must be a string"
-        )
+        errors.append(f"{MANIFEST_PATH}: raw_fallback_policy.opt_in_env_var must be a string")
     if raw_fallback_policy.get("requires_change_class") is not True:
-        errors.append(
-            f"{MANIFEST_PATH}: raw_fallback_policy.requires_change_class must be true"
-        )
+        errors.append(f"{MANIFEST_PATH}: raw_fallback_policy.requires_change_class must be true")
     preview_required_for = _ensure_string_list(
         errors,
         "raw_fallback_policy.preview_required_for",
@@ -498,9 +476,7 @@ def resolve_capabilities(
                 f"{MANIFEST_PATH}: raw_fallback_policy.preview_required_for references unknown class {class_name!r}"
             )
     if not isinstance(raw_fallback_policy.get("read_only_mode"), str):
-        errors.append(
-            f"{MANIFEST_PATH}: raw_fallback_policy.read_only_mode must be a string"
-        )
+        errors.append(f"{MANIFEST_PATH}: raw_fallback_policy.read_only_mode must be a string")
 
     fallback_behavior = manifest.get("fallback_behavior")
     if not isinstance(fallback_behavior, dict):
@@ -509,15 +485,11 @@ def resolve_capabilities(
     for profile_name in REQUIRED_FALLBACK_PROFILES:
         profile = fallback_behavior.get(profile_name)
         if not isinstance(profile, dict):
-            errors.append(
-                f"{MANIFEST_PATH}: fallback_behavior.{profile_name} must be a TOML table"
-            )
+            errors.append(f"{MANIFEST_PATH}: fallback_behavior.{profile_name} must be a TOML table")
             continue
         for key in REQUIRED_FALLBACK_PROFILE_KEYS:
             if key not in profile:
-                errors.append(
-                    f"{MANIFEST_PATH}: fallback_behavior.{profile_name} missing {key}"
-                )
+                errors.append(f"{MANIFEST_PATH}: fallback_behavior.{profile_name} missing {key}")
         if not isinstance(profile.get("trigger"), str):
             errors.append(
                 f"{MANIFEST_PATH}: fallback_behavior.{profile_name}.trigger must be a string"
@@ -618,18 +590,14 @@ def resolve_capabilities(
     for class_name in ("proposed", "protected"):
         flow = approval_ux.get(class_name)
         if not isinstance(flow, dict):
-            errors.append(
-                f"{MANIFEST_PATH}: approval_ux.{class_name} must be a TOML table"
-            )
+            errors.append(f"{MANIFEST_PATH}: approval_ux.{class_name} must be a TOML table")
             flow = {}
         approval_flows[class_name] = flow
         for key in REQUIRED_APPROVAL_FLOW_KEYS:
             if key not in flow:
                 errors.append(f"{MANIFEST_PATH}: approval_ux.{class_name} missing {key}")
         if not isinstance(flow.get("trigger"), str):
-            errors.append(
-                f"{MANIFEST_PATH}: approval_ux.{class_name}.trigger must be a string"
-            )
+            errors.append(f"{MANIFEST_PATH}: approval_ux.{class_name}.trigger must be a string")
         if not isinstance(flow.get("primary_action"), str):
             errors.append(
                 f"{MANIFEST_PATH}: approval_ux.{class_name}.primary_action must be a string"
@@ -644,9 +612,7 @@ def resolve_capabilities(
                 f"{MANIFEST_PATH}: approval_ux.{class_name}.deferred_outcome must be a string"
             )
         if not isinstance(flow.get("copy_style"), str):
-            errors.append(
-                f"{MANIFEST_PATH}: approval_ux.{class_name}.copy_style must be a string"
-            )
+            errors.append(f"{MANIFEST_PATH}: approval_ux.{class_name}.copy_style must be a string")
 
     ui_feedback = manifest.get("ui_feedback")
     if not isinstance(ui_feedback, dict):
@@ -666,15 +632,11 @@ def resolve_capabilities(
         status_labels = {}
     for key in REQUIRED_UI_FEEDBACK_STATUS_KEYS:
         if not isinstance(status_labels.get(key), str):
-            errors.append(
-                f"{MANIFEST_PATH}: ui_feedback.status_labels.{key} must be a string"
-            )
+            errors.append(f"{MANIFEST_PATH}: ui_feedback.status_labels.{key} must be a string")
 
     preview_section_labels = ui_feedback.get("preview_section_labels")
     if not isinstance(preview_section_labels, dict):
-        errors.append(
-            f"{MANIFEST_PATH}: ui_feedback.preview_section_labels must be a TOML table"
-        )
+        errors.append(f"{MANIFEST_PATH}: ui_feedback.preview_section_labels must be a TOML table")
         preview_section_labels = {}
     for section_name in preview_sections:
         if not isinstance(preview_section_labels.get(section_name), str):
@@ -684,9 +646,7 @@ def resolve_capabilities(
 
     result_field_labels = ui_feedback.get("result_field_labels")
     if not isinstance(result_field_labels, dict):
-        errors.append(
-            f"{MANIFEST_PATH}: ui_feedback.result_field_labels must be a TOML table"
-        )
+        errors.append(f"{MANIFEST_PATH}: ui_feedback.result_field_labels must be a TOML table")
         result_field_labels = {}
 
     error_taxonomy = manifest.get("error_taxonomy")
@@ -841,15 +801,11 @@ def resolve_capabilities(
             "semantic_extensions": sorted(semantic_extensions - runtime_tool_names),
         }
         missing_minimum_read_tools = sorted(set(minimum_read_tools) - runtime_tool_names)
-        missing_minimum_semantic_tools = sorted(
-            set(minimum_semantic_tools) - runtime_tool_names
-        )
+        missing_minimum_semantic_tools = sorted(set(minimum_semantic_tools) - runtime_tool_names)
 
         write_tools_present = bool((raw_fallback | semantic_extensions) & runtime_tool_names)
         read_only_runtime = (
-            read_only_runtime_allowed
-            and not write_tools_present
-            and not missing_minimum_read_tools
+            read_only_runtime_allowed and not write_tools_present and not missing_minimum_read_tools
         )
 
         if write_tools_present:
@@ -866,7 +822,9 @@ def resolve_capabilities(
                 errors.append(
                     f"{MANIFEST_PATH}: required read-only tool {tool_name!r} is not exported by the MCP runtime"
                 )
-            optional_read_tools = sorted(read_support - set(minimum_read_tools) - runtime_tool_names)
+            optional_read_tools = sorted(
+                read_support - set(minimum_read_tools) - runtime_tool_names
+            )
             if optional_read_tools:
                 warnings.append(
                     f"{MANIFEST_PATH}: runtime is read-only and omits optional read tools {optional_read_tools!r}"
@@ -880,7 +838,11 @@ def resolve_capabilities(
             missing_minimum_semantic_tools
         )
 
-        if contract_compatible and not missing_minimum_read_tools and not missing_minimum_semantic_tools:
+        if (
+            contract_compatible
+            and not missing_minimum_read_tools
+            and not missing_minimum_semantic_tools
+        ):
             discovery_mode = "semantic"
             selected_strategy = capability_discovery.get("semantic_result")
             discovery_reason = (
@@ -889,9 +851,7 @@ def resolve_capabilities(
         elif contract_compatible and read_only_runtime:
             discovery_mode = "read_only"
             selected_strategy = capability_discovery.get("read_only_result")
-            discovery_reason = (
-                "Manifest is compatible and the runtime exports the minimum read tool set without write tools."
-            )
+            discovery_reason = "Manifest is compatible and the runtime exports the minimum read tool set without write tools."
         else:
             discovery_mode = "fallback"
             selected_strategy = capability_discovery.get("incompatible_result")
@@ -965,15 +925,9 @@ def resolve_capabilities(
         if config.get("status") == "implemented":
             implemented_operation_count += 1
             tool_name = config.get("tool")
-            operation_config = (
-                operations.get(tool_name, {})
-                if isinstance(tool_name, str)
-                else {}
-            )
+            operation_config = operations.get(tool_name, {}) if isinstance(tool_name, str) else {}
             changed_files = [
-                path
-                for path in operation_config.get("writes", [])
-                if isinstance(path, str)
+                path for path in operation_config.get("writes", []) if isinstance(path, str)
             ]
             result_fields = [
                 field

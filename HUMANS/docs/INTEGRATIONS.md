@@ -99,7 +99,7 @@ All three support **custom memory** or **custom tools**:
 ```python
 import sys
 sys.path.insert(0, "./agent-memory-seed")
-from tools.agent_memory_mcp.server import create_mcp
+from engram_mcp.agent_memory_mcp.server import create_mcp
 
 # create_mcp() returns (mcp_instance, tools_dict, get_repo, get_root)
 _, tools, _, _ = create_mcp(repo_root="./agent-memory-seed")

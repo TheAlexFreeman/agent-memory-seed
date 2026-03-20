@@ -22,7 +22,7 @@ def load_server_module() -> ModuleType:
     if str(REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(REPO_ROOT))
     try:
-        return importlib.import_module("tools.agent_memory_mcp.server")
+        return importlib.import_module("engram_mcp.agent_memory_mcp.server")
     except ModuleNotFoundError as exc:
         raise unittest.SkipTest(f"agent_memory_mcp dependencies unavailable: {exc.name}") from exc
 
@@ -35,10 +35,10 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.server = load_server_module()
-        cls.errors = importlib.import_module("tools.agent_memory_mcp.errors")
+        cls.errors = importlib.import_module("engram_mcp.agent_memory_mcp.errors")
         try:
             cls.frontmatter_utils = importlib.import_module(
-                "tools.agent_memory_mcp.frontmatter_utils"
+                "engram_mcp.agent_memory_mcp.frontmatter_utils"
             )
         except ModuleNotFoundError as exc:
             raise unittest.SkipTest(

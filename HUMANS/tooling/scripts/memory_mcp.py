@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-_server = importlib.import_module("tools.agent_memory_mcp.server")
+_server = importlib.import_module("engram_mcp.agent_memory_mcp.server")
 
 __all__ = getattr(_server, "__all__", [])
 globals().update({name: getattr(_server, name) for name in __all__})
