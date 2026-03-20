@@ -87,6 +87,16 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertIsNone(payload["frontmatter"])
         self.assertIn("Quick Reference", payload["content"])
 
+    def test_get_capabilities_returns_structured_payload(self) -> None:
+        raw = asyncio.run(self.module.memory_get_capabilities())
+        payload = json.loads(raw)
+
+        self.assertEqual(payload["kind"], "agent-memory-capabilities")
+        self.assertEqual(payload["contract_versions"]["capabilities"], 1)
+        self.assertIn("memory_get_capabilities", payload["tool_sets"]["read_support"])
+        self.assertEqual(payload["summary"]["contract_versions"]["mcp"], 1)
+        self.assertGreaterEqual(payload["summary"]["total_tools"], 1)
+
     def test_read_file_works_over_stdio_transport(self) -> None:
         if not VENV_PYTHON.exists():
             raise unittest.SkipTest(f"venv interpreter not found: {VENV_PYTHON}")
@@ -117,6 +127,7 @@ class MemoryMCPTests(unittest.TestCase):
     def test_new_tools_are_exported(self) -> None:
         for name in (
             "memory_git_log",
+            "memory_get_capabilities",
             "memory_check_knowledge_freshness",
             "memory_check_aggregation_triggers",
             "memory_aggregate_access",

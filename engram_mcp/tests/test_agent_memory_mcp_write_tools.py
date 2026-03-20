@@ -710,6 +710,51 @@ status: active
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_update_frontmatter_bulk"](updates=oversized))
 
+    def test_memory_get_capabilities_returns_parseable_json(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "HUMANS/tooling/agent-memory-capabilities.toml": """version = 1
+kind = \"agent-memory-capabilities\"
+
+[contract_versions]
+frontmatter = 1
+access = 1
+mcp = 1
+capabilities = 1
+
+[tool_sets]
+read_support = [\"memory_get_capabilities\", \"memory_read_file\"]
+raw_fallback = [\"memory_write\"]
+semantic_extensions = [\"memory_create_plan\"]
+declared_gaps = []
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_get_capabilities"]()))
+
+        self.assertEqual(payload["kind"], "agent-memory-capabilities")
+        self.assertEqual(payload["contract_versions"]["capabilities"], 1)
+        self.assertEqual(payload["summary"]["total_tools"], 4)
+        self.assertEqual(payload["summary"]["read_tools"], 2)
+        self.assertEqual(payload["summary"]["semantic_tools"], 1)
+
+    def test_memory_get_capabilities_returns_structured_error_for_malformed_toml(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "HUMANS/tooling/agent-memory-capabilities.toml": "version = 1\nkind = [\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_get_capabilities"]()))
+
+        self.assertIn("error", payload)
+        self.assertIn("Could not parse capability manifest", payload["error"])
+        self.assertEqual(payload["path"], "HUMANS/tooling/agent-memory-capabilities.toml")
+        self.assertIn("kind = [", payload["raw"])
+
     def test_memory_delete_rejects_repo_root_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)

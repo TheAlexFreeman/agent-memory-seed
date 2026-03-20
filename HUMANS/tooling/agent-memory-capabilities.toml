@@ -4,8 +4,16 @@ mcp_entrypoint = "engram_mcp/memory_mcp.py"
 manifest_role = "Repo-side prototype for governed memory writes and capability discovery."
 shared_result_type = "MemoryWriteResult"
 
+[contract_versions]
+frontmatter = 1
+access = 1
+mcp = 1
+capabilities = 1
+
 [tool_sets]
 read_support = [
+  # Self-referential by design: this tool reads the manifest that declares it.
+  "memory_get_capabilities",
   "memory_read_file",
   "memory_list_folder",
   "memory_search",

@@ -30,8 +30,8 @@ Blocks: none; structural prerequisites are complete.
 
 Detail: plans/mcp-write-and-crosscutting-improvements.md
 Scope: Add frontmatter batch updates, native capability lookup, and richer search results.
-Progress: 4/15 complete
-Next: Phase 2, item 1 — implement `memory_get_capabilities` in `read_tools.py`
+Progress: 9/15 complete
+Next: Phase 3, item 1 — add `context_lines` param to `memory_search`
 Blocks: none; structural prerequisites are complete.
 
 

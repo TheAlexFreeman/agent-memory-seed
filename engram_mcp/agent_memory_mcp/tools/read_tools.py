@@ -21,6 +21,7 @@ import json
 import re
 import subprocess
 import sys
+from importlib import import_module
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -54,6 +55,12 @@ _DEFAULT_AGGREGATION_TRIGGER = 15
 _NEAR_TRIGGER_WINDOW = 3
 _PERIODIC_REVIEW_DAYS = 30
 _STAGE_ORDER = ("Exploration", "Calibration", "Consolidation")
+_CAPABILITIES_MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
+
+try:
+    tomllib = cast(Any, import_module("tomllib"))
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
+    tomllib = cast(Any, import_module("tomli"))
 
 
 def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
@@ -72,6 +79,37 @@ def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
     if medium_m:
         medium = int(medium_m.group(1))
     return low, medium
+
+
+def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
+    tool_sets = manifest.get("tool_sets") if isinstance(manifest.get("tool_sets"), dict) else {}
+    read_support = tool_sets.get("read_support") if isinstance(tool_sets, dict) else []
+    raw_fallback = tool_sets.get("raw_fallback") if isinstance(tool_sets, dict) else []
+    semantic_extensions = tool_sets.get("semantic_extensions") if isinstance(tool_sets, dict) else []
+    declared_gaps = tool_sets.get("declared_gaps") if isinstance(tool_sets, dict) else []
+
+    read_tools = read_support if isinstance(read_support, list) else []
+    raw_tools = raw_fallback if isinstance(raw_fallback, list) else []
+    semantic_tools = semantic_extensions if isinstance(semantic_extensions, list) else []
+    gaps = declared_gaps if isinstance(declared_gaps, list) else []
+    contract_versions = manifest.get("contract_versions")
+    if not isinstance(contract_versions, dict):
+        contract_versions = {}
+
+    return {
+        "total_tools": len(
+            {
+                *[tool for tool in read_tools if isinstance(tool, str)],
+                *[tool for tool in raw_tools if isinstance(tool, str)],
+                *[tool for tool in semantic_tools if isinstance(tool, str)],
+            }
+        ),
+        "read_tools": len([tool for tool in read_tools if isinstance(tool, str)]),
+        "raw_tools": len([tool for tool in raw_tools if isinstance(tool, str)]),
+        "semantic_tools": len([tool for tool in semantic_tools if isinstance(tool, str)]),
+        "declared_gaps": len([gap for gap in gaps if isinstance(gap, str)]),
+        "contract_versions": contract_versions,
+    }
 
 
 def _parse_aggregation_trigger(repo_root: Path) -> int:
@@ -1230,6 +1268,68 @@ def _build_knowledge_freshness_report(
 
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     """Register all Tier 0 read tools and return their callables."""
+
+    # ------------------------------------------------------------------
+    # memory_get_capabilities
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_get_capabilities",
+        annotations=_tool_annotations(
+            title="Get Capability Manifest",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_get_capabilities() -> str:
+        """Return the governed capability manifest as structured JSON.
+
+        This tool is intentionally self-referential: it is listed in the same
+        `read_support` manifest entry that it reads. When the manifest cannot
+        be read or parsed, it returns a structured error payload so callers can
+        fall back to manual inspection.
+        """
+        root = get_root()
+        manifest_path = root / _CAPABILITIES_MANIFEST_PATH
+
+        try:
+            raw_manifest = manifest_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            return json.dumps(
+                {
+                    "error": f"Could not read capability manifest: {exc}",
+                    "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
+                    "raw": None,
+                },
+                indent=2,
+            )
+
+        try:
+            parsed = tomllib.loads(raw_manifest)
+        except Exception as exc:
+            return json.dumps(
+                {
+                    "error": f"Could not parse capability manifest: {exc}",
+                    "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
+                    "raw": raw_manifest,
+                },
+                indent=2,
+            )
+
+        if not isinstance(parsed, dict):
+            return json.dumps(
+                {
+                    "error": "Capability manifest did not parse to a TOML table",
+                    "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
+                    "raw": raw_manifest,
+                },
+                indent=2,
+            )
+
+        payload = dict(parsed)
+        payload["summary"] = _build_capabilities_summary(payload)
+        return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
     # memory_read_file
@@ -2519,6 +2619,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(signals, indent=2)
 
     return {
+        "memory_get_capabilities": memory_get_capabilities,
         "memory_read_file": memory_read_file,
         "memory_list_folder": memory_list_folder,
         "memory_search": memory_search,

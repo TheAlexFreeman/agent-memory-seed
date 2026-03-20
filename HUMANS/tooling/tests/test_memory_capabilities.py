@@ -3,13 +3,15 @@ from __future__ import annotations
 import importlib.util
 import sys
 import unittest
+from importlib import import_module
 from pathlib import Path
+from types import ModuleType
 from unittest import mock
 
 try:
-    import tomllib
+    tomllib = import_module("tomllib")
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
-    import tomli as tomllib
+    tomllib = import_module("tomli")
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -200,6 +202,20 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(
             discovery["incompatible_result"],
             "raw_fallback_or_defer",
+        )
+
+    def test_manifest_declares_memory_get_capabilities_in_read_support(self) -> None:
+        manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+
+        self.assertIn("memory_get_capabilities", manifest["tool_sets"]["read_support"])
+        self.assertEqual(
+            manifest["contract_versions"],
+            {
+                "frontmatter": 1,
+                "access": 1,
+                "mcp": 1,
+                "capabilities": 1,
+            },
         )
 
     def test_manifest_declares_ui_feedback_contract(self) -> None:

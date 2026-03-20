@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 2, item 1: implement memory_get_capabilities in read_tools.py"
+next_action: "Phase 3, item 1: add context_lines param to memory_search"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -183,19 +183,19 @@ Extend `test_memory_capabilities.py` to assert `memory_get_capabilities` is in `
 - [x] 1.2 Enforce 100-file batch size limit
 - [x] 1.3 Handle partial validation failure (fail-before-stage)
 - [x] 1.4 Update capabilities TOML for bulk frontmatter tool
-- [ ] 2.1 Implement `memory_get_capabilities` in `read_tools.py`
-- [ ] 2.2 Add `summary` field to capabilities output
-- [ ] 2.3 Register in `read_support` and capabilities contract
+- [x] 2.1 Implement `memory_get_capabilities` in `read_tools.py`
+- [x] 2.2 Add `summary` field to capabilities output
+- [x] 2.3 Register in `read_support` and capabilities contract
 - [ ] 3.1 Add `context_lines` param to `memory_search`
 - [ ] 3.2 Enforce context_lines ceiling of 10
 - [ ] 3.3 Output format with context line prefix `{line_no}|`
 - [ ] 3.4 Update max_results accounting to exclude context lines
 - [ ] 4.1 Tests for `memory_update_frontmatter_bulk`
-- [ ] 4.2 Tests for `memory_get_capabilities`
+- [x] 4.2 Tests for `memory_get_capabilities`
 - [ ] 4.3 Tests for `memory_search` context_lines
-- [ ] 4.4 Update capabilities TOML test suite
+- [x] 4.4 Update capabilities TOML test suite
 
-**Progress:** 4/15 items complete
+**Progress:** 9/15 items complete
 
 ---
 
