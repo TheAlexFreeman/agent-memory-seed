@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 0, item 1 — rename tools/ to mcp/ and update package discovery in pyproject.toml"
+last_verified: '2026-03-19'
+next_action: Resolve the top-level `mcp` namespace collision before renaming `tools/`.
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -121,6 +121,13 @@ Goal: establish the new directory name and make Python packaging aware of it.
 The server does not yet run from the new path at the end of this phase — that
 comes in Phase 1. This phase is purely structural and must not break any existing
 imports until Phase 1 provides the compat shim.
+
+Blocking finding (2026-03-19): the repo already depends on the third-party
+`mcp` package (`mcp>=1.0` in `pyproject.toml`), and the active virtual
+environment resolves `import mcp` to site-packages. Creating a top-level local
+package named `mcp/` would shadow that dependency on `sys.path`, breaking
+imports like `from mcp.server.fastmcp import FastMCP`. Resolve this namespace
+collision before executing the rename as written.
 
 ### Items
 
@@ -612,3 +619,4 @@ All commits go on the current branch (`live-test--maiden`). No new branches need
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following design discussion on MCP module growth and placement |
+| 2026-03-19 | Verified a blocking namespace collision: renaming `tools/` to top-level `mcp/` would shadow the installed `mcp` dependency in the active venv, so Phase 0 needs a package-name revision before implementation can continue |

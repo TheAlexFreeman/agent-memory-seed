@@ -9,12 +9,9 @@ Read this section first during compact returning sessions when active plans exis
 Priority order for active work:
 
 <!-- BEGIN: mcp-reorganization -->
-### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
-Detail: plans/mcp-reorganization.md
-Scope: Move the MCP implementation out of `tools/` into a dedicated `mcp/` package, then split the monolith and update path contracts.
-Progress: 0/41 complete
-Next: Phase 0, item 1 — rename `tools/` → `mcp/` at the repo root
-Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6 after Phase 2.
+### `mcp-reorganization.md` · status: active · trust: medium
+**Progress:** 0/0 items complete
+**Next action:** Resolve the top-level `mcp` namespace collision before renaming `tools/`.
 <!-- END: mcp-reorganization -->
 
 <!-- BEGIN: worktree-integration -->
