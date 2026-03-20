@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 1, item 1 — git object model and content-addressable storage"
+last_verified: '2026-03-19'
+next_action: '`git-worktrees-and-hooks.md`'
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -39,7 +39,7 @@ All output files go to `knowledge/_unverified/systems-architecture/`.
 
 ## Research phases
 
-### Phase 1 — Git internals · ☐ 0/3 complete
+### Phase 1 — Git internals · ☐ 1/3 complete
 
 **Why first:** The entire system is built on git as its storage layer, and three open
 problems are directly rooted in incomplete understanding of git's internals: (1) the
@@ -48,7 +48,7 @@ mount, (2) the worktree integration plan (Phase 0 of `worktree-integration.md`)
 which requires precise understanding of the orphan branch → worktree topology, and
 (3) the plan to add git hooks for governance automation.
 
-1. ☐ `git-object-model.md`
+1. ☑ `git-object-model.md`
 
    - **The four object types:** blob (file content), tree (directory snapshot), commit
      (history node), tag (named ref). How each is stored: header + content,
@@ -526,3 +526,4 @@ until reviewed.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following discussion of git/filesystem/distributed-systems research areas relevant to memory system architecture |
+| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) |
