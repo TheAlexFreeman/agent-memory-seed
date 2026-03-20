@@ -1,10 +1,9 @@
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research normal-form games, Nash equilibrium definition, existence proof"
-origin_session: chats/2026/03/19
+last_verified: 2026-03-20
+next_action: "Complete — human review of knowledge/_unverified/mathematics/game-theory/ files recommended"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -150,28 +149,28 @@ Files go in `knowledge/_unverified/mathematics/game-theory/` with standard front
 ## Progress tracking
 
 ### Phase 1 — Foundations
-- [ ] 1.1 Normal-form games and Nash equilibrium
-- [ ] 1.2 Prisoner's dilemma and coordination games
-- [ ] 1.3 Extensive-form games and backward induction
+- [x] 1.1 Normal-form games and Nash equilibrium
+- [x] 1.2 Prisoner's dilemma and coordination games
+- [x] 1.3 Extensive-form games and backward induction
 
 ### Phase 2 — Evolutionary perspectives
-- [ ] 2.1 Evolutionary game theory and replicator dynamics
-- [ ] 2.2 Evolution of cooperation (Axelrod, tit-for-tat)
+- [x] 2.1 Evolutionary game theory and replicator dynamics
+- [x] 2.2 Evolution of cooperation (Axelrod, tit-for-tat)
 
 ### Phase 3 — Mechanism design
-- [ ] 3.1 The design problem and revelation principle
-- [ ] 3.2 VCG mechanisms
-- [ ] 3.3 Matching markets (Gale-Shapley, Roth)
+- [x] 3.1 The design problem and revelation principle
+- [x] 3.2 VCG mechanisms
+- [x] 3.3 Matching markets (Gale-Shapley, Roth)
 
 ### Phase 4 — Social choice
-- [ ] 4.1 Arrow's impossibility theorem
-- [ ] 4.2 Voting rules and Gibbard-Satterthwaite
+- [x] 4.1 Arrow's impossibility theorem
+- [x] 4.2 Voting rules and Gibbard-Satterthwaite
 
 ### Phase 5 — Signaling
-- [ ] 5.1 Costly signaling (Spence)
-- [ ] 5.2 Cheap talk (Crawford-Sobel)
+- [x] 5.1 Costly signaling (Spence)
+- [x] 5.2 Cheap talk (Crawford-Sobel)
 
-**Progress:** 0/12 items complete
+**Progress:** 12/12 ✓ COMPLETE
 
 ---
 
