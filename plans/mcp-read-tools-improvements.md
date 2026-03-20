@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 1, item 1: add since and path_filter params to memory_git_log"
+last_verified: 2026-03-20
+next_action: "Phase 2, item 1: implement memory_session_health_check in read_tools.py"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -115,21 +115,21 @@ Add `memory_session_health_check` to `read_support` list. Ensure `warn_pct` and 
 
 ## Progress tracking
 
-- [ ] 1.1 Add `since` param to `memory_git_log`
-- [ ] 1.2 Add `path` param to `memory_git_log`
-- [ ] 1.3 Update docstring and TOML for `memory_git_log`
+- [x] 1.1 Add `since` param to `memory_git_log`
+- [x] 1.2 Add `path` param to `memory_git_log`
+- [x] 1.3 Update docstring and TOML for `memory_git_log`
 - [ ] 2.1 Implement `memory_session_health_check` in `read_tools.py`
 - [ ] 2.2 Register in server and capabilities contract
 - [ ] 2.3 Update `skills/session-start.md` to use the new tool
 - [ ] 3.1 Add `warn_pct` param to `memory_audit_trust`
 - [ ] 3.2 Add `approaching` bucket to audit output
 - [ ] 3.3 Update docstring and test for approaching bucket
-- [ ] 4.1 Tests for `memory_git_log` filter params
+- [x] 4.1 Tests for `memory_git_log` filter params
 - [ ] 4.2 Tests for `memory_session_health_check`
 - [ ] 4.3 Tests for `memory_audit_trust` approaching bucket
 - [ ] 4.4 Update `agent-memory-capabilities.toml`
 
-**Progress:** 0/13 items complete
+**Progress:** 4/13 items complete
 
 ---
 
@@ -146,5 +146,6 @@ Add `memory_session_health_check` to `read_support` list. Ensure `warn_pct` and 
 
 ## Notes
 
+- 2026-03-20: Completed Phase 1 for `memory_git_log`: added `since` and `path_filter`, updated the tool docstring, documented the filter surface in the capabilities manifest, and added focused tests for default, filtered, combined, and invalid-date cases.
 - 2026-03-19: Adjacent read-side groundwork landed outside this checklist: `memory_run_periodic_review`, `memory_get_file_provenance`, `memory_inspect_commit`, and a shared maturity-signal helper refactor. This does not directly complete any items in this plan, but it reduces implementation risk for future session-health and trust-audit improvements.
 - 2026-03-19: Keep `next_action` unchanged. The remaining direct scope is still `memory_git_log` filters, `memory_session_health_check`, and the `memory_audit_trust` warning band.

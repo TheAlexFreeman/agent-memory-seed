@@ -404,19 +404,29 @@ class GitRepo:
     # Inspection
     # ------------------------------------------------------------------
 
-    def log(self, n: int = 10) -> list[dict]:
+    def log(
+        self,
+        n: int = 10,
+        *,
+        since: str | None = None,
+        path_filter: str | None = None,
+    ) -> list[dict]:
         """Return the last n commits as structured dicts."""
         # Use a record separator to handle multi-line messages
         sep = "|||COMMIT|||"
-        result = self._run(
-            [
-                "git",
-                "log",
-                f"-{n}",
-                f"--pretty=format:{sep}%H%n%s%n%ai%n",
-                "--name-only",
-            ]
-        )
+        cmd = [
+            "git",
+            "log",
+            f"-{n}",
+            f"--pretty=format:{sep}%H%n%s%n%ai%n",
+            "--name-only",
+        ]
+        if since is not None:
+            cmd.append(f"--after={since}")
+        if path_filter is not None:
+            cmd += ["--", path_filter]
+
+        result = self._run(cmd)
 
         commits = []
         raw = result.stdout.strip()

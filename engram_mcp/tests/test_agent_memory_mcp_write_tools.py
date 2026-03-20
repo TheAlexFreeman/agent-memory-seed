@@ -2663,6 +2663,108 @@ Next: Original next action
         self.assertEqual(payload[0]["message"], "host update")
         self.assertIn("src/app.py", payload[0]["files_changed"])
 
+    def test_memory_git_log_default_behavior_includes_recent_commits(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "# Quick Reference\n",
+                "identity/profile.md": "# Profile\n",
+                "plans/demo.md": "# Demo\n",
+            },
+            initial_commit_date="2026-03-01T00:00:00+00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"identity/profile.md": "# Profile\nupdated\n"},
+            "update identity",
+            commit_date="2026-03-10T00:00:00+00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\nupdated\n"},
+            "update plan",
+            commit_date="2026-03-18T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_git_log"](n=2)))
+
+        self.assertEqual([entry["message"] for entry in payload], ["update plan", "update identity"])
+        self.assertEqual([entry["truncated"] for entry in payload], [False, False])
+
+    def test_memory_git_log_filters_by_since_with_truncation_flag(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "# Quick Reference\n",
+                "identity/profile.md": "# Profile\n",
+                "plans/demo.md": "# Demo\n",
+            },
+            initial_commit_date="2026-03-01T00:00:00+00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"identity/profile.md": "# Profile\nupdated\n"},
+            "update identity",
+            commit_date="2026-03-10T00:00:00+00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\nupdated\n"},
+            "update plan",
+            commit_date="2026-03-18T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_git_log"](n=1, since="2026-03-01")))
+
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["message"], "update plan")
+        self.assertTrue(payload[0]["truncated"])
+
+    def test_memory_git_log_filters_by_path_and_since(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "# Quick Reference\n",
+                "identity/profile.md": "# Profile\n",
+                "plans/demo.md": "# Demo\n",
+            },
+            initial_commit_date="2026-03-01T00:00:00+00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"identity/profile.md": "# Profile\nupdated\n"},
+            "update identity",
+            commit_date="2026-03-10T00:00:00+00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {"plans/demo.md": "# Demo\nupdated\n"},
+            "update plan",
+            commit_date="2026-03-18T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_git_log"](
+                    n=5,
+                    since="2026-03-12",
+                    path_filter="plans\\demo.md",
+                )
+            )
+        )
+
+        self.assertEqual(len(payload), 1)
+        self.assertEqual(payload[0]["message"], "update plan")
+        self.assertEqual(payload[0]["files_changed"], ["plans/demo.md"])
+        self.assertFalse(payload[0]["truncated"])
+
+    def test_memory_git_log_rejects_invalid_since(self) -> None:
+        repo_root = self._init_repo({"meta/quick-reference.md": "# Quick Reference\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(tools["memory_git_log"](since="2026-99-99"))
+
     def test_memory_git_log_rejects_host_repo_inside_memory_worktree(self) -> None:
         repo_root = self._init_repo(
             {

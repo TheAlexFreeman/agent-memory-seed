@@ -9,6 +9,9 @@ read_support = [
   "memory_read_file",
   "memory_list_folder",
   "memory_search",
+  # memory_git_log supports optional `since` (YYYY-MM-DD) and `path_filter`
+  # parameters; returned commit entries may include `truncated` when `n`
+  # clips matches before the date window is exhausted.
   "memory_git_log",
   "memory_check_aggregation_triggers",
   "memory_aggregate_access",

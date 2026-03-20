@@ -147,6 +147,20 @@ def _parse_iso_date(raw_date: object) -> date | None:
         return None
 
 
+def _normalize_git_log_path_filter(path_filter: str) -> str:
+    """Validate and normalize an optional git-log path filter."""
+    from ..errors import ValidationError
+
+    normalized = path_filter.strip().replace("\\", "/")
+    if not normalized:
+        raise ValidationError("path_filter must be a non-empty repo-relative path or glob")
+    if normalized.startswith(("/", "../")) or "/../" in normalized:
+        raise ValidationError("path_filter must be a repo-relative path or glob")
+    if re.match(r"^[A-Za-z]:[/\\]", normalized):
+        raise ValidationError("path_filter must be a repo-relative path or glob")
+    return normalized
+
+
 def _load_access_entries(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Return parsed hot ACCESS entries and per-file counts for reporting."""
     entries: list[dict[str, Any]] = []
@@ -1503,22 +1517,48 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             openWorldHint=False,
         ),
     )
-    async def memory_git_log(n: int = 10, use_host_repo: bool = False) -> str:
+    async def memory_git_log(
+        n: int = 10,
+        since: str | None = None,
+        path_filter: str | None = None,
+        use_host_repo: bool = False,
+    ) -> str:
         """Return recent commit history for the memory repository.
 
         Useful at session start to see what changed since the last session.
 
         Args:
             n: Number of commits to return (default: 10, max: 50).
+            since: Optional ISO date filter (YYYY-MM-DD). Only commits after this date are returned.
+            path_filter: Optional repo-relative path or git pathspec to restrict the log.
             use_host_repo: When true, read from host_repo_root in agent-bootstrap.toml.
 
         Returns:
-            JSON list of commits, each with sha, message, date, files_changed.
+            JSON list of commits, each with sha, message, date, files_changed, truncated.
         """
+        from ..errors import ValidationError
+
         root = get_root()
         repo = _get_git_repo_for_log(root, get_repo(), use_host_repo=use_host_repo)
         n = min(n, 50)
-        commits = repo.log(n)
+        if since is not None and _parse_iso_date(since) is None:
+            raise ValidationError("since must be a valid ISO date string (YYYY-MM-DD)")
+
+        normalized_path_filter = None
+        if path_filter is not None:
+            normalized_path_filter = _normalize_git_log_path_filter(path_filter)
+
+        commits = repo.log(n, since=since, path_filter=normalized_path_filter)
+        truncated = False
+        if since is not None and len(commits) == n and n > 0:
+            total_commits = repo.commit_count_since(
+                since,
+                paths=[normalized_path_filter] if normalized_path_filter else None,
+            )
+            truncated = total_commits > len(commits)
+
+        for commit in commits:
+            commit["truncated"] = truncated
         return json.dumps(commits, indent=2)
 
     # ------------------------------------------------------------------

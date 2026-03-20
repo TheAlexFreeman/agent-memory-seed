@@ -21,8 +21,8 @@ Blocks: none.
 
 Detail: plans/mcp-read-tools-improvements.md
 Scope: Collapse manual session-start reads and improve git-log and trust-audit visibility.
-Progress: 0/13 complete
-Next: Phase 1, item 1 — add `since` and `path_filter` params to `memory_git_log` in `read_tools.py`
+Progress: 4/13 complete
+Next: Phase 2, item 1 — implement `memory_session_health_check` in `read_tools.py`
 Blocks: none; structural prerequisites are complete.
 
 
