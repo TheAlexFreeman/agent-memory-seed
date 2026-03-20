@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 1, item 8 — update meta/quick-reference.md routing rules for worktree topology (requires protected-file approval)"
+next_action: "Phase 2, item 10 — add memory_check_knowledge_freshness to read_tools.py"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -150,7 +150,7 @@ work correctly when the memory store is a worktree inside a larger project.
    recent commits) alongside the memory store status at session start. In standalone
    mode this field is absent and behaviour is unchanged.
 
-8. ☐ Update `meta/quick-reference.md` routing rules for worktree topology
+8. ☑ Update `meta/quick-reference.md` routing rules for worktree topology
 
    Add a routing rule: if the agent detects it is operating from a host project root
    (not the memory repo root directly), the MCP server path and memory store path
@@ -167,7 +167,7 @@ enabling knowledge staleness detection as source files change.
 
 ### Items
 
-9. ☐ Add `host_repo_root` parameter to `memory_git_log`
+9. ☑ Add `host_repo_root` parameter to `memory_git_log`
 
    The existing tool reads git log from the memory repo root. Add an optional
    `use_host_repo: bool = False` parameter that, when set, reads from
@@ -388,4 +388,4 @@ no change.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following design discussion on orphan-branch worktree integration strategy |
-| 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 items 5-7 by writing host-root adapter files, preferring `engram-mcp` over the path-based script when available, and formalizing optional `host_repo_root` support in the bootstrap resolver and validator. Next planned item: Phase 1 item 8, which touches `meta/quick-reference.md` and therefore needs explicit protected-file approval before implementation. |
+| 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 items 5-8 by writing host-root adapter files, preferring `engram-mcp` over the path-based script when available, formalizing optional `host_repo_root` support in the bootstrap resolver and validator, and updating `meta/quick-reference.md` for host-root worktree routing. Also completed Phase 2 item 9 by teaching `memory_git_log` to read from the configured host repo with path-safety checks. Next planned item: Phase 2 item 10 (`memory_check_knowledge_freshness`). |

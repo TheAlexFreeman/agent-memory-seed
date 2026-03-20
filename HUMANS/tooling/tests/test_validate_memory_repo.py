@@ -79,6 +79,7 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     - Check whether `meta/review-queue.md` still contains only its placeholder.
     - Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger.
     - `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
+    - In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations and the worktree path for memory files and governance.
 
     ## Compact bootstrap contract
 

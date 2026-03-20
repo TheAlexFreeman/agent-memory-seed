@@ -12,9 +12,9 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 7/24 complete
-Next: Phase 1, item 8 — update `meta/quick-reference.md` routing for worktree topology
-Blocks: requires explicit approval before editing protected file `meta/quick-reference.md`.
+Progress: 9/24 complete
+Next: Phase 2, item 10 — add `memory_check_knowledge_freshness` to `read_tools.py`
+Blocks: none; freshness tooling can proceed on top of host-repo git access.
 
 
 ### `access-log-tooling-improvements.md` · status: active · trust: medium

@@ -42,6 +42,7 @@ Use this table to determine which files to read for each session type. Load file
 - Check whether `meta/review-queue.md` still contains only its placeholder. Load the body only when real entries exist or the user asks about it.
 - Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger. Load entries only when a trigger is hit or the current task requires retrieval analysis.
 - `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
+- In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations and the worktree path for memory files and governance.
 
 ---
 

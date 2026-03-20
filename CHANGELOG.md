@@ -32,6 +32,10 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 - **Promoted `host_repo_root` into the bootstrap contract.** Added an optional `host_repo_root` field to `agent-bootstrap.toml`, taught the bootstrap resolver to return host-repo git state when configured, and taught the validator to reject malformed non-absolute values.
 
+- **Updated the live router for host/worktree topology.** `meta/quick-reference.md` now makes the worktree split explicit: use `host_repo_root` for host-code git operations and the memory worktree for memory files and governance surfaces.
+
+- **Enabled host-repo git log reads from the MCP layer.** `memory_git_log` now accepts a host-repo mode that resolves `host_repo_root` from `agent-bootstrap.toml`, rejects host paths nested inside the memory worktree, and returns commit history from the configured application repo.
+
 - **Extended setup regression coverage.** Added end-to-end setup tests for orphan-branch creation, committed worktree materialization, worktree-targeted MCP config paths, and `--dry-run` safety. Also refreshed `setup/initial-commit-paths.txt`, `.gitattributes`, and the setup fixture so the new worktree tooling is preserved in the canonical seed commit.
 
 **Reasoning:** The top-priority build plan was blocked on having a real entry point for worktree mode. Landing the Phase 0 path first creates a usable deployment command, proves the orphan-branch topology in tests, and establishes the minimal seed boundary that later adapter, validator, and host-repo freshness work can build on without mixing user-specific content into new worktree branches.
