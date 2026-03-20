@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 2, item 10 — add memory_check_knowledge_freshness to read_tools.py"
+next_action: "Phase 3, item 13 — write CI/CD exemption guidance in HUMANS/docs/INTEGRATIONS.md"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -179,7 +179,7 @@ enabling knowledge staleness detection as source files change.
    have no way to know when source files have changed since a knowledge file's
    `last_verified` date.
 
-10. ☐ Add `memory_check_knowledge_freshness` tool to `read_tools.py`
+10. ☑ Add `memory_check_knowledge_freshness` tool to `read_tools.py`
 
     Given a list of knowledge file paths, returns a list of freshness reports:
     - `status`: `fresh` / `stale` / `unknown` (unknown if `last_verified` is absent
@@ -198,7 +198,7 @@ enabling knowledge staleness detection as source files change.
     This makes the trust decay policy machine-enforceable rather than advisory and gives
     freshness checks a stronger provenance anchor than date-only comparisons.
 
-11. ☐ Update `memory_audit_trust` to use freshness data when `host_repo_root` is set
+11. ☑ Update `memory_audit_trust` to use freshness data when `host_repo_root` is set
 
     The existing audit tool checks `last_verified` dates against fixed thresholds.
     Extend it so that when host repo access is available, stale thresholds are
@@ -207,7 +207,7 @@ enabling knowledge staleness detection as source files change.
     its source files is less urgent than one with a 2-week-old `last_verified` but 40
     intervening commits.
 
-12. ☐ Add test coverage for items 9–11
+12. ☑ Add test coverage for items 9–11
 
     Use a temporary git repo with a known commit history as the simulated host repo.
     Cover: fresh file (no source changes), stale file (source changed after
@@ -389,3 +389,4 @@ no change.
 |---|---|
 | 2026-03-19 | Plan created following design discussion on orphan-branch worktree integration strategy |
 | 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 items 5-8 by writing host-root adapter files, preferring `engram-mcp` over the path-based script when available, formalizing optional `host_repo_root` support in the bootstrap resolver and validator, and updating `meta/quick-reference.md` for host-root worktree routing. Also completed Phase 2 item 9 by teaching `memory_git_log` to read from the configured host repo with path-safety checks. Next planned item: Phase 2 item 10 (`memory_check_knowledge_freshness`). |
+| 2026-03-20 | Completed Phase 2 items 10-12 by adding `memory_check_knowledge_freshness`, reusing the host-repo bootstrap contract to resolve related source files and compare them against host git history, and folding the same freshness signal into `memory_audit_trust` so stale host-backed notes are escalated by change activity while unchanged notes stay lower priority. Added targeted MCP coverage for stale, fresh, unknown-host, and export behavior; targeted tests passed (`98 passed`). Next planned item: Phase 3 item 13 (`HUMANS/docs/INTEGRATIONS.md` worktree guidance). |

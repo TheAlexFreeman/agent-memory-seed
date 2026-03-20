@@ -6,6 +6,7 @@ These extend the existing read-only tool set with:
   - memory_list_folder : unchanged from existing (re-implemented here)
   - memory_search      : unchanged from existing (re-implemented here)
   - memory_git_log     : recent commit history
+    - memory_check_knowledge_freshness : host-repo freshness for knowledge files
   - memory_diff        : working tree status
   - memory_audit_trust : trust decay audit
     - memory_check_aggregation_triggers : ACCESS.jsonl trigger status
@@ -988,6 +989,180 @@ def _get_git_repo_for_log(root: Path, repo, *, use_host_repo: bool):
         raise ValidationError(str(exc)) from exc
 
 
+def _get_host_git_repo(root: Path, repo):
+    """Return the configured host repo, if present."""
+    if _resolve_host_repo(root) is None:
+        return None
+    return _get_git_repo_for_log(root, repo, use_host_repo=True)
+
+
+def _split_csv_or_lines(raw: str) -> list[str]:
+    items: list[str] = []
+    for chunk in re.split(r"[,\n]", raw):
+        value = chunk.strip()
+        if value:
+            items.append(value)
+    return list(dict.fromkeys(items))
+
+
+def _coerce_path_list(value: object) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return _split_csv_or_lines(value)
+    if isinstance(value, (list, tuple)):
+        items: list[str] = []
+        for entry in value:
+            text = str(entry).strip()
+            if text:
+                items.append(text)
+        return list(dict.fromkeys(items))
+    text = str(value).strip()
+    return [text] if text else []
+
+
+def _resolve_requested_knowledge_paths(root: Path, raw_paths: str) -> list[tuple[str, Path]]:
+    from ..errors import NotFoundError, ValidationError
+
+    resolved: list[tuple[str, Path]] = []
+    for requested in _split_csv_or_lines(raw_paths):
+        rel_path = Path(requested)
+        if rel_path.is_absolute():
+            raise ValidationError(f"Knowledge path must be repo-relative: {requested}")
+
+        abs_path = (root / rel_path).resolve()
+        try:
+            abs_path.relative_to(root)
+        except ValueError as exc:
+            raise ValidationError(f"Knowledge path escapes repository root: {requested}") from exc
+
+        rel = abs_path.relative_to(root).as_posix()
+        if not rel.startswith("knowledge/"):
+            raise ValidationError(f"Knowledge path must live under knowledge/: {requested}")
+        if not abs_path.exists() or not abs_path.is_file():
+            raise NotFoundError(f"File not found: {requested}")
+        resolved.append((rel, abs_path))
+
+    if not resolved:
+        raise ValidationError("Provide at least one knowledge path")
+    return list(dict.fromkeys(resolved))
+
+
+def _resolve_host_source_path(host_repo, candidate: str) -> str | None:
+    from ..errors import MemoryPermissionError, ValidationError
+
+    raw_path = Path(candidate)
+    if raw_path.is_absolute():
+        abs_path = raw_path.resolve()
+        try:
+            abs_path.relative_to(host_repo.root)
+        except ValueError as exc:
+            raise ValidationError(f"Host source path escapes repository root: {candidate}") from exc
+    else:
+        try:
+            abs_path = host_repo.abs_path(candidate)
+        except MemoryPermissionError as exc:
+            raise ValidationError(str(exc)) from exc
+
+    if not abs_path.exists() or not abs_path.is_file():
+        return None
+    return abs_path.relative_to(host_repo.root).as_posix()
+
+
+def _infer_host_source_files(rel_path: str, host_repo) -> list[str]:
+    parts = Path(rel_path).parts
+    if len(parts) < 3 or parts[0] != "knowledge" or parts[1] != "codebase":
+        return []
+
+    candidate = Path(*parts[2:])
+    candidates: list[Path] = [candidate]
+    if candidate.suffix == ".md":
+        candidates.append(candidate.with_suffix(""))
+
+    inferred: list[str] = []
+    for item in candidates:
+        if not item.parts:
+            continue
+        resolved = _resolve_host_source_path(host_repo, item.as_posix())
+        if resolved is not None:
+            inferred.append(resolved)
+    return list(dict.fromkeys(inferred))
+
+
+def _suggest_freshness_action(
+    *,
+    status: str,
+    trust: str | None,
+    host_changes_since: int | None,
+    verified_against_commit: str | None,
+    current_head: str | None,
+) -> str:
+    if status == "unknown":
+        return "none"
+    if status == "fresh":
+        if trust == "low" and verified_against_commit and current_head == verified_against_commit:
+            return "promote"
+        return "none"
+    if trust == "high" and (host_changes_since or 0) >= 20:
+        return "downgrade_trust"
+    return "reverify"
+
+
+def _build_knowledge_freshness_report(root: Path, repo, rel_path: str, abs_path: Path) -> dict[str, object]:
+    from ..frontmatter_utils import read_with_frontmatter
+
+    fm_dict, _ = read_with_frontmatter(abs_path)
+    trust_value = fm_dict.get("trust")
+    trust = str(trust_value) if trust_value else None
+    verified_value = fm_dict.get("verified_against_commit")
+    verified_against_commit = str(verified_value) if verified_value else None
+    last_verified_date = _effective_date(fm_dict)
+    host_repo = _get_host_git_repo(root, repo)
+    source_files: list[str] = []
+    current_head: str | None = None
+    host_changes_since: int | None = None
+    status = "unknown"
+
+    if host_repo is not None:
+        current_head = host_repo.current_head()
+        explicit_sources = _coerce_path_list(fm_dict.get("related"))
+        for candidate in explicit_sources:
+            resolved = _resolve_host_source_path(host_repo, candidate)
+            if resolved is not None:
+                source_files.append(resolved)
+        if not source_files:
+            source_files.extend(_infer_host_source_files(rel_path, host_repo))
+        source_files = list(dict.fromkeys(source_files))
+
+        if source_files and last_verified_date is not None:
+            host_changes_since = host_repo.commit_count_since(
+                f"{last_verified_date} 23:59:59",
+                paths=source_files,
+            )
+            status = "fresh" if host_changes_since == 0 else "stale"
+        elif verified_against_commit and current_head:
+            status = "fresh" if verified_against_commit == current_head else "stale"
+
+    payload: dict[str, object] = {
+        "path": rel_path,
+        "trust": trust,
+        "last_verified": str(last_verified_date) if last_verified_date is not None else None,
+        "verified_against_commit": verified_against_commit,
+        "current_head": current_head,
+        "source_files": source_files,
+        "host_changes_since": host_changes_since,
+        "status": status,
+    }
+    payload["suggested_action"] = _suggest_freshness_action(
+        status=status,
+        trust=trust,
+        host_changes_since=host_changes_since,
+        verified_against_commit=verified_against_commit,
+        current_head=current_head,
+    )
+    return payload
+
+
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     """Register all Tier 0 read tools and return their callables."""
 
@@ -1312,6 +1487,41 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         n = min(n, 50)
         commits = repo.log(n)
         return json.dumps(commits, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_check_knowledge_freshness
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_check_knowledge_freshness",
+        annotations=_tool_annotations(
+            title="Check Knowledge Freshness",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_check_knowledge_freshness(paths: str) -> str:
+        """Check knowledge-file freshness against the configured host repository.
+
+        Args:
+            paths: Comma-separated or newline-separated knowledge file paths.
+
+        Returns:
+            JSON with one freshness report per requested knowledge file.
+        """
+        root = get_root()
+        repo = get_repo()
+        reports = [
+            _build_knowledge_freshness_report(root, repo, rel_path, abs_path)
+            for rel_path, abs_path in _resolve_requested_knowledge_paths(root, paths)
+        ]
+        payload = {
+            "checked_at": str(date.today()),
+            "files_checked": len(reports),
+            "reports": reports,
+        }
+        return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
     # memory_check_aggregation_triggers
@@ -1889,6 +2099,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         unevaluable = []
         files_checked = 0
         repo = get_repo()
+        host_repo = _get_host_git_repo(root, repo)
         untracked_files = set(repo.diff_status()["untracked"])
 
         for cat in categories:
@@ -1951,14 +2162,33 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 if implicit_medium:
                     entry["implicit_trust"] = True
 
+                freshness_report = None
+                freshness_status = "unknown"
+                if host_repo is not None:
+                    freshness_report = _build_knowledge_freshness_report(root, repo, rel, md_file)
+                    freshness_status = str(freshness_report["status"])
+                    for key in (
+                        "current_head",
+                        "verified_against_commit",
+                        "host_changes_since",
+                        "source_files",
+                    ):
+                        if freshness_report.get(key) is not None:
+                            entry[key] = freshness_report[key]
+                    entry["freshness_status"] = freshness_status
+
                 if trust == "low":
                     threshold = low_threshold
                     warn = low_warn
                     entry["days_until_threshold"] = max(0, threshold - days)
                     if days >= threshold:
-                        entry["action_required"] = "archive"
-                        overdue_low.append(entry)
-                    elif days >= warn:
+                        if freshness_status == "fresh":
+                            entry["action_required"] = "review"
+                            upcoming_low.append(entry)
+                        else:
+                            entry["action_required"] = "archive"
+                            overdue_low.append(entry)
+                    elif days >= warn or freshness_status == "stale":
                         entry["action_required"] = "review"
                         upcoming_low.append(entry)
                 elif trust == "medium":
@@ -1966,10 +2196,16 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     warn = medium_warn
                     entry["days_until_threshold"] = max(0, threshold - days)
                     if days >= threshold:
-                        entry["action_required"] = "flag"
-                        overdue_medium.append(entry)
-                    elif days >= warn:
-                        entry["action_required"] = "review"
+                        if freshness_status == "fresh":
+                            entry["action_required"] = "review"
+                            upcoming_medium.append(entry)
+                        else:
+                            entry["action_required"] = "flag"
+                            overdue_medium.append(entry)
+                    elif days >= warn or freshness_status == "stale":
+                        entry["action_required"] = (
+                            "reverify" if freshness_status == "stale" else "review"
+                        )
                         upcoming_medium.append(entry)
 
         result = {
@@ -2086,6 +2322,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_list_folder": memory_list_folder,
         "memory_search": memory_search,
         "memory_git_log": memory_git_log,
+        "memory_check_knowledge_freshness": memory_check_knowledge_freshness,
         "memory_check_aggregation_triggers": memory_check_aggregation_triggers,
         "memory_aggregate_access": memory_aggregate_access,
         "memory_run_periodic_review": memory_run_periodic_review,

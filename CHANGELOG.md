@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Host-repo freshness checks landed
+
+**Changed:**
+
+- **Added a host-backed freshness read tool.** `memory_check_knowledge_freshness` now reads knowledge-file frontmatter, resolves `related` host source files through `host_repo_root`, compares them against host git history, and returns structured freshness reports with `status`, `current_head`, `host_changes_since`, and `suggested_action`.
+
+- **Extended trust audit with source-change awareness.** `memory_audit_trust` now reuses the same freshness signal when a host repo is configured, so recent source churn can escalate medium-trust notes for re-verification while older but unchanged notes avoid being treated as equally urgent.
+
+- **Added host-history counting support to the git wrapper.** `GitRepo` now exposes a commit-count helper used to measure host changes since a note's `last_verified` date without duplicating git subprocess logic in the read-tool layer.
+
+- **Expanded MCP regression coverage.** Added targeted tests for stale/fresh/unknown freshness reports, freshness-aware trust auditing, and export visibility for the new read tool.
+
+**Reasoning:** Host-repo git access by itself only exposed raw history; it did not make that history actionable for memory governance. This slice turns the new worktree topology into a usable staleness signal that agents can query directly and that trust auditing can consume automatically, which closes the core Phase 2 loop before moving on to CI/tooling-hygiene templates.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Worktree-init foundation landed
 
 **Changed:**

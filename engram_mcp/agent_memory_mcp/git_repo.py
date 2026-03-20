@@ -441,6 +441,14 @@ class GitRepo:
             )
         return commits
 
+    def commit_count_since(self, since: str, *, paths: list[str] | None = None) -> int:
+        """Return the number of commits since a date, optionally filtered to paths."""
+        cmd = ["git", "rev-list", "--count", f"--since={since}", "HEAD"]
+        if paths:
+            cmd += ["--", *paths]
+        result = self._run(cmd)
+        return int(result.stdout.strip() or "0")
+
     def current_head(self) -> str:
         """Return the current HEAD commit SHA."""
         result = self._run(["git", "rev-parse", "HEAD"])

@@ -138,6 +138,8 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         repo_root: Path,
         files: dict[str, str],
         message: str,
+        *,
+        commit_date: str | None = None,
     ) -> str:
         for rel_path, content in files.items():
             target = repo_root / rel_path
@@ -156,6 +158,15 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             check=True,
             capture_output=True,
             text=True,
+            env=(
+                {
+                    **os.environ,
+                    "GIT_AUTHOR_DATE": commit_date,
+                    "GIT_COMMITTER_DATE": commit_date,
+                }
+                if commit_date is not None
+                else None
+            ),
         )
         return subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -165,7 +176,7 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             text=True,
         ).stdout.strip()
 
-    def _init_host_repo(self, files: dict[str, str]) -> Path:
+    def _init_host_repo(self, files: dict[str, str], *, initial_commit_date: str | None = None) -> Path:
         temp_root = Path(self._tmpdir.name) / (f"host_{id(files)}")
         temp_root.mkdir(parents=True, exist_ok=True)
         subprocess.run(["git", "init"], cwd=temp_root, check=True, capture_output=True, text=True)
@@ -188,12 +199,20 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
         subprocess.run(["git", "add", "."], cwd=temp_root, check=True, capture_output=True, text=True)
+        commit_env = None
+        if initial_commit_date is not None:
+            commit_env = {
+                **os.environ,
+                "GIT_AUTHOR_DATE": initial_commit_date,
+                "GIT_COMMITTER_DATE": initial_commit_date,
+            }
         subprocess.run(
             ["git", "commit", "-m", "host seed"],
             cwd=temp_root,
             check=True,
             capture_output=True,
             text=True,
+            env=commit_env,
         )
         return temp_root
 
@@ -2105,6 +2124,201 @@ Next: Original next action
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_git_log"](use_host_repo=True))
+
+    def test_memory_check_knowledge_freshness_reports_stale_host_backed_note(self) -> None:
+        host_root = self._init_host_repo(
+            {"src/app.py": "print('host')\n"},
+            initial_commit_date="2026-02-20T00:00:00+00:00",
+        )
+        initial_head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=host_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        updated_head = self._write_and_commit(
+            host_root,
+            {"src/app.py": "print('host v2')\n"},
+            "host update",
+            commit_date="2026-03-10T00:00:00+00:00",
+        )
+        repo_root = self._init_repo(
+            {
+                "agent-bootstrap.toml": (
+                    'version = 1\n'
+                    'router = "meta/quick-reference.md"\n'
+                    'default_mode = "returning"\n'
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
+                    f'host_repo_root = "{host_root.as_posix()}"\n'
+                ),
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/app.md": (
+                    "---\n"
+                    "trust: medium\n"
+                    "last_verified: 2026-03-01\n"
+                    f"verified_against_commit: {initial_head}\n"
+                    "related:\n"
+                    "  - src/app.py\n"
+                    "---\n\n"
+                    "# App\n"
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_check_knowledge_freshness"](paths="knowledge/app.md"))
+        )
+
+        self.assertEqual(payload["files_checked"], 1)
+        report = payload["reports"][0]
+        self.assertEqual(report["path"], "knowledge/app.md")
+        self.assertEqual(report["status"], "stale")
+        self.assertEqual(report["source_files"], ["src/app.py"])
+        self.assertEqual(report["host_changes_since"], 1)
+        self.assertEqual(report["current_head"], updated_head)
+        self.assertEqual(report["suggested_action"], "reverify")
+
+    def test_memory_check_knowledge_freshness_returns_unknown_without_host_repo(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "# Quick Reference\n",
+                "knowledge/app.md": (
+                    "---\n"
+                    "trust: medium\n"
+                    "last_verified: 2026-03-01\n"
+                    "related:\n"
+                    "  - src/app.py\n"
+                    "---\n\n"
+                    "# App\n"
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_check_knowledge_freshness"](paths="knowledge/app.md"))
+        )
+
+        self.assertEqual(payload["files_checked"], 1)
+        report = payload["reports"][0]
+        self.assertEqual(report["status"], "unknown")
+        self.assertEqual(report["source_files"], [])
+        self.assertIsNone(report["current_head"])
+        self.assertEqual(report["suggested_action"], "none")
+
+    def test_memory_audit_trust_flags_recent_medium_note_when_host_sources_changed(self) -> None:
+        host_root = self._init_host_repo(
+            {"src/app.py": "print('host')\n"},
+            initial_commit_date="2026-02-20T00:00:00+00:00",
+        )
+        initial_head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=host_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        self._write_and_commit(
+            host_root,
+            {"src/app.py": "print('host v2')\n"},
+            "host update",
+            commit_date="2026-03-10T00:00:00+00:00",
+        )
+        repo_root = self._init_repo(
+            {
+                "agent-bootstrap.toml": (
+                    'version = 1\n'
+                    'router = "meta/quick-reference.md"\n'
+                    'default_mode = "returning"\n'
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
+                    f'host_repo_root = "{host_root.as_posix()}"\n'
+                ),
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/app.md": (
+                    "---\n"
+                    "trust: medium\n"
+                    "last_verified: 2026-03-01\n"
+                    f"verified_against_commit: {initial_head}\n"
+                    "related:\n"
+                    "  - src/app.py\n"
+                    "---\n\n"
+                    "# App\n"
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(len(payload["upcoming_medium"]), 1)
+        entry = payload["upcoming_medium"][0]
+        self.assertEqual(entry["path"], "knowledge/app.md")
+        self.assertEqual(entry["freshness_status"], "stale")
+        self.assertEqual(entry["host_changes_since"], 1)
+        self.assertEqual(entry["action_required"], "reverify")
+
+    def test_memory_audit_trust_downgrades_stale_age_when_host_sources_are_unchanged(self) -> None:
+        host_root = self._init_host_repo(
+            {"src/app.py": "print('host')\n"},
+            initial_commit_date="2024-12-20T00:00:00+00:00",
+        )
+        current_head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=host_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        repo_root = self._init_repo(
+            {
+                "agent-bootstrap.toml": (
+                    'version = 1\n'
+                    'router = "meta/quick-reference.md"\n'
+                    'default_mode = "returning"\n'
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
+                    f'host_repo_root = "{host_root.as_posix()}"\n'
+                ),
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/legacy.md": (
+                    "---\n"
+                    "trust: medium\n"
+                    "last_verified: 2025-01-01\n"
+                    f"verified_against_commit: {current_head}\n"
+                    "related:\n"
+                    "  - src/app.py\n"
+                    "---\n\n"
+                    "# Legacy\n"
+                ),
+            },
+            initial_commit_date="2025-01-01T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(len(payload["upcoming_medium"]), 1)
+        entry = payload["upcoming_medium"][0]
+        self.assertEqual(entry["path"], "knowledge/legacy.md")
+        self.assertEqual(entry["freshness_status"], "fresh")
+        self.assertEqual(entry["host_changes_since"], 0)
+        self.assertEqual(entry["action_required"], "review")
 
     def test_memory_check_aggregation_triggers_reports_above_and_near_thresholds(self) -> None:
         repo_root = self._init_repo(

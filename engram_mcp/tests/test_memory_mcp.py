@@ -117,6 +117,7 @@ class MemoryMCPTests(unittest.TestCase):
     def test_new_tools_are_exported(self) -> None:
         for name in (
             "memory_git_log",
+            "memory_check_knowledge_freshness",
             "memory_check_aggregation_triggers",
             "memory_aggregate_access",
             "memory_run_periodic_review",

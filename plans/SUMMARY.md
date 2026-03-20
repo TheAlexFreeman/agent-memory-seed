@@ -12,9 +12,9 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 9/24 complete
-Next: Phase 2, item 10 — add `memory_check_knowledge_freshness` to `read_tools.py`
-Blocks: none; freshness tooling can proceed on top of host-repo git access.
+Progress: 12/24 complete
+Next: Phase 3, item 13 — write CI/CD exemption guidance in `HUMANS/docs/INTEGRATIONS.md`
+Blocks: none; host-repo freshness tooling is in place, so Phase 3 documentation/templates are unblocked.
 
 
 ### `access-log-tooling-improvements.md` · status: active · trust: medium
