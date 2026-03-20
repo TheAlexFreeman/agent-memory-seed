@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 3, item 1: extend memory_validate with coverage-gap checks"
+next_action: "Phase 3, item 2: add session_id coverage and proxy-session fallback fields"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -104,14 +104,14 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [x] 2.2 Add `task_id` short code + maturity signal grouping
 - [x] 2.3 Add `min_helpfulness` sweep filter + sidecar file
 - [x] 2.4 Define archive segmentation + materialized-summary refresh behavior
-- [ ] 3.1 Extend `memory_validate` with coverage check
+- [x] 3.1 Extend `memory_validate` with coverage check
 - [ ] 3.2 `memory_get_maturity_signals` fallback + coverage field
 - [ ] 4.1 Tests for batch tool
-- [ ] 4.2 Tests for coverage validator
+- [x] 4.2 Tests for coverage validator
 - [x] 4.3 Update capabilities TOML tests
 - [ ] 4.4 Document new fields in CORE.md
 
-**Progress:** 8/13 items complete
+**Progress:** 10/13 items complete
 
 ---
 

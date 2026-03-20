@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import re
 import shutil
 import subprocess
@@ -8,6 +9,7 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -773,6 +775,11 @@ def strip_standalone_only_files(root: Path) -> None:
 
 
 class ValidateMemoryRepoTests(unittest.TestCase):
+    def assert_no_non_coverage_warnings(self, result: object) -> None:
+        warnings = list(getattr(result, "warnings"))
+        unexpected = [warning for warning in warnings if not warning.startswith("CoverageGap:")]
+        self.assertEqual(unexpected, [], "\n".join(unexpected))
+
     def test_current_seed_repo_passes_validation(self) -> None:
         result = validator.validate_repo(REPO_ROOT)
         self.assertEqual(result.errors, [], "\n".join(result.errors))
@@ -979,7 +986,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(memory_root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
-            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+            self.assert_no_non_coverage_warnings(result)
 
     def test_worktree_without_host_repo_root_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1209,6 +1216,44 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 )
             )
 
+    def test_coverage_gap_warns_for_monitored_folder_without_recent_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+
+            result = validator.validate_repo(root)
+
+            self.assertTrue(
+                any(
+                    warning.startswith("CoverageGap: skills/")
+                    and f"last {validator.DEFAULT_ACCESS_COVERAGE_WINDOW_DAYS} days" in warning
+                    for warning in result.warnings
+                )
+            )
+
+    def test_coverage_gap_does_not_warn_for_folder_with_recent_entry(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "skills" / "ACCESS.jsonl",
+                json.dumps(
+                    {
+                        "file": "skills/onboarding.md",
+                        "date": date.today().isoformat(),
+                        "task": "validator coverage",
+                        "helpfulness": 0.8,
+                        "note": "recent skill access",
+                        "session_id": "chats/2026/03/20/chat-001",
+                    }
+                )
+                + "\n",
+            )
+
+            result = validator.validate_repo(root)
+
+            self.assertFalse(any(warning.startswith("CoverageGap: skills/") for warning in result.warnings))
+
     def test_invalid_source_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
@@ -1337,7 +1382,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
-            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+            self.assert_no_non_coverage_warnings(result)
 
     def test_invalid_optional_last_verified_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1428,7 +1473,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
-            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+            self.assert_no_non_coverage_warnings(result)
 
     def test_legacy_origin_session_warns_but_passes(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1711,7 +1756,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
-            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+            self.assert_no_non_coverage_warnings(result)
 
     def test_quarantine_file_with_wrong_source_warns(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1765,7 +1810,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
-            self.assertEqual(result.warnings, [], "\n".join(result.warnings))
+            self.assert_no_non_coverage_warnings(result)
 
     def test_access_entry_with_path_traversal_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

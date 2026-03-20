@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path, PurePosixPath
+from types import ModuleType
 from typing import Any
 
 import frontmatter as fmlib
@@ -16,17 +18,24 @@ import frontmatter as fmlib
 try:
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
-    import tomli as tomllib
+    import tomli
+
+    TOML_MODULE: ModuleType = tomli
+else:
+    TOML_MODULE = tomllib
 
 
 CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
 ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "chats")
+ACCESS_COVERAGE_DIRS = ("meta", "skills", "identity", "chats")
 IGNORED_DIR_NAMES = {".git", ".claude", "__pycache__", ".pytest_cache"}
 PLACEHOLDER_SNIPPETS = (
     "_Nothing here yet.",
     "_No pending items._",
     "_No current notes._",
 )
+DEFAULT_ACCESS_COVERAGE_WINDOW_DAYS = 30
+ACCESS_COVERAGE_WINDOW_ENV_VAR = "MEMORY_VALIDATE_COVERAGE_WINDOW_DAYS"
 
 REQUIRED_FRONTMATTER_KEYS = (
     "source",
@@ -50,7 +59,7 @@ LEGACY_ORIGIN_SESSION_RE = re.compile(r"^chat-\d{3}$")
 SPECIAL_ORIGIN_SESSION_VALUES = {"setup", "manual", "unknown"}
 
 REQUIRED_ACCESS_FIELDS = {"file", "date", "task", "helpfulness", "note"}
-OPTIONAL_ACCESS_FIELDS = {"session_id", "category"}
+OPTIONAL_ACCESS_FIELDS = {"session_id", "category", "mode", "task_id"}
 
 EXPECTED_QUICK_REFERENCE_PARAMETERS = (
     "Low-trust retirement threshold",
@@ -479,7 +488,7 @@ def is_deployed_worktree_repo(root: Path) -> bool:
         return False
 
     try:
-        manifest = tomllib.loads(text)
+        manifest = TOML_MODULE.loads(text)
     except Exception:
         return False
 
@@ -527,6 +536,95 @@ def iter_access_files(root: Path) -> list[Path]:
                 continue
             paths.append(path)
     return sorted(paths)
+
+
+def iter_coverage_target_files(root: Path, folder: str) -> list[Path]:
+    base = root / folder
+    if not base.exists():
+        return []
+
+    paths: list[Path] = []
+    for path in base.rglob("*.md"):
+        if should_ignore(path.relative_to(root)):
+            continue
+        if path.name == "SUMMARY.md":
+            continue
+        paths.append(path)
+    return sorted(paths)
+
+
+def access_coverage_window_days() -> int:
+    raw_value = os.environ.get(ACCESS_COVERAGE_WINDOW_ENV_VAR, "").strip()
+    if not raw_value:
+        return DEFAULT_ACCESS_COVERAGE_WINDOW_DAYS
+    try:
+        parsed = int(raw_value)
+    except ValueError:
+        return DEFAULT_ACCESS_COVERAGE_WINDOW_DAYS
+    return parsed if parsed > 0 else DEFAULT_ACCESS_COVERAGE_WINDOW_DAYS
+
+
+def collect_last_access_dates_by_folder(root: Path) -> dict[str, date]:
+    last_seen: dict[str, date] = {}
+    for path in iter_access_files(root):
+        if path.name == "ACCESS_SCANS.jsonl":
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(payload, dict):
+                continue
+
+            file_value = payload.get("file")
+            date_value = payload.get("date")
+            if not isinstance(file_value, str) or not isinstance(date_value, str):
+                continue
+
+            normalized_file = normalize_repo_relative_path(file_value)
+            if normalized_file is None:
+                continue
+            try:
+                entry_date = date.fromisoformat(date_value)
+            except ValueError:
+                continue
+
+            folder = PurePosixPath(normalized_file).parts[0]
+            if folder not in ACCESS_COVERAGE_DIRS:
+                continue
+            current = last_seen.get(folder)
+            if current is None or entry_date > current:
+                last_seen[folder] = entry_date
+    return last_seen
+
+
+def validate_access_coverage(root: Path, result: ValidationResult) -> None:
+    window_days = access_coverage_window_days()
+    today = date.today()
+    last_seen = collect_last_access_dates_by_folder(root)
+
+    for folder in ACCESS_COVERAGE_DIRS:
+        if not iter_coverage_target_files(root, folder):
+            continue
+
+        last_entry_date = last_seen.get(folder)
+        if last_entry_date is None:
+            result.warn(
+                f"CoverageGap: {folder}/ has 0 ACCESS entries in the last {window_days} days (days_since_last_entry=never)"
+            )
+            continue
+
+        days_since_last_entry = (today - last_entry_date).days
+        if days_since_last_entry >= window_days:
+            result.warn(
+                f"CoverageGap: {folder}/ has 0 ACCESS entries in the last {window_days} days (days_since_last_entry={days_since_last_entry})"
+            )
 
 
 def parse_frontmatter(path: Path, text: str, result: ValidationResult) -> dict[str, Any] | None:
@@ -969,8 +1067,8 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
         return
 
     try:
-        manifest = tomllib.loads(text)
-    except tomllib.TOMLDecodeError as exc:
+        manifest = TOML_MODULE.loads(text)
+    except TOML_MODULE.TOMLDecodeError as exc:
         result.error(f"{path}: invalid TOML ({exc})")
         return
 
@@ -1145,8 +1243,8 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         return
 
     try:
-        manifest = tomllib.loads(text)
-    except tomllib.TOMLDecodeError as exc:
+        manifest = TOML_MODULE.loads(text)
+    except TOML_MODULE.TOMLDecodeError as exc:
         result.error(f"{path}: invalid TOML ({exc})")
         return
 
@@ -1435,7 +1533,7 @@ def validate_mcp_runtime_layout(root: Path, result: ValidationResult) -> None:
         return
 
     try:
-        manifest = tomllib.loads(text)
+        manifest = TOML_MODULE.loads(text)
     except Exception as exc:
         result.error(f"{manifest_path}: invalid TOML ({exc})")
         return
@@ -1641,6 +1739,8 @@ def validate_repo(root: Path) -> ValidationResult:
 
     for path in iter_access_files(root):
         validate_access_file(path, root, result)
+
+    validate_access_coverage(root, result)
 
     return result
 
