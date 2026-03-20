@@ -78,6 +78,18 @@ Seven files covering Phase 1 (Greek foundation) and Phase 2 (Medieval synthesis)
 - **`cognitive-linguistics-metaphor-blending.md`** — Deep dive into three foundational cognitive linguistics programs: Lakoff & Johnson's Conceptual Metaphor Theory (primary metaphors, embodied grounding, radial categories, basic-level categories); Fauconnier & Turner's Conceptual Blending Theory (mental spaces, four network types, vital relations, compression, optimality principles); Sweetser's polysemy and viewpoint work (three-domain model for modality/conjunctions/perception verbs, frame semantics, fictive motion, subjectivity, gesture). Includes synthesis of how all three connect to the dynamical systems framework and LLM implications.
 - **`blending-compression-coupling-construal.md`** — Focused synthesis on three themes and their convergence in narrative world-understanding: (1) blending-as-compression — the AIT/MDL parallel, the key divergence (observer-relative vs. objective), and how blending optimality maps onto narrative aesthetics; (2) structural coupling and metaphor — primary metaphors as coupling deposits, languaging as intersubjective coupling, narrative as transmission of coupling history, and the asymmetry problem; (3) subjective construal — Langacker's spectrum, subjectification, narrative focalization as multi-perspective blending, the immersion/distance dual-mode. Synthesis: narrative as cognitive triangulation (compression + coupling + construal), with the dark side.
 
+<!-- section: system-notes -->
+### `system-notes/` — Engram system analysis and design notes (started 2026-03-20)
+
+System-internal analysis files produced by the Engram agent analyzing its own architecture and security surface. All carry `trust: low` and require especially careful human review given their self-referential nature.
+
+- **`memetic-security-injection-vectors.md`** — Context injection vector map for the Engram agent-memory system — all paths through which foreign content enters a session's context window, ranked by persistence and risk.
+- **`memetic-security-drift-vs-attack.md`** — Taxonomy of behavior-changing mechanisms in agentic memory systems — active injection, passive drift, precedent creep, and scope expansion — with detection heuristics and design implications.
+- **`memetic-security-memory-amplification.md`** — Analysis of how persistent memory systems amplify memetic threats — write amplification, trust escalation, governance modification, and summary compression bias — with quantified threat lifetime and influence radius for each Engram write target.
+- **`2026-03-19-tmp-data-loss-incident.md`** — Incident report on data loss and git-reset handling.
+- **`2026-03-20-git-session-followup.md`** — Follow-up notes on git session recovery.
+- **`environment-capability-asymmetry.md`** — Notes on capability asymmetry across environments.
+
 <!-- section: ai-frontier -->
 ### `ai-frontier/` — Frontier AI technical knowledge base (created 2026-03-19)
 

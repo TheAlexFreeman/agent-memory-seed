@@ -1,7 +1,7 @@
 ---
 created: 2026-03-20
 last_verified: 2026-03-20
-next_action: "Phase 1, item 1.1 — threat taxonomy: map all context injection vectors in a running engram session"
+next_action: "Phase 2, item 2.1 — trust tier system audit: document what the current trust tier system enforces and what it doesn't"
 origin_session: chats/2026/03/20/chat-001
 source: agent-generated
 status: active
@@ -291,10 +291,10 @@ What cannot be engineered away.
 ## Progress tracking
 
 ### Phase 1 — Threat Taxonomy
-- [ ] 1.1 Context injection vectors in a running Engram session
-- [ ] 1.2 Drift vs. attack: the phenomenological distinction
-- [ ] 1.3 Capability-robustness coupling (literature)
-- [ ] 1.4 The memory system as specific amplifier
+- [x] 1.1 Context injection vectors in a running Engram session
+- [x] 1.2 Drift vs. attack: the phenomenological distinction
+- [x] 1.3 Capability-robustness coupling (literature)
+- [x] 1.4 The memory system as specific amplifier
 
 ### Phase 2 — Existing Mitigations and Their Limits
 - [ ] 2.1 Trust tier system audit
@@ -321,7 +321,7 @@ What cannot be engineered away.
 - [ ] 5.2 Social and institutional residual
 - [ ] 5.3 The self-referential problem
 
-**Progress:** 0/18 items
+**Progress:** 4/18 items
 
 ---
 
