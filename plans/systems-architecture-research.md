@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: '`git-plumbing-and-automation.md`'
+next_action: '`filesystem-atomicity-and-locking.md`'
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -39,7 +39,7 @@ All output files go to `knowledge/_unverified/systems-architecture/`.
 
 ## Research phases
 
-### Phase 1 — Git internals · ☐ 2/3 complete
+### Phase 1 — Git internals · ☑ 3/3 complete
 
 **Why first:** The entire system is built on git as its storage layer, and three open
 problems are directly rooted in incomplete understanding of git's internals: (1) the
@@ -95,7 +95,7 @@ which requires precise understanding of the orphan branch → worktree topology,
      Phases 0–1. The hook model is how governance automation escapes depending on the
      agent to "remember" to validate.
 
-3. ☐ `git-plumbing-and-automation.md`
+3. ☑ `git-plumbing-and-automation.md`
 
    - **Plumbing vs. porcelain:** why `git add` / `git commit` / `git checkout` are
      unsafe to parse in scripts (locale-sensitive output, interactive prompts,
@@ -526,4 +526,4 @@ until reviewed.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following discussion of git/filesystem/distributed-systems research areas relevant to memory system architecture |
-| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) |
+| 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) || 2026-03-19 | Completed git-plumbing-and-automation.md (systems-architecture-research 3/13) |
