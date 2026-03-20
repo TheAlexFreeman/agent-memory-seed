@@ -34,6 +34,15 @@ Progress: 0/15 complete
 Next: Phase 1, item 1 — implement `memory_update_frontmatter_bulk` in `write_tools.py`
 Blocks: none; structural prerequisites are complete.
 
+
+### `mcp-curation-and-analytics-tools.md` · status: active · trust: medium
+
+Detail: plans/mcp-curation-and-analytics-tools.md
+Scope: Batch knowledge promotion, cross-reference validation, SUMMARY generation, ACCESS analytics, and branch diff tools.
+Progress: 0/22 complete
+Next: Phase 1, item 1 — implement `memory_promote_knowledge_batch` in `knowledge_tools.py`
+Blocks: none; can begin immediately. Complements (does not duplicate) mcp-read-tools-improvements and mcp-write-and-crosscutting-improvements.
+
 ### Research plans
 
 ### `information-theory-stat-learning-research.md` · status: complete · trust: medium · **COMPLETE**
