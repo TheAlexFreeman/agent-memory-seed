@@ -82,19 +82,11 @@ Blocks: waits on `mcp-reorganization.md` Phase 2.
 
 
 
-### `ai-frontier-research.md` · status: active · trust: medium
-
-Detail: plans/ai-frontier-research.md
-Scope: Build a deep knowledge base on frontier AI, from reasoning models through alignment, long-context systems, multi-agent coordination, and interpretability.
-Progress: 0/21 complete
-Next: Phase 1, item 1 — research reasoning models (o1/o3, DeepSeek R1, chain-of-thought, process reward models, test-time compute scaling)
-
-
-
 ---
 
 ## Recent completions
 
+- [ai-frontier-research.md](ai-frontier-research.md) — completed 2026-03-19; 21 knowledge files covering reasoning models, alignment, retrieval/memory, multi-agent coordination, interpretability, emerging architectures, and AI epistemology.
 - [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; compact startup contract enforced, drill-down references required, helper added, measured at 5705/7000 tokens with 1295 headroom.
 - [systems-architecture-research.md](systems-architecture-research.md) — completed 2026-03-19; storage, concurrency, and data-model primitives for the memory system.
 - [lesswrong-rationalist-community-research.md](lesswrong-rationalist-community-research.md) — completed 2026-03-19; LessWrong and rationalist-community narrative survey.

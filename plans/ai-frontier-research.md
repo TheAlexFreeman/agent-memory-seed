@@ -270,41 +270,41 @@ knowledge/_unverified/ai-frontier/
 ## Progress tracking
 
 ### Phase 1 — Reasoning and test-time compute
-- [ ] 1.1 Reasoning models (o1/o3/R1/extended thinking)
-- [ ] 1.2 Scaling laws for test-time compute
-- [ ] 1.3 Benchmarking reasoning
+- [x] 1.1 Reasoning models (o1/o3/R1/extended thinking)
+- [x] 1.2 Scaling laws for test-time compute
+- [x] 1.3 Benchmarking reasoning
 
 ### Phase 2 — Alignment and post-training
-- [ ] 2.1 RLHF, RLAIF, reward model problem
-- [ ] 2.2 Instruction following and hierarchies
-- [ ] 2.3 Frontier alignment research
+- [x] 2.1 RLHF, RLAIF, reward model problem
+- [x] 2.2 Instruction following and hierarchies
+- [x] 2.3 Frontier alignment research
 
 ### Phase 3 — Retrieval, memory, and long-context
-- [ ] 3.1 RAG architecture
-- [ ] 3.2 Long-context architecture
-- [ ] 3.3 Persistent memory architectures
+- [x] 3.1 RAG architecture
+- [x] 3.2 Long-context architecture
+- [x] 3.3 Persistent memory architectures
 
 ### Phase 4 — Multi-agent systems
-- [ ] 4.1 Agent architecture patterns
-- [ ] 4.2 Multi-agent coordination challenges
-- [ ] 4.3 Human-in-the-loop design
+- [x] 4.1 Agent architecture patterns
+- [x] 4.2 Multi-agent coordination challenges
+- [x] 4.3 Human-in-the-loop design
 
 ### Phase 5 — Interpretability
-- [ ] 5.1 Mechanistic interpretability
-- [ ] 5.2 What LLMs represent and confabulate
-- [ ] 5.3 Emergence and phase transitions
+- [x] 5.1 Mechanistic interpretability
+- [x] 5.2 What LLMs represent and confabulate
+- [x] 5.3 Emergence and phase transitions
 
 ### Phase 6 — Emerging architectures
-- [ ] 6.1 State space models (Mamba)
-- [ ] 6.2 Mixture of experts
-- [ ] 6.3 Synthetic data and self-improvement
+- [x] 6.1 State space models (Mamba)
+- [x] 6.2 Mixture of experts
+- [x] 6.3 Synthetic data and self-improvement
 
 ### Phase 7 — AI epistemology
-- [ ] 7.1 What it means for a model to "know" something
-- [ ] 7.2 LLMs as dynamical systems (connecting to philosophy files)
-- [ ] 7.3 Compression, intelligence, and what LLMs compress (connecting to AIT file)
+- [x] 7.1 What it means for a model to "know" something
+- [x] 7.2 LLMs as dynamical systems (connecting to philosophy files)
+- [x] 7.3 Compression, intelligence, and what LLMs compress (connecting to AIT file)
 
-**Progress:** 0/21 items complete
+**Progress:** 21/21 items complete
 
 ---
 
