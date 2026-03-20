@@ -1671,8 +1671,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             for entry in review_queue_entries
             if entry.get("status", "pending") == "pending"
             or (
-                entry.get("type") == "security"
-                and entry.get("status", "pending") == "investigated"
+                entry.get("type") == "security" and entry.get("status", "pending") == "investigated"
             )
         ]
 
@@ -2226,14 +2225,15 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     )
     async def memory_audit_trust(
         include_categories: str = "",
+        warn_pct: float = 0.75,
     ) -> str:
         """Audit trust decay across the memory repository.
 
                 Checks all files with trust frontmatter against the decay thresholds
                 from meta/quick-reference.md, and treats files without frontmatter as
                 implicit medium-trust when a git-backed effective date is available:
-          - low-trust files:    overdue at 120 days, flagged at 90 days
-          - medium-trust files: overdue at 180 days, flagged at 150 days
+          - low-trust files:    overdue at 120 days, flagged at 90 days, approaching at 75%
+          - medium-trust files: overdue at 180 days, flagged at 150 days, approaching at 75%
                     - frontmatterless tracked files: audited as implicit medium-trust
                     - frontmatterless untracked files: reported as unevaluable
 
@@ -2242,12 +2242,18 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Args:
             include_categories: Comma-separated list of top-level folders to scan
                                  (e.g. 'knowledge,plans'). Empty = scan all.
+            warn_pct: Fraction of the threshold that should surface in the
+                      approaching bucket before the 30-day upcoming window.
 
         Returns:
-            JSON with overdue/upcoming buckets plus unevaluable files,
+            JSON with overdue/upcoming/approaching buckets plus unevaluable files,
             checked_at, and files_checked count.
         """
+        from ..errors import ValidationError
         from ..frontmatter_utils import read_with_frontmatter
+
+        if warn_pct <= 0 or warn_pct >= 1:
+            raise ValidationError("warn_pct must satisfy 0 < warn_pct < 1")
 
         root = get_root()
         low_threshold, medium_threshold = _parse_trust_thresholds(root)
@@ -2261,6 +2267,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         today = date.today()
         overdue_low = []
         overdue_medium = []
+        approaching = []
         upcoming_low = []
         upcoming_medium = []
         unevaluable = []
@@ -2347,6 +2354,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 if trust == "low":
                     threshold = low_threshold
                     warn = low_warn
+                    approaching_warn = threshold * warn_pct
                     entry["days_until_threshold"] = max(0, threshold - days)
                     if days >= threshold:
                         if freshness_status == "fresh":
@@ -2358,9 +2366,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     elif days >= warn or freshness_status == "stale":
                         entry["action_required"] = "review"
                         upcoming_low.append(entry)
+                    elif days >= approaching_warn:
+                        entry["action_required"] = "review"
+                        approaching.append(entry)
                 elif trust == "medium":
                     threshold = medium_threshold
                     warn = medium_warn
+                    approaching_warn = threshold * warn_pct
                     entry["days_until_threshold"] = max(0, threshold - days)
                     if days >= threshold:
                         if freshness_status == "fresh":
@@ -2374,10 +2386,14 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                             "reverify" if freshness_status == "stale" else "review"
                         )
                         upcoming_medium.append(entry)
+                    elif days >= approaching_warn:
+                        entry["action_required"] = "review"
+                        approaching.append(entry)
 
         result = {
             "overdue_low": overdue_low,
             "overdue_medium": overdue_medium,
+            "approaching": approaching,
             "upcoming_low": upcoming_low,
             "upcoming_medium": upcoming_medium,
             "unevaluable": unevaluable,
@@ -2386,6 +2402,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "thresholds": {
                 "low_days": low_threshold,
                 "medium_days": medium_threshold,
+                "warn_pct": warn_pct,
             },
         }
         return json.dumps(result, indent=2)

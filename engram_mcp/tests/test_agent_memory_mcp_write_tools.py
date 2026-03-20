@@ -2611,8 +2611,85 @@ Next: Original next action
 
         self.assertEqual(payload["files_checked"], 1)
         self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(payload["approaching"], [])
         self.assertEqual(payload["upcoming_medium"], [])
         self.assertEqual(payload["unevaluable"], [])
+
+    def test_memory_audit_trust_reports_approaching_bucket_before_upcoming_window(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/approaching.md": (
+                    "---\n"
+                    "trust: medium\n"
+                    "last_verified: 2025-10-30\n"
+                    "---\n\n"
+                    "# Approaching\n"
+                ),
+            },
+            initial_commit_date="2025-10-30T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(payload["upcoming_medium"], [])
+        self.assertEqual(len(payload["approaching"]), 1)
+        entry = payload["approaching"][0]
+        self.assertEqual(entry["path"], "knowledge/approaching.md")
+        self.assertEqual(entry["trust"], "medium")
+        self.assertEqual(entry["action_required"], "review")
+
+    def test_memory_audit_trust_keeps_upcoming_items_out_of_approaching(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/upcoming.md": (
+                    "---\n"
+                    "trust: medium\n"
+                    "last_verified: 2025-10-05\n"
+                    "---\n\n"
+                    "# Upcoming\n"
+                ),
+            },
+            initial_commit_date="2025-10-05T00:00:00+00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_audit_trust"](include_categories="knowledge"))
+        )
+
+        self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(payload["approaching"], [])
+        self.assertEqual(len(payload["upcoming_medium"]), 1)
+        self.assertEqual(payload["upcoming_medium"][0]["path"], "knowledge/upcoming.md")
+
+    def test_memory_audit_trust_rejects_invalid_warn_pct(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "Low-trust retirement threshold | 120-day\n"
+                    "Medium-trust flagging threshold | 180-day\n"
+                ),
+                "knowledge/any.md": "# Any\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_audit_trust"](include_categories="knowledge", warn_pct=1.0)
+            )
 
     def test_memory_audit_trust_reports_untracked_frontmatterless_file_as_unevaluable(self) -> None:
         repo_root = self._init_repo(
@@ -2924,6 +3001,7 @@ Next: Original next action
         )
 
         self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(payload["approaching"], [])
         self.assertEqual(len(payload["upcoming_medium"]), 1)
         entry = payload["upcoming_medium"][0]
         self.assertEqual(entry["path"], "knowledge/app.md")
@@ -2976,6 +3054,7 @@ Next: Original next action
         )
 
         self.assertEqual(payload["overdue_medium"], [])
+        self.assertEqual(payload["approaching"], [])
         self.assertEqual(len(payload["upcoming_medium"]), 1)
         entry = payload["upcoming_medium"][0]
         self.assertEqual(entry["path"], "knowledge/legacy.md")

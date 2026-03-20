@@ -34,6 +34,22 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Trust-audit warning band landed
+
+**Changed:**
+
+- **Extended `memory_audit_trust` with a configurable early-warning band.** Added optional `warn_pct` validation, surfaced an `approaching` bucket for files that have crossed a configurable fraction of their trust-decay threshold but are not yet in the final 30-day upcoming window, and preserved the stronger `upcoming` and `overdue` behavior for stale host-backed notes and truly overdue files.
+
+- **Documented the new read surface in the capability manifest.** Added a manifest note that `memory_audit_trust` now accepts `warn_pct` and may return an `approaching` bucket.
+
+- **Expanded regression coverage for trust decay reporting.** Added tests for approaching medium-trust files, ensured upcoming items do not double-appear in approaching, and validated that out-of-range `warn_pct` values raise `ValidationError`.
+
+**Reasoning:** The prior trust audit only surfaced files once they were already close to a hard threshold or fully overdue, which left little room for proactive review. This change introduces an earlier warning band without weakening the existing stronger signals, which gives the system a more usable gradient for maintenance decisions.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Worktree validator profile and CI enforcement landed
 
 **Changed:**

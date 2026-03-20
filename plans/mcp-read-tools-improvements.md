@@ -1,10 +1,10 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 3, item 1: add warn_pct to memory_audit_trust"
+next_action: "Human review of Phase 3 trust-audit warning band outputs"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 category: build
@@ -121,15 +121,15 @@ Add `memory_session_health_check` to `read_support` list. Ensure `warn_pct` and 
 - [x] 2.1 Implement `memory_session_health_check` in `read_tools.py`
 - [x] 2.2 Register in server and capabilities contract
 - [x] 2.3 Update `skills/session-start.md` to use the new tool
-- [ ] 3.1 Add `warn_pct` param to `memory_audit_trust`
-- [ ] 3.2 Add `approaching` bucket to audit output
-- [ ] 3.3 Update docstring and test for approaching bucket
+- [x] 3.1 Add `warn_pct` param to `memory_audit_trust`
+- [x] 3.2 Add `approaching` bucket to audit output
+- [x] 3.3 Update docstring and test for approaching bucket
 - [x] 4.1 Tests for `memory_git_log` filter params
 - [x] 4.2 Tests for `memory_session_health_check`
-- [ ] 4.3 Tests for `memory_audit_trust` approaching bucket
-- [ ] 4.4 Update `agent-memory-capabilities.toml`
+- [x] 4.3 Tests for `memory_audit_trust` approaching bucket
+- [x] 4.4 Update `agent-memory-capabilities.toml`
 
-**Progress:** 8/13 items complete
+**Progress:** 13/13 items complete
 
 ---
 
@@ -149,4 +149,5 @@ Add `memory_session_health_check` to `read_support` list. Ensure `warn_pct` and 
 - 2026-03-20: Completed Phase 2 for session-start maintenance: added `memory_session_health_check`, reused existing quick-reference and review-queue parsers, registered the tool in the exported read set and capabilities manifest, updated `skills/session-start.md` to prefer the single-call probe with manual fallback, and added focused tests for aggregation, overdue periodic review, and pending review-queue counting.
 - 2026-03-20: Completed Phase 1 for `memory_git_log`: added `since` and `path_filter`, updated the tool docstring, documented the filter surface in the capabilities manifest, and added focused tests for default, filtered, combined, and invalid-date cases.
 - 2026-03-19: Adjacent read-side groundwork landed outside this checklist: `memory_run_periodic_review`, `memory_get_file_provenance`, `memory_inspect_commit`, and a shared maturity-signal helper refactor. This does not directly complete any items in this plan, but it reduces implementation risk for future session-health and trust-audit improvements.
-- 2026-03-19: Remaining direct scope is now the `memory_audit_trust` warning band plus the final capability-manifest follow-up for Phase 4.4.
+- 2026-03-20: Completed Phase 3 for trust decay visibility: added configurable `warn_pct`, surfaced the new `approaching` bucket ahead of the 30-day upcoming window, validated out-of-range inputs, documented the new surface in the capabilities manifest, and added focused tests for approaching, upcoming exclusion, and invalid percentages.
+- 2026-03-19: Direct implementation scope is complete; remaining follow-up is human review of the new warning-band behavior in real usage.

@@ -17,16 +17,16 @@ Next: Human review of ACCESS analytics outputs or follow-on cleanup only.
 Blocks: none.
 
 
-### `mcp-read-tools-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
+### `mcp-read-tools-improvements.md` · status: complete · trust: medium
 
 Detail: plans/mcp-read-tools-improvements.md
 Scope: Collapse manual session-start reads and improve git-log and trust-audit visibility.
-Progress: 8/13 complete
-Next: Phase 3, item 1 — add `warn_pct` to `memory_audit_trust`
+Progress: 13/13 complete
+Next: Human review of the completed read-tool improvements and follow-on cleanup only.
 Blocks: none; structural prerequisites are complete.
 
 
-### `mcp-write-and-crosscutting-improvements.md` · status: active · trust: medium
+### `mcp-write-and-crosscutting-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/mcp-write-and-crosscutting-improvements.md
 Scope: Add frontmatter batch updates, native capability lookup, and richer search results.
@@ -87,6 +87,7 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 
 ## Recent completions
 
+- [mcp-read-tools-improvements.md](mcp-read-tools-improvements.md) — completed 2026-03-20; 13/13 items across 4 phases (git-log filters, session health check, trust-audit warning band, read-surface contract/test updates); `memory_git_log` now supports `since` and `path_filter`, `memory_session_health_check` collapses session-start maintenance checks, and `memory_audit_trust` now surfaces an `approaching` bucket via `warn_pct`.
 - [ethics-metaethics-research.md](ethics-metaethics-research.md) — completed 2026-03-20; 13/13 items across 4 phases (classical frameworks, Parfit's Reasons and Persons, metaethics, applied AI ethics); 13 knowledge files in `_unverified/philosophy/ethics/`; pending human review.
 - [personal-identity-memory-research.md](personal-identity-memory-research.md) — completed 2026-03-20; 12/12 items across 4 phases (early modern debate, Parfit's reductionism, narrative identity, AI identity synthesis); 12 knowledge files in `_unverified/philosophy/personal-identity/`; pending human review.
 - [phenomenology-embodied-cognition-research.md](phenomenology-embodied-cognition-research.md) — completed 2026-03-20; 12/12 items across 5 phases (Husserlian foundations, Heidegger, Merleau-Ponty, 4E cognition, application/synthesis); 12 knowledge files in `_unverified/philosophy/phenomenology/`; pending human review.

@@ -20,6 +20,8 @@ read_support = [
   "memory_get_file_provenance",
   "memory_inspect_commit",
   "memory_diff",
+  # memory_audit_trust supports optional `warn_pct` and may return an
+  # `approaching` bucket before files enter the 30-day upcoming window.
   "memory_audit_trust",
   "memory_validate",
   "memory_get_maturity_signals",
