@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: Mixture of Experts (MoE) — sparse routing, DeepSeek MoE, expert specialization, inference economics
 trust: low

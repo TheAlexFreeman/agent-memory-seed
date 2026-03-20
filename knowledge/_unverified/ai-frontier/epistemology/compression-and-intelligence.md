@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: Compression, intelligence, and what LLMs compress — MDL, next-token prediction, limits of compression
 trust: low

@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: LLMs as dynamical systems — activation trajectories, in-context learning, reasoning as trajectory extension
 trust: low

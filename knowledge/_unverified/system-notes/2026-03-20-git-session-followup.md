@@ -5,7 +5,7 @@ domain: system-operations
 created: 2026-03-20
 trust: low
 tags: [git, session-hygiene, multi-agent, engram_mcp, architecture, incident-followup]
-origin_session: chats/2026/03/20
+origin_session: chats/2026/03/20/chat-001
 related: knowledge/_unverified/system-notes/2026-03-19-tmp-data-loss-incident.md
 ---
 

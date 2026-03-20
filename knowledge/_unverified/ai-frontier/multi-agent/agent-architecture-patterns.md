@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: Agent architecture patterns — ReAct, Plan-and-execute, Reflexion, orchestrator-subagent
 trust: low

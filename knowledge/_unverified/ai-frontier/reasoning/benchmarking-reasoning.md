@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: Benchmarking reasoning — what benchmarks measure, saturation, and the frontier/deployment gap
 trust: low

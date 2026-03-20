@@ -1,6 +1,6 @@
 ---
 created: 2026-03-19
-origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: external-research
 topic: What LLMs represent and confabulate — world models, hallucination taxonomy, calibration
 trust: low
