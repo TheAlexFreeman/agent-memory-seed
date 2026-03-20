@@ -75,12 +75,17 @@ Key files:
 - `content-addressable-storage-and-integrity.md` — CAS fundamentals, Git as a Merkle DAG, commit-SHA provenance, and integrity design grounded in Git's existing object model
 
 <!-- section: tooling -->
-### `tooling/` — Codex and MCP runtime notes (ingested 2026-03-18, trust: medium)
+### `tooling/` — MCP protocol knowledge and runtime notes (promoted 2026-03-20, trust: medium)
 
-One file capturing a local debugging session for the repo's `agent_memory` MCP server under Codex Desktop.
+Five files plus a four-file MCP subfolder covering the Model Context Protocol specification, server design patterns, ecosystem landscape, 2026 roadmap, and a local debugging case study.
 
-Key files:
-- `codex-mcp-timeouts-git-stdin.md` — Investigation showing that apparent Codex MCP config failures were actually stdio transport interference from git subprocess stdin inheritance, plus the patch and verification path
+Key entry points:
+- `mcp/SUMMARY.md` — Index for the MCP knowledge base (4 files promoted from `_unverified/` on 2026-03-20)
+- `mcp/mcp-protocol-overview.md` — Architecture and spec overview: Host/Client/Server model, transports, primitives, lifecycle
+- `mcp/mcp-server-design-patterns.md` — Practical build guide: FastMCP, tool design, security, testing
+- `mcp/mcp-ecosystem-survey.md` — 108 clients, feature matrix, reference servers, SDKs, frameworks (March 2026)
+- `mcp/mcp-2026-roadmap-update.md` — 2026 roadmap: transport scalability, Tasks, enterprise, governance
+- `codex-mcp-timeouts-git-stdin.md` — Debugging stdio transport stdin inheritance in this repo's MCP server
 
 ## What belongs here
 
