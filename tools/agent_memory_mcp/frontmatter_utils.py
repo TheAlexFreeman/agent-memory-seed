@@ -24,6 +24,7 @@ import frontmatter as fm
 # Frontmatter read/write
 # ---------------------------------------------------------------------------
 
+
 def read_with_frontmatter(abs_path: Path) -> tuple[dict[str, Any], str]:
     """Parse a file's YAML frontmatter.
 
@@ -98,9 +99,7 @@ def _split_into_phases(lines: list[str]) -> list[tuple[int, int]]:
 
     end_line is exclusive (like Python slice indexing).
     """
-    phase_starts = [
-        i for i, line in enumerate(lines) if _PHASE_HEADING_RE.match(line)
-    ]
+    phase_starts = [i for i, line in enumerate(lines) if _PHASE_HEADING_RE.match(line)]
     bounds = []
     for idx, start in enumerate(phase_starts):
         end = phase_starts[idx + 1] if idx + 1 < len(phase_starts) else len(lines)
@@ -140,21 +139,25 @@ def parse_plan_items(
         for line_no in range(start + 1, end):
             im = _ITEM_RE.match(lines[line_no])
             if im:
-                items.append({
-                    "item_index": item_idx,
-                    "line": line_no,
-                    "done": im.group(2) == "☑",
-                    "text": im.group(3).strip(),
-                })
+                items.append(
+                    {
+                        "item_index": item_idx,
+                        "line": line_no,
+                        "done": im.group(2) == "☑",
+                        "text": im.group(3).strip(),
+                    }
+                )
                 item_idx += 1
-        phases.append({
-            "phase_index": phase_idx,
-            "heading_line": start,
-            "done": int(done_str),
-            "total": int(total_str),
-            "complete": checkbox == "☑",
-            "items": items,
-        })
+        phases.append(
+            {
+                "phase_index": phase_idx,
+                "heading_line": start,
+                "done": int(done_str),
+                "total": int(total_str),
+                "complete": checkbox == "☑",
+                "items": items,
+            }
+        )
     return phases
 
 
@@ -193,9 +196,7 @@ def mark_plan_item_complete(
         )
     item = phase["items"][item_index]
     if item["done"]:
-        raise AlreadyDoneError(
-            f"Item {phase_index}.{item_index} is already complete"
-        )
+        raise AlreadyDoneError(f"Item {phase_index}.{item_index} is already complete")
 
     lines = content.splitlines(keepends=True)
 
@@ -263,9 +264,8 @@ def add_progress_log_row(content: str, action_description: str) -> str:
 # plans/SUMMARY.md — BEGIN/END anchor manipulation
 # ---------------------------------------------------------------------------
 
-def find_begin_end_block(
-    content: str, block_id: str
-) -> tuple[int, int] | None:
+
+def find_begin_end_block(content: str, block_id: str) -> tuple[int, int] | None:
     """Find (begin_line_idx, end_line_idx) inclusive for a BEGIN/END pair.
 
     Returns None if the block is not found.
@@ -282,9 +282,7 @@ def find_begin_end_block(
     return None
 
 
-def replace_begin_end_block(
-    content: str, block_id: str, new_block_content: str
-) -> str:
+def replace_begin_end_block(content: str, block_id: str, new_block_content: str) -> str | None:
     """Replace the content between (and including) BEGIN/END anchors.
 
     new_block_content should include the BEGIN and END tag lines.
@@ -302,7 +300,7 @@ def replace_begin_end_block(
     if new_lines_raw and not new_lines_raw[-1].endswith("\n"):
         new_lines_raw[-1] += "\n"
 
-    result_lines = lines[:begin_idx] + new_lines_raw + lines[end_idx + 1:]
+    result_lines = lines[:begin_idx] + new_lines_raw + lines[end_idx + 1 :]
     return "".join(result_lines)
 
 
@@ -324,11 +322,10 @@ def build_plan_summary_block(
         f"### `{plan_id}.md` · status: {status_str} · trust: {trust}",
     ]
     if description:
-        lines.append(f"{description}")
-        lines.append("")
+        lines.append(f"Scope: {description}")
     lines += [
-        f"**Progress:** {done}/{total} items complete",
-        f"**Next action:** {next_str}",
+        f"Progress: {done}/{total} complete",
+        f"Next: {next_str}",
         f"<!-- END: {plan_id} -->",
     ]
     return "\n".join(lines) + "\n"
@@ -349,9 +346,8 @@ def append_plan_to_summary(summary_content: str, block: str) -> str:
 # knowledge/SUMMARY.md — section anchor manipulation
 # ---------------------------------------------------------------------------
 
-def find_section_bounds(
-    content: str, section_id: str
-) -> tuple[int, int] | None:
+
+def find_section_bounds(content: str, section_id: str) -> tuple[int, int] | None:
     """Find (anchor_line_idx, exclusive_end_line_idx) for a section anchor.
 
     The anchor line is `<!-- section: {section_id} -->`.

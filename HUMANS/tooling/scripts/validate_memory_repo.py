@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass, field
@@ -20,6 +21,11 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
 CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
 ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "chats")
 IGNORED_DIR_NAMES = {".git", ".claude", "__pycache__", ".pytest_cache"}
+PLACEHOLDER_SNIPPETS = (
+    "_Nothing here yet.",
+    "_No pending items._",
+    "_No current notes._",
+)
 
 REQUIRED_FRONTMATTER_KEYS = (
     "source",
@@ -128,6 +134,16 @@ EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
     "meta/review-queue.md:load_only_when_non_placeholder",
     "ACCESS.jsonl:count_non_empty_lines",
 )
+COMPACT_RETURNING_BUDGET = EXPECTED_BOOTSTRAP_TOKEN_BUDGETS["returning"]
+COMPACT_RETURNING_TARGETS = {
+    "meta/quick-reference.md": 2600,
+    "identity/SUMMARY.md": 450,
+    "chats/SUMMARY.md": 750,
+    "plans/SUMMARY.md": 1700,
+    "scratchpad/USER.md": 400,
+    "scratchpad/CURRENT.md": 650,
+}
+COMPACT_RETURNING_HEADROOM = 1000
 TASK_READINESS_MANIFEST_PATH = Path("HUMANS/tooling/agent-task-readiness.toml")
 EXPECTED_TASK_READINESS_PROFILES = (
     "workspace_general",
@@ -215,9 +231,7 @@ SETUP_GUIDANCE_FILES = (
     Path("HUMANS/docs/QUICKSTART.md"),
 )
 ONBOARDING_EXPORT_TEMPLATE_PATH = Path("HUMANS/tooling/onboard-export-template.md")
-ONBOARDING_EXPORT_REQUIRED_PHRASE = (
-    "bash HUMANS/tooling/scripts/onboard-export.sh <file>"
-)
+ONBOARDING_EXPORT_REQUIRED_PHRASE = "bash HUMANS/tooling/scripts/onboard-export.sh <file>"
 ONBOARDING_EXPORT_FORBIDDEN_PATTERNS = (r"bash scripts/onboard-export\.sh(?: <file>)?",)
 ADAPTER_FILES = (Path("AGENTS.md"), Path("CLAUDE.md"), Path(".cursorrules"))
 ROOT_SETUP_TARGETS = {
@@ -226,18 +240,20 @@ ROOT_SETUP_TARGETS = {
 }
 CANONICAL_SETUP_FILES = (Path("setup/setup.sh"), Path("setup/setup.html"))
 
-PROMPT_START_LINE = "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
+PROMPT_START_LINE = (
+    "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
+)
 PROMPT_ROUTE_LINE = "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
 PROMPT_MCP_LINE = "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-LIVE_CONFIG_LINE = "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
+LIVE_CONFIG_LINE = (
+    "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
+)
 ADAPTER_ROUTING_PHRASE = "follow the routing rules in `meta/quick-reference.md`"
 ADAPTER_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes"
 README_START_PHRASE = "Start every session with `meta/quick-reference.md`."
 README_ARCHITECTURE_PHRASE = "Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review"
 MCP_PREFERENCE_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-QUICK_REFERENCE_ROUTER_PHRASE = (
-    "Use this file as the operational router for every session:"
-)
+QUICK_REFERENCE_ROUTER_PHRASE = "Use this file as the operational router for every session:"
 FIRST_RUN_MCP_PHRASE = MCP_PREFERENCE_PHRASE
 SESSION_CHECKLISTS_MCP_PHRASE = MCP_PREFERENCE_PHRASE
 SKILLS_SUMMARY_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes while executing these skills; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
@@ -246,9 +262,7 @@ SESSION_START_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are availabl
 SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
-SETUP_GUIDANCE_REQUIRED_PATTERNS = (
-    r"live routing (?:in|from)\s+`?meta/quick-reference\.md`?",
-)
+SETUP_GUIDANCE_REQUIRED_PATTERNS = (r"live routing (?:in|from)\s+`?meta/quick-reference\.md`?",)
 SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
 SESSION_START_SKILL_PATH = Path("skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
@@ -356,9 +370,7 @@ def iter_access_files(root: Path) -> list[Path]:
     return sorted(paths)
 
 
-def parse_frontmatter(
-    path: Path, text: str, result: ValidationResult
-) -> dict[str, Any] | None:
+def parse_frontmatter(path: Path, text: str, result: ValidationResult) -> dict[str, Any] | None:
     lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
         return None
@@ -369,9 +381,7 @@ def parse_frontmatter(
             end_index = index
             break
     if end_index is None:
-        result.error(
-            f"{path}: frontmatter starts with '---' but has no closing delimiter"
-        )
+        result.error(f"{path}: frontmatter starts with '---' but has no closing delimiter")
         return None
 
     try:
@@ -381,24 +391,18 @@ def parse_frontmatter(
         return None
 
 
-def validate_iso_date(
-    value: object, path: Path, field_name: str, result: ValidationResult
-) -> None:
+def validate_iso_date(value: object, path: Path, field_name: str, result: ValidationResult) -> None:
     if isinstance(value, datetime):
         value = value.date()
     if isinstance(value, date):
         return
     if not isinstance(value, str):
-        result.error(
-            f"{path}: {field_name} must be a date or string in YYYY-MM-DD format"
-        )
+        result.error(f"{path}: {field_name} must be a date or string in YYYY-MM-DD format")
         return
     try:
         date.fromisoformat(value)
     except ValueError:
-        result.error(
-            f"{path}: {field_name} must be a valid YYYY-MM-DD date, got {value!r}"
-        )
+        result.error(f"{path}: {field_name} must be a valid YYYY-MM-DD date, got {value!r}")
 
 
 def normalize_repo_relative_path(raw_path: str) -> str | None:
@@ -483,9 +487,7 @@ def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> No
         if status == "complete":
             return
         if not next_action:
-            result.error(
-                f"{path}: plan files must define non-empty frontmatter key 'next_action'"
-            )
+            result.error(f"{path}: plan files must define non-empty frontmatter key 'next_action'")
 
 
 def validate_access_file(path: Path, root: Path, result: ValidationResult) -> None:
@@ -548,24 +550,18 @@ def validate_access_file(path: Path, root: Path, result: ValidationResult) -> No
         if not isinstance(helpfulness, (int, float)):
             result.error(f"{path}:{line_number}: helpfulness must be numeric")
         elif not 0.0 <= float(helpfulness) <= 1.0:
-            result.error(
-                f"{path}:{line_number}: helpfulness must be between 0.0 and 1.0"
-            )
+            result.error(f"{path}:{line_number}: helpfulness must be between 0.0 and 1.0")
 
         if "session_id" in payload:
             session_id = payload["session_id"]
             if not isinstance(session_id, str):
-                result.error(
-                    f"{path}:{line_number}: session_id must be a string when present"
-                )
+                result.error(f"{path}:{line_number}: session_id must be a string when present")
             elif not CANONICAL_ORIGIN_SESSION_RE.fullmatch(session_id):
                 result.error(
                     f"{path}:{line_number}: session_id must match chats/YYYY/MM/DD/chat-NNN when present, got {session_id!r}"
                 )
         if "category" in payload and not isinstance(payload["category"], str):
-            result.error(
-                f"{path}:{line_number}: category must be a string when present"
-            )
+            result.error(f"{path}:{line_number}: category must be a string when present")
 
         unknown_keys = set(payload) - REQUIRED_ACCESS_FIELDS - OPTIONAL_ACCESS_FIELDS
         if unknown_keys:
@@ -602,9 +598,7 @@ def validate_chat_leaf_sessions(root: Path, result: ValidationResult) -> None:
                             f"{summary_path}: frontmatter session must match {session_id!r}, got {session_value!r}"
                         )
                     if "date" in frontmatter:
-                        validate_iso_date(
-                            frontmatter["date"], summary_path, "date", result
-                        )
+                        validate_iso_date(frontmatter["date"], summary_path, "date", result)
 
                 first_nonempty_line = next(
                     (line.strip() for line in body.splitlines() if line.strip()),
@@ -630,6 +624,143 @@ def extract_manifest_row(text: str, session_type: str) -> str | None:
     return match.group("body")
 
 
+def estimate_token_count(text: str) -> int:
+    stripped = text.strip()
+    if not stripped:
+        return 0
+    return max(1, math.ceil(len(stripped) / 4))
+
+
+def is_placeholder_or_empty_text(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return True
+    return any(snippet in stripped for snippet in PLACEHOLDER_SNIPPETS)
+
+
+def plans_summary_has_active_plans(text: str) -> bool:
+    return "status: active" in text or "Priority order for active work:" in text
+
+
+def iter_compact_startup_measurements(
+    root: Path, result: ValidationResult
+) -> list[tuple[str, int, str]]:
+    measurements: list[tuple[str, int, str]] = []
+
+    for rel_path in EXPECTED_RETURNING_STEP_PATHS:
+        path = root / rel_path
+        if not path.exists():
+            continue
+
+        text = read_text(path, result)
+        if text is None:
+            continue
+
+        if rel_path in {"chats/SUMMARY.md", "scratchpad/USER.md", "scratchpad/CURRENT.md"}:
+            if is_placeholder_or_empty_text(text):
+                continue
+        if rel_path == "plans/SUMMARY.md" and not plans_summary_has_active_plans(text):
+            continue
+
+        measurements.append((rel_path, estimate_token_count(text), text))
+
+    return measurements
+
+
+def validate_plans_summary_shape(path: Path, text: str, result: ValidationResult) -> None:
+    for heading in ("## Active plans", "## Recent completions"):
+        if heading not in text:
+            result.error(f"{path}: missing compact plans heading {heading!r}")
+
+    if "## Completed plans" in text:
+        result.error(
+            f"{path}: completed-plan narratives must be collapsed into '## Recent completions'"
+        )
+
+    block_pattern = re.compile(
+        r"<!-- BEGIN: (?P<id>[^ ]+) -->\n(?P<body>.*?)<!-- END: (?P=id) -->",
+        re.DOTALL,
+    )
+    for match in block_pattern.finditer(text):
+        body = match.group("body")
+        body_lines = [line.strip() for line in body.splitlines() if line.strip()]
+        if "Progress:" not in body:
+            result.error(
+                f"{path}: compact plan block {match.group('id')!r} must include 'Progress:'"
+            )
+        if "Next:" not in body:
+            result.error(f"{path}: compact plan block {match.group('id')!r} must include 'Next:'")
+        if len(body_lines) > 5:
+            result.error(
+                f"{path}: compact plan block {match.group('id')!r} is too long ({len(body_lines)} non-empty lines); move detail into the plan file"
+            )
+
+
+def validate_chats_summary_shape(path: Path, text: str, result: ValidationResult) -> None:
+    for heading in ("## Live themes", "## Recent continuity", "## Retrieval guide"):
+        if heading not in text:
+            result.error(f"{path}: missing compact chats heading {heading!r}")
+
+    if re.search(r"^### chat-\d+", text, re.MULTILINE):
+        result.error(
+            f"{path}: chat-by-chat narrative headings are too detailed for the compact startup path"
+        )
+
+    if "Load dated summaries" not in text and "Load dated summaries when" not in text:
+        result.error(f"{path}: must include retrieval guidance for dated summaries")
+
+
+def validate_scratchpad_current_shape(path: Path, text: str, result: ValidationResult) -> None:
+    for heading in (
+        "## Active threads",
+        "## Immediate next actions",
+        "## Open questions",
+        "## Drill-down refs",
+    ):
+        if heading not in text:
+            result.error(f"{path}: missing compact scratchpad heading {heading!r}")
+
+    if "|---|" in text:
+        result.error(
+            f"{path}: compact CURRENT.md should not contain large tables; move analysis into a dated scratchpad"
+        )
+
+
+def validate_compact_startup_contract(root: Path, result: ValidationResult) -> None:
+    measurements = iter_compact_startup_measurements(root, result)
+    if not measurements:
+        return
+
+    total_tokens = sum(tokens for _, tokens, _ in measurements)
+    if total_tokens > COMPACT_RETURNING_BUDGET:
+        largest = ", ".join(
+            f"{path}={tokens}"
+            for path, tokens, _ in sorted(measurements, key=lambda item: item[1], reverse=True)[:3]
+        )
+        result.error(
+            f"compact returning startup uses ~{total_tokens} tokens against the {COMPACT_RETURNING_BUDGET}-token ceiling; largest contributors: {largest}"
+        )
+    elif total_tokens > COMPACT_RETURNING_BUDGET - COMPACT_RETURNING_HEADROOM:
+        result.warn(
+            f"compact returning startup uses ~{total_tokens} tokens, leaving less than {COMPACT_RETURNING_HEADROOM} tokens of reserve"
+        )
+
+    for rel_path, tokens, text in measurements:
+        target = COMPACT_RETURNING_TARGETS.get(rel_path)
+        if target is not None and tokens > target:
+            result.error(
+                f"{root / rel_path}: compact startup file uses ~{tokens} tokens, above target {target}; move detail behind drill-down reads"
+            )
+
+        path = root / rel_path
+        if rel_path == "plans/SUMMARY.md":
+            validate_plans_summary_shape(path, text, result)
+        elif rel_path == "chats/SUMMARY.md":
+            validate_chats_summary_shape(path, text, result)
+        elif rel_path == "scratchpad/CURRENT.md":
+            validate_scratchpad_current_shape(path, text, result)
+
+
 def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> None:
     path = root / BOOTSTRAP_MANIFEST_PATH
     if not path.exists():
@@ -652,9 +783,7 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
 
     router = manifest.get("router")
     if router != "meta/quick-reference.md":
-        result.error(
-            f"{path}: router must be 'meta/quick-reference.md', got {router!r}"
-        )
+        result.error(f"{path}: router must be 'meta/quick-reference.md', got {router!r}")
     elif not (root / router).exists():
         result.error(f"{path}: router target {router!r} does not exist")
 
@@ -692,9 +821,7 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
 
     missing_modes = [mode for mode in EXPECTED_BOOTSTRAP_MODES if mode not in modes]
     if missing_modes:
-        result.error(
-            f"{path}: missing required bootstrap modes: {', '.join(missing_modes)}"
-        )
+        result.error(f"{path}: missing required bootstrap modes: {', '.join(missing_modes)}")
 
     for mode_name in EXPECTED_BOOTSTRAP_MODES:
         mode = modes.get(mode_name)
@@ -719,9 +846,7 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
                 result.error(
                     f"{path}: modes.{mode_name}.on_demand must be {list(EXPECTED_BOOTSTRAP_ON_DEMAND)!r}"
                 )
-            if mode.get("maintenance_probes") != list(
-                EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES
-            ):
+            if mode.get("maintenance_probes") != list(EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES):
                 result.error(
                     f"{path}: modes.{mode_name}.maintenance_probes must be {list(EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES)!r}"
                 )
@@ -735,9 +860,7 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
         seen_paths: set[str] = set()
         for index, step in enumerate(steps, start=1):
             if not isinstance(step, dict):
-                result.error(
-                    f"{path}: modes.{mode_name}.steps[{index}] must be a table"
-                )
+                result.error(f"{path}: modes.{mode_name}.steps[{index}] must be a table")
                 continue
 
             step_path = step.get("path")
@@ -765,9 +888,7 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
                 )
 
             if not isinstance(step.get("required"), bool):
-                result.error(
-                    f"{path}: modes.{mode_name}.steps[{index}].required must be a boolean"
-                )
+                result.error(f"{path}: modes.{mode_name}.steps[{index}].required must be a boolean")
 
             cost = step.get("cost")
             if cost not in EXPECTED_BOOTSTRAP_COST_VALUES:
@@ -808,31 +929,22 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         result.error(f"{path}: version must be 1")
     if manifest.get("kind") != "agent-task-readiness":
         result.error(f"{path}: kind must be 'agent-task-readiness'")
-    if (
-        not isinstance(manifest.get("manifest_role"), str)
-        or not manifest["manifest_role"].strip()
-    ):
+    if not isinstance(manifest.get("manifest_role"), str) or not manifest["manifest_role"].strip():
         result.error(f"{path}: manifest_role must be a non-empty string")
 
     resolver_entrypoint = manifest.get("resolver_entrypoint")
     if not isinstance(resolver_entrypoint, str) or not resolver_entrypoint.strip():
         result.error(f"{path}: resolver_entrypoint must be a non-empty string")
     elif not (root / resolver_entrypoint).exists():
-        result.error(
-            f"{path}: resolver_entrypoint does not exist at {resolver_entrypoint!r}"
-        )
+        result.error(f"{path}: resolver_entrypoint does not exist at {resolver_entrypoint!r}")
 
     task_detection = manifest.get("task_detection")
     if not isinstance(task_detection, dict):
         result.error(f"{path}: task_detection must be a TOML table")
     else:
         if task_detection.get("default_profile") != "workspace_general":
-            result.error(
-                f"{path}: task_detection.default_profile must be 'workspace_general'"
-            )
-        if task_detection.get("profile_order") != list(
-            EXPECTED_TASK_READINESS_PROFILE_ORDER
-        ):
+            result.error(f"{path}: task_detection.default_profile must be 'workspace_general'")
+        if task_detection.get("profile_order") != list(EXPECTED_TASK_READINESS_PROFILE_ORDER):
             result.error(
                 f"{path}: task_detection.profile_order must be {list(EXPECTED_TASK_READINESS_PROFILE_ORDER)!r}"
             )
@@ -889,10 +1001,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
             "manifest_action_label",
             "manifest_action_reason",
         ):
-            if (
-                not isinstance(ui_feedback.get(key), str)
-                or not ui_feedback[key].strip()
-            ):
+            if not isinstance(ui_feedback.get(key), str) or not ui_feedback[key].strip():
                 result.error(f"{path}: ui_feedback.{key} must be a non-empty string")
         for key in ("details_when_blocked_only", "green_summary_only"):
             if not isinstance(ui_feedback.get(key), bool):
@@ -902,10 +1011,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
             result.error(f"{path}: ui_feedback.status_labels must be a TOML table")
         else:
             for key in EXPECTED_TASK_READINESS_STATUS_LABELS:
-                if (
-                    not isinstance(status_labels.get(key), str)
-                    or not status_labels[key].strip()
-                ):
+                if not isinstance(status_labels.get(key), str) or not status_labels[key].strip():
                     result.error(
                         f"{path}: ui_feedback.status_labels.{key} must be a non-empty string"
                     )
@@ -920,9 +1026,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         checks = {}
 
     missing_profiles = [
-        profile
-        for profile in EXPECTED_TASK_READINESS_PROFILES
-        if profile not in profiles
+        profile for profile in EXPECTED_TASK_READINESS_PROFILES if profile not in profiles
     ]
     if missing_profiles:
         result.error(
@@ -930,14 +1034,10 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
         )
 
     missing_checks = [
-        check_id
-        for check_id in EXPECTED_TASK_READINESS_CHECKS
-        if check_id not in checks
+        check_id for check_id in EXPECTED_TASK_READINESS_CHECKS if check_id not in checks
     ]
     if missing_checks:
-        result.error(
-            f"{path}: missing required task-readiness checks: {', '.join(missing_checks)}"
-        )
+        result.error(f"{path}: missing required task-readiness checks: {', '.join(missing_checks)}")
 
     for profile_name in EXPECTED_TASK_READINESS_PROFILES:
         profile = profiles.get(profile_name)
@@ -960,9 +1060,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
                                 f"{path}: profiles.{profile_name}.{key} references unknown check {check_id!r}"
                             )
             elif not isinstance(value, str) or not value.strip():
-                result.error(
-                    f"{path}: profiles.{profile_name}.{key} must be a non-empty string"
-                )
+                result.error(f"{path}: profiles.{profile_name}.{key} must be a non-empty string")
 
     for check_id in EXPECTED_TASK_READINESS_CHECKS:
         check_definition = checks.get(check_id)
@@ -985,9 +1083,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
                                 f"{path}: checks.{check_id}.failure_modes contains unknown mode {item!r}"
                             )
             elif not isinstance(value, str) or not value.strip():
-                result.error(
-                    f"{path}: checks.{check_id}.{key} must be a non-empty string"
-                )
+                result.error(f"{path}: checks.{check_id}.{key} must be a non-empty string")
         if check_definition.get("category") not in ALLOWED_TASK_READINESS_CATEGORIES:
             result.error(
                 f"{path}: checks.{check_id}.category must be one of {sorted(ALLOWED_TASK_READINESS_CATEGORIES)!r}"
@@ -1014,6 +1110,9 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
         "metadata-first maintenance probes",
         "Count non-empty lines in `ACCESS.jsonl` files",
         "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",
+        "Whole-file compact mode",
+        "Compact file success criteria",
+        "Target budget",
     )
     for phrase in required_phrases:
         if phrase not in text:
@@ -1055,9 +1154,7 @@ def validate_runtime_guidance(root: Path, result: ValidationResult) -> None:
             continue
         for pattern in FORBIDDEN_RUNTIME_PATTERNS:
             if re.search(pattern, text):
-                result.error(
-                    f"{path}: contains forbidden runtime guidance pattern {pattern!r}"
-                )
+                result.error(f"{path}: contains forbidden runtime guidance pattern {pattern!r}")
 
 
 def validate_setup_entrypoints(root: Path, result: ValidationResult) -> None:
@@ -1090,13 +1187,9 @@ def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
         if "meta/quick-reference.md" not in text:
             result.error(f"{path}: must point agents to meta/quick-reference.md")
         if ADAPTER_ROUTING_PHRASE not in text:
-            result.error(
-                f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}"
-            )
+            result.error(f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}")
         if ADAPTER_MCP_PHRASE not in text:
-            result.error(
-                f"{path}: missing MCP preference phrase {ADAPTER_MCP_PHRASE!r}"
-            )
+            result.error(f"{path}: missing MCP preference phrase {ADAPTER_MCP_PHRASE!r}")
 
 
 def validate_prompt_copy(root: Path, result: ValidationResult) -> None:
@@ -1132,9 +1225,7 @@ def validate_setup_guidance(root: Path, result: ValidationResult) -> None:
                 result.error(f"{path}: missing setup-guidance pattern {pattern!r}")
         for pattern in SETUP_GUIDANCE_FORBIDDEN_PATTERNS:
             if re.search(pattern, text):
-                result.error(
-                    f"{path}: contains forbidden setup-guidance pattern {pattern!r}"
-                )
+                result.error(f"{path}: contains forbidden setup-guidance pattern {pattern!r}")
 
 
 def validate_onboarding_export_template(root: Path, result: ValidationResult) -> None:
@@ -1154,9 +1245,7 @@ def validate_onboarding_export_template(root: Path, result: ValidationResult) ->
 
     for pattern in ONBOARDING_EXPORT_FORBIDDEN_PATTERNS:
         if re.search(pattern, text):
-            result.error(
-                f"{path}: contains forbidden onboarding-export pattern {pattern!r}"
-            )
+            result.error(f"{path}: contains forbidden onboarding-export pattern {pattern!r}")
 
 
 def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
@@ -1164,16 +1253,12 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
     if readme is not None:
         for phrase in (README_START_PHRASE, README_ARCHITECTURE_PHRASE):
             if phrase not in readme:
-                result.error(
-                    f"{root / 'README.md'}: missing contract phrase {phrase!r}"
-                )
+                result.error(f"{root / 'README.md'}: missing contract phrase {phrase!r}")
 
     session_checklists = read_text(root / "meta" / "session-checklists.md", result)
     if session_checklists is not None:
         if SESSION_CHECKLISTS_ON_DEMAND_PHRASE not in session_checklists:
-            result.error(
-                f"{root / 'meta' / 'session-checklists.md'}: missing on-demand guidance"
-            )
+            result.error(f"{root / 'meta' / 'session-checklists.md'}: missing on-demand guidance")
         if SESSION_CHECKLISTS_MCP_PHRASE not in session_checklists:
             result.error(
                 f"{root / 'meta' / 'session-checklists.md'}: missing MCP preference guidance"
@@ -1181,9 +1266,7 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
 
     first_run = read_text(root / "meta" / "first-run.md", result)
     if first_run is not None and FIRST_RUN_MCP_PHRASE not in first_run:
-        result.error(
-            f"{root / 'meta' / 'first-run.md'}: missing MCP preference guidance"
-        )
+        result.error(f"{root / 'meta' / 'first-run.md'}: missing MCP preference guidance")
 
     session_start = root / SESSION_START_SKILL_PATH
     if session_start.exists():
@@ -1191,9 +1274,7 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
         if text is not None:
             for phrase in SESSION_START_REQUIRED_PHRASES:
                 if phrase not in text:
-                    result.error(
-                        f"{session_start}: missing startup-skill phrase {phrase!r}"
-                    )
+                    result.error(f"{session_start}: missing startup-skill phrase {phrase!r}")
             for pattern in SESSION_START_FORBIDDEN_PATTERNS:
                 if re.search(pattern, text, re.MULTILINE):
                     result.error(
@@ -1206,9 +1287,7 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
         if text is not None:
             for phrase in SESSION_WRAPUP_REQUIRED_PHRASES:
                 if phrase not in text:
-                    result.error(
-                        f"{session_wrapup}: missing wrapup-skill phrase {phrase!r}"
-                    )
+                    result.error(f"{session_wrapup}: missing wrapup-skill phrase {phrase!r}")
             for pattern in SESSION_WRAPUP_FORBIDDEN_PATTERNS:
                 if re.search(pattern, text, re.MULTILINE):
                     result.error(
@@ -1220,17 +1299,12 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
         result.error(f"{root / SKILLS_SUMMARY_PATH}: missing MCP preference guidance")
 
     onboarding_skill = read_text(root / ONBOARDING_SKILL_PATH, result)
-    if (
-        onboarding_skill is not None
-        and ONBOARDING_SKILL_MCP_PHRASE not in onboarding_skill
-    ):
+    if onboarding_skill is not None and ONBOARDING_SKILL_MCP_PHRASE not in onboarding_skill:
         result.error(f"{root / ONBOARDING_SKILL_PATH}: missing MCP preference guidance")
 
     session_sync = read_text(root / SESSION_SYNC_SKILL_PATH, result)
     if session_sync is not None and SESSION_SYNC_SKILL_MCP_PHRASE not in session_sync:
-        result.error(
-            f"{root / SESSION_SYNC_SKILL_PATH}: missing MCP preference guidance"
-        )
+        result.error(f"{root / SESSION_SYNC_SKILL_PATH}: missing MCP preference guidance")
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:
@@ -1273,6 +1347,7 @@ def validate_repo(root: Path) -> ValidationResult:
     validate_agent_bootstrap_manifest(root, result)
     validate_task_readiness_manifest(root, result)
     validate_quick_reference(root, result)
+    validate_compact_startup_contract(root, result)
     validate_runtime_guidance(root, result)
     validate_setup_entrypoints(root, result)
     validate_adapter_routing(root, result)

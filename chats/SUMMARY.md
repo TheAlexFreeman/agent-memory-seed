@@ -1,73 +1,39 @@
 # Chats Summary
 
-This folder is the episodic memory — a chronological archive of conversations between the user and agent. It is organized hierarchically by date, with summaries at each level providing progressively compressed views of the interaction history.
+Compact returning-session view of episodic history. Use this file for live themes, recent continuity, and retrieval guidance. Load dated summaries only when the compact view is insufficient.
 
-## Overall history
+## Live themes
 
-**Five chat records logged (2026-03-18).** All from the first day; chat-001 spanned three context windows, chat-002 handled maintenance, chat-003 focused on automation design, chat-004 created a new research lane on LessWrong and the Rationalist community, and chat-005 did the same for the genealogy of modern AI.
+- The memory system is still being designed in public: bootstrap routing, validator rules, MCP ergonomics, and context-efficiency work are recurring conversation threads.
+- Research lanes were created quickly and several have already completed, especially around Django, React, DevOps, philosophy, rationalist-community history, and AI-paradigm genealogy.
+- The user is using the repo both as a memory system and as an object of active engineering work, so system-design chats often directly change repo structure and rules.
 
-### chat-001 — Extended first session (3 context windows)
+## Recent continuity
 
-**Part 1 — Onboarding.** Identity profile confirmed (source upgraded from template to user-stated, trust: high). Django 6.0 knowledge base built (9 files). React 19 + Chakra UI 3 research added (4 files). Knowledge-building goal established: Celery expertise over time.
+- 2026-03-19: first periodic review completed; Exploration retained, belief-diff log written, and review-queue items added for `plans/ACCESS.jsonl` aggregation and future review-trigger policy.
+- 2026-03-18: bootstrap resolver, governed-write contract, readiness manifest, and related validation/test work landed.
+- 2026-03-18: major research plans were created and several were completed the next day, shifting the repo from initial onboarding into active maintenance plus targeted new-plan work.
 
-**Part 2 — Philosophy research.** Extensive `knowledge/_unverified/philosophy/` folder built: self-organizing dynamical systems, LLMs vs human minds, narrative cognition, cognitive linguistics (Lakoff, Fauconnier, Sweetser). History-of-philosophy research plan launched. Alex noted personal connection to Eve Sweetser (Berkeley, ~10 years ago).
+## Retrieval guide
 
-**Part 3 — Engineering stack planning and MCP design.** Four research plans created: `django-stack-research.md`, `react-stack-research.md` (TanStack Router replacing React Router), `devops-docker-research.md`, `agent-memory-mcp.md`. Upstream core branch (76 files) integrated. Commit conventions and SUMMARY anchor scheme designed. Two commits made.
+- Load dated summaries when the user references a past discussion, when the current task resembles earlier repo-governance work, or when a topic likely overlaps prior research planning.
+- Start with `chats/YYYY/MM/DD/SUMMARY.md`, then `chat-NNN/SUMMARY.md`.
+- Read `transcript.md` only when the summaries are insufficient.
 
-### chat-002 — System review and maintenance
+## Recent sessions
 
-Delivered system review findings: updated CHANGELOG, chats/SUMMARY, chat-001 SUMMARY, fixed `memory_move` source restriction gap in MCP plan, created this chat-002 record.
+- `2026/03/18/chat-001` — onboarding, philosophy expansion, engineering-stack planning, MCP design.
+- `2026/03/18/chat-002` — system review and maintenance fixes.
+- `2026/03/18/chat-003` — automation planning and scratchpad backlog.
+- `2026/03/18/chat-004` — LessWrong / rationalist-community research plan.
+- `2026/03/18/chat-005` — AI-paradigm genealogy research plan.
+- `2026/03/19/chat-001` — periodic review, maturity assessment, access-log analysis, and new implementation plans.
 
-### chat-003 — Automation planning and wrap-up
+## Drill-down paths
 
-Drafted four setup-ready Codex automations for this repo: `Memory Health`, `Aggregation Watcher`, `Unverified Triage`, and `Periodic Review`. Revised them to self-gate and archive clean runs, then recorded a provisional backlog of future candidates in scratchpad notes.
-
-### chat-004 — LessWrong / rationalist community research planning
-
-Created `plans/lesswrong-rationalist-community-research.md`, an 11-file research program starting with Eliezer Yudkowsky and the Sequences, then expanding through heuristics-and-biases roots, Robin Hanson and Overcoming Bias, Scott Alexander, Gwern, MIRI, CFAR, and a final synthesis of the community's aims and tensions. Updated `plans/SUMMARY.md` and `plans/ACCESS.jsonl` accordingly.
-
-### chat-005 — AI paradigm genealogy research planning
-
-Created `plans/ai-paradigm-genealogy-research.md`, an 11-file research program telling the current AI paradigm as a cumulative technical story: perceptrons, symbolic detours, backpropagation, architectural inductive biases, GPUs and ImageNet, transformers, scaling laws, instruction tuning, and frontier LLM systems. Updated `plans/SUMMARY.md` and `plans/ACCESS.jsonl`.
-
-See `2026/03/18/chat-001/`, `2026/03/18/chat-002/`, `2026/03/18/chat-003/`, `2026/03/18/chat-004/`, and `2026/03/18/chat-005/` for full session records.
-
-## Structure
-
-```
-chats/
-├── SUMMARY.md          ← This file. Top-level history overview.
-├── ACCESS.jsonl        ← Tracks which past chats are retrieved and why.
-└── YYYY/
-    ├── SUMMARY.md      ← Yearly summary: major themes, projects, evolution.
-    └── MM/
-        ├── SUMMARY.md  ← Monthly summary: key conversations and outcomes.
-        └── DD/
-            ├── SUMMARY.md  ← Daily summary: what happened today.
-            └── chat-NNN/
-                ├── SUMMARY.md    ← Individual chat summary.
-                ├── transcript.md ← Full conversation record (read-only archive).
-                └── artifacts/    ← Files created or uploaded during the chat.
-```
-
-## Compression principles
-
-- **Chat-level summaries:** What was discussed, what was decided, what was produced. Include enough detail that an agent could pick up the thread if the user says "remember when we talked about X?"
-- **Daily summaries:** Brief roll-up of the day's conversations. Only notable if multiple chats occurred or something significant happened.
-- **Monthly summaries:** Thematic overview. What projects were active, what shifted, what was learned. Individual chats mentioned only if pivotal.
-- **Yearly summaries:** Broad narrative arc. How the user's needs, interests, and working patterns evolved over the year.
-
-## When to retrieve past chats
-
-- When the user explicitly references a past conversation.
-- When the current task closely resembles a past task (check ACCESS.jsonl patterns).
-- When the user's request involves a topic that appears in the chat summaries.
-- **Do not** load full transcripts unless the summary is insufficient. Start with summaries and drill down only as needed.
+- `chats/2026/03/18/` for first-day onboarding and initial system design.
+- `chats/2026/03/19/` for periodic review, compact-bootstrap work, and access-log tooling analysis.
 
 ## Usage patterns
 
-_Early access data present, but no aggregation has run yet._ After aggregation, this section will contain:
-- **High-value files** — files with 5+ retrievals and mean helpfulness ≥ 0.7
-- **Low-value files** — files with 3+ retrievals and mean helpfulness ≤ 0.3
-- **Co-retrieval clusters** — file sets accessed together across 3+ sessions
-- **Retrieval trends** — frequency and helpfulness changes since last aggregation
+_Early access data present, but no aggregation has run yet._ Add retrieval trends here only after aggregation; keep the top of this file focused on continuity and drill-down guidance.

@@ -9,9 +9,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-VALIDATOR_PATH = (
-    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
-)
+VALIDATOR_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "validate_memory_repo.py"
 
 SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_PATH)
 assert SPEC is not None
@@ -72,6 +70,25 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     - Check whether `meta/review-queue.md` still contains only its placeholder.
     - Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger.
     - `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
+
+    ## Compact bootstrap contract
+
+    **Startup strategy:** Whole-file compact mode.
+
+    | File | Keep in compact path | Move to drill-down files | Target budget |
+    |---|---|---|---|
+    | `meta/quick-reference.md` | Routing and thresholds | Longer rationale | ~2,600 tokens |
+    | `identity/SUMMARY.md` | User portrait | Detailed evidence | ~450 tokens |
+    | `chats/SUMMARY.md` | Themes and retrieval guidance | Narrative history | ~750 tokens |
+    | `plans/SUMMARY.md` | Active plans and next actions | Full plan detail | ~1,700 tokens |
+    | `scratchpad/USER.md` | Current user notes | Older context | ~400 tokens |
+    | `scratchpad/CURRENT.md` | Active threads and refs | Extended analysis | ~650 tokens |
+
+    ## Compact file success criteria
+
+    - `plans/SUMMARY.md` must preserve active-plan priority and next actions.
+    - `chats/SUMMARY.md` must preserve current themes and retrieval guidance.
+    - `scratchpad/CURRENT.md` must preserve active threads and drill-down refs.
 
     ## Current active stage: Exploration
 
@@ -557,6 +574,15 @@ def build_minimal_repo(root: Path) -> None:
         write(root / dirname / "ACCESS.jsonl", "")
 
     write(
+        root / "chats" / "SUMMARY.md",
+        "# Chats Summary\n\n_Nothing here yet._\n",
+    )
+    write(
+        root / "plans" / "SUMMARY.md",
+        "# Plans — Summary\n\n## Active plans\n\n_No active plans._\n\n## Recent completions\n\n_None yet._\n",
+    )
+
+    write(
         root / "skills" / "SUMMARY.md",
         f"# Skills summary\n\n{SKILLS_SUMMARY_MCP_LINE}\n",
     )
@@ -653,9 +679,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             (root / "agent-bootstrap.toml").unlink()
 
             result = validator.validate_repo(root)
-            self.assertTrue(
-                any("missing bootstrap manifest" in error for error in result.errors)
-            )
+            self.assertTrue(any("missing bootstrap manifest" in error for error in result.errors))
 
     def test_missing_task_readiness_manifest_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -665,10 +689,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "missing task-readiness manifest" in error
-                    for error in result.errors
-                )
+                any("missing task-readiness manifest" in error for error in result.errors)
             )
 
     def test_task_readiness_manifest_with_wrong_default_profile_fails(self) -> None:
@@ -687,8 +708,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(
                 any(
-                    "task_detection.default_profile must be 'workspace_general'"
-                    in error
+                    "task_detection.default_profile must be 'workspace_general'" in error
                     for error in result.errors
                 )
             )
@@ -708,10 +728,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "references unknown check 'missing_check'" in error
-                    for error in result.errors
-                )
+                any("references unknown check 'missing_check'" in error for error in result.errors)
             )
 
     def test_bootstrap_manifest_with_wrong_router_fails(self) -> None:
@@ -729,10 +746,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "router must be 'meta/quick-reference.md'" in error
-                    for error in result.errors
-                )
+                any("router must be 'meta/quick-reference.md'" in error for error in result.errors)
             )
 
     def test_bootstrap_manifest_with_wrong_returning_order_fails(self) -> None:
@@ -750,8 +764,63 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
+                any("modes.returning.steps must load" in error for error in result.errors)
+            )
+
+    def test_compact_startup_budget_overrun_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "scratchpad" / "CURRENT.md",
+                "# Agent working notes\n\n"
+                + "## Active threads\n\n- "
+                + ("very long note " * 800)
+                + "\n\n## Immediate next actions\n\n- Trim this file\n\n## Open questions\n\n- How much is too much?\n\n## Drill-down refs\n\n- plans/compact-bootstrap-efficiency.md\n",
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
                 any(
-                    "modes.returning.steps must load" in error
+                    "compact startup file uses ~" in error
+                    or "compact returning startup uses ~" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_chats_summary_with_chat_by_chat_heading_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "chats" / "SUMMARY.md",
+                textwrap.dedent(
+                    """\
+                    # Chats Summary
+
+                    ## Live themes
+
+                    - Theme
+
+                    ## Recent continuity
+
+                    - Continuity
+
+                    ## Retrieval guide
+
+                    - Load dated summaries when needed.
+
+                    ### chat-001
+
+                    Too much narrative.
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "chat-by-chat narrative headings are too detailed" in error
                     for error in result.errors
                 )
             )
@@ -981,10 +1050,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "missing required frontmatter keys" in error
-                    for error in result.errors
-                )
+                any("missing required frontmatter keys" in error for error in result.errors)
             )
 
     def test_canonical_origin_session_path_passes(self) -> None:
@@ -1035,9 +1101,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
-            self.assertTrue(
-                any("legacy origin_session" in warning for warning in result.warnings)
-            )
+            self.assertTrue(any("legacy origin_session" in warning for warning in result.warnings))
 
     def test_malformed_origin_session_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1061,9 +1125,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             )
 
             result = validator.validate_repo(root)
-            self.assertTrue(
-                any("origin_session must be" in error for error in result.errors)
-            )
+            self.assertTrue(any("origin_session must be" in error for error in result.errors))
 
     def test_runtime_guidance_pointing_to_system_maturity_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -1076,10 +1138,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "forbidden runtime guidance pattern" in error
-                    for error in result.errors
-                )
+                any("forbidden runtime guidance pattern" in error for error in result.errors)
             )
 
     def test_session_start_skill_with_readme_bootstrap_fails(self) -> None:
@@ -1107,10 +1166,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "forbidden startup-skill pattern" in error
-                    for error in result.errors
-                )
+                any("forbidden startup-skill pattern" in error for error in result.errors)
             )
 
     def test_session_start_skill_with_compact_manifest_guidance_passes(self) -> None:
@@ -1165,9 +1221,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "forbidden wrapup-skill pattern" in error for error in result.errors
-                )
+                any("forbidden wrapup-skill pattern" in error for error in result.errors)
             )
 
     def test_session_wrapup_skill_with_on_demand_guidance_passes(self) -> None:
@@ -1214,10 +1268,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "forbidden setup-guidance pattern" in error
-                    for error in result.errors
-                )
+                any("forbidden setup-guidance pattern" in error for error in result.errors)
             )
 
     def test_onboarding_export_template_with_stale_script_path_fails(self) -> None:
@@ -1231,10 +1282,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "forbidden onboarding-export pattern" in error
-                    for error in result.errors
-                )
+                any("forbidden onboarding-export pattern" in error for error in result.errors)
             )
 
     def test_quarantine_file_with_wrong_trust_fails(self) -> None:
@@ -1260,10 +1308,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "quarantine file must have trust: low" in error
-                    for error in result.errors
-                )
+                any("quarantine file must have trust: low" in error for error in result.errors)
             )
 
     def test_quarantine_file_with_last_verified_fails(self) -> None:
@@ -1289,10 +1334,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any(
-                    "quarantine file must omit last_verified" in error
-                    for error in result.errors
-                )
+                any("quarantine file must omit last_verified" in error for error in result.errors)
             )
 
     def test_quarantine_file_with_correct_trust_and_source_passes(self) -> None:
@@ -1437,10 +1479,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertEqual(result.errors, [], "\n".join(result.errors))
             self.assertTrue(
-                any(
-                    "missing session reflection note" in warning
-                    for warning in result.warnings
-                )
+                any("missing session reflection note" in warning for warning in result.warnings)
             )
 
     def test_chat_leaf_summary_without_heading_fails(self) -> None:
@@ -1493,9 +1532,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             self.assertIn("meta/quick-reference.md", text)
             self.assertIn(ADAPTER_ROUTING_LINE, text)
-            self.assertNotIn(
-                "follow the bootstrap sequence and rules in README.md", text
-            )
+            self.assertNotIn("follow the bootstrap sequence and rules in README.md", text)
 
     def test_root_setup_entrypoints_exist_and_target_canonical_impl(self) -> None:
         wrapper = (REPO_ROOT / "setup.sh").read_text(encoding="utf-8")
@@ -1505,9 +1542,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertIn("setup/setup.html", wrapper_html)
 
     def test_browser_setup_copy_no_longer_claims_remote_parity(self) -> None:
-        quickstart = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(
-            encoding="utf-8"
-        )
+        quickstart = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(encoding="utf-8")
         setup_html = (REPO_ROOT / "setup" / "setup.html").read_text(encoding="utf-8")
 
         self.assertIn("Git remote setup stays manual.", quickstart)
@@ -1516,9 +1551,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertNotIn("follow the bootstrap sequence", quickstart)
 
     def test_onboarding_export_template_uses_canonical_import_command(self) -> None:
-        text = (
-            REPO_ROOT / "HUMANS" / "tooling" / "onboard-export-template.md"
-        ).read_text(encoding="utf-8")
+        text = (REPO_ROOT / "HUMANS" / "tooling" / "onboard-export-template.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn("bash HUMANS/tooling/scripts/onboard-export.sh <file>", text)
         self.assertNotIn("bash scripts/onboard-export.sh <file>", text)
@@ -1559,9 +1594,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
     def test_quickstart_describes_template_backed_first_run_and_conditional_import_commit(
         self,
     ) -> None:
-        text = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(
-            encoding="utf-8"
-        )
+        text = (REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md").read_text(encoding="utf-8")
 
         self.assertIn(
             "rm -rf .git && git init --initial-branch=core",
@@ -1585,12 +1618,8 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
 
     def test_compact_manifest_excludes_readme_and_session_checklists(self) -> None:
-        quick_reference = (REPO_ROOT / "meta" / "quick-reference.md").read_text(
-            encoding="utf-8"
-        )
-        compact_row = validator.extract_manifest_row(
-            quick_reference, "Compact returning"
-        )
+        quick_reference = (REPO_ROOT / "meta" / "quick-reference.md").read_text(encoding="utf-8")
+        compact_row = validator.extract_manifest_row(quick_reference, "Compact returning")
 
         assert compact_row is not None
         self.assertNotIn("README.md", compact_row)

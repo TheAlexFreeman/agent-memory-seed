@@ -4,9 +4,8 @@ origin_session: chats/2026/03/19/chat-001
 type: knowledge
 domain: ai-tools
 tags: [agent-memory, mcp, persistent-memory, rag, git, governance, ecosystem]
-trust: medium
+trust: low
 created: 2026-03-19
-last_verified: 2026-03-19
 ---
 
 # Where agent-memory-seed Fits in the AI Ecosystem

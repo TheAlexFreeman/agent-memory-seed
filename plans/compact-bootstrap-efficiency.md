@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: define the compact-path contract and target budget for each startup-loaded file"
+next_action: "Phase 3, item 5: add drill-down reference checks to keep compact summaries pointing at deeper files instead of duplicating them"
 origin_session: unknown
 source: agent-generated
 status: active
@@ -132,30 +132,30 @@ Update `CHANGELOG.md` and the relevant summary files so future maintainers under
 
 ## Progress tracking
 
-- [ ] 1.1 Define the compact bootstrap contract
-- [ ] 1.2 Set per-file token targets
-- [ ] 1.3 Define compact-file success criteria
-- [ ] 1.4 Decide the startup-safe section strategy
-- [ ] 2.1 Refactor `plans/SUMMARY.md` to active-state format
-- [ ] 2.2 Refactor `meta/quick-reference.md` to runtime authority only
-- [ ] 2.3 Refactor `chats/SUMMARY.md` to thematic continuity + retrieval guidance
-- [ ] 2.4 Refactor `scratchpad/CURRENT.md` to handoff-only format
-- [ ] 2.5 Normalize `scratchpad/USER.md` and `identity/SUMMARY.md` if needed
-- [ ] 3.1 Improve aggregate compact-budget diagnostics
-- [ ] 3.2 Add per-file compact-budget checks
-- [ ] 3.3 Add structural rules for compact summaries
-- [ ] 3.4 Add archive-vs-summary drift checks
+- [x] 1.1 Define the compact bootstrap contract
+- [x] 1.2 Set per-file token targets
+- [x] 1.3 Define compact-file success criteria
+- [x] 1.4 Decide the startup-safe section strategy
+- [x] 2.1 Refactor `plans/SUMMARY.md` to active-state format
+- [x] 2.2 Refactor `meta/quick-reference.md` to runtime authority only
+- [x] 2.3 Refactor `chats/SUMMARY.md` to thematic continuity + retrieval guidance
+- [x] 2.4 Refactor `scratchpad/CURRENT.md` to handoff-only format
+- [x] 2.5 Normalize `scratchpad/USER.md` and `identity/SUMMARY.md` if needed
+- [x] 3.1 Improve aggregate compact-budget diagnostics
+- [x] 3.2 Add per-file compact-budget checks
+- [x] 3.3 Add structural rules for compact summaries
+- [x] 3.4 Add archive-vs-summary drift checks
 - [ ] 3.5 Add drill-down reference checks
 - [ ] 4.1 Add a compact-budget inspection helper
 - [ ] 4.2 Add section-bound loading support if adopted
 - [ ] 4.3 Review bootstrap manifest and retrieval heuristics
-- [ ] 4.4 Add context-efficiency guidance to documentation
-- [ ] 5.1 Update tests for the new compact formats
+- [x] 4.4 Add context-efficiency guidance to documentation
+- [x] 5.1 Update tests for the new compact formats
 - [ ] 5.2 Re-measure the compact payload after migration
-- [ ] 5.3 Run repo-wide validation and targeted regressions
-- [ ] 5.4 Record the optimization in changelog and summary surfaces
+- [x] 5.3 Run repo-wide validation and targeted regressions
+- [x] 5.4 Record the optimization in changelog and summary surfaces
 
-**Progress:** 0/22 items complete
+**Progress:** 16/22 items complete
 
 ---
 

@@ -295,6 +295,8 @@ Context cost depends on whether the model is onboarding, resuming normally, or r
 
 For models with smaller context windows, prefer the compact returning manifest in `meta/quick-reference.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 
+The compact startup path is intentionally whole-file and metadata-first: startup-loaded summaries should carry live state, next actions, and drill-down pointers, while archives, long rationales, and chat-by-chat narratives live in deeper files.
+
 For the complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest". For on-demand session start/end runbooks, see `meta/session-checklists.md`.
 
 ## Session reflection

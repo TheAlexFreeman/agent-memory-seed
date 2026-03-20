@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-19] Compact bootstrap contract and validator enforcement
+
+**Changed:**
+
+- **Refactored the compact startup surfaces.** Rewrote `meta/quick-reference.md`, `plans/SUMMARY.md`, `chats/SUMMARY.md`, and `scratchpad/CURRENT.md` so the returning-session path is explicitly metadata-first: live state, next actions, retrieval guidance, and drill-down links remain in startup-loaded files while narrative history and extended analysis move out.
+
+- **Defined explicit compact-path budgets and a whole-file strategy.** The live router now records per-file token targets for each startup-loaded file and makes the operating choice explicit: startup files should stay compact as whole files rather than depending on hidden startup-safe sections.
+
+- **Aligned plan-summary generation with the new compact shape.** Updated the MCP helper that rewrites `plans/SUMMARY.md` blocks so routine plan updates preserve the compact `Scope / Progress / Next` format instead of reintroducing longer prose blocks.
+
+- **Added validator and test coverage for compact drift.** Extended the validator and seed fixtures to check the compact-path contract directly, including localized file-size budgets, aggregate returning-session budget measurement, summary-shape requirements, and drift heuristics for archive-like narrative sprawl.
+
+**Reasoning:** The compact returning path had drifted into an archive-like startup payload, blowing past its own budget and wasting recurring context on material that should have been loaded on demand. Making the compact contract explicit in the live router, preserving it in summary-generation helpers, and enforcing it in the validator closes that loop. This improves consistency between docs, tooling, and generated summaries; improves user-friendliness by keeping startup state readable and actionable; and improves context efficiency by restoring headroom in the returning-session path.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-03-19] First periodic review
 
 **Changed:**

@@ -248,8 +248,8 @@ next_action: Do first step
         self.assertEqual(frontmatter["next_action"], "Do second step")
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
         self.assertIn("1. ☑ Do first step", body)
-        self.assertIn("**Progress:** 1/2 items complete", summary)
-        self.assertIn("**Next action:** Do second step", summary)
+        self.assertIn("Progress: 1/2 complete", summary)
+        self.assertIn("Next: Do second step", summary)
 
     def test_promote_knowledge_updates_frontmatter_and_both_summaries(self) -> None:
         repo_root = self._init_repo(
@@ -841,7 +841,9 @@ Structured.
         )
         payload = json.loads(raw)
 
-        entry = json.loads((repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip())
+        entry = json.loads(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+        )
         self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
         self.assertEqual(entry["category"], "react-performance")
 
