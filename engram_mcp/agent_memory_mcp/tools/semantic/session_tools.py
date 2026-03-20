@@ -25,6 +25,10 @@ def _tool_annotations(**kwargs: object) -> Any:
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
+_REVIEW_QUEUE_HEADING_RE = re.compile(
+    r"(?m)^### (?:\[(?P<date>\d{4}-\d{2}-\d{2})\] (?P<title>.+)|(?P<legacy_date>\d{4}-\d{2}-\d{2}) — (?P<legacy_title>.+))$"
+)
+_REVIEW_QUEUE_FIELD_RE = re.compile(r"(?m)^\*\*(.+?):\*\*\s*(.+)$")
 _REVERT_ALLOWED_TOP_LEVELS = frozenset(
     {"identity", "knowledge", "skills", "plans", "chats", "meta", "scratchpad"}
 )
@@ -105,6 +109,96 @@ def _append_markdown_block(existing: str, block: str) -> str:
     if not trimmed_existing:
         return trimmed_block + "\n"
     return trimmed_existing + "\n\n---\n\n" + trimmed_block + "\n"
+
+
+def _resolve_scratchpad_target(target: str) -> str:
+    target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
+    if target in target_map:
+        return target_map[target]
+    if isinstance(target, str) and target.startswith("scratchpad/") and target.endswith(".md"):
+        slug = target[len("scratchpad/") : -len(".md")]
+        validate_slug(slug, field_name="target")
+        return f"scratchpad/{slug}.md"
+    from ...errors import ValidationError
+
+    raise ValidationError(
+        "target must be 'user', 'current', or 'scratchpad/{slug}.md' with a bare kebab-case slug"
+    )
+
+
+def _review_item_slug(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return normalized or "review-item"
+
+
+def _build_review_item_id(review_date: str, title: str) -> str:
+    return f"{review_date}-{_review_item_slug(title)}"
+
+
+def _split_review_queue_sections(content: str) -> tuple[str, str]:
+    match = re.search(r"(?m)^## Resolved\s*$", content)
+    if match is None:
+        return content, ""
+    return content[: match.start()], content[match.start() :]
+
+
+def _parse_review_queue_blocks(content: str) -> tuple[str, list[dict[str, str]]]:
+    matches = list(_REVIEW_QUEUE_HEADING_RE.finditer(content))
+    if not matches:
+        return content, []
+
+    prefix = content[: matches[0].start()]
+    blocks: list[dict[str, str]] = []
+    for index, match in enumerate(matches):
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
+        raw_block = content[start:end].strip()
+        review_date = match.group("date") or match.group("legacy_date") or ""
+        title = (match.group("title") or match.group("legacy_title") or "").strip()
+        fields = {
+            field_match.group(1).strip().lower().replace(" ", "_"): field_match.group(2).strip()
+            for field_match in _REVIEW_QUEUE_FIELD_RE.finditer(raw_block)
+        }
+        item_id = fields.get("item_id", _build_review_item_id(review_date, title))
+        blocks.append(
+            {
+                "date": review_date,
+                "title": title,
+                "item_id": item_id,
+                "raw": raw_block,
+            }
+        )
+    return prefix, blocks
+
+
+def _render_review_queue(prefix: str, pending_blocks: list[str], resolved_section: str) -> str:
+    cleaned_prefix = re.sub(r"(?m)^_No pending items\._\s*$\n?", "", prefix).rstrip()
+    sections: list[str] = []
+    if cleaned_prefix:
+        sections.append(cleaned_prefix)
+    if pending_blocks:
+        sections.append("\n\n---\n\n".join(block.strip() for block in pending_blocks))
+    else:
+        sections.append("_No pending items._")
+    rendered = "\n\n".join(section for section in sections if section).rstrip() + "\n"
+    if resolved_section.strip():
+        rendered += "\n" + resolved_section.strip() + "\n"
+    return rendered
+
+
+def _append_review_resolution(
+    resolved_section: str,
+    *,
+    resolved_on: str,
+    item_id: str,
+    resolution_note: str | None,
+) -> str:
+    entry = f"- {resolved_on} — {item_id}"
+    if resolution_note and resolution_note.strip():
+        entry += f": {resolution_note.strip()}"
+    if resolved_section.strip():
+        return resolved_section.rstrip() + "\n" + entry + "\n"
+    return "## Resolved\n\n" + entry + "\n"
 
 
 def _update_last_periodic_review_date(content: str, review_date: str) -> str | None:
@@ -272,22 +366,17 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_append_scratchpad(
         target: str, content: str, section: str | None = None
     ) -> str:
-        from ...errors import ValidationError
         from ...models import MemoryWriteResult
 
         repo = get_repo()
         root = get_root()
 
-        target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
-        if target not in target_map:
-            raise ValidationError(f"target must be 'user' or 'current', got: {target}")
-
-        rel_path = target_map[target]
+        rel_path = _resolve_scratchpad_target(target)
         abs_path = root / rel_path
         abs_path.parent.mkdir(parents=True, exist_ok=True)
         existing = abs_path.read_text(encoding="utf-8") if abs_path.exists() else ""
 
-        if section and existing:
+        if section:
             section_heading = f"## {section}"
             if section_heading in existing:
                 idx = existing.index(section_heading)
@@ -308,7 +397,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         abs_path.write_text(new_content, encoding="utf-8")
         repo.add(rel_path)
-        commit_msg = f"[scratchpad] Append to {target}"
+        commit_msg = f"[scratchpad] Append to {rel_path}"
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
@@ -415,17 +504,36 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if not abs_queue.exists():
             raise ValidationError(f"Review queue not found: {review_queue_rel}")
 
+        path, _ = resolve_repo_path(repo, path, field_name="path")
         today = today_str()
-        priority_tag = "🚨 urgent" if priority == "urgent" else "normal"
-        entry = (
-            f"\n### {today} — {path} ({priority_tag})\n\n"
-            f"**File:** `{path}`  \n"
-            f"**Date:** {today}  \n"
-            f"**Priority:** {priority}  \n"
-            f"**Reason:** {reason}\n"
+        title = f"Review {path}"
+        item_id = _build_review_item_id(today, title)
+        entry = "\n".join(
+            [
+                f"### [{today}] {title}",
+                f"**Item ID:** {item_id}",
+                "**Type:** proposed",
+                f"**File:** {path}",
+                f"**Priority:** {priority}",
+                f"**Reason:** {reason}",
+                "**Status:** pending",
+            ]
         )
         content = abs_queue.read_text(encoding="utf-8")
-        abs_queue.write_text(content.rstrip() + "\n" + entry, encoding="utf-8")
+        pending_section, resolved_section = _split_review_queue_sections(content)
+        prefix, blocks = _parse_review_queue_blocks(pending_section)
+        blocks.append(
+            {
+                "date": today,
+                "title": title,
+                "item_id": item_id,
+                "raw": entry,
+            }
+        )
+        abs_queue.write_text(
+            _render_review_queue(prefix, [block["raw"] for block in blocks], resolved_section),
+            encoding="utf-8",
+        )
         repo.add(review_queue_rel)
 
         commit_msg = f"[curation] Flag {path} for review ({priority})"
@@ -434,7 +542,81 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             files_changed=[review_queue_rel],
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"flagged_path": path, "priority": priority},
+            new_state={"flagged_path": path, "priority": priority, "item_id": item_id},
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_resolve_review_item",
+        annotations=_tool_annotations(
+            title="Resolve Review Queue Item",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_resolve_review_item(
+        item_id: str,
+        resolution_note: str | None = None,
+        version_token: str | None = None,
+    ) -> str:
+        from ...errors import NotFoundError, ValidationError
+        from ...frontmatter_utils import today_str
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        item_id = validate_slug(item_id, field_name="item_id")
+        review_queue_rel = "meta/review-queue.md"
+        abs_queue = root / review_queue_rel
+        if not abs_queue.exists():
+            raise NotFoundError(f"Review queue not found: {review_queue_rel}")
+
+        repo.check_version_token(review_queue_rel, version_token)
+        content = abs_queue.read_text(encoding="utf-8")
+        pending_section, resolved_section = _split_review_queue_sections(content)
+        prefix, blocks = _parse_review_queue_blocks(pending_section)
+
+        remaining_blocks: list[str] = []
+        matched_block: dict[str, str] | None = None
+        for block in blocks:
+            if block["item_id"] == item_id:
+                matched_block = block
+                continue
+            remaining_blocks.append(block["raw"])
+
+        if matched_block is None:
+            raise NotFoundError(f"Review queue item not found: {item_id}")
+
+        status_match = _REVIEW_QUEUE_FIELD_RE.findall(matched_block["raw"])
+        field_map = {
+            key.strip().lower().replace(" ", "_"): value.strip()
+            for key, value in status_match
+        }
+        if field_map.get("status") != "pending":
+            raise ValidationError(f"Review queue item is not pending: {item_id}")
+
+        updated_resolved = _append_review_resolution(
+            resolved_section,
+            resolved_on=today_str(),
+            item_id=item_id,
+            resolution_note=resolution_note,
+        )
+        abs_queue.write_text(
+            _render_review_queue(prefix, remaining_blocks, updated_resolved),
+            encoding="utf-8",
+        )
+        repo.add(review_queue_rel)
+
+        commit_msg = f"[curation] Resolve review item: {item_id}"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=[review_queue_rel],
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"item_id": item_id},
         )
         return result.to_json()
 
@@ -779,6 +961,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_append_scratchpad": memory_append_scratchpad,
         "memory_record_chat_summary": memory_record_chat_summary,
         "memory_flag_for_review": memory_flag_for_review,
+        "memory_resolve_review_item": memory_resolve_review_item,
         "memory_log_access": memory_log_access,
         "memory_record_reflection": memory_record_reflection,
         "memory_record_periodic_review": memory_record_periodic_review,

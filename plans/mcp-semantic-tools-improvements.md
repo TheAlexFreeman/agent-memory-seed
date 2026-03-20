@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 1, item 1: expand memory_append_scratchpad to accept dated scratchpad slugs"
+last_verified: 2026-03-20
+next_action: "Phase 4, item 1: implement memory_record_session composite"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -190,16 +190,16 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 
 ## Progress tracking
 
-- [ ] 1.1 Expand `memory_append_scratchpad` to accept dated slug targets
-- [ ] 1.2 Validation for new target form
-- [ ] 1.3 Update capabilities TOML for scratchpad tool
-- [ ] 2.1 Implement `memory_resolve_review_item`
-- [ ] 2.2 Add `item_id` to `memory_flag_for_review` result
-- [ ] 2.3 Add operations table for `memory_resolve_review_item`
-- [ ] 3.1 Implement `memory_update_skill`
-- [ ] 3.2 Handle `create_if_missing` param
-- [ ] 3.3 Document skill churn guard decision
-- [ ] 3.4 Update capabilities contract for skill tool
+- [x] 1.1 Expand `memory_append_scratchpad` to accept dated slug targets
+- [x] 1.2 Validation for new target form
+- [x] 1.3 Update capabilities TOML for scratchpad tool
+- [x] 2.1 Implement `memory_resolve_review_item`
+- [x] 2.2 Add `item_id` to `memory_flag_for_review` result
+- [x] 2.3 Add operations table for `memory_resolve_review_item`
+- [x] 3.1 Implement `memory_update_skill`
+- [x] 3.2 Handle `create_if_missing` param
+- [x] 3.3 Document skill churn guard decision
+- [x] 3.4 Update capabilities contract for skill tool
 - [ ] 4.1 Implement `memory_record_session` composite
 - [ ] 4.2 Update individual chat/reflection tool docstrings
 - [ ] 4.3 Update `skills/session-wrapup.md`
@@ -207,14 +207,14 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 - [ ] 5.2 Register tool in capabilities contract (both modes)
 - [ ] 5.3 Update `skills/session-start.md` with aggregation instruction
 - [ ] 5.4 Document retroactive backfill and session_id fallback behavior
-- [ ] 6.1 Tests for `memory_append_scratchpad`
-- [ ] 6.2 Tests for `memory_resolve_review_item`
-- [ ] 6.3 Tests for `memory_update_skill`
+- [x] 6.1 Tests for `memory_append_scratchpad`
+- [x] 6.2 Tests for `memory_resolve_review_item`
+- [x] 6.3 Tests for `memory_update_skill`
 - [ ] 6.4 Tests for `memory_record_session`
 - [ ] 6.5 Tests for `memory_run_aggregation`
-- [ ] 6.6 Full capabilities TOML update
+- [x] 6.6 Full capabilities TOML update
 
-**Progress:** 0/22 items complete
+**Progress:** 14/22 items complete
 
 ---
 
@@ -232,6 +232,9 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 
 ## Notes
 
+- 2026-03-20: Phase 1 and Phase 2 landed together. `memory_append_scratchpad` now accepts dated scratchpad slug targets, `memory_flag_for_review` emits stable `item_id` values, and `memory_resolve_review_item` provides a governed path for review-queue cleanup.
+- 2026-03-20: Phase 3 landed. `memory_update_skill` now provides a protected semantic path for updating or creating skill files, with tests and manifest coverage. Focus now shifts to session recording and aggregation.
+
 - 2026-03-19: Adjacent semantic groundwork landed outside this checklist: `memory_record_periodic_review` now provides a protected governance write path for approved periodic-review outputs. That does not directly complete checklist items here, but it validates the manifest, approval, and publication patterns needed for future protected semantic tools.
 - 2026-03-19: The read-side additions from the same session (`memory_run_periodic_review`, provenance inspection, commit inspection) also reduce uncertainty around future `memory_resolve_review_item`, `memory_record_session`, and aggregation-oriented flows.
-- 2026-03-19: Keep `next_action` unchanged. The remaining direct scope is still scratchpad targeting, review-queue lifecycle, skill updates, session recording, and aggregation execution.
+- 2026-03-20: The remaining direct scope is now session recording and aggregation execution.

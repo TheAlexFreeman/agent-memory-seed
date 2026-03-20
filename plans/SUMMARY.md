@@ -12,8 +12,8 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/mcp-semantic-tools-improvements.md
 Scope: Close semantic-tooling gaps around scratchpad writes, review-queue lifecycle, skills updates, session recording, and aggregation.
-Progress: 0/22 complete
-Next: Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
+Progress: 14/22 complete
+Next: Phase 4, item 1 — implement `memory_record_session` composite
 Blocks: none; unblocked by the completed `mcp-reorganization.md` migration.
 
 ### `worktree-integration.md` · status: active · trust: medium

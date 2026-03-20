@@ -6,13 +6,15 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from importlib import import_module
 from pathlib import Path
-from typing import Any
+from types import ModuleType
+from typing import Any, cast
 
 try:
-    import tomllib
+    tomllib = cast(ModuleType, import_module("tomllib"))
 except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
-    import tomli as tomllib
+    tomllib = cast(ModuleType, import_module("tomli"))
 
 
 MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
@@ -130,6 +132,7 @@ ALLOWED_COMMIT_CATEGORY_HINTS = {
     "identity",
     "knowledge",
     "plan",
+    "skill",
     "scratchpad",
     "system",
 }
@@ -174,8 +177,10 @@ RESULT_HIGHLIGHT_PRIORITY = (
     "priority",
     "version_token",
     "target",
+    "section",
     "key",
     "mode",
+    "item_id",
     "identity_updates_this_session",
 )
 
@@ -730,12 +735,13 @@ def resolve_capabilities(repo_root: Path, *, include_runtime: bool = True) -> di
                 f"{MANIFEST_PATH}: desktop_operations.{operation_name}.change_class references unknown class {change_class!r}"
             )
         if status == "implemented":
-            tool_name = config.get("tool")
-            if not isinstance(tool_name, str):
+            tool_name_value = config.get("tool")
+            if not isinstance(tool_name_value, str):
                 errors.append(
                     f"{MANIFEST_PATH}: desktop_operations.{operation_name}.tool must be a string"
                 )
                 continue
+            tool_name = tool_name_value
             if tool_name not in semantic_extensions:
                 errors.append(
                     f"{MANIFEST_PATH}: desktop_operations.{operation_name} references non-semantic tool {tool_name!r}"
@@ -769,7 +775,7 @@ def resolve_capabilities(repo_root: Path, *, include_runtime: bool = True) -> di
     available_read_tools: list[str] = []
     available_raw_tools: list[str] = []
     available_semantic_tools: list[str] = []
-    missing_declared_tools = {
+    missing_declared_tools: dict[str, list[str]] = {
         "read_support": [],
         "raw_fallback": [],
         "semantic_extensions": [],
@@ -924,8 +930,13 @@ def resolve_capabilities(repo_root: Path, *, include_runtime: bool = True) -> di
 
         if config.get("status") == "implemented":
             implemented_operation_count += 1
-            tool_name = config.get("tool")
-            operation_config = operations.get(tool_name, {}) if isinstance(tool_name, str) else {}
+            tool_name_value = config.get("tool")
+            implemented_tool_name = tool_name_value if isinstance(tool_name_value, str) else None
+            operation_config = (
+                operations.get(implemented_tool_name, {})
+                if isinstance(implemented_tool_name, str)
+                else {}
+            )
             changed_files = [
                 path for path in operation_config.get("writes", []) if isinstance(path, str)
             ]
@@ -937,7 +948,7 @@ def resolve_capabilities(repo_root: Path, *, include_runtime: bool = True) -> di
             highlighted_result_fields = _pick_highlight_fields(result_fields)
             operation_summary.update(
                 {
-                    "tool": tool_name,
+                    "tool": implemented_tool_name,
                     "commit_category_hint": operation_config.get("commit_category_hint"),
                     "changed_files": changed_files,
                     "changed_file_count": len(changed_files),

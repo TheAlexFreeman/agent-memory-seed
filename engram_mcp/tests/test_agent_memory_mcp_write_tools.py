@@ -713,6 +713,249 @@ Structured.
                 )
             )
 
+    def test_memory_append_scratchpad_accepts_dated_slug_and_creates_file(self) -> None:
+        repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Current\n"})
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_append_scratchpad"](
+                target="scratchpad/2026-03-20-worklog.md",
+                content="Initial note",
+                section="Findings",
+            )
+        )
+        payload = json.loads(raw)
+
+        scratchpad = (
+            repo_root / "scratchpad" / "2026-03-20-worklog.md"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(
+            payload["new_state"]["target"],
+            "scratchpad/2026-03-20-worklog.md",
+        )
+        self.assertIn("## Findings\n\nInitial note\n", scratchpad)
+
+    def test_memory_append_scratchpad_rejects_invalid_target_format(self) -> None:
+        repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Current\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_append_scratchpad"](
+                    target="scratchpad/not valid.md",
+                    content="Invalid",
+                )
+            )
+
+    def test_memory_flag_for_review_returns_item_id_and_uses_canonical_format(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "plans/demo.md": "# Demo\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_flag_for_review"](
+                path="plans/demo.md",
+                reason="Needs human review before promotion.",
+                priority="urgent",
+            )
+        )
+        payload = json.loads(raw)
+        review_queue = (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["new_state"]["flagged_path"], "plans/demo.md")
+        self.assertRegex(
+            payload["new_state"]["item_id"],
+            r"^\d{4}-\d{2}-\d{2}-review-plans-demo-md$",
+        )
+        self.assertIn("### [", review_queue)
+        self.assertIn("**Item ID:** ", review_queue)
+        self.assertIn("**Type:** proposed", review_queue)
+        self.assertNotIn("_No pending items._", review_queue)
+
+    def test_memory_resolve_review_item_moves_entry_to_resolved_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/review-queue.md": """# Review Queue
+
+### [2026-03-20] Review plans/demo.md
+**Item ID:** 2026-03-20-review-plans-demo-md
+**Type:** proposed
+**File:** plans/demo.md
+**Priority:** normal
+**Reason:** Review it.
+**Status:** pending
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_resolve_review_item"](
+                item_id="2026-03-20-review-plans-demo-md",
+                resolution_note="Handled during maintenance.",
+            )
+        )
+        payload = json.loads(raw)
+        review_queue = (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["new_state"]["item_id"], "2026-03-20-review-plans-demo-md")
+        self.assertEqual(
+            payload["commit_message"],
+            "[curation] Resolve review item: 2026-03-20-review-plans-demo-md",
+        )
+        self.assertIn("_No pending items._", review_queue)
+        self.assertIn("## Resolved", review_queue)
+        self.assertIn(
+            "2026-03-20-review-plans-demo-md: Handled during maintenance.",
+            review_queue,
+        )
+        self.assertNotIn("**Status:** pending", review_queue)
+
+    def test_memory_update_skill_upserts_existing_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "skills/session-start.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-16
+last_verified: 2026-03-16
+trust: high
+---
+
+# Session Start
+
+## Steps
+
+Load compact context.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_update_skill"](
+                file="session-start",
+                section="Steps",
+                content="Load compact context and active plans.",
+            )
+        )
+        payload = json.loads(raw)
+        skill = (repo_root / "skills" / "session-start.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["new_state"]["section"], "Steps")
+        self.assertIn("## Steps\n\nLoad compact context and active plans.", skill)
+        self.assertIn(f"last_verified: '{date.today()}'", skill)
+
+    def test_memory_update_skill_appends_existing_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "skills/session-sync.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-16
+last_verified: 2026-03-16
+trust: high
+---
+
+# Session Sync
+
+## Steps
+
+Capture a short checkpoint.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_update_skill"](
+                file="session-sync",
+                section="Steps",
+                content="Record any open questions.",
+                mode="append",
+            )
+        )
+        skill = (repo_root / "skills" / "session-sync.md").read_text(encoding="utf-8")
+
+        self.assertIn("Capture a short checkpoint.\nRecord any open questions.", skill)
+
+    def test_memory_update_skill_replaces_existing_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "skills/session-wrapup.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-16
+last_verified: 2026-03-16
+trust: high
+---
+
+# Session Wrapup
+
+## Steps
+
+Old guidance.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_update_skill"](
+                file="session-wrapup",
+                section="Steps",
+                content="Use the governed session recorder when available.",
+                mode="replace",
+            )
+        )
+        skill = (repo_root / "skills" / "session-wrapup.md").read_text(encoding="utf-8")
+
+        self.assertIn("Use the governed session recorder when available.", skill)
+        self.assertNotIn("Old guidance.", skill)
+
+    def test_memory_update_skill_raises_for_missing_file_without_creation(self) -> None:
+        repo_root = self._init_repo({"skills/SUMMARY.md": "# Skills\n"})
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.NotFoundError):
+            asyncio.run(
+                tools["memory_update_skill"](
+                    file="missing-skill",
+                    section="Steps",
+                    content="Create guidance.",
+                )
+            )
+
+    def test_memory_update_skill_can_create_missing_file(self) -> None:
+        repo_root = self._init_repo({"skills/SUMMARY.md": "# Skills\n"})
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_update_skill"](
+                file="new-skill",
+                section="Steps",
+                content="Create the first guidance block.",
+                create_if_missing=True,
+                source="agent-generated",
+                trust="medium",
+                origin_session="chats/2026/03/20/chat-001",
+            )
+        )
+        payload = json.loads(raw)
+        skill_path = repo_root / "skills" / "new-skill.md"
+        skill = skill_path.read_text(encoding="utf-8")
+
+        self.assertEqual(payload["new_state"]["section"], "Steps")
+        self.assertTrue(skill_path.exists())
+        self.assertIn("source: agent-generated", skill)
+        self.assertIn("origin_session: chats/2026/03/20/chat-001", skill)
+        self.assertIn("trust: medium", skill)
+        self.assertIn("## Steps\n\nCreate the first guidance block.", skill)
+
     # ------------------------------------------------------------------
     # P0-1: memory_write / memory_edit protected-path enforcement
     # ------------------------------------------------------------------

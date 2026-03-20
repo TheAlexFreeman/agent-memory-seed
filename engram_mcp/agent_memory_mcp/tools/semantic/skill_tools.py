@@ -1,0 +1,149 @@
+"""Skill-oriented semantic tools."""
+
+from __future__ import annotations
+
+import re
+from typing import TYPE_CHECKING, Any, cast
+
+from ...path_policy import resolve_repo_path, validate_session_id, validate_slug
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
+
+
+def _tool_annotations(**kwargs: object) -> Any:
+    return cast(Any, kwargs)
+
+
+def _replace_markdown_section(body: str, section_name: str, new_value: str) -> str | None:
+    section_heading = f"## {section_name}"
+    match = re.search(rf"(?m)^##\s+{re.escape(section_name)}\s*$", body)
+    if match is None:
+        return None
+
+    content_start = match.end()
+    next_heading = re.search(r"(?m)^## ", body[content_start:])
+    section_end = content_start + next_heading.start() if next_heading else len(body)
+    replacement = f"{section_heading}\n\n{new_value.strip()}\n"
+    if next_heading:
+        replacement += "\n"
+    return body[: match.start()] + replacement + body[section_end:]
+
+
+def _append_markdown_section(body: str, section_name: str, value: str) -> str | None:
+    match = re.search(rf"(?m)^##\s+{re.escape(section_name)}\s*$", body)
+    if match is None:
+        return None
+
+    content_start = match.end()
+    next_heading = re.search(r"(?m)^## ", body[content_start:])
+    section_end = content_start + next_heading.start() if next_heading else len(body)
+    existing = body[content_start:section_end].strip()
+    appended = f"{existing}\n{value.strip()}" if existing else value.strip()
+    return _replace_markdown_section(body, section_name, appended)
+
+
+def register_tools(mcp: "FastMCP", get_repo) -> dict[str, object]:
+    """Register skill-oriented semantic tools."""
+
+    @mcp.tool(
+        name="memory_update_skill",
+        annotations=_tool_annotations(
+            title="Update Skill File",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_update_skill(
+        file: str,
+        section: str,
+        content: str,
+        mode: str = "upsert",
+        version_token: str | None = None,
+        create_if_missing: bool = False,
+        source: str | None = None,
+        trust: str | None = None,
+        origin_session: str | None = None,
+    ) -> str:
+        """Update a named section in a skill file, optionally creating the file.
+
+        Unlike identity updates, skill updates do not enforce a per-session churn alarm.
+        The protected change class and explicit-review flow are the primary safeguards here.
+        """
+        from ...errors import NotFoundError, ValidationError
+        from ...frontmatter_utils import read_with_frontmatter, today_str, write_with_frontmatter
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+
+        if mode not in ("upsert", "append", "replace"):
+            raise ValidationError(f"mode must be 'upsert', 'append', or 'replace': {mode}")
+
+        file = validate_slug(file, field_name="file")
+        rel_path, abs_path = resolve_repo_path(repo, f"skills/{file}.md")
+        today = today_str()
+
+        if abs_path.exists():
+            repo.check_version_token(rel_path, version_token)
+            fm_dict, body = read_with_frontmatter(abs_path)
+        else:
+            if not create_if_missing:
+                raise NotFoundError(f"Skill file not found: {rel_path}")
+            if not source or not source.strip():
+                raise ValidationError("source is required when create_if_missing=True")
+            if trust not in ("high", "medium", "low"):
+                raise ValidationError(
+                    "trust must be 'high', 'medium', or 'low' when create_if_missing=True"
+                )
+            if origin_session is None:
+                raise ValidationError("origin_session is required when create_if_missing=True")
+            validate_session_id(origin_session)
+            fm_dict = {
+                "source": source.strip(),
+                "origin_session": origin_session,
+                "created": today,
+                "last_verified": today,
+                "trust": trust,
+            }
+            body = f"# {file.replace('-', ' ').title()}\n"
+
+        section_heading = f"## {section}"
+        if section in fm_dict:
+            if mode == "append":
+                existing = str(fm_dict[section])
+                fm_dict[section] = existing + "\n" + content.strip()
+            else:
+                fm_dict[section] = content
+        elif section_heading in body:
+            updated_body = (
+                _append_markdown_section(body, section, content)
+                if mode == "append"
+                else _replace_markdown_section(body, section, content)
+            )
+            if updated_body is None:
+                raise ValidationError(f"Skill section not found: {section_heading}")
+            body = updated_body
+        else:
+            body = body.rstrip() + f"\n\n{section_heading}\n\n{content.strip()}\n"
+
+        fm_dict["last_verified"] = today
+        write_with_frontmatter(abs_path, fm_dict, body)
+
+        repo.add(rel_path)
+        commit_msg = f"[skill] Update {section} in skills/{file}.md"
+        commit_result = repo.commit(commit_msg)
+
+        result = MemoryWriteResult.from_commit(
+            files_changed=[rel_path],
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"section": section, "mode": mode},
+        )
+        return result.to_json()
+
+    return {"memory_update_skill": memory_update_skill}
+
+
+__all__ = ["register_tools"]
