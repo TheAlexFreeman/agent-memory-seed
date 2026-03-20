@@ -28,8 +28,8 @@ Every folder has:
 | Interface                  | How it works                                                              | Best for                              | Setup effort |
 | -------------------------- | ------------------------------------------------------------------------- | ------------------------------------- | ------------ |
 | **Direct Git filesystem**  | `git clone` + read/write Markdown files                                   | Humans, simple scripts, any LLM       | 5 minutes    |
-| **MCP Server**             | `python HUMANS/tooling/scripts/memory_mcp.py`                             | Modern agent runtimes (2026 standard) | 2 minutes    |
-| **Python library**         | `tools/agent_memory_mcp/` — import `create_mcp()` from `server.py`       | Embedding the MCP surface in Python   | 10 minutes   |
+| **MCP Server**             | `python engram_mcp/memory_mcp.py` or `engram-mcp`                         | Modern agent runtimes (2026 standard) | 2 minutes    |
+| **Python library**         | `engram_mcp/agent_memory_mcp/` — import `create_mcp()` from `server.py` | Embedding the MCP surface in Python   | 10 minutes   |
 | **SQLite Index** (derived) | Auto-generated `.memory.db` (not yet implemented — see README roadmap)    | Hybrid vector + keyword search        | Optional     |
 
 **MCP = Model Context Protocol** (Anthropic-originated 2024, now the de-facto 2026 standard for memory/tool interoperability). The server exposes your entire repo as a clean JSON/HTTP service.
@@ -73,7 +73,7 @@ class GitSeedCheckpointer(BaseCheckpointSaver):
     def __init__(self, repo_path: str):
         self.repo = git.Repo(repo_path)
         # Connect to MCP server started via:
-        #   MEMORY_REPO_ROOT=<path> python HUMANS/tooling/scripts/memory_mcp.py
+        #   MEMORY_REPO_ROOT=<path> python engram_mcp/memory_mcp.py
 
     def get(self, thread_id):  # → loads relevant SUMMARY.md + chats
         ...
@@ -191,7 +191,7 @@ No other memory system in 2026 gives you this level of transparency by default.
 
 1. Clone the repo
 2. Run `./setup.sh`
-3. Start MCP server: `python HUMANS/tooling/scripts/memory_mcp.py`
+3. Start MCP server: `python engram_mcp/memory_mcp.py` or `engram-mcp`
 4. Test with any framework (OpenClaw or LangGraph example above)
 5. Commit a test reflection → watch `git log` and `ACCESS.jsonl`
 

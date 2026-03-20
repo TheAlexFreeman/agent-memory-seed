@@ -12,7 +12,7 @@ On 2026-03-18, Codex Desktop appeared to have a bad `~/.codex/config.toml`, but 
 ## Symptoms
 
 - A fresh desktop session after reboot still showed `agent_memory` MCP tool calls timing out.
-- `~/.codex/config.toml` resolved the expected repo venv interpreter and `HUMANS/tooling/scripts/memory_mcp.py`.
+- `~/.codex/config.toml` resolved the expected repo venv interpreter and `engram_mcp/memory_mcp.py`.
 - Desktop logs showed the server starting and handling requests such as `ListToolsRequest`, `ListResourcesRequest`, and `CallToolRequest`.
 - A standalone Python MCP client reproduced the hang outside the desktop app, which ruled out Codex-specific configuration as the primary problem.
 - `memory_list_folder` succeeded over stdio MCP, while `memory_read_file` hung because it reaches git-backed code to compute the file `version_token`.
@@ -25,15 +25,15 @@ When the stdio MCP server spawned `git`, the child process inherited stdin from 
 
 The fix was to set `stdin=subprocess.DEVNULL` for subprocesses that run inside the MCP server:
 
-- `tools/agent_memory_mcp/git_repo.py`
-- `tools/agent_memory_mcp/server.py`
-- `tools/agent_memory_mcp/tools/read_tools.py`
+- `engram_mcp/agent_memory_mcp/git_repo.py`
+- `engram_mcp/agent_memory_mcp/server.py`
+- `engram_mcp/agent_memory_mcp/tools/read_tools.py`
 
-A regression test was added in `HUMANS/tooling/tests/test_memory_mcp.py` that launches the server over real stdio transport with the repo venv interpreter and calls `memory_read_file`.
+A regression test was added in `engram_mcp/tests/test_memory_mcp.py` that launches the server over real stdio transport with the repo venv interpreter and calls `memory_read_file`.
 
 ## Verification
 
-- `.venv\Scripts\python.exe -m unittest HUMANS.tooling.tests.test_memory_mcp` passed after the fix.
+- `.venv\Scripts\python.exe -m unittest engram_mcp.tests.test_memory_mcp` passed after the fix.
 - A direct stdio MCP client call successfully returned both `memory_list_folder` and `memory_read_file`.
 - Empty `list_resources` and `list_resource_templates` responses were not the issue; this server is primarily tool-oriented.
 

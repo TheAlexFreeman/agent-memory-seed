@@ -14,8 +14,8 @@ Priority order for active work:
 
 Detail: plans/mcp-reorganization.md
 Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
-Progress: 0/41 complete
-Next: Phase 0, item 1 — complete the physical move from `tools/` to `engram_mcp/` now that the additive namespace bootstrap is in place.
+Progress: 18/41 complete
+Next: Phase 2, item 21 — remove the `tools/` compat shim, then run the full suite once the remaining historical `tools/` path references are reconciled.
 Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6 after the reorganization reaches its path-update phase.
 
 

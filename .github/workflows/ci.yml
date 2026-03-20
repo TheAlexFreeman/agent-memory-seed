@@ -22,17 +22,17 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install test dependencies
-        run: python -m pip install pytest ruff mcp python-frontmatter
+      - name: Install package and dev dependencies
+        run: python -m pip install -e ".[dev]"
 
       - name: Lint Python
-        run: python -m ruff check HUMANS/tooling/scripts/ HUMANS/tooling/tests/ tools/agent_memory_mcp/
+        run: python -m ruff check HUMANS/tooling/scripts/ HUMANS/tooling/tests/ engram_mcp/
 
       - name: Run validator
         run: python HUMANS/tooling/scripts/validate_memory_repo.py
 
       - name: Run tests
-        run: python -m pytest HUMANS/tooling/tests/ -v
+        run: python -m pytest HUMANS/tooling/tests/ engram_mcp/tests/ -v
 
       - name: Lint shell scripts
         if: runner.os == 'Linux'
