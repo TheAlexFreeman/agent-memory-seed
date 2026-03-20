@@ -841,6 +841,13 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
             f"{path}: adapter_files must be {expected_adapter_files!r}, got {adapter_files!r}"
         )
 
+    host_repo_root = manifest.get("host_repo_root")
+    if host_repo_root is not None:
+        if not isinstance(host_repo_root, str) or not host_repo_root.strip():
+            result.error(f"{path}: host_repo_root must be a non-empty string when present")
+        elif not Path(host_repo_root).is_absolute():
+            result.error(f"{path}: host_repo_root must be an absolute path when present")
+
     mode_detection = manifest.get("mode_detection")
     if not isinstance(mode_detection, dict):
         result.error(f"{path}: mode_detection must be a TOML table")

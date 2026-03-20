@@ -26,7 +26,11 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 - **Wired host-side MCP output into the flow.** The new init script appends `host_repo_root` to the deployed bootstrap file, writes host-root Codex config when requested, and emits a generic MCP example for other clients.
 
+- **Made worktree MCP launchers less brittle.** Host-side worktree config now prefers a discovered `engram-mcp` CLI when available and falls back to the existing Python-plus-script entrypoint only when the CLI is unavailable.
+
 - **Added host-root agent adapters for worktree mode.** `init-worktree.sh` now writes trimmed `AGENTS.md`, `CLAUDE.md`, and `.cursorrules` files into the host repository so agent sessions start from the memory worktree's `meta/quick-reference.md` instead of assuming the host root is the memory store.
+
+- **Promoted `host_repo_root` into the bootstrap contract.** Added an optional `host_repo_root` field to `agent-bootstrap.toml`, taught the bootstrap resolver to return host-repo git state when configured, and taught the validator to reject malformed non-absolute values.
 
 - **Extended setup regression coverage.** Added end-to-end setup tests for orphan-branch creation, committed worktree materialization, worktree-targeted MCP config paths, and `--dry-run` safety. Also refreshed `setup/initial-commit-paths.txt`, `.gitattributes`, and the setup fixture so the new worktree tooling is preserved in the canonical seed commit.
 

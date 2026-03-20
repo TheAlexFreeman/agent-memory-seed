@@ -12,9 +12,9 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 5/24 complete
-Next: Phase 1, item 6 — refine platform-specific MCP config output for worktree mode
-Blocks: none; worktree-specific implementation can proceed.
+Progress: 7/24 complete
+Next: Phase 1, item 8 — update `meta/quick-reference.md` routing for worktree topology
+Blocks: requires explicit approval before editing protected file `meta/quick-reference.md`.
 
 
 ### `access-log-tooling-improvements.md` · status: active · trust: medium

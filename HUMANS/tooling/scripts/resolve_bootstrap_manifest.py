@@ -175,6 +175,8 @@ class StartupResolution:
     preload_access_mode: str
     budget: StartupBudget
     git_state: GitState
+    host_repo_root: str | None
+    host_git_state: GitState | None
     warnings: list[StartupWarning]
     trace: list[StartupTraceStep]
     active_override: str | None
@@ -333,6 +335,16 @@ def detect_git_state(repo_root: Path, expected_branch: str | None = None) -> Git
         worktree_branch_drift=worktree_branch_drift,
         branch_checked_out_elsewhere=branch_checked_out_elsewhere,
     )
+
+
+def resolve_host_repo_root(repo_root: Path, manifest: dict[str, Any]) -> Path | None:
+    raw_root = manifest.get("host_repo_root")
+    if not isinstance(raw_root, str) or not raw_root.strip():
+        return None
+    candidate = Path(raw_root)
+    if not candidate.is_absolute():
+        candidate = (repo_root / candidate).resolve()
+    return candidate
 
 
 def is_placeholder_or_empty(path: Path) -> bool:
@@ -718,6 +730,8 @@ def _resolve_skip_manifest(
         preload_access_mode="startup_trace_only",
         budget=budget,
         git_state=current_git_state,
+        host_repo_root=None,
+        host_git_state=None,
         warnings=warnings,
         trace=trace,
         active_override=active_override,
@@ -786,9 +800,13 @@ def resolve_startup(
         raise ValueError(f"Unsupported mode {mode!r}")
 
     mode_config = manifest["modes"][mode]
+    host_repo_root = resolve_host_repo_root(repo_root, manifest)
     current_git_state = git_state or detect_git_state(
         repo_root, expected_branch=expected_branch
     )
+    host_git_state = None
+    if host_repo_root is not None:
+        host_git_state = detect_git_state(host_repo_root)
     trace, budget = resolve_trace(
         repo_root,
         list(mode_config["steps"]),
@@ -814,6 +832,8 @@ def resolve_startup(
         preload_access_mode="startup_trace_only",
         budget=budget,
         git_state=current_git_state,
+        host_repo_root=str(host_repo_root) if host_repo_root is not None else None,
+        host_git_state=host_git_state,
         warnings=warnings,
         trace=trace,
         active_override=active_override,

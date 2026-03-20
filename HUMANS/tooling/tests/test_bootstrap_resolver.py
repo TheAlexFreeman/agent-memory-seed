@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 import tempfile
 import textwrap
@@ -358,6 +359,67 @@ class BootstrapResolverTests(unittest.TestCase):
                 resolution.startup_panel.repo_next_step.reason,
                 "Repo-declared router for Returning mode.",
             )
+
+    def test_host_repo_root_surfaces_host_git_state_when_configured(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+            root = Path(tempdir)
+            host_root = Path(host_tempdir)
+            build_repo(root, placeholder_scratchpad=False)
+
+            subprocess.run(
+                ["git", "init", "--initial-branch=main"],
+                cwd=host_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.name", "Test User"],
+                cwd=host_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "test@example.com"],
+                cwd=host_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            (host_root / "README.md").write_text("# Host\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "."],
+                cwd=host_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "commit", "-m", "host init"],
+                cwd=host_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            write(
+                root / "agent-bootstrap.toml",
+                BOOTSTRAP_MANIFEST.replace(
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]',
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\nhost_repo_root = "'
+                    + host_root.as_posix()
+                    + '"',
+                    1,
+                ),
+            )
+
+            resolution = resolver.resolve_startup(root, requested_mode="returning")
+
+            self.assertEqual(resolution.host_repo_root, str(host_root))
+            self.assertIsNotNone(resolution.host_git_state)
+            assert resolution.host_git_state is not None
+            self.assertEqual(resolution.host_git_state.current_branch, "main")
             self.assertEqual(
                 resolution.startup_panel.files[0].path,
                 "meta/quick-reference.md",

@@ -2,6 +2,9 @@ version = 1
 router = "meta/quick-reference.md"
 default_mode = "returning"
 adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]
+# Optional in deployed worktree mode. When set, points at the host codebase root
+# so startup tooling can surface host-repo git state alongside the memory worktree.
+# host_repo_root = "C:/path/to/host/repo"
 
 [mode_detection]
 automation = "scheduled_or_recurring_run"

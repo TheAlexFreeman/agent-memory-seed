@@ -822,6 +822,24 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 any("modes.returning.steps must load" in error for error in result.errors)
             )
 
+    def test_bootstrap_manifest_with_relative_host_repo_root_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "agent-bootstrap.toml",
+                VALID_BOOTSTRAP_MANIFEST.replace(
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]',
+                    'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\nhost_repo_root = "../host-repo"',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any("host_repo_root must be an absolute path" in error for error in result.errors)
+            )
+
     def test_compact_startup_budget_overrun_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)

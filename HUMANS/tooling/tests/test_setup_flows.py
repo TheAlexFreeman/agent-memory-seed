@@ -98,12 +98,15 @@ class SetupFlowTests(unittest.TestCase):
         seed_root: Path,
         host_root: Path,
         *args: str,
+        env_updates: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess[str]:
         bash = find_bash()
         if bash is None:
             self.skipTest("bash is not available in this environment")
 
         env = isolated_env(host_root / ".home")
+        if env_updates:
+            env.update(env_updates)
         return subprocess.run(
             [bash, str(seed_root / "setup" / "init-worktree.sh"), *args],
             cwd=host_root,
@@ -319,6 +322,34 @@ class SetupFlowTests(unittest.TestCase):
                 text=True,
             ).stdout.strip()
             self.assertEqual("", branches)
+
+    def test_init_worktree_prefers_engram_mcp_cli_when_available(self) -> None:
+        with tempfile.TemporaryDirectory() as seed_tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+            seed_root = Path(seed_tempdir)
+            host_root = Path(host_tempdir)
+            build_setup_repo(seed_root)
+            self.init_host_repo(host_root)
+
+            fake_bin = host_root / "fake-bin"
+            fake_bin.mkdir()
+            launcher = fake_bin / "engram-mcp"
+            launcher.write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            launcher.chmod(0o755)
+
+            result = self.run_init_worktree(
+                seed_root,
+                host_root,
+                "--non-interactive",
+                "--platform",
+                "generic",
+                env_updates={"PATH": f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}"},
+            )
+
+            self.assertIn("mcp-config-example.json", result.stdout)
+
+            config_text = (host_root / "mcp-config-example.json").read_text(encoding="utf-8")
+            self.assertIn(str(launcher).replace("\\", "\\\\"), config_text)
+            self.assertIn('"args": []', config_text)
 
     def test_shell_and_browser_setup_sources_keep_profile_summary_copy_aligned(
         self,

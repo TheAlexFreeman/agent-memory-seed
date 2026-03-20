@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 1, item 6 — refine platform-specific MCP config output for worktree mode"
+next_action: "Phase 1, item 8 — update meta/quick-reference.md routing rules for worktree topology (requires protected-file approval)"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -132,7 +132,7 @@ work correctly when the memory store is a worktree inside a larger project.
    inside the worktree (which remain for when agents access the memory branch
    directly).
 
-6. ☐ Extend `setup/init-worktree.sh` to write platform-specific MCP config
+6. ☑ Extend `setup/init-worktree.sh` to write platform-specific MCP config
 
    For each supported platform (Codex, Claude Cowork, generic):
    - Write the MCP server config pointing at `<worktree-path>/engram_mcp/memory_mcp.py`
@@ -143,7 +143,7 @@ work correctly when the memory store is a worktree inside a larger project.
    - For other platforms: write an `mcp-config-example.json` referencing the worktree
      path, with a clear comment that the user must paste this into their client config.
 
-7. ☐ Add `host_repo_root` field to `agent-bootstrap.toml`
+7. ☑ Add `host_repo_root` field to `agent-bootstrap.toml`
 
    A new optional field that tells the bootstrap resolver where the host codebase
    lives. When set, the bootstrap can surface the host repo's git status (branch,
@@ -388,4 +388,4 @@ no change.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following design discussion on orphan-branch worktree integration strategy |
-| 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 item 5 by writing host-root adapter files that point agents at the worktree router and host-side MCP config. Next priority: Phase 1 item 6 MCP config refinement. |
+| 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 items 5-7 by writing host-root adapter files, preferring `engram-mcp` over the path-based script when available, and formalizing optional `host_repo_root` support in the bootstrap resolver and validator. Next planned item: Phase 1 item 8, which touches `meta/quick-reference.md` and therefore needs explicit protected-file approval before implementation. |

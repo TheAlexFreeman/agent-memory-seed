@@ -326,24 +326,21 @@ EOF
 
 write_host_codex_config() {
     local host_root="$1"
-    local worktree_root="$2"
-    local python_cmd="$3"
+    local launcher_cmd="$2"
+    local launcher_arg="$3"
     local host_root_native="$4"
     local worktree_native="$5"
-    local memory_script="$worktree_root/engram_mcp/memory_mcp.py"
-    local escaped_python
-    local escaped_script
+    local escaped_command
     local escaped_worktree
 
-    escaped_python="$(toml_escape "$python_cmd")"
-    escaped_script="$(toml_escape "$(native_path "$memory_script")")"
+    escaped_command="$(toml_escape "$launcher_cmd")"
     escaped_worktree="$(toml_escape "$worktree_native")"
 
     mkdir -p "$host_root/.codex"
     cat > "$host_root/.codex/config.toml" <<EOF
 [mcp_servers.agent_memory]
-command = "$escaped_python"
-args = ["$escaped_script"]
+command = "$escaped_command"
+args = [$(if [[ -n "$launcher_arg" ]]; then printf '"%s"' "$(toml_escape "$launcher_arg")"; fi)]
 cwd = "$escaped_worktree"
 startup_timeout_sec = 20
 tool_timeout_sec = 120
@@ -357,19 +354,17 @@ EOF
 
 write_host_mcp_example() {
     local host_root="$1"
-    local worktree_root="$2"
-    local host_root_native="$3"
-    local worktree_native="$4"
-    local memory_script_native
-
-    memory_script_native="$(native_path "$worktree_root/engram_mcp/memory_mcp.py")"
+        local launcher_cmd="$2"
+        local launcher_arg="$3"
+        local host_root_native="$4"
+        local worktree_native="$5"
 
     cat > "$host_root/mcp-config-example.json" <<EOF
 {
   "_comment": "Copy this MCP server entry into your client configuration and point it at the deployed memory worktree.",
   "agent_memory": {
-    "command": "python",
-    "args": ["$(json_escape "$memory_script_native")"],
+        "command": "$(json_escape "$launcher_cmd")",
+        "args": [$(if [[ -n "$launcher_arg" ]]; then printf '"%s"' "$(json_escape "$launcher_arg")"; fi)],
     "cwd": "$(json_escape "$worktree_native")",
     "env": {
       "MEMORY_REPO_ROOT": "$(json_escape "$worktree_native")",
@@ -445,6 +440,53 @@ detect_python_for_worktree() {
         native_path "$(command -v python)"
         return 0
     fi
+    return 1
+}
+
+detect_engram_mcp_for_worktree() {
+    local worktree_root="$1"
+    local candidate=""
+    for candidate in \
+        "$worktree_root/.venv/Scripts/engram-mcp.exe" \
+        "$worktree_root/.venv/Scripts/engram-mcp.cmd" \
+        "$worktree_root/.venv/Scripts/engram-mcp.bat" \
+        "$worktree_root/.venv/bin/engram-mcp"; do
+        if [[ -f "$candidate" ]]; then
+            native_path "$candidate"
+            return 0
+        fi
+    done
+    if command -v engram-mcp >/dev/null 2>&1; then
+        native_path "$(command -v engram-mcp)"
+        return 0
+    fi
+    return 1
+}
+
+SERVER_COMMAND=""
+SERVER_ARG=""
+SERVER_MODE=""
+
+resolve_server_launcher() {
+    local worktree_root="$1"
+    local memory_script_native
+
+    if SERVER_COMMAND="$(detect_engram_mcp_for_worktree "$worktree_root")"; then
+        SERVER_ARG=""
+        SERVER_MODE="cli"
+        return 0
+    fi
+
+    if SERVER_COMMAND="$(detect_python_for_worktree "$worktree_root")"; then
+        memory_script_native="$(native_path "$worktree_root/engram_mcp/memory_mcp.py")"
+        SERVER_ARG="$memory_script_native"
+        SERVER_MODE="python"
+        return 0
+    fi
+
+    SERVER_COMMAND="python"
+    SERVER_ARG="$(native_path "$worktree_root/engram_mcp/memory_mcp.py")"
+    SERVER_MODE="fallback"
     return 1
 }
 
@@ -554,10 +596,12 @@ run_cmd git -C "$TEMP_WORKTREE" commit -m "[system] Initialize agent memory work
 run_cmd git worktree remove "$TEMP_WORKTREE"
 run_cmd git worktree add "$WORKTREE_ABS" "$BRANCH_NAME"
 
+resolve_server_launcher "$WORKTREE_ABS" || true
+
 case "${PLATFORM:-generic}" in
     codex)
-        if python_cmd="$(detect_python_for_worktree "$WORKTREE_ABS")"; then
-            write_host_codex_config "$HOST_REPO_ROOT" "$WORKTREE_ABS" "$python_cmd" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE"
+        if [[ "$SERVER_MODE" != "fallback" ]]; then
+            write_host_codex_config "$HOST_REPO_ROOT" "$SERVER_COMMAND" "$SERVER_ARG" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE"
             write_host_adapter_files "$HOST_REPO_ROOT" "$WORKTREE_DISPLAY" "$BRANCH_NAME" ".codex/config.toml"
             echo "[ok] Wrote host Codex MCP config to .codex/config.toml"
         else
@@ -565,7 +609,7 @@ case "${PLATFORM:-generic}" in
         fi
         ;;
     *)
-        write_host_mcp_example "$HOST_REPO_ROOT" "$WORKTREE_ABS" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE"
+        write_host_mcp_example "$HOST_REPO_ROOT" "$SERVER_COMMAND" "$SERVER_ARG" "$HOST_ROOT_NATIVE" "$WORKTREE_NATIVE"
         write_host_adapter_files "$HOST_REPO_ROOT" "$WORKTREE_DISPLAY" "$BRANCH_NAME" "mcp-config-example.json"
         echo "[ok] Wrote host MCP example config to mcp-config-example.json"
         ;;
