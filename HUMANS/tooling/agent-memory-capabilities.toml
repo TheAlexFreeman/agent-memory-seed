@@ -39,12 +39,16 @@ semantic_extensions = [
   "memory_demote_knowledge",
   "memory_archive_knowledge",
   "memory_append_scratchpad",
+  "memory_update_skill",
   "memory_update_identity_trait",
+  "memory_record_session",
+  "memory_run_aggregation",
   "memory_record_chat_summary",
   "memory_record_reflection",
   "memory_record_periodic_review",
   "memory_log_access",
   "memory_flag_for_review",
+  "memory_resolve_review_item",
   "memory_revert_commit",
 ]
 declared_gaps = []
@@ -133,12 +137,14 @@ new_path = "Knowledge Path"
 trust = "Trust"
 archive_path = "Archive Path"
 target = "Scratchpad Target"
+section = "Section"
 key = "Identity Key"
 mode = "Update Mode"
 identity_updates_this_session = "Identity Updates This Session"
 session_id = "Chat Session"
 flagged_path = "Flagged Path"
 priority = "Review Priority"
+item_id = "Review Item"
 reflection_path = "Reflection Path"
 review_date = "Review Date"
 active_stage = "Active Stage"
@@ -151,6 +157,11 @@ reverted_sha = "Reverted Commit"
 new_sha = "New Commit"
 access_jsonl = "Access Log File"
 entry_count = "Access Entry Count"
+entries_processed = "Entries Processed"
+session_groups_processed = "Session Groups Processed"
+legacy_fallback_entries = "Legacy Fallback Entries"
+summary_update_targets = "Summary Update Targets"
+archive_targets = "Archive Targets"
 
 [shared_result]
 fields = [
@@ -333,6 +344,14 @@ tier = "semantic"
 operation_group = "scratchpad"
 change_class = "automatic"
 
+[desktop_operations.update_skill]
+status = "implemented"
+tool = "memory_update_skill"
+tier = "semantic"
+operation_group = "skill"
+change_class = "protected"
+notes = "Protected governed path for updates to existing or newly created skill files."
+
 [desktop_operations.update_identity_trait]
 status = "implemented"
 tool = "memory_update_identity_trait"
@@ -346,6 +365,22 @@ tool = "memory_record_chat_summary"
 tier = "semantic"
 operation_group = "chat"
 change_class = "automatic"
+notes = "Superseded for full wrap-up by memory_record_session; kept for summary-only writes."
+
+[desktop_operations.record_session]
+status = "implemented"
+tool = "memory_record_session"
+tier = "semantic"
+operation_group = "chat"
+change_class = "automatic"
+
+[desktop_operations.run_aggregation]
+status = "implemented"
+tool = "memory_run_aggregation"
+tier = "semantic"
+operation_group = "governance"
+change_class = "proposed"
+notes = "Supports dry-run preview by default; apply mode compacts ACCESS logs, refreshes usage-pattern summaries, and archives immutable monthly segments."
 
 [desktop_operations.flag_for_review]
 status = "implemented"
@@ -354,6 +389,14 @@ tier = "semantic"
 operation_group = "governance"
 change_class = "automatic"
 notes = "Narrow machine-generated governance append; not a general protected meta edit."
+
+[desktop_operations.resolve_review_item]
+status = "implemented"
+tool = "memory_resolve_review_item"
+tier = "semantic"
+operation_group = "governance"
+change_class = "proposed"
+notes = "Governed removal from the pending review queue after a human has confirmed resolution."
 
 [desktop_operations.append_access_entry]
 status = "implemented"
@@ -368,6 +411,7 @@ tool = "memory_record_reflection"
 tier = "semantic"
 operation_group = "chat"
 change_class = "automatic"
+notes = "Superseded for full wrap-up by memory_record_session; kept for reflection-only writes."
 
 [desktop_operations.record_periodic_review]
 status = "implemented"
@@ -525,7 +569,7 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "scratchpad"
-writes = ["scratchpad/USER.md", "scratchpad/CURRENT.md"]
+writes = ["scratchpad/USER.md", "scratchpad/CURRENT.md", "scratchpad/{slug}.md"]
 owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
@@ -533,6 +577,21 @@ owns_review_queue = []
 result_fields = ["target"]
 fallback_tools = ["memory_edit", "memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_update_skill]
+group = "skill"
+tier = "semantic"
+change_class = "protected"
+commit_model = "auto_commit"
+commit_category_hint = "skill"
+writes = ["skills/{file}.md"]
+owns_frontmatter = ["skills/{file}.md"]
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = []
+result_fields = ["section", "mode"]
+fallback_tools = []
+error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
 
 [operations.memory_update_identity_trait]
 group = "identity"
@@ -563,6 +622,53 @@ owns_review_queue = []
 result_fields = ["session_id"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["StagingError"]
+superseded_by = "memory_record_session"
+
+[operations.memory_record_session]
+group = "chat"
+tier = "semantic"
+change_class = "automatic"
+commit_model = "auto_commit"
+commit_category_hint = "chat"
+writes = [
+  "chats/YYYY/MM/DD/chat-NNN/SUMMARY.md",
+  "chats/YYYY/MM/DD/chat-NNN/reflection.md",
+  "chats/SUMMARY.md",
+  "{folder}/ACCESS.jsonl",
+]
+owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
+owns_summaries = ["chats/SUMMARY.md"]
+owns_access_logs = ["{folder}/ACCESS.jsonl"]
+owns_review_queue = []
+result_fields = ["session_id"]
+fallback_tools = ["memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_run_aggregation]
+group = "governance"
+tier = "semantic"
+change_class = "proposed"
+commit_model = "auto_commit"
+commit_category_hint = "curation"
+writes = [
+  "{folder}/SUMMARY.md",
+  "{folder}/ACCESS.jsonl",
+  "{folder}/ACCESS.archive.YYYY-MM.jsonl",
+]
+owns_frontmatter = []
+owns_summaries = ["{folder}/SUMMARY.md"]
+owns_access_logs = ["{folder}/ACCESS.jsonl", "{folder}/ACCESS.archive.YYYY-MM.jsonl"]
+owns_review_queue = []
+result_fields = [
+  "entries_processed",
+  "session_groups_processed",
+  "legacy_fallback_entries",
+  "summary_update_targets",
+  "archive_targets",
+]
+fallback_tools = ["memory_edit", "memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+notes = "Dry-run is the default preview path. Apply mode groups by session_id, falls back to date for legacy entries without session_id, updates Usage patterns sections, rotates immutable monthly archive segments, and clears the processed hot logs in one commit."
 
 [operations.memory_flag_for_review]
 group = "governance"
@@ -575,9 +681,24 @@ owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
 owns_review_queue = ["meta/review-queue.md"]
-result_fields = ["flagged_path", "priority"]
+result_fields = ["flagged_path", "priority", "item_id"]
 fallback_tools = ["memory_edit", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_resolve_review_item]
+group = "governance"
+tier = "semantic"
+change_class = "proposed"
+commit_model = "auto_commit"
+commit_category_hint = "curation"
+writes = ["meta/review-queue.md"]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = ["meta/review-queue.md"]
+result_fields = ["item_id"]
+fallback_tools = ["memory_edit", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
 
 [operations.memory_log_access]
 group = "chat"
@@ -608,6 +729,7 @@ owns_review_queue = []
 result_fields = ["reflection_path"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
+superseded_by = "memory_record_session"
 
 [operations.memory_record_periodic_review]
 group = "governance"

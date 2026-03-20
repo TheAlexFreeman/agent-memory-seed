@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date
 from pathlib import Path, PurePosixPath
@@ -25,6 +26,10 @@ def _tool_annotations(**kwargs: object) -> Any:
 _ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
+_REVIEW_QUEUE_HEADING_RE = re.compile(
+    r"(?m)^### (?:\[(?P<date>\d{4}-\d{2}-\d{2})\] (?P<title>.+)|(?P<legacy_date>\d{4}-\d{2}-\d{2}) — (?P<legacy_title>.+))$"
+)
+_REVIEW_QUEUE_FIELD_RE = re.compile(r"(?m)^\*\*(.+?):\*\*\s*(.+)$")
 _REVERT_ALLOWED_TOP_LEVELS = frozenset(
     {"identity", "knowledge", "skills", "plans", "chats", "meta", "scratchpad"}
 )
@@ -105,6 +110,476 @@ def _append_markdown_block(existing: str, block: str) -> str:
     if not trimmed_existing:
         return trimmed_block + "\n"
     return trimmed_existing + "\n\n---\n\n" + trimmed_block + "\n"
+
+
+def _build_chat_summary_content(session_id: str, summary: str, key_topics: str = "") -> str:
+    from ...frontmatter_utils import today_str
+
+    today = today_str()
+    fm_dict: dict[str, object] = {
+        "session": session_id,
+        "date": today,
+        "trust": "medium",
+        "source": "agent-generated",
+    }
+    topics = [topic.strip() for topic in key_topics.split(",") if topic.strip()]
+    if topics:
+        fm_dict["key_topics"] = topics
+
+    import frontmatter as fmlib  # type: ignore[import-untyped]
+
+    post = fmlib.Post(summary, **fm_dict)
+    return fmlib.dumps(post)
+
+
+def _update_chats_summary_index(content: str, session_id: str, recorded_date: str) -> str | None:
+    if session_id in content:
+        return None
+    mention = f"\nSee `{session_id}/` for session recorded {recorded_date}.\n"
+    if "## Structure" in content:
+        return content.replace("## Structure", mention + "\n## Structure", 1)
+    return content.rstrip() + mention
+
+
+def _build_reflection_content(reflection: str) -> str:
+    trimmed = reflection.strip()
+    if trimmed.startswith("## "):
+        return trimmed + "\n"
+    return "## Session reflection\n\n" + trimmed + "\n"
+
+
+def _build_structured_reflection_content(
+    memory_retrieved: str,
+    memory_influence: str,
+    outcome_quality: str,
+    gaps_noticed: str,
+    system_observations: str = "",
+) -> str:
+    lines = [
+        "## Session reflection\n",
+        "\n",
+        f"**Memory retrieved:** {memory_retrieved}\n",
+        f"**Memory influence:** {memory_influence}\n",
+        f"**Outcome quality:** {outcome_quality}\n",
+        f"**Gaps noticed:** {gaps_noticed}\n",
+    ]
+    if system_observations:
+        lines.append(f"**System observations:** {system_observations}\n")
+    return "".join(lines)
+
+
+def _normalize_access_entry(
+    repo,
+    root: Path,
+    raw_entry: object,
+    *,
+    forced_session_id: str,
+) -> tuple[str, str]:
+    import json as _json
+
+    from ...errors import ValidationError
+    from ...frontmatter_utils import today_str
+
+    if not isinstance(raw_entry, dict):
+        raise ValidationError("access_entries must contain objects with file/task/helpfulness/note")
+
+    file_value = raw_entry.get("file")
+    task_value = raw_entry.get("task")
+    helpfulness_value = raw_entry.get("helpfulness")
+    note_value = raw_entry.get("note")
+    category_value = raw_entry.get("category")
+
+    if not isinstance(task_value, str) or not task_value.strip():
+        raise ValidationError("access entry task must be a non-empty string")
+    if not isinstance(note_value, str) or not note_value.strip():
+        raise ValidationError("access entry note must be a non-empty string")
+    if not isinstance(helpfulness_value, (int, float)):
+        raise ValidationError("access entry helpfulness must be a float between 0.0 and 1.0")
+    helpfulness = float(helpfulness_value)
+    if not (0.0 <= helpfulness <= 1.0):
+        raise ValidationError(
+            f"access entry helpfulness must be between 0.0 and 1.0, got {helpfulness}"
+        )
+
+    if not isinstance(file_value, str) or not file_value.strip():
+        raise ValidationError("access entry file must be a non-empty repo-relative path")
+    file_path, _ = resolve_repo_path(repo, file_value, field_name="file")
+    access_jsonl = _access_jsonl_for(file_path)
+    if access_jsonl is None:
+        root_part = PurePosixPath(file_path).parts[0] if file_path else "(empty)"
+        raise ValidationError(
+            f"Cannot log access for '{file_path}': '{root_part}/' is not an access-tracked directory. Supported roots: {sorted(_ACCESS_ROOTS)}"
+        )
+
+    if category_value is not None:
+        category = validate_slug(str(category_value), field_name="category")
+        categories = _load_task_categories(root)
+        if not categories:
+            raise ValidationError(
+                "category cannot be set until meta/task-categories.md exists with a controlled vocabulary"
+            )
+        if category not in categories:
+            raise ValidationError(f"category must be one of {sorted(categories)}, got: {category}")
+    else:
+        category = None
+
+    entry: dict[str, object] = {
+        "file": file_path,
+        "date": today_str(),
+        "task": task_value.strip(),
+        "helpfulness": round(helpfulness, 2),
+        "note": note_value.strip(),
+        "session_id": forced_session_id,
+    }
+    if category is not None:
+        entry["category"] = category
+    return access_jsonl, _json.dumps(entry, ensure_ascii=False)
+
+
+def _append_access_entries(
+    repo,
+    root: Path,
+    access_entries: list[dict[str, object]] | None,
+    *,
+    session_id: str,
+) -> list[str]:
+    if not access_entries:
+        return []
+
+    grouped: dict[str, list[str]] = {}
+    for raw_entry in access_entries:
+        access_jsonl, line = _normalize_access_entry(
+            repo,
+            root,
+            raw_entry,
+            forced_session_id=session_id,
+        )
+        grouped.setdefault(access_jsonl, []).append(line)
+
+    changed_files: list[str] = []
+    for access_jsonl, lines in grouped.items():
+        abs_access = root / access_jsonl
+        abs_access.parent.mkdir(parents=True, exist_ok=True)
+        existing = abs_access.read_text(encoding="utf-8") if abs_access.exists() else ""
+        payload = "\n".join(lines)
+        updated = (
+            existing.rstrip("\n") + "\n" + payload + "\n"
+            if existing.strip()
+            else payload + "\n"
+        )
+        abs_access.write_text(updated, encoding="utf-8")
+        repo.add(access_jsonl)
+        changed_files.append(access_jsonl)
+    return changed_files
+
+
+def _normalize_aggregation_folders(folders: list[str] | None) -> list[str] | None:
+    from ...errors import ValidationError
+
+    if folders is None:
+        return None
+    if not isinstance(folders, list) or not all(isinstance(item, str) for item in folders):
+        raise ValidationError("folders must be a list of repo folder prefixes")
+
+    normalized: list[str] = []
+    allowed = {"identity", "knowledge", "knowledge/_unverified", "skills", "plans", "chats"}
+    for raw_folder in folders:
+        folder = raw_folder.strip().rstrip("/")
+        if folder not in allowed:
+            raise ValidationError(f"Unsupported aggregation folder: {raw_folder}")
+        if folder not in normalized:
+            normalized.append(folder)
+    return normalized
+
+
+def _filter_aggregation_entries(
+    entries: list[dict[str, Any]],
+    folders: list[str] | None,
+) -> list[dict[str, Any]]:
+    if folders is None:
+        return entries
+
+    filtered: list[dict[str, Any]] = []
+    for entry in entries:
+        access_file = str(entry.get("_access_file", ""))
+        folder = access_file.rsplit("/", 1)[0] if "/" in access_file else ""
+        if folder in folders:
+            filtered.append(entry)
+    return filtered
+
+
+def _build_aggregation_session_groups(
+    entries: list[dict[str, Any]],
+) -> tuple[dict[str, set[str]], int]:
+    groups: dict[str, set[str]] = {}
+    legacy_fallback_entries = 0
+    for entry in entries:
+        file_path = entry.get("file")
+        if not file_path:
+            continue
+        session_id = entry.get("session_id")
+        if session_id:
+            group_id = str(session_id)
+        else:
+            legacy_fallback_entries += 1
+            group_id = f"legacy:{entry.get('date', 'unknown')}"
+        groups.setdefault(group_id, set()).add(str(file_path))
+    return groups, legacy_fallback_entries
+
+
+def _build_phase1_clusters(
+    entries: list[dict[str, Any]],
+    threshold: int,
+) -> tuple[list[dict[str, Any]], int, int]:
+    session_groups, legacy_fallback_entries = _build_aggregation_session_groups(entries)
+    pair_sessions: dict[tuple[str, str], set[str]] = {}
+
+    for group_id, group_files in session_groups.items():
+        ordered_files = sorted(group_files)
+        for index, left in enumerate(ordered_files):
+            for right in ordered_files[index + 1 :]:
+                pair_sessions.setdefault((left, right), set()).add(group_id)
+
+    adjacency: dict[str, set[str]] = {}
+    for (left, right), supporting_groups in pair_sessions.items():
+        if len(supporting_groups) < threshold:
+            continue
+        adjacency.setdefault(left, set()).add(right)
+        adjacency.setdefault(right, set()).add(left)
+
+    maximal_cliques: list[set[str]] = []
+
+    def bron_kerbosch(r_set: set[str], p_set: set[str], x_set: set[str]) -> None:
+        if not p_set and not x_set:
+            if len(r_set) >= 3:
+                maximal_cliques.append(set(r_set))
+            return
+
+        for node in list(p_set):
+            bron_kerbosch(
+                r_set | {node},
+                p_set & adjacency.get(node, set()),
+                x_set & adjacency.get(node, set()),
+            )
+            p_set.remove(node)
+            x_set.add(node)
+
+    bron_kerbosch(set(), set(adjacency), set())
+
+    clusters: list[dict[str, Any]] = []
+    seen: set[tuple[str, ...]] = set()
+    for clique in maximal_cliques:
+        clique_files = sorted(clique)
+        folders = sorted({file_path.split("/", 1)[0] for file_path in clique_files})
+        if len(folders) < 2:
+            continue
+        key = tuple(clique_files)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        pair_counts: list[int] = []
+        supporting_session_groups: set[str] = set()
+        for index, left in enumerate(clique_files):
+            for right in clique_files[index + 1 :]:
+                sessions = pair_sessions.get((left, right)) or pair_sessions.get((right, left)) or set()
+                pair_counts.append(len(sessions))
+                supporting_session_groups.update(sessions)
+        clusters.append(
+            {
+                "files": clique_files,
+                "folders": folders,
+                "co_retrieval_count": min(pair_counts) if pair_counts else 0,
+                "session_groups": sorted(supporting_session_groups),
+            }
+        )
+
+    clusters.sort(key=lambda item: (-int(item["co_retrieval_count"]), item["files"]))
+    return clusters, len(session_groups), legacy_fallback_entries
+
+
+def _render_usage_patterns_section(
+    *,
+    folder: str,
+    entries: list[dict[str, Any]],
+    clusters: list[dict[str, Any]],
+    aggregation_date: str,
+    legacy_fallback_entries: int,
+) -> str:
+    from ..read_tools import _summarize_access_by_file
+
+    file_summaries = _summarize_access_by_file(entries)
+    high_value_files = [
+        item
+        for item in file_summaries
+        if int(item["entry_count"]) >= 5
+        and item["mean_helpfulness"] is not None
+        and float(item["mean_helpfulness"]) >= 0.7
+    ]
+    low_value_files = [
+        item
+        for item in file_summaries
+        if int(item["entry_count"]) >= 3
+        and item["mean_helpfulness"] is not None
+        and float(item["mean_helpfulness"]) <= 0.3
+    ]
+    relevant_clusters = [
+        cluster for cluster in clusters if folder in cast(list[str], cluster["folders"])
+    ]
+    session_groups, _ = _build_aggregation_session_groups(entries)
+
+    high_line = (
+        "; ".join(
+            f"{item['file']} ({item['entry_count']} retrievals, mean {item['mean_helpfulness']})"
+            for item in high_value_files
+        )
+        if high_value_files
+        else "none."
+    )
+    low_line = (
+        "; ".join(
+            f"{item['file']} ({item['entry_count']} retrievals, mean {item['mean_helpfulness']})"
+            for item in low_value_files
+        )
+        if low_value_files
+        else "none."
+    )
+    cluster_line = (
+        "; ".join(
+            f"{' + '.join(cast(list[str], cluster['files']))} ({cluster['co_retrieval_count']} session groups)"
+            for cluster in relevant_clusters
+        )
+        if relevant_clusters
+        else "none."
+    )
+
+    lines = [
+        "## Usage patterns",
+        "",
+        f"- Last aggregation: {aggregation_date}",
+        f"- Entries processed: {len(entries)}",
+        f"- Session groups processed: {len(session_groups)}",
+        f"- High-value files: {high_line}",
+        f"- Low-value files: {low_line}",
+        f"- Co-retrieval clusters: {cluster_line}",
+    ]
+    if legacy_fallback_entries:
+        lines.append(
+            f"- Legacy fallback entries: {legacy_fallback_entries} entries lacked session_id and were grouped by date."
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _replace_usage_patterns_section(content: str, new_section: str) -> str:
+    match = re.search(r"(?m)^## Usage patterns\s*$", content)
+    if match is None:
+        return content.rstrip() + "\n\n" + new_section
+
+    start = match.start()
+    following = re.search(r"(?m)^## ", content[match.end() :])
+    end = match.end() + following.start() if following else len(content)
+    prefix = content[:start].rstrip()
+    suffix = content[end:].lstrip("\n")
+    rebuilt = prefix + "\n\n" + new_section.rstrip() + "\n"
+    if suffix:
+        rebuilt += "\n" + suffix
+    return rebuilt
+
+
+def _archive_segment_name(entries: list[dict[str, Any]]) -> str:
+    dates = sorted(str(entry.get("date", "")) for entry in entries if entry.get("date"))
+    source_date = dates[-1] if dates else str(date.today())
+    return f"ACCESS.archive.{source_date[:7]}.jsonl"
+
+
+def _resolve_scratchpad_target(target: str) -> str:
+    target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
+    if target in target_map:
+        return target_map[target]
+    if isinstance(target, str) and target.startswith("scratchpad/") and target.endswith(".md"):
+        slug = target[len("scratchpad/") : -len(".md")]
+        validate_slug(slug, field_name="target")
+        return f"scratchpad/{slug}.md"
+    from ...errors import ValidationError
+
+    raise ValidationError(
+        "target must be 'user', 'current', or 'scratchpad/{slug}.md' with a bare kebab-case slug"
+    )
+
+
+def _review_item_slug(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+    return normalized or "review-item"
+
+
+def _build_review_item_id(review_date: str, title: str) -> str:
+    return f"{review_date}-{_review_item_slug(title)}"
+
+
+def _split_review_queue_sections(content: str) -> tuple[str, str]:
+    match = re.search(r"(?m)^## Resolved\s*$", content)
+    if match is None:
+        return content, ""
+    return content[: match.start()], content[match.start() :]
+
+
+def _parse_review_queue_blocks(content: str) -> tuple[str, list[dict[str, str]]]:
+    matches = list(_REVIEW_QUEUE_HEADING_RE.finditer(content))
+    if not matches:
+        return content, []
+
+    prefix = content[: matches[0].start()]
+    blocks: list[dict[str, str]] = []
+    for index, match in enumerate(matches):
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(content)
+        raw_block = content[start:end].strip()
+        review_date = match.group("date") or match.group("legacy_date") or ""
+        title = (match.group("title") or match.group("legacy_title") or "").strip()
+        fields = {
+            field_match.group(1).strip().lower().replace(" ", "_"): field_match.group(2).strip()
+            for field_match in _REVIEW_QUEUE_FIELD_RE.finditer(raw_block)
+        }
+        item_id = fields.get("item_id", _build_review_item_id(review_date, title))
+        blocks.append(
+            {
+                "date": review_date,
+                "title": title,
+                "item_id": item_id,
+                "raw": raw_block,
+            }
+        )
+    return prefix, blocks
+
+
+def _render_review_queue(prefix: str, pending_blocks: list[str], resolved_section: str) -> str:
+    cleaned_prefix = re.sub(r"(?m)^_No pending items\._\s*$\n?", "", prefix).rstrip()
+    sections: list[str] = []
+    if cleaned_prefix:
+        sections.append(cleaned_prefix)
+    if pending_blocks:
+        sections.append("\n\n---\n\n".join(block.strip() for block in pending_blocks))
+    else:
+        sections.append("_No pending items._")
+    rendered = "\n\n".join(section for section in sections if section).rstrip() + "\n"
+    if resolved_section.strip():
+        rendered += "\n" + resolved_section.strip() + "\n"
+    return rendered
+
+
+def _append_review_resolution(
+    resolved_section: str,
+    *,
+    resolved_on: str,
+    item_id: str,
+    resolution_note: str | None,
+) -> str:
+    entry = f"- {resolved_on} — {item_id}"
+    if resolution_note and resolution_note.strip():
+        entry += f": {resolution_note.strip()}"
+    if resolved_section.strip():
+        return resolved_section.rstrip() + "\n" + entry + "\n"
+    return "## Resolved\n\n" + entry + "\n"
 
 
 def _update_last_periodic_review_date(content: str, review_date: str) -> str | None:
@@ -272,22 +747,17 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_append_scratchpad(
         target: str, content: str, section: str | None = None
     ) -> str:
-        from ...errors import ValidationError
         from ...models import MemoryWriteResult
 
         repo = get_repo()
         root = get_root()
 
-        target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
-        if target not in target_map:
-            raise ValidationError(f"target must be 'user' or 'current', got: {target}")
-
-        rel_path = target_map[target]
+        rel_path = _resolve_scratchpad_target(target)
         abs_path = root / rel_path
         abs_path.parent.mkdir(parents=True, exist_ok=True)
         existing = abs_path.read_text(encoding="utf-8") if abs_path.exists() else ""
 
-        if section and existing:
+        if section:
             section_heading = f"## {section}"
             if section_heading in existing:
                 idx = existing.index(section_heading)
@@ -308,7 +778,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         abs_path.write_text(new_content, encoding="utf-8")
         repo.add(rel_path)
-        commit_msg = f"[scratchpad] Append to {target}"
+        commit_msg = f"[scratchpad] Append to {rel_path}"
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
@@ -332,6 +802,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_record_chat_summary(
         session_id: str, summary: str, key_topics: str = ""
     ) -> str:
+        """Record a chat summary.
+
+        For full session wrap-up, prefer memory_record_session so summary,
+        reflection, and ACCESS writes land in a single commit.
+        """
         from ...frontmatter_utils import today_str
         from ...models import MemoryWriteResult
 
@@ -346,20 +821,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         abs_session_summary.parent.mkdir(parents=True, exist_ok=True)
 
         today = today_str()
-        fm_dict: dict[str, object] = {
-            "session": session_id,
-            "date": today,
-            "trust": "medium",
-            "source": "agent-generated",
-        }
-        topics = [topic.strip() for topic in key_topics.split(",") if topic.strip()]
-        if topics:
-            fm_dict["key_topics"] = topics
-
-        import frontmatter as fmlib  # type: ignore[import-untyped]
-
-        post = fmlib.Post(summary, **fm_dict)
-        abs_session_summary.write_text(fmlib.dumps(post), encoding="utf-8")
+        abs_session_summary.write_text(
+            _build_chat_summary_content(session_id, summary, key_topics),
+            encoding="utf-8",
+        )
         repo.add(session_summary_rel)
 
         files_changed = [session_summary_rel]
@@ -367,15 +832,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         abs_chats_summary = root / chats_summary_rel
         if abs_chats_summary.exists():
             chats_content = abs_chats_summary.read_text(encoding="utf-8")
-            if session_id not in chats_content:
-                mention = f"\nSee `{session_id}/` for session recorded {today}.\n"
-                if "## Structure" in chats_content:
-                    chats_content = chats_content.replace(
-                        "## Structure", mention + "\n## Structure", 1
-                    )
-                else:
-                    chats_content = chats_content.rstrip() + mention
-                abs_chats_summary.write_text(chats_content, encoding="utf-8")
+            updated_chats_content = _update_chats_summary_index(chats_content, session_id, today)
+            if updated_chats_content is not None:
+                abs_chats_summary.write_text(updated_chats_content, encoding="utf-8")
                 repo.add(chats_summary_rel)
                 files_changed.append(chats_summary_rel)
 
@@ -415,17 +874,36 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if not abs_queue.exists():
             raise ValidationError(f"Review queue not found: {review_queue_rel}")
 
+        path, _ = resolve_repo_path(repo, path, field_name="path")
         today = today_str()
-        priority_tag = "🚨 urgent" if priority == "urgent" else "normal"
-        entry = (
-            f"\n### {today} — {path} ({priority_tag})\n\n"
-            f"**File:** `{path}`  \n"
-            f"**Date:** {today}  \n"
-            f"**Priority:** {priority}  \n"
-            f"**Reason:** {reason}\n"
+        title = f"Review {path}"
+        item_id = _build_review_item_id(today, title)
+        entry = "\n".join(
+            [
+                f"### [{today}] {title}",
+                f"**Item ID:** {item_id}",
+                "**Type:** proposed",
+                f"**File:** {path}",
+                f"**Priority:** {priority}",
+                f"**Reason:** {reason}",
+                "**Status:** pending",
+            ]
         )
         content = abs_queue.read_text(encoding="utf-8")
-        abs_queue.write_text(content.rstrip() + "\n" + entry, encoding="utf-8")
+        pending_section, resolved_section = _split_review_queue_sections(content)
+        prefix, blocks = _parse_review_queue_blocks(pending_section)
+        blocks.append(
+            {
+                "date": today,
+                "title": title,
+                "item_id": item_id,
+                "raw": entry,
+            }
+        )
+        abs_queue.write_text(
+            _render_review_queue(prefix, [block["raw"] for block in blocks], resolved_section),
+            encoding="utf-8",
+        )
         repo.add(review_queue_rel)
 
         commit_msg = f"[curation] Flag {path} for review ({priority})"
@@ -434,7 +912,81 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             files_changed=[review_queue_rel],
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"flagged_path": path, "priority": priority},
+            new_state={"flagged_path": path, "priority": priority, "item_id": item_id},
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_resolve_review_item",
+        annotations=_tool_annotations(
+            title="Resolve Review Queue Item",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_resolve_review_item(
+        item_id: str,
+        resolution_note: str | None = None,
+        version_token: str | None = None,
+    ) -> str:
+        from ...errors import NotFoundError, ValidationError
+        from ...frontmatter_utils import today_str
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        item_id = validate_slug(item_id, field_name="item_id")
+        review_queue_rel = "meta/review-queue.md"
+        abs_queue = root / review_queue_rel
+        if not abs_queue.exists():
+            raise NotFoundError(f"Review queue not found: {review_queue_rel}")
+
+        repo.check_version_token(review_queue_rel, version_token)
+        content = abs_queue.read_text(encoding="utf-8")
+        pending_section, resolved_section = _split_review_queue_sections(content)
+        prefix, blocks = _parse_review_queue_blocks(pending_section)
+
+        remaining_blocks: list[str] = []
+        matched_block: dict[str, str] | None = None
+        for block in blocks:
+            if block["item_id"] == item_id:
+                matched_block = block
+                continue
+            remaining_blocks.append(block["raw"])
+
+        if matched_block is None:
+            raise NotFoundError(f"Review queue item not found: {item_id}")
+
+        status_match = _REVIEW_QUEUE_FIELD_RE.findall(matched_block["raw"])
+        field_map = {
+            key.strip().lower().replace(" ", "_"): value.strip()
+            for key, value in status_match
+        }
+        if field_map.get("status") != "pending":
+            raise ValidationError(f"Review queue item is not pending: {item_id}")
+
+        updated_resolved = _append_review_resolution(
+            resolved_section,
+            resolved_on=today_str(),
+            item_id=item_id,
+            resolution_note=resolution_note,
+        )
+        abs_queue.write_text(
+            _render_review_queue(prefix, remaining_blocks, updated_resolved),
+            encoding="utf-8",
+        )
+        repo.add(review_queue_rel)
+
+        commit_msg = f"[curation] Resolve review item: {item_id}"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=[review_queue_rel],
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"item_id": item_id},
         )
         return result.to_json()
 
@@ -531,6 +1083,240 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return result.to_json()
 
     @mcp.tool(
+        name="memory_record_session",
+        annotations=_tool_annotations(
+            title="Record Full Session",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_record_session(
+        session_id: str,
+        summary: str,
+        reflection: str | None = None,
+        key_topics: str = "",
+        access_entries: list[dict[str, object]] | None = None,
+    ) -> str:
+        """Record a full session in one commit.
+
+        Writes the session summary, optional reflection, chat index update,
+        and optional ACCESS entries atomically under a single [chat] commit.
+        """
+        from ...frontmatter_utils import today_str
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        validate_session_id(session_id)
+        session_summary_rel, abs_session_summary = resolve_repo_path(
+            repo, f"{session_id}/SUMMARY.md", field_name="session_id"
+        )
+        abs_session_summary.parent.mkdir(parents=True, exist_ok=True)
+
+        files_changed = [session_summary_rel]
+        abs_session_summary.write_text(
+            _build_chat_summary_content(session_id, summary, key_topics),
+            encoding="utf-8",
+        )
+        repo.add(session_summary_rel)
+
+        reflection_rel: str | None = None
+        if reflection is not None and reflection.strip():
+            reflection_rel = f"{session_id}/reflection.md"
+            reflection_abs = root / reflection_rel
+            reflection_abs.parent.mkdir(parents=True, exist_ok=True)
+            reflection_abs.write_text(_build_reflection_content(reflection), encoding="utf-8")
+            repo.add(reflection_rel)
+            files_changed.append(reflection_rel)
+
+        chats_summary_rel = "chats/SUMMARY.md"
+        abs_chats_summary = root / chats_summary_rel
+        if abs_chats_summary.exists():
+            updated_chats_content = _update_chats_summary_index(
+                abs_chats_summary.read_text(encoding="utf-8"),
+                session_id,
+                today_str(),
+            )
+            if updated_chats_content is not None:
+                abs_chats_summary.write_text(updated_chats_content, encoding="utf-8")
+                repo.add(chats_summary_rel)
+                files_changed.append(chats_summary_rel)
+
+        files_changed.extend(
+            path
+            for path in _append_access_entries(
+                repo,
+                root,
+                access_entries,
+                session_id=session_id,
+            )
+            if path not in files_changed
+        )
+
+        commit_msg = f"[chat] Record session {session_id}"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=files_changed,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"session_id": session_id},
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_run_aggregation",
+        annotations=_tool_annotations(
+            title="Run ACCESS Aggregation",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_run_aggregation(
+        folders: list[str] | None = None,
+        dry_run: bool = True,
+    ) -> str:
+        """Aggregate hot ACCESS logs into summary updates and archive segments.
+
+        Phase 1 uses session_id as the primary grouping key and falls back to
+        date-based legacy grouping for older ACCESS entries that do not include
+        session_id. Use dry_run=True to preview summary/archive targets before
+        applying the aggregation commit.
+        """
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+        selected_folders = _normalize_aggregation_folders(folders)
+        default_access_folders = ["identity", "knowledge", "knowledge/_unverified", "skills", "plans", "chats"]
+
+        access_files = [
+            f"{folder}/ACCESS.jsonl"
+            for folder in (selected_folders or default_access_folders)
+        ]
+
+        raw_entries: list[dict[str, Any]] = []
+        entries_by_access_file: dict[str, list[dict[str, Any]]] = {}
+        for access_file in access_files:
+            abs_access = root / access_file
+            if not abs_access.exists():
+                continue
+            file_entries: list[dict[str, Any]] = []
+            for line in abs_access.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                entry = json.loads(line)
+                if isinstance(entry, dict) and entry.get("file"):
+                    file_entries.append(entry)
+            normalized_entries: list[dict[str, Any]] = []
+            for entry in file_entries:
+                normalized = dict(entry)
+                normalized["_access_file"] = access_file
+                normalized_entries.append(normalized)
+            if normalized_entries:
+                entries_by_access_file[access_file] = normalized_entries
+                raw_entries.extend(normalized_entries)
+
+        filtered_entries = _filter_aggregation_entries(raw_entries, selected_folders)
+        clusters, session_group_count, legacy_fallback_entries = _build_phase1_clusters(
+            filtered_entries,
+            threshold=3,
+        )
+
+        entries_by_folder: dict[str, list[dict[str, Any]]] = {}
+        for entry in filtered_entries:
+            folder = str(entry["file"]).split("/", 1)[0]
+            entries_by_folder.setdefault(folder, []).append(entry)
+
+        summary_targets = [
+            f"{folder}/SUMMARY.md"
+            for folder, folder_entries in sorted(entries_by_folder.items())
+            if folder_entries and (root / folder / "SUMMARY.md").exists()
+        ]
+        archive_targets = sorted(
+            {
+                f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(entries)}"
+                for access_file, entries in entries_by_access_file.items()
+                if _filter_aggregation_entries(entries, selected_folders)
+            }
+        )
+
+        preview_state = {
+            "mode": "dry_run" if dry_run else "apply",
+            "folders": selected_folders or sorted(entries_by_folder),
+            "entries_processed": len(filtered_entries),
+            "session_groups_processed": session_group_count,
+            "legacy_fallback_entries": legacy_fallback_entries,
+            "summary_update_targets": summary_targets,
+            "archive_targets": archive_targets,
+            "clusters": clusters,
+        }
+
+        if dry_run or not filtered_entries:
+            result = MemoryWriteResult(
+                files_changed=summary_targets + archive_targets,
+                commit_sha=None,
+                commit_message=None,
+                new_state=preview_state,
+            )
+            return result.to_json()
+
+        changed_files: list[str] = []
+        aggregation_date = str(date.today())
+
+        for summary_rel in summary_targets:
+            folder = summary_rel.split("/", 1)[0]
+            abs_summary = root / summary_rel
+            updated_content = _replace_usage_patterns_section(
+                abs_summary.read_text(encoding="utf-8"),
+                _render_usage_patterns_section(
+                    folder=folder,
+                    entries=entries_by_folder.get(folder, []),
+                    clusters=clusters,
+                    aggregation_date=aggregation_date,
+                    legacy_fallback_entries=legacy_fallback_entries,
+                ),
+            )
+            abs_summary.write_text(updated_content, encoding="utf-8")
+            repo.add(summary_rel)
+            changed_files.append(summary_rel)
+
+        for access_file, file_entries in entries_by_access_file.items():
+            filtered_file_entries = _filter_aggregation_entries(file_entries, selected_folders)
+            if not filtered_file_entries:
+                continue
+            abs_access = root / access_file
+            archive_rel = f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(filtered_file_entries)}"
+            abs_archive = root / archive_rel
+            archive_existing = abs_archive.read_text(encoding="utf-8") if abs_archive.exists() else ""
+            hot_content = abs_access.read_text(encoding="utf-8")
+            appended_archive = (
+                archive_existing.rstrip("\n") + "\n" + hot_content.strip("\n") + "\n"
+                if archive_existing.strip()
+                else hot_content.strip("\n") + ("\n" if hot_content.strip() else "")
+            )
+            abs_archive.parent.mkdir(parents=True, exist_ok=True)
+            abs_archive.write_text(appended_archive, encoding="utf-8")
+            abs_access.write_text("", encoding="utf-8")
+            repo.add(archive_rel)
+            repo.add(access_file)
+            changed_files.extend([archive_rel, access_file])
+
+        commit_msg = f"[curation] Aggregate ACCESS logs ({aggregation_date})"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=changed_files,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state=preview_state,
+        )
+        return result.to_json()
+
+    @mcp.tool(
         name="memory_record_reflection",
         annotations=_tool_annotations(
             title="Record Session Reflection",
@@ -548,6 +1334,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         gaps_noticed: str,
         system_observations: str = "",
     ) -> str:
+        """Record a structured reflection.
+
+        For full session wrap-up, prefer memory_record_session so summary,
+        reflection, and ACCESS writes land in a single commit.
+        """
         from ...errors import ValidationError
         from ...models import MemoryWriteResult
 
@@ -568,18 +1359,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 f"Reflection already exists for {session_id}. Edit it directly with memory_edit if an update is needed."
             )
 
-        lines = [
-            "## Session reflection\n",
-            "\n",
-            f"**Memory retrieved:** {memory_retrieved}\n",
-            f"**Memory influence:** {memory_influence}\n",
-            f"**Outcome quality:** {outcome_quality}\n",
-            f"**Gaps noticed:** {gaps_noticed}\n",
-        ]
-        if system_observations:
-            lines.append(f"**System observations:** {system_observations}\n")
-
-        reflection_abs.write_text("".join(lines), encoding="utf-8")
+        reflection_abs.write_text(
+            _build_structured_reflection_content(
+                memory_retrieved,
+                memory_influence,
+                outcome_quality,
+                gaps_noticed,
+                system_observations,
+            ),
+            encoding="utf-8",
+        )
         repo.add(reflection_rel)
         commit_msg = f"[chat] Add session reflection for {session_id}"
         commit_result = repo.commit(commit_msg)
@@ -779,7 +1568,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_append_scratchpad": memory_append_scratchpad,
         "memory_record_chat_summary": memory_record_chat_summary,
         "memory_flag_for_review": memory_flag_for_review,
+        "memory_resolve_review_item": memory_resolve_review_item,
         "memory_log_access": memory_log_access,
+        "memory_record_session": memory_record_session,
+        "memory_run_aggregation": memory_run_aggregation,
         "memory_record_reflection": memory_record_reflection,
         "memory_record_periodic_review": memory_record_periodic_review,
         "memory_revert_commit": memory_revert_commit,

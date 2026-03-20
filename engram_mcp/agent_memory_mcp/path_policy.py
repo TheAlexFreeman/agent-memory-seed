@@ -16,6 +16,7 @@ KNOWN_COMMIT_PREFIXES: frozenset[str] = frozenset(
     {
         "[knowledge]",
         "[plan]",
+        "[skill]",
         "[identity]",
         "[chat]",
         "[curation]",

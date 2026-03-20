@@ -2,7 +2,7 @@
 source: user-stated
 origin_session: manual
 created: 2026-03-16
-last_verified: 2026-03-16
+last_verified: 2026-03-20
 trust: high
 ---
 
@@ -29,7 +29,7 @@ When local agent-memory MCP tools are available, prefer them for memory reads an
 ### 2. Check pending items (silent)
 
 - Use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them.
-- Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag for aggregation at session end — do not run aggregation now (it requires loading `meta/curation-algorithms.md` and is better deferred to wrap-up).
+- Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag it for session-end handling. At wrap-up, preview the compaction with `memory_run_aggregation(dry_run=True)` before deciding whether to apply summary/archive updates.
 - Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
 
 ### 3. Check write access (silent)

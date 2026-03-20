@@ -8,15 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-### `mcp-semantic-tools-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
-
-Detail: plans/mcp-semantic-tools-improvements.md
-Scope: Close semantic-tooling gaps around scratchpad writes, review-queue lifecycle, skills updates, session recording, and aggregation.
-Progress: 0/22 complete
-Next: Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
-Blocks: none; unblocked by the completed `mcp-reorganization.md` migration.
-
-### `worktree-integration.md` · status: active · trust: medium
+### `worktree-integration.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
@@ -82,6 +74,7 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 
 ## Recent completions
 
+- [mcp-semantic-tools-improvements.md](mcp-semantic-tools-improvements.md) — completed 2026-03-20; Tier 1 semantic tool gaps closed across scratchpad targeting, review-queue lifecycle, skill updates, composite session recording, and ACCESS aggregation compaction.
 - [mcp-reorganization.md](mcp-reorganization.md) — completed 2026-03-20; Phase 5 validator/CI/layout verification finished and downstream MCP tooling plans unblocked.
 - [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; startup contract enforced and measured under budget.
 - [ai-frontier-research.md](ai-frontier-research.md) — completed 2026-03-19; frontier-AI knowledge set written.
