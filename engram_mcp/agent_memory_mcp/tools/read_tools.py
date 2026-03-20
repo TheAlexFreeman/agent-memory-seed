@@ -399,23 +399,33 @@ def _compute_maturity_signals(
         all_entries, _ = _load_access_entries(root)
 
     session_ids: set[str] = set()
+    access_entries_with_session_id = 0
     write_session_ids: set[str] = set()
     access_density_by_task_id: dict[str, int] = {}
+    proxy_session_keys: set[tuple[str, str]] = set()
     for entry in all_entries:
         sid = entry.get("session_id")
         if sid:
             sid_str = str(sid)
             session_ids.add(sid_str)
+            access_entries_with_session_id += 1
             mode_value = entry.get("mode")
             if isinstance(mode_value, str) and mode_value in {"write", "update", "create"}:
                 write_session_ids.add(sid_str)
         task_id_value = entry.get("task_id")
         task_bucket = str(task_id_value).strip() if task_id_value else "unspecified"
         access_density_by_task_id[task_bucket] = access_density_by_task_id.get(task_bucket, 0) + 1
+        date_value = str(entry.get("date", "")).strip()
+        proxy_task_value = str(task_id_value).strip() if task_id_value else str(entry.get("task", "")).strip()
+        if date_value and proxy_task_value:
+            proxy_session_keys.add((date_value, proxy_task_value))
     total_sessions = len(session_ids)
     write_sessions = len(write_session_ids)
 
     access_density = len(all_entries)
+    session_id_coverage_pct = (
+        round(100.0 * access_entries_with_session_id / access_density, 1) if access_density else 0.0
+    )
 
     content_files = _load_content_files(root)
     total_content_files = len(content_files)
@@ -482,9 +492,10 @@ def _compute_maturity_signals(
             continue
     mean_helpfulness = round(statistics.mean(helpfulness_values), 3) if helpfulness_values else 0.0
 
-    return {
+    result = {
         "access_scope": "hot_only",
         "total_sessions": total_sessions,
+        "session_id_coverage_pct": session_id_coverage_pct,
         "access_density": access_density,
         "file_coverage_pct": file_coverage_pct,
         "files_accessed": files_accessed,
@@ -498,6 +509,13 @@ def _compute_maturity_signals(
         "helpfulness_sample_size": len(helpfulness_values),
         "computed_at": str(date.today()),
     }
+    if access_density and session_id_coverage_pct < 50.0:
+        result["proxy_sessions"] = len(proxy_session_keys)
+        result["proxy_session_note"] = (
+            "session_id coverage below 50%; proxy_sessions estimates sessions using distinct "
+            "(date, task_id or task) pairs."
+        )
+    return result
 
 
 def _classify_signal_stage(metric: str, value: object) -> str | None:
@@ -2311,6 +2329,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                               are excluded from these metrics
               total_sessions          (int)   Distinct session_id values across
                                               hot ACCESS.jsonl files
+              session_id_coverage_pct (float) % of hot ACCESS entries carrying
+                                              canonical session_id values
               access_density          (int)   Total ACCESS.jsonl entries across
                                               hot logs across all folders
               file_coverage_pct       (float) % of content files accessed at
@@ -2332,6 +2352,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                               task_id bucket; entries without
                                               task_id are grouped under
                                               "unspecified"
+              proxy_sessions         (int)   Optional fallback estimate based on
+                                              distinct (date, task_id or task)
+                                              pairs when session_id coverage is low
+              proxy_session_note     (str)   Optional warning describing when
+                                              proxy_sessions was emitted
               mean_helpfulness        (float) Mean helpfulness score across all
                                               ACCESS entries that carry the field
               helpfulness_sample_size (int)   Number of entries with a

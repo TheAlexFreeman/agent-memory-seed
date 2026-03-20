@@ -1352,7 +1352,9 @@ Old guidance.
         self.assertEqual(knowledge_access, "")
         self.assertEqual(log_count, "2")
 
-    def test_memory_get_maturity_signals_ignores_archive_segments_and_reports_hot_scope(self) -> None:
+    def test_memory_get_maturity_signals_ignores_archive_segments_and_reports_hot_scope(
+        self,
+    ) -> None:
         repo_root = self._init_repo(
             {
                 "identity/profile.md": "# Profile\n",
@@ -1908,8 +1910,7 @@ Next: Original next action
                 "knowledge/lit/foo.md": "# Foo\n",
                 "knowledge/ACCESS.jsonl": "",
                 "HUMANS/tooling/agent-memory-capabilities.toml": (
-                    "[access_logging]\n"
-                    'task_ids = ["plan-review", "validation"]\n'
+                    '[access_logging]\ntask_ids = ["plan-review", "validation"]\n'
                 ),
             }
         )
@@ -1982,8 +1983,7 @@ Next: Original next action
             {
                 "knowledge/lit/foo.md": "# Foo\n",
                 "HUMANS/tooling/agent-memory-capabilities.toml": (
-                    "[access_logging]\n"
-                    'task_ids = ["plan-review", "validation"]\n'
+                    '[access_logging]\ntask_ids = ["plan-review", "validation"]\n'
                 ),
             }
         )
@@ -2231,8 +2231,10 @@ Next: Original next action
         payload = json.loads(asyncio.run(tools["memory_get_maturity_signals"]()))
 
         self.assertEqual(payload["total_sessions"], 3)
+        self.assertEqual(payload["session_id_coverage_pct"], 100.0)
         self.assertEqual(payload["write_sessions"], 2)
         self.assertEqual(payload["access_density"], 3)
+        self.assertNotIn("proxy_sessions", payload)
 
     def test_memory_get_maturity_signals_groups_access_density_by_task_id(self) -> None:
         repo_root = self._init_repo(
@@ -2288,6 +2290,74 @@ Next: Original next action
             payload["access_density_by_task_id"],
             {"plan-review": 1, "unspecified": 1, "validation": 1},
         )
+
+    def test_memory_get_maturity_signals_emits_proxy_sessions_when_session_id_coverage_is_low(
+        self,
+    ) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": "# Profile\n",
+                "knowledge/lit/foo.md": "# Foo\n",
+                "plans/demo.md": "# Demo\n",
+                "knowledge/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "knowledge/lit/foo.md",
+                                "date": "2026-03-20",
+                                "task": "with session",
+                                "helpfulness": 0.8,
+                                "note": "session-backed",
+                                "session_id": "chats/2026/03/20/chat-019",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "file": "knowledge/lit/foo.md",
+                                "date": "2026-03-20",
+                                "task_id": "plan-review",
+                                "task": "legacy sweep",
+                                "helpfulness": 0.7,
+                                "note": "legacy one",
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "plans/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "plans/demo.md",
+                                "date": "2026-03-20",
+                                "task_id": "plan-review",
+                                "task": "legacy sweep",
+                                "helpfulness": 0.6,
+                                "note": "duplicate proxy bucket",
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "file": "plans/demo.md",
+                                "date": "2026-03-21",
+                                "task": "legacy planning",
+                                "helpfulness": 0.5,
+                                "note": "second proxy bucket",
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_get_maturity_signals"]()))
+
+        self.assertEqual(payload["total_sessions"], 1)
+        self.assertEqual(payload["session_id_coverage_pct"], 25.0)
+        self.assertEqual(payload["proxy_sessions"], 3)
+        self.assertIn("session_id coverage below 50%", payload["proxy_session_note"])
 
     def test_memory_revert_commit_preview_returns_confirmation_metadata(self) -> None:
         repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
