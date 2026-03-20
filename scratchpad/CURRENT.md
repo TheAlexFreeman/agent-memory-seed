@@ -176,3 +176,6 @@ Current output: `file.md\n  45: matching line here`. When reading code or multi-
 
 <!-- 2026-03-18, session: chats/2026/03/18/chat-003 -->
 Pattern (needs more data): The memory repo now has a plausible second-tier automation backlog beyond the first four maintenance drafts. Candidate ideas are tracked in `scratchpad/2026-03-18-automation-backlog.md` until repeated need or user approval justifies promotion into a formal plan or skill proposal.
+
+<!-- 2026-03-19, session: chats/2026/03/19/chat-001 -->
+Draft abstraction: Multi-agent use in this repo likely wants worktree-level isolation, single-writer promotion of trusted summaries, and better `agent_id`/claim metadata before true concurrent writes. Detailed note: `scratchpad/2026-03-19-multi-agent-management-notes.md`.
