@@ -7,6 +7,7 @@ source: agent-generated
 status: paused
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Production-Readiness Roadmap

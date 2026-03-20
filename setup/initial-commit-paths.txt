@@ -61,6 +61,12 @@ engram_mcp/agent_memory_mcp/server.py
 engram_mcp/agent_memory_mcp/server_main.py
 engram_mcp/agent_memory_mcp/tools/__init__.py
 engram_mcp/agent_memory_mcp/tools/read_tools.py
+engram_mcp/agent_memory_mcp/tools/semantic/__init__.py
+engram_mcp/agent_memory_mcp/tools/semantic/_session.py
+engram_mcp/agent_memory_mcp/tools/semantic/identity_tools.py
+engram_mcp/agent_memory_mcp/tools/semantic/knowledge_tools.py
+engram_mcp/agent_memory_mcp/tools/semantic/plan_tools.py
+engram_mcp/agent_memory_mcp/tools/semantic/session_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic_tools.py
 engram_mcp/agent_memory_mcp/tools/write_tools.py
 engram_mcp/tests/__init__.py
@@ -73,6 +79,7 @@ knowledge/ACCESS.jsonl
 knowledge/SUMMARY.md
 knowledge/_unverified/ACCESS.jsonl
 knowledge/_unverified/SUMMARY.md
+knowledge/_unverified/ai-frontier/agentic-frameworks.md
 knowledge/_unverified/ai-frontier/alignment/frontier-alignment-research.md
 knowledge/_unverified/ai-frontier/alignment/instruction-following.md
 knowledge/_unverified/ai-frontier/alignment/rlhf-reward-models.md
@@ -82,6 +89,9 @@ knowledge/_unverified/ai-frontier/architectures/synthetic-data-self-improvement.
 knowledge/_unverified/ai-frontier/epistemology/compression-and-intelligence.md
 knowledge/_unverified/ai-frontier/epistemology/knowledge-and-knowing.md
 knowledge/_unverified/ai-frontier/epistemology/llms-as-dynamical-systems.md
+knowledge/_unverified/ai-frontier/foundation-model-governance.md
+knowledge/_unverified/ai-frontier/hardware-efficiency.md
+knowledge/_unverified/ai-frontier/inference-time-compute.md
 knowledge/_unverified/ai-frontier/interpretability/emergence-phase-transitions.md
 knowledge/_unverified/ai-frontier/interpretability/llm-representation-confabulation.md
 knowledge/_unverified/ai-frontier/interpretability/mechanistic-interpretability.md

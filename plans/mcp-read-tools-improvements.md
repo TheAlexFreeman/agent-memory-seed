@@ -7,6 +7,7 @@ source: agent-generated
 status: active
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Implementation Plan: MCP Tier 0 Read Tool Improvements

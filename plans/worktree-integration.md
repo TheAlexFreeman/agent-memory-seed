@@ -7,6 +7,7 @@ source: agent-generated
 status: active
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Roadmap: Orphan-Branch Worktree Integration

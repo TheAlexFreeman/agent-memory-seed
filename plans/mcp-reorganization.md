@@ -7,6 +7,7 @@ source: agent-generated
 status: active
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Implementation Plan: MCP Module Reorganization
@@ -219,7 +220,7 @@ lives under `HUMANS/`.
 
 ### Items
 
-7. ☑ Move entrypoint: `HUMANS/tooling/scripts/memory_mcp.py` → `engram_mcp/memory_mcp.py`
+7. ☐ Move entrypoint: `HUMANS/tooling/scripts/memory_mcp.py` → `engram_mcp/memory_mcp.py`
 
    Update the file to use the new import path:
 
@@ -234,7 +235,7 @@ lives under `HUMANS/`.
     relocated. A deprecation comment is added noting that `engram-mcp` (the CLI
    entrypoint) is now the preferred invocation.
 
-8. ☑ Move MCP test files
+8. ☐ Move MCP test files
 
      - `HUMANS/tooling/tests/test_memory_mcp.py` → `engram_mcp/tests/test_memory_mcp.py`
    - `HUMANS/tooling/tests/test_agent_memory_mcp_write_tools.py`
@@ -251,7 +252,7 @@ lives under `HUMANS/`.
     Update `tools.agent_memory_mcp.*` imports in `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
     to `engram_mcp.agent_memory_mcp.*`.
 
-9. ☑ Update `test_setup_flows.py` entrypoint path assertion
+9. ☐ Update `test_setup_flows.py` entrypoint path assertion
 
    The setup flow test asserts that `setup.sh` generates a config containing the
    `memory_mcp.py` path. Update the expected path from
@@ -262,7 +263,7 @@ lives under `HUMANS/`.
     str(root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\")
    ```
 
-10. ☑ Update `resolve_memory_capabilities.py` import
+10. ☐ Update `resolve_memory_capabilities.py` import
 
     ```python
     # Old: from tools.agent_memory_mcp.server import create_mcp
@@ -283,7 +284,7 @@ upgrading.
 
 ### Items
 
-12. ☑ Update `setup/setup.sh`
+12. ☐ Update `setup/setup.sh`
 
     ```bash
     # Old:
@@ -292,7 +293,7 @@ upgrading.
     local memory_script="${repo_root_native%[\\/]}${sep}engram_mcp${sep}memory_mcp.py"
     ```
 
-13. ☑ Update `setup/setup.html`
+13. ☐ Update `setup/setup.html`
 
     ```javascript
     // Old:
@@ -301,21 +302,21 @@ upgrading.
     var memoryScript = trimmedRepo + sep + 'engram_mcp' + sep + 'memory_mcp.py'
     ```
 
-14. ☑ Update `HUMANS/tooling/mcp-config-example.json`
+14. ☐ Update `HUMANS/tooling/mcp-config-example.json`
 
     ```json
     // Old: "args": ["~/code/personal/agent-memory-seed/HUMANS/tooling/scripts/memory_mcp.py"]
     // New: "args": ["~/code/personal/agent-memory-seed/engram_mcp/memory_mcp.py"]
     ```
 
-15. ☑ Update `HUMANS/tooling/agent-memory-capabilities.toml`
+15. ☐ Update `HUMANS/tooling/agent-memory-capabilities.toml`
 
     ```toml
     # Old: mcp_entrypoint = "HUMANS/tooling/scripts/memory_mcp.py"
     # New: mcp_entrypoint = "engram_mcp/memory_mcp.py"
     ```
 
-16. ☑ Update `.codex/config.toml`
+16. ☐ Update `.codex/config.toml`
 
     The committed config contains user-specific absolute paths. Update the
     `args` path to point at `engram_mcp/memory_mcp.py` and add a comment that this file
@@ -323,7 +324,7 @@ upgrading.
     version with absolute paths is a known issue tracked separately — see
     P3-C of the remediation plan.)
 
-17. ☑ Update `HUMANS/docs/INTEGRATIONS.md`
+17. ☐ Update `HUMANS/docs/INTEGRATIONS.md`
 
     The Python library import example:
     ```python
@@ -331,7 +332,7 @@ upgrading.
     # New: from engram_mcp.agent_memory_mcp.server import create_mcp
     ```
 
-18. ☑ Update `worktree-integration.md` plan references
+18. ☐ Update `worktree-integration.md` plan references
 
     Phase 1, item 6 of the worktree plan references
     `<worktree-path>/HUMANS/tooling/scripts/memory_mcp.py` as the MCP entrypoint.
@@ -345,7 +346,7 @@ upgrading.
     `engram_mcp/tests/__init__.py`, `engram_mcp/tests/test_memory_mcp.py`,
     `engram_mcp/tests/test_agent_memory_mcp_write_tools.py`
 
-20. ☑ Update CI workflow (``.github/workflows/ci.yml``)
+20. ☐ Update CI workflow (``.github/workflows/ci.yml``)
 
     Update the `ruff` lint paths and any explicit file paths from
     `tools/agent_memory_mcp/` to `engram_mcp/agent_memory_mcp/`.

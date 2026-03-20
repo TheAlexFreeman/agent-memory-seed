@@ -7,6 +7,7 @@ source: agent-generated
 status: complete
 trust: medium
 type: implementation-plan
+category: build
 ---
 
 # Implementation Plan: Codex Desktop Governed Memory Writes

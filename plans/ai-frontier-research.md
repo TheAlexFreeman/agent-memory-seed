@@ -1,12 +1,13 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research reasoning models — o1/o3, DeepSeek R1, chain-of-thought vs. process reward models, test-time compute scaling"
+next_action: "Phase 2 extension complete; consider Phase 3 extension (RAG details, ColPali, late-chunking) or agentic framework deep-dives"
 origin_session: chats/2026/03/19/chat-002
 source: agent-generated
 status: active
 trust: medium
 type: research-plan
+category: research
 ---
 
 # Research Plan: Frontier AI Topics
@@ -305,6 +306,14 @@ knowledge/_unverified/ai-frontier/
 - [x] 7.3 Compression, intelligence, and what LLMs compress (connecting to AIT file)
 
 **Progress:** 21/21 items complete
+
+### Phase 2 extension — Infrastructure and governance (2026-03-20)
+- [x] Agentic frameworks (LangGraph, CrewAI, AutoGen, OpenAI SDK, LlamaIndex)
+- [x] Foundation model governance (EU AI Act, NIST, compute governance, Conditioner problem)
+- [x] Inference-time compute infrastructure (vLLM/PagedAttention, speculative decoding, quantization)
+- [x] AI hardware and efficiency trends (H100/B200/TPUs/custom silicon, MoE, power constraints)
+
+**Extension progress:** 4/4 items complete
 
 ---
 
