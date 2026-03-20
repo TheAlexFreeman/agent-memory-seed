@@ -1,13 +1,12 @@
----
 created: 2026-03-19
 last_verified: 2026-03-19
 next_action: "Phase 1, item 1: research normal-form games, Nash equilibrium definition, existence proof"
 origin_session: chats/2026/03/19
+origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
 trust: medium
 type: research-plan
----
 
 # Research Plan: Game Theory and Mechanism Design
 

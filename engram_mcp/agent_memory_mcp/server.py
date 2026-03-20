@@ -11,7 +11,7 @@ from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
 from .git_repo import GitRepo
-from .tools import read_tools, semantic_tools, write_tools
+from .tools import read_tools, semantic, write_tools
 
 
 DeletePermissionHook = Callable[[str], None]
@@ -115,7 +115,7 @@ def create_mcp(
                 grant_delete_permission=delete_permission_hook,
             )
         )
-    tools.update(semantic_tools.register(mcp, get_repo, get_root))
+    tools.update(semantic.register(mcp, get_repo, get_root))
     return mcp, tools, root, repo
 
 

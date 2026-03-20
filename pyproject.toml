@@ -24,7 +24,7 @@ dev = ["pytest>=8.0", "ruff>=0.4", "mcp>=1.0", "python-frontmatter>=1.1"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["tools*", "engram_mcp*"]
+include = ["engram_mcp*"]
 
 [tool.ruff]
 line-length = 100

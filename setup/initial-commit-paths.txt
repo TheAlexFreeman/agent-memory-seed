@@ -134,6 +134,8 @@ knowledge/_unverified/mcp/mcp-server-design-patterns.md
 knowledge/_unverified/philosophy/blending-compression-coupling-construal.md
 knowledge/_unverified/philosophy/cognitive-linguistics-metaphor-blending.md
 knowledge/_unverified/philosophy/compression-intelligence-ait.md
+knowledge/_unverified/philosophy/cs-lewis-abolition-of-man.md
+knowledge/_unverified/philosophy/cs-lewis-space-trilogy.md
 knowledge/_unverified/philosophy/emergence-consciousness-iit.md
 knowledge/_unverified/philosophy/free-energy-autopoiesis-cybernetics.md
 knowledge/_unverified/philosophy/history/SUMMARY.md
@@ -299,15 +301,3 @@ skills/onboarding.md
 skills/session-start.md
 skills/session-sync.md
 skills/session-wrapup.md
-tools/__init__.py
-tools/agent_memory_mcp/__init__.py
-tools/agent_memory_mcp/errors.py
-tools/agent_memory_mcp/frontmatter_utils.py
-tools/agent_memory_mcp/git_repo.py
-tools/agent_memory_mcp/models.py
-tools/agent_memory_mcp/path_policy.py
-tools/agent_memory_mcp/server.py
-tools/agent_memory_mcp/tools/__init__.py
-tools/agent_memory_mcp/tools/read_tools.py
-tools/agent_memory_mcp/tools/semantic_tools.py
-tools/agent_memory_mcp/tools/write_tools.py
