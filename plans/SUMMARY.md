@@ -8,13 +8,13 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-### `mcp-reorganization.md` · status: active · trust: medium · **TOP PRIORITY**
+### `mcp-semantic-tools-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
 
-Detail: plans/mcp-reorganization.md
-Progress: 22/41 complete
-Next: Phase 3, item 24 — move the reset-tool registration into `semantic/_session.py`, then continue the semantic-tools split.
-Blocks: `access-log-tooling-improvements.md`, `mcp-semantic-tools-improvements.md`, `mcp-read-tools-improvements.md`, `mcp-write-and-crosscutting-improvements.md`, and `worktree-integration.md` item 6.
-Scope: Move the MCP implementation out of `tools/` into the `engram_mcp/` runtime package, then split the monolith and update path contracts under the Engram naming direction.
+Detail: plans/mcp-semantic-tools-improvements.md
+Scope: Close semantic-tooling gaps around scratchpad writes, review-queue lifecycle, skills updates, session recording, and aggregation.
+Progress: 0/22 complete
+Next: Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
+Blocks: none; unblocked by the completed `mcp-reorganization.md` migration.
 
 ### `worktree-integration.md` · status: active · trust: medium
 
@@ -22,7 +22,7 @@ Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
 Progress: 0/24 complete
 Next: Phase 0, item 1 — write init-worktree.sh scaffold
-Blocks: item 6 waits on `mcp-reorganization.md` Phase 2; the rest can proceed independently.
+Blocks: none; worktree-specific implementation can proceed.
 
 
 ### `access-log-tooling-improvements.md` · status: active · trust: medium
@@ -31,16 +31,7 @@ Detail: plans/access-log-tooling-improvements.md
 Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
 Progress: 0/12 complete
 Next: Phase 1, item 1 — implement `memory_log_access_batch` in `write_tools.py`
-Blocks: waits on `mcp-reorganization.md` Phase 2.
-
-
-### `mcp-semantic-tools-improvements.md` · status: active · trust: medium
-
-Detail: plans/mcp-semantic-tools-improvements.md
-Scope: Close semantic-tooling gaps around scratchpad writes, review-queue lifecycle, skills updates, session recording, and aggregation.
-Progress: 0/22 complete
-Next: Phase 1, item 1 — expand `memory_append_scratchpad` to accept dated scratchpad slugs
-Blocks: waits on `mcp-reorganization.md` Phase 2.
+Blocks: none; structural prerequisites are complete.
 
 
 ### `mcp-read-tools-improvements.md` · status: active · trust: medium
@@ -49,7 +40,7 @@ Detail: plans/mcp-read-tools-improvements.md
 Scope: Collapse manual session-start reads and improve git-log and trust-audit visibility.
 Progress: 0/13 complete
 Next: Phase 1, item 1 — add `since` and `path_filter` params to `memory_git_log` in `read_tools.py`
-Blocks: waits on `mcp-reorganization.md` Phase 2.
+Blocks: none; structural prerequisites are complete.
 
 
 ### `mcp-write-and-crosscutting-improvements.md` · status: active · trust: medium
@@ -58,7 +49,7 @@ Detail: plans/mcp-write-and-crosscutting-improvements.md
 Scope: Add frontmatter batch updates, native capability lookup, and richer search results.
 Progress: 0/15 complete
 Next: Phase 1, item 1 — implement `memory_update_frontmatter_bulk` in `write_tools.py`
-Blocks: waits on `mcp-reorganization.md` Phase 2.
+Blocks: none; structural prerequisites are complete.
 
 ### Research plans
 
@@ -91,6 +82,7 @@ Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 
 ## Recent completions
 
+- [mcp-reorganization.md](mcp-reorganization.md) — completed 2026-03-20; Phase 5 validator/CI/layout verification finished and downstream MCP tooling plans unblocked.
 - [compact-bootstrap-efficiency.md](compact-bootstrap-efficiency.md) — completed 2026-03-20; startup contract enforced and measured under budget.
 - [ai-frontier-research.md](ai-frontier-research.md) — completed 2026-03-19; frontier-AI knowledge set written.
 - [systems-architecture-research.md](systems-architecture-research.md) — completed 2026-03-19; storage and concurrency primitives captured.

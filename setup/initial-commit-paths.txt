@@ -58,6 +58,12 @@ engram_mcp/agent_memory_mcp/models.py
 engram_mcp/agent_memory_mcp/path_policy.py
 engram_mcp/agent_memory_mcp/server.py
 engram_mcp/agent_memory_mcp/server_main.py
+engram_mcp/agent_memory_mcp/core/__init__.py
+engram_mcp/agent_memory_mcp/core/errors.py
+engram_mcp/agent_memory_mcp/core/frontmatter_utils.py
+engram_mcp/agent_memory_mcp/core/git_repo.py
+engram_mcp/agent_memory_mcp/core/models.py
+engram_mcp/agent_memory_mcp/core/path_policy.py
 engram_mcp/agent_memory_mcp/tools/__init__.py
 engram_mcp/agent_memory_mcp/tools/read_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/__init__.py
@@ -66,11 +72,11 @@ engram_mcp/agent_memory_mcp/tools/semantic/identity_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/knowledge_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/plan_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/session_tools.py
-engram_mcp/agent_memory_mcp/tools/semantic_tools.py
 engram_mcp/agent_memory_mcp/tools/write_tools.py
 engram_mcp/memory_mcp.py
 engram_mcp/tests/__init__.py
 engram_mcp/tests/test_agent_memory_mcp_write_tools.py
+engram_mcp/tests/test_core_boundary.py
 engram_mcp/tests/test_memory_mcp.py
 identity/ACCESS.jsonl
 identity/SUMMARY.md

@@ -1,8 +1,11 @@
-"""Session-state helpers for semantic tools."""
+"""Session-state helpers and tool registration for semantic tools."""
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, cast
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
 
 
 _IDENTITY_CHURN_LIMIT = 5
@@ -37,11 +40,46 @@ def reset_session_state(session_state: SessionState) -> dict[str, int | bool]:
     }
 
 
+def _tool_annotations(**kwargs: object) -> Any:
+    return cast(Any, kwargs)
+
+
+def register_tools(mcp: "FastMCP", session_state: SessionState) -> dict[str, object]:
+    """Register session-scoped semantic tools backed by a shared state object."""
+
+    @mcp.tool(
+        name="memory_reset_session_state",
+        annotations=_tool_annotations(
+            title="Reset Per-Session State",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_reset_session_state() -> str:
+        """Reset per-session counters (identity churn alarm) to their initial values.
+
+        Call this at the start of each new session to ensure a clean slate,
+        particularly in long-running MCP server processes where the server is
+        not restarted between sessions.
+
+        Returns:
+            JSON object with the reset state values.
+        """
+        import json as _json
+
+        return _json.dumps(reset_session_state(session_state))
+
+    return {"memory_reset_session_state": memory_reset_session_state}
+
+
 __all__ = [
     "SessionState",
     "create_session_state",
     "get_identity_churn_limit",
     "get_identity_updates",
     "increment_identity_updates",
+    "register_tools",
     "reset_session_state",
 ]

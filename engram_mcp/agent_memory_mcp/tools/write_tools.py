@@ -23,7 +23,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import (
     KNOWN_COMMIT_PREFIXES,
-    resolve_repo_path,
     validate_raw_move_destination,
     validate_raw_mutation_source,
     validate_raw_write_target,
@@ -252,7 +251,7 @@ def register(
         Returns:
             MemoryWriteResult JSON.
         """
-        from ..errors import NotFoundError, MemoryPermissionError
+        from ..errors import MemoryPermissionError, NotFoundError
         from ..models import MemoryWriteResult
 
         repo = get_repo()
