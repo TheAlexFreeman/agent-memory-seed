@@ -180,6 +180,7 @@ knowledge/_unverified/philosophy/mcluhan-and-media-theory.md
 knowledge/_unverified/philosophy/narrative-cognition.md
 knowledge/_unverified/philosophy/nick-land-accelerationism.md
 knowledge/_unverified/philosophy/self-organized-criticality.md
+knowledge/_unverified/philosophy/sons-of-man-covenant.md
 knowledge/_unverified/philosophy/synthesis-intelligence-as-dynamical-regime.md
 knowledge/_unverified/rationalist-community/SUMMARY.md
 knowledge/_unverified/rationalist-community/community/lesswrong-community-formation-and-core-norms.md
