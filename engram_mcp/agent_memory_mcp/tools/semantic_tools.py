@@ -14,6 +14,7 @@ MCP tools, to avoid coupling).
 from __future__ import annotations
 
 import re
+from datetime import date
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any, cast
 
@@ -51,6 +52,38 @@ _REVERT_SYSTEM_TOP_LEVELS = frozenset({"meta"})
 _REVERT_SYSTEM_FILES = frozenset(
     {"AGENTS.md", "CHANGELOG.md", "CLAUDE.md", "README.md", "agent-bootstrap.toml"}
 )
+_PERIODIC_REVIEW_STAGE_SETTINGS: dict[str, dict[str, str | int]] = {
+    "Exploration": {
+        "Low-trust retirement threshold": 120,
+        "Medium-trust flagging threshold": 180,
+        "Staleness trigger (no access)": 120,
+        "Aggregation trigger": 15,
+        "Identity churn alarm": 5,
+        "Knowledge flooding alarm": 5,
+        "Task similarity method": "Session co-occurrence",
+        "Cluster co-retrieval threshold": 3,
+    },
+    "Calibration": {
+        "Low-trust retirement threshold": 60,
+        "Medium-trust flagging threshold": 120,
+        "Staleness trigger (no access)": 90,
+        "Aggregation trigger": 20,
+        "Identity churn alarm": 3,
+        "Knowledge flooding alarm": 3,
+        "Task similarity method": "Task-string normalization",
+        "Cluster co-retrieval threshold": 3,
+    },
+    "Consolidation": {
+        "Low-trust retirement threshold": 45,
+        "Medium-trust flagging threshold": 90,
+        "Staleness trigger (no access)": 60,
+        "Aggregation trigger": 25,
+        "Identity churn alarm": 2,
+        "Knowledge flooding alarm": 2,
+        "Task similarity method": "Controlled category vocabulary",
+        "Cluster co-retrieval threshold": 4,
+    },
+}
 
 
 def _plan_path(plan_id: str) -> str:
@@ -220,6 +253,88 @@ def _build_revert_preview(repo, sha: str) -> dict[str, object]:
         "eligible": not reasons,
         "policy_reasons": reasons,
     }
+
+
+def _append_markdown_block(existing: str, block: str) -> str:
+    """Append a markdown block separated by the repo's standard divider."""
+    trimmed_existing = existing.rstrip()
+    trimmed_block = block.strip()
+    if not trimmed_block:
+        return existing
+    if not trimmed_existing:
+        return trimmed_block + "\n"
+    return trimmed_existing + "\n\n---\n\n" + trimmed_block + "\n"
+
+
+def _update_last_periodic_review_date(content: str, review_date: str) -> str | None:
+    """Replace the quick-reference periodic review date."""
+    updated = re.sub(
+        r"(## Last periodic review\s*\n\s*\n\*\*Date:\*\*\s*)([^\n]+)",
+        rf"\g<1>{review_date}",
+        content,
+        count=1,
+    )
+    return updated if updated != content else None
+
+
+def _update_current_stage_block(
+    content: str,
+    review_date: str,
+    active_stage: str,
+    assessment_summary: str,
+) -> str:
+    """Update quick-reference current-stage metadata and thresholds."""
+    settings = _PERIODIC_REVIEW_STAGE_SETTINGS[active_stage]
+    updated = re.sub(
+        r"(?m)^## Current active stage:\s*.+$",
+        f"## Current active stage: {active_stage}",
+        content,
+        count=1,
+    )
+    assessed_line = f"_Last assessed: {review_date} — {assessment_summary}_"
+    if re.search(r"(?m)^_Last assessed: .*_$", updated):
+        updated = re.sub(
+            r"(?m)^_Last assessed: .*_$",
+            assessed_line,
+            updated,
+            count=1,
+        )
+    else:
+        updated = updated.replace(
+            f"## Current active stage: {active_stage}\n",
+            f"## Current active stage: {active_stage}\n\n{assessed_line}\n",
+            1,
+        )
+
+    for label, value in settings.items():
+        value_str = f"{value} entries" if label == "Aggregation trigger" else str(value)
+        if label in {
+            "Low-trust retirement threshold",
+            "Medium-trust flagging threshold",
+            "Staleness trigger (no access)",
+        }:
+            value_str = f"{value} days"
+        if label in {"Identity churn alarm", "Knowledge flooding alarm"}:
+            if label == "Identity churn alarm":
+                value_str = f"{value} traits/session"
+            else:
+                value_str = f"{value} files/day"
+        if label == "Cluster co-retrieval threshold":
+            value_str = f"{value} sessions"
+        updated = re.sub(
+            rf"(?m)^\| {re.escape(label)} \| .* \| .* \|$",
+            f"| {label} | {value_str} | {active_stage} |",
+            updated,
+            count=1,
+        )
+
+    updated = re.sub(
+        r"(?m)^\*\*Method:\*\*\s*.+$",
+        f"**Method:** {settings['Task similarity method']}",
+        updated,
+        count=1,
+    )
+    return updated
 
 
 def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
@@ -1768,6 +1883,135 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return result.to_json()
 
     # ------------------------------------------------------------------
+    # memory_record_periodic_review
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_record_periodic_review",
+        annotations=_tool_annotations(
+            title="Record Periodic Review Outputs",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_record_periodic_review(
+        review_date: str,
+        assessment_summary: str,
+        belief_diff_entry: str,
+        review_queue_entries: str = "",
+        active_stage: str = "",
+    ) -> str:
+        """Apply approved periodic-review outputs to governed meta files.
+
+        Writes are limited to:
+          - meta/belief-diff-log.md
+          - meta/review-queue.md (optional append)
+          - meta/quick-reference.md
+
+        The tool updates the last periodic review date in quick-reference,
+        appends a dated belief-diff entry, optionally appends review-queue
+        entries, and can update the active stage plus threshold table when the
+        review concluded that a stage transition or reaffirmation should be
+        recorded.
+        """
+        from ..errors import NotFoundError, ValidationError
+        from ..models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        try:
+            date.fromisoformat(review_date)
+        except ValueError as exc:
+            raise ValidationError(f"review_date must be YYYY-MM-DD, got: {review_date!r}") from exc
+        if not assessment_summary.strip():
+            raise ValidationError("assessment_summary must be non-empty")
+        if not belief_diff_entry.strip():
+            raise ValidationError("belief_diff_entry must be non-empty")
+
+        normalized_stage = active_stage.strip()
+        if normalized_stage and normalized_stage not in _PERIODIC_REVIEW_STAGE_SETTINGS:
+            raise ValidationError(
+                "active_stage must be one of Exploration, Calibration, Consolidation"
+            )
+
+        quick_reference_rel = "meta/quick-reference.md"
+        belief_diff_rel = "meta/belief-diff-log.md"
+        review_queue_rel = "meta/review-queue.md"
+
+        abs_quick_reference = root / quick_reference_rel
+        abs_belief_diff = root / belief_diff_rel
+        abs_review_queue = root / review_queue_rel
+        for rel_path, abs_path in (
+            (quick_reference_rel, abs_quick_reference),
+            (belief_diff_rel, abs_belief_diff),
+            (review_queue_rel, abs_review_queue),
+        ):
+            if not abs_path.exists():
+                raise NotFoundError(f"Required periodic-review file not found: {rel_path}")
+
+        quick_reference_content = abs_quick_reference.read_text(encoding="utf-8")
+        updated_quick_reference = _update_last_periodic_review_date(
+            quick_reference_content, review_date
+        )
+        if updated_quick_reference is None:
+            raise ValidationError(
+                "Could not locate the 'Last periodic review' date block in meta/quick-reference.md"
+            )
+
+        current_stage_match = re.search(
+            r"(?m)^## Current active stage:\s*([^\n]+)$", quick_reference_content
+        )
+        current_stage = (
+            current_stage_match.group(1).strip() if current_stage_match else "Exploration"
+        )
+        stage_to_record = normalized_stage or current_stage
+        updated_quick_reference = _update_current_stage_block(
+            updated_quick_reference,
+            review_date,
+            stage_to_record,
+            assessment_summary,
+        )
+        abs_quick_reference.write_text(updated_quick_reference, encoding="utf-8")
+        repo.add(quick_reference_rel)
+
+        belief_diff_content = abs_belief_diff.read_text(encoding="utf-8")
+        abs_belief_diff.write_text(
+            _append_markdown_block(belief_diff_content, belief_diff_entry),
+            encoding="utf-8",
+        )
+        repo.add(belief_diff_rel)
+
+        files_changed = [quick_reference_rel, belief_diff_rel]
+        review_queue_written = False
+        if review_queue_entries.strip():
+            review_queue_content = abs_review_queue.read_text(encoding="utf-8")
+            abs_review_queue.write_text(
+                _append_markdown_block(review_queue_content, review_queue_entries),
+                encoding="utf-8",
+            )
+            repo.add(review_queue_rel)
+            files_changed.append(review_queue_rel)
+            review_queue_written = True
+
+        commit_msg = f"[system] Record periodic review {review_date}"
+        commit_result = repo.commit(commit_msg)
+
+        result = MemoryWriteResult.from_commit(
+            files_changed=files_changed,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={
+                "review_date": review_date,
+                "active_stage": stage_to_record,
+                "belief_diff_written": True,
+                "review_queue_written": review_queue_written,
+            },
+        )
+        return result.to_json()
+
+    # ------------------------------------------------------------------
     # memory_revert_commit
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -1920,6 +2164,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_log_access": memory_log_access,
         "memory_list_plans": memory_list_plans,
         "memory_record_reflection": memory_record_reflection,
+        "memory_record_periodic_review": memory_record_periodic_review,
         "memory_revert_commit": memory_revert_commit,
         "memory_reset_session_state": memory_reset_session_state,
     }

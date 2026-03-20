@@ -1471,6 +1471,722 @@ Next: Original next action
             "untracked_without_frontmatter",
         )
 
+    def test_memory_check_aggregation_triggers_reports_above_and_near_thresholds(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "plans/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": f"plans/item-{idx}.md",
+                            "date": "2026-03-19",
+                            "task": "periodic review",
+                            "helpfulness": 0.7,
+                            "note": "useful",
+                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(15)
+                ),
+                "knowledge/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": f"knowledge/topic-{idx}.md",
+                            "date": "2026-03-19",
+                            "task": "research",
+                            "helpfulness": 0.5,
+                            "note": "context",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(12)
+                ),
+                "identity/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "identity/profile.md",
+                        "date": "2026-03-19",
+                        "task": "profile lookup",
+                        "helpfulness": 0.9,
+                        "note": "critical",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_check_aggregation_triggers"]()))
+
+        self.assertEqual(payload["aggregation_trigger"], 15)
+        self.assertEqual(payload["near_trigger_window"], 3)
+        self.assertEqual(payload["above_trigger"], ["plans/ACCESS.jsonl"])
+        self.assertEqual(payload["near_trigger"], ["knowledge/ACCESS.jsonl"])
+
+        reports = {item["access_file"]: item for item in payload["reports"]}
+        self.assertEqual(reports["plans/ACCESS.jsonl"]["status"], "above")
+        self.assertEqual(reports["plans/ACCESS.jsonl"]["remaining_to_trigger"], 0)
+        self.assertEqual(reports["knowledge/ACCESS.jsonl"]["status"], "near")
+        self.assertEqual(reports["knowledge/ACCESS.jsonl"]["remaining_to_trigger"], 3)
+        self.assertEqual(reports["identity/ACCESS.jsonl"]["status"], "below")
+
+    def test_memory_check_aggregation_triggers_ignores_invalid_jsonl_lines(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "plans/ACCESS.jsonl": (
+                    "not-json\n"
+                    + json.dumps(
+                        {
+                            "file": "plans/demo.md",
+                            "date": "2026-03-19",
+                            "task": "planning",
+                            "helpfulness": 0.6,
+                            "note": "useful",
+                        }
+                    )
+                    + "\n"
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_check_aggregation_triggers"]()))
+
+        self.assertEqual(payload["files_checked"], 1)
+        self.assertEqual(payload["reports"][0]["entries"], 1)
+        self.assertEqual(payload["reports"][0]["invalid_lines"], 1)
+        self.assertEqual(payload["reports"][0]["status"], "below")
+
+    def test_memory_aggregate_access_reports_high_low_and_clusters(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "plans/ACCESS.jsonl": "".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "plans/high-value.md",
+                                "date": "2026-03-19",
+                                "task": "planning",
+                                "helpfulness": 0.9,
+                                "note": "core plan",
+                                "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                            }
+                        )
+                        + "\n"
+                        for idx in range(5)
+                    ]
+                    + [
+                        json.dumps(
+                            {
+                                "file": "plans/low-value.md",
+                                "date": "2026-03-19",
+                                "task": "planning",
+                                "helpfulness": 0.2,
+                                "note": "noise",
+                                "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                            }
+                        )
+                        + "\n"
+                        for idx in range(3)
+                    ]
+                ),
+                "knowledge/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": "knowledge/topic-a.md",
+                            "date": "2026-03-19",
+                            "task": "planning",
+                            "helpfulness": 0.8,
+                            "note": "paired context",
+                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(3)
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_aggregate_access"]()))
+
+        self.assertEqual(payload["entries_considered"], 11)
+        self.assertEqual(payload["files_considered"], 3)
+        self.assertEqual(payload["high_value_files"][0]["file"], "plans/high-value.md")
+        self.assertEqual(payload["low_value_files"][0]["file"], "plans/low-value.md")
+        self.assertEqual(
+            payload["co_retrieval_clusters"][0]["files"],
+            ["knowledge/topic-a.md", "plans/high-value.md"],
+        )
+        self.assertIn("plans/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
+        self.assertIn("knowledge/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
+        self.assertEqual(
+            payload["proposed_outputs"]["review_queue_candidates"][0]["file"],
+            "plans/low-value.md",
+        )
+
+    def test_memory_aggregate_access_filters_by_folder_date_and_helpfulness(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "plans/ACCESS.jsonl": "".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "plans/in-range.md",
+                                "date": "2026-03-10",
+                                "task": "planning",
+                                "helpfulness": 0.75,
+                                "note": "keep",
+                                "session_id": "chats/2026/03/10/chat-001",
+                            }
+                        )
+                        + "\n",
+                        json.dumps(
+                            {
+                                "file": "plans/too-old.md",
+                                "date": "2026-02-01",
+                                "task": "planning",
+                                "helpfulness": 0.9,
+                                "note": "old",
+                                "session_id": "chats/2026/02/01/chat-001",
+                            }
+                        )
+                        + "\n",
+                    ]
+                ),
+                "knowledge/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "knowledge/out-of-folder.md",
+                        "date": "2026-03-10",
+                        "task": "research",
+                        "helpfulness": 0.8,
+                        "note": "other folder",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_aggregate_access"](
+                    folder="plans",
+                    start_date="2026-03-01",
+                    end_date="2026-03-31",
+                    min_helpfulness=0.7,
+                )
+            )
+        )
+
+        self.assertEqual(payload["entries_considered"], 1)
+        self.assertEqual(payload["files_considered"], 1)
+        self.assertEqual(payload["file_summaries"][0]["file"], "plans/in-range.md")
+        self.assertEqual(payload["filters"]["folder"], "plans")
+        self.assertEqual(payload["filters"]["start_date"], "2026-03-01")
+
+    def test_memory_run_periodic_review_recommends_stage_transition(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+## Last periodic review
+
+**Date:** 2026-01-01
+
+| Aggregation trigger | 15 entries | Exploration |
+""",
+                "identity/profile.md": """---
+source: user-stated
+origin_session: chats/2026/01/01/chat-001
+created: 2026-01-01
+last_verified: 2026-01-01
+trust: high
+---
+
+Alex profile.
+""",
+                "plans/alpha.md": """---
+source: agent-generated
+origin_session: chats/2026/03/01/chat-001
+created: 2026-03-01
+last_verified: 2026-03-01
+trust: high
+---
+
+Alpha.
+""",
+                "plans/beta.md": """---
+source: agent-generated
+origin_session: chats/2026/03/01/chat-002
+created: 2026-03-01
+last_verified: 2026-03-01
+trust: high
+---
+
+Beta.
+""",
+                "knowledge/topic-a.md": """---
+source: external-research
+origin_session: chats/2026/03/01/chat-003
+created: 2026-03-01
+last_verified: 2026-03-05
+trust: high
+---
+
+Topic A.
+""",
+                "knowledge/topic-b.md": """---
+source: external-research
+origin_session: chats/2026/03/01/chat-004
+created: 2026-03-01
+last_verified: 2026-03-05
+trust: medium
+---
+
+Topic B.
+""",
+                "knowledge/topic-c.md": """---
+source: external-research
+origin_session: chats/2026/03/01/chat-005
+created: 2026-03-01
+last_verified: 2026-03-05
+trust: medium
+---
+
+Topic C.
+""",
+                "knowledge/topic-d.md": """---
+source: external-research
+origin_session: chats/2026/03/01/chat-006
+created: 2026-03-01
+last_verified: 2026-03-05
+trust: medium
+---
+
+Topic D.
+""",
+                "skills/session-start.md": """---
+source: skill-discovery
+origin_session: chats/2026/03/01/chat-007
+created: 2026-03-01
+last_verified: 2026-03-05
+trust: medium
+---
+
+Skill start.
+""",
+                "skills/session-sync.md": """---
+source: skill-discovery
+origin_session: chats/2026/03/01/chat-008
+created: 2026-03-01
+last_verified: 2026-03-05
+trust: medium
+---
+
+Skill sync.
+""",
+                "plans/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": "plans/alpha.md" if idx % 2 == 0 else "knowledge/topic-a.md",
+                            "date": f"2026-03-{(idx % 20) + 1:02d}",
+                            "task": "periodic review",
+                            "helpfulness": 0.65,
+                            "note": "useful",
+                            "session_id": f"chats/2026/03/{(idx % 20) + 1:02d}/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(30)
+                ),
+                "knowledge/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": "knowledge/topic-b.md"
+                            if idx % 2 == 0
+                            else "knowledge/topic-c.md",
+                            "date": f"2026-03-{(idx % 20) + 1:02d}",
+                            "task": "research",
+                            "helpfulness": 0.62,
+                            "note": "relevant",
+                            "session_id": f"chats/2026/03/{(idx % 20) + 1:02d}/chat-k{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(30)
+                ),
+            },
+            initial_commit_date="2026-01-01T00:00:00",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_run_periodic_review"]()))
+
+        self.assertTrue(payload["review_due"]["due"])
+        maturity = payload["ordered_checks"]["maturity_assessment"]
+        self.assertEqual(maturity["current_stage"], "Exploration")
+        self.assertEqual(maturity["recommended_stage"], "Calibration")
+        self.assertTrue(maturity["transition_recommended"])
+        self.assertIn(
+            "meta/quick-reference.md",
+            payload["proposed_outputs"]["deferred_write_targets"],
+        )
+
+    def test_memory_run_periodic_review_collects_review_findings(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+## Last periodic review
+
+**Date:** 2026-03-19
+
+| Low-trust retirement threshold | 120 days | Exploration |
+| Aggregation trigger | 15 entries | Exploration |
+""",
+                "meta/review-queue.md": """# Review Queue
+
+### [2026-03-20] Security: Review dormant file spike
+**Type:** security
+**Trigger:** Sudden access spike on a dormant file.
+**File:** knowledge/_unverified/old-note.md
+**Recommended action:** Investigate access pattern
+**Status:** pending
+
+### [2026-03-20] Aggregate plans access log
+**Type:** proposed
+**Description:** Aggregate stale plans ACCESS log.
+**Status:** pending
+""",
+                "identity/profile.md": """---
+source: user-stated
+origin_session: chats/2026/01/01/chat-001
+created: 2026-01-01
+last_verified: 2026-01-01
+trust: high
+---
+
+Stable profile.
+""",
+                "knowledge/current.md": """---
+source: external-research
+origin_session: chats/2026/03/20/chat-001
+created: 2026-03-20
+trust: medium
+---
+
+Current note.
+""",
+                "knowledge/conflicted.md": """---
+source: agent-inferred
+origin_session: chats/2026/03/20/chat-001
+created: 2026-03-20
+trust: medium
+---
+
+[CONFLICT] Preference uncertain.
+""",
+                "knowledge/_unverified/old-note.md": """---
+source: external-research
+origin_session: chats/2025/10/01/chat-001
+created: 2025-10-01
+trust: low
+---
+
+Old note.
+""",
+                "plans/low-value.md": """---
+source: agent-generated
+origin_session: chats/2026/03/20/chat-010
+created: 2026-03-20
+trust: medium
+---
+
+Low value plan.
+""",
+                "knowledge/topic-a.md": """---
+source: external-research
+origin_session: chats/2026/03/20/chat-011
+created: 2026-03-20
+trust: medium
+---
+
+Topic A.
+""",
+                "plans/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": "plans/low-value.md",
+                            "date": "2026-03-20",
+                            "task": "maintenance",
+                            "helpfulness": 0.2,
+                            "note": "noise",
+                            "session_id": f"chats/2026/03/20/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(3)
+                ),
+                "knowledge/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": "knowledge/topic-a.md",
+                            "date": "2026-03-20",
+                            "task": "maintenance",
+                            "helpfulness": 0.8,
+                            "note": "pair",
+                            "session_id": f"chats/2026/03/20/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(3)
+                ),
+                "chats/2026/03/20/chat-001/reflection.md": "## Session reflection\n\nRecurring maintenance theme.\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_run_periodic_review"]()))
+
+        ordered = payload["ordered_checks"]
+        self.assertEqual(ordered["security_flags"]["pending_count"], 1)
+        self.assertEqual(ordered["review_queue"]["pending_non_security_count"], 1)
+        self.assertEqual(ordered["unverified_content"]["overdue_count"], 1)
+        self.assertEqual(
+            ordered["unverified_content"]["overdue_files"][0]["path"],
+            "knowledge/_unverified/old-note.md",
+        )
+        self.assertEqual(ordered["conflict_resolution"]["files"], ["knowledge/conflicted.md"])
+        self.assertEqual(ordered["unhelpful_memory"]["count"], 1)
+        self.assertEqual(
+            ordered["emergent_categorization"]["clusters"][0]["files"],
+            ["knowledge/topic-a.md", "plans/low-value.md"],
+        )
+        self.assertEqual(ordered["session_reflection_themes"]["reflection_count"], 1)
+        self.assertIn("meta/review-queue.md", payload["proposed_outputs"]["deferred_write_targets"])
+
+    def test_memory_get_file_provenance_returns_frontmatter_access_and_history(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic.md": """---
+source: external-research
+origin_session: chats/2026/03/19/chat-001
+created: 2026-03-19
+trust: low
+---
+
+Initial note.
+""",
+                "knowledge/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": "knowledge/topic.md",
+                            "date": "2026-03-19",
+                            "task": "research",
+                            "helpfulness": 0.8,
+                            "note": "relevant",
+                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(3)
+                ),
+            },
+            initial_commit_date="2026-03-19T00:00:00",
+        )
+        self._write_and_commit(
+            repo_root,
+            {
+                "knowledge/topic.md": """---
+source: external-research
+origin_session: chats/2026/03/19/chat-001
+created: 2026-03-19
+trust: low
+---
+
+Updated note.
+"""
+            },
+            "[knowledge] update topic",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_get_file_provenance"](path="knowledge/topic.md"))
+        )
+
+        self.assertEqual(payload["path"], "knowledge/topic.md")
+        self.assertEqual(payload["frontmatter"]["source"], "external-research")
+        self.assertTrue(payload["requires_provenance_pause"])
+        self.assertEqual(payload["access_summary"]["entry_count"], 3)
+        self.assertEqual(payload["access_summary"]["session_count"], 3)
+        self.assertEqual(payload["latest_commit"]["message"], "[knowledge] update topic")
+        self.assertGreaterEqual(len(payload["commit_history"]), 2)
+        self.assertIsNotNone(payload["version_token"])
+
+    def test_memory_inspect_commit_returns_scope_and_prefix_metadata(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic.md": """---
+source: external-research
+origin_session: chats/2026/03/19/chat-001
+created: 2026-03-19
+trust: low
+---
+
+Initial note.
+"""
+            },
+            initial_commit_date="2026-03-19T00:00:00",
+        )
+        commit_sha = self._write_and_commit(
+            repo_root,
+            {"knowledge/topic.md": "updated\n"},
+            "[knowledge] rewrite topic",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_inspect_commit"](sha=commit_sha[:8])))
+
+        self.assertEqual(payload["requested_sha"], commit_sha[:8])
+        self.assertEqual(payload["sha"], commit_sha)
+        self.assertEqual(payload["recognized_prefix"], "[knowledge]")
+        self.assertEqual(payload["file_count"], 1)
+        self.assertEqual(payload["top_level_paths"], ["knowledge"])
+        self.assertTrue(payload["is_head"])
+
+    def test_memory_record_periodic_review_updates_meta_outputs(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+_Last assessed: 2026-03-01 — Exploration retained_
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+| Staleness trigger (no access) | 120 days | Exploration |
+| Aggregation trigger | 15 entries | Exploration |
+| Identity churn alarm | 5 traits/session | Exploration |
+| Knowledge flooding alarm | 5 files/day | Exploration |
+| Task similarity method | Session co-occurrence | Exploration |
+| Cluster co-retrieval threshold | 3 sessions | Exploration |
+
+## Active task similarity method
+
+**Method:** Session co-occurrence
+""",
+                "meta/belief-diff-log.md": "# Belief Diff Log\n",
+                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(
+            tools["memory_record_periodic_review"](
+                review_date="2026-03-19",
+                assessment_summary="Exploration retained (signals still within bounds)",
+                belief_diff_entry=(
+                    "## [2026-03-19] Periodic review\n\n### Assessment\nExploration retained.\n"
+                ),
+                review_queue_entries=(
+                    "### [2026-03-19] Aggregate plans access log\n"
+                    "**Type:** proposed\n"
+                    "**Description:** Aggregate plans/ACCESS.jsonl.\n"
+                    "**Status:** pending\n"
+                ),
+            )
+        )
+        payload = json.loads(raw)
+
+        quick_reference = (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8")
+        belief_diff = (repo_root / "meta" / "belief-diff-log.md").read_text(encoding="utf-8")
+        review_queue = (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8")
+
+        self.assertIn("**Date:** 2026-03-19", quick_reference)
+        self.assertIn(
+            "_Last assessed: 2026-03-19 — Exploration retained (signals still within bounds)_",
+            quick_reference,
+        )
+        self.assertIn("## [2026-03-19] Periodic review", belief_diff)
+        self.assertIn("Aggregate plans access log", review_queue)
+        self.assertEqual(payload["commit_message"], "[system] Record periodic review 2026-03-19")
+        self.assertEqual(payload["new_state"]["review_date"], "2026-03-19")
+        self.assertTrue(payload["new_state"]["belief_diff_written"])
+        self.assertTrue(payload["new_state"]["review_queue_written"])
+
+    def test_memory_record_periodic_review_updates_stage_thresholds(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+_Last assessed: 2026-03-01 — Exploration retained_
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+| Staleness trigger (no access) | 120 days | Exploration |
+| Aggregation trigger | 15 entries | Exploration |
+| Identity churn alarm | 5 traits/session | Exploration |
+| Knowledge flooding alarm | 5 files/day | Exploration |
+| Task similarity method | Session co-occurrence | Exploration |
+| Cluster co-retrieval threshold | 3 sessions | Exploration |
+
+## Active task similarity method
+
+**Method:** Session co-occurrence
+""",
+                "meta/belief-diff-log.md": "# Belief Diff Log\n",
+                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_record_periodic_review"](
+                review_date="2026-03-19",
+                assessment_summary="Calibration selected after majority signal review",
+                belief_diff_entry=(
+                    "## [2026-03-19] Periodic review\n\n### Assessment\nCalibration selected.\n"
+                ),
+                active_stage="Calibration",
+            )
+        )
+
+        quick_reference = (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8")
+        self.assertIn("## Current active stage: Calibration", quick_reference)
+        self.assertIn(
+            "| Aggregation trigger | 20 entries | Calibration |",
+            quick_reference,
+        )
+        self.assertIn(
+            "| Knowledge flooding alarm | 3 files/day | Calibration |",
+            quick_reference,
+        )
+        self.assertIn("**Method:** Task-string normalization", quick_reference)
+
     # ------------------------------------------------------------------
     # P1: Identity churn alarm + memory_reset_session_state
     # ------------------------------------------------------------------

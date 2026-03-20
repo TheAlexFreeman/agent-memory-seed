@@ -8,6 +8,7 @@ These extend the existing read-only tool set with:
   - memory_git_log     : recent commit history
   - memory_diff        : working tree status
   - memory_audit_trust : trust decay audit
+    - memory_check_aggregation_triggers : ACCESS.jsonl trigger status
 
 All tools are registered onto the FastMCP instance passed in via register().
 """
@@ -32,6 +33,7 @@ def _tool_annotations(**kwargs: object) -> Any:
     """Return MCP tool annotations with a relaxed runtime-only type surface."""
     return cast(Any, kwargs)
 
+
 # Trust decay thresholds (days) — defaults; runtime reads from quick-reference.md
 _DEFAULT_LOW_THRESHOLD = 120
 _DEFAULT_MEDIUM_THRESHOLD = 180
@@ -46,6 +48,10 @@ _IGNORED_NAMES = frozenset(
     }
 )
 _HUMANS_DIRNAME = "HUMANS"
+_DEFAULT_AGGREGATION_TRIGGER = 15
+_NEAR_TRIGGER_WINDOW = 3
+_PERIODIC_REVIEW_DAYS = 30
+_STAGE_ORDER = ("Exploration", "Calibration", "Consolidation")
 
 
 def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
@@ -66,6 +72,28 @@ def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
     return low, medium
 
 
+def _parse_aggregation_trigger(repo_root: Path) -> int:
+    """Read the active ACCESS aggregation trigger from meta/quick-reference.md."""
+    qr_path = repo_root / "meta" / "quick-reference.md"
+    if not qr_path.exists():
+        return _DEFAULT_AGGREGATION_TRIGGER
+
+    text = qr_path.read_text(encoding="utf-8")
+    match = re.search(
+        r"aggregation trigger\s*\|\s*(\d+)\s+entries",
+        text,
+        re.IGNORECASE,
+    )
+    if match is not None:
+        return int(match.group(1))
+
+    fallback = re.search(r"aggregate when .*?reach\s*\*\*(\d+)\*\*", text, re.IGNORECASE)
+    if fallback is not None:
+        return int(fallback.group(1))
+
+    return _DEFAULT_AGGREGATION_TRIGGER
+
+
 def _effective_date(fm: dict) -> date | None:
     """Return last_verified if present, else created, else None."""
     for key in ("last_verified", "created"):
@@ -78,6 +106,830 @@ def _effective_date(fm: dict) -> date | None:
             except ValueError:
                 pass
     return None
+
+
+def _iter_live_access_files(root: Path) -> list[Path]:
+    """Return tracked live ACCESS.jsonl files, excluding archives and dot-dirs."""
+    access_files: list[Path] = []
+    for access_file in root.rglob("ACCESS.jsonl"):
+        try:
+            rel = access_file.relative_to(root)
+        except ValueError:
+            continue
+        if rel.parts and rel.parts[0].startswith("."):
+            continue
+        access_files.append(access_file)
+    return sorted(access_files)
+
+
+def _parse_access_entry(raw_line: str) -> dict[str, Any] | None:
+    """Parse a JSONL ACCESS entry, returning None for blank or invalid lines."""
+    raw_line = raw_line.strip()
+    if not raw_line:
+        return None
+    try:
+        parsed = json.loads(raw_line)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, dict):
+        return None
+    return cast(dict[str, Any], parsed)
+
+
+def _parse_iso_date(raw_date: object) -> date | None:
+    """Parse YYYY-MM-DD strings used in ACCESS.jsonl dates."""
+    if raw_date is None:
+        return None
+    try:
+        return datetime.strptime(str(raw_date), "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _load_access_entries(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Return parsed live ACCESS entries and per-file counts for reporting."""
+    entries: list[dict[str, Any]] = []
+    counts: list[dict[str, Any]] = []
+
+    for access_file in _iter_live_access_files(root):
+        try:
+            text = access_file.read_text(encoding="utf-8")
+        except OSError:
+            continue
+
+        live_count = 0
+        invalid_count = 0
+        for raw_line in text.splitlines():
+            if not raw_line.strip():
+                continue
+            entry = _parse_access_entry(raw_line)
+            if entry is None:
+                invalid_count += 1
+                continue
+            entry["_access_file"] = access_file.relative_to(root).as_posix()
+            entries.append(entry)
+            live_count += 1
+
+        counts.append(
+            {
+                "access_file": access_file.relative_to(root).as_posix(),
+                "folder": access_file.parent.relative_to(root).as_posix(),
+                "entries": live_count,
+                "invalid_lines": invalid_count,
+            }
+        )
+
+    return entries, counts
+
+
+def _filter_access_entries(
+    entries: list[dict[str, Any]],
+    *,
+    folder: str = "",
+    file_prefix: str = "",
+    start_date: str = "",
+    end_date: str = "",
+    min_helpfulness: float | None = None,
+    max_helpfulness: float | None = None,
+) -> list[dict[str, Any]]:
+    """Filter ACCESS entries by folder, file prefix, date range, and helpfulness."""
+    start = _parse_iso_date(start_date) if start_date else None
+    end = _parse_iso_date(end_date) if end_date else None
+
+    filtered: list[dict[str, Any]] = []
+    for entry in entries:
+        access_file = str(entry.get("_access_file", ""))
+        file_path = str(entry.get("file", ""))
+
+        if folder:
+            normalized_folder = folder.rstrip("/")
+            if not access_file.startswith(f"{normalized_folder}/") and access_file != (
+                f"{normalized_folder}/ACCESS.jsonl"
+            ):
+                continue
+        if file_prefix and not file_path.startswith(file_prefix):
+            continue
+
+        entry_date = _parse_iso_date(entry.get("date"))
+        if start is not None and (entry_date is None or entry_date < start):
+            continue
+        if end is not None and (entry_date is None or entry_date > end):
+            continue
+
+        raw_helpfulness = entry.get("helpfulness")
+        if isinstance(raw_helpfulness, (int, float, str)):
+            try:
+                helpfulness = float(raw_helpfulness)
+            except ValueError:
+                helpfulness = None  # type: ignore[assignment]
+        else:
+            helpfulness = None  # type: ignore[assignment]
+
+        if min_helpfulness is not None and (helpfulness is None or helpfulness < min_helpfulness):
+            continue
+        if max_helpfulness is not None and (helpfulness is None or helpfulness > max_helpfulness):
+            continue
+
+        filtered.append(entry)
+
+    return filtered
+
+
+def _summarize_access_by_file(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Summarize ACCESS entries per file for aggregation reports."""
+    per_file: dict[str, dict[str, Any]] = {}
+
+    for entry in entries:
+        file_path = str(entry.get("file", ""))
+        if not file_path:
+            continue
+        bucket = per_file.setdefault(
+            file_path,
+            {
+                "file": file_path,
+                "folder": file_path.split("/", 1)[0],
+                "entry_count": 0,
+                "helpfulness_values": [],
+                "session_ids": set(),
+                "last_access_date": None,
+                "source_access_logs": set(),
+            },
+        )
+        bucket["entry_count"] += 1
+
+        raw_helpfulness = entry.get("helpfulness")
+        if isinstance(raw_helpfulness, (int, float, str)):
+            try:
+                bucket["helpfulness_values"].append(float(raw_helpfulness))
+            except ValueError:
+                pass
+
+        session_id = entry.get("session_id")
+        if session_id:
+            bucket["session_ids"].add(str(session_id))
+
+        access_file = entry.get("_access_file")
+        if access_file:
+            bucket["source_access_logs"].add(str(access_file))
+
+        entry_date = _parse_iso_date(entry.get("date"))
+        if entry_date is not None:
+            last_access = bucket["last_access_date"]
+            if last_access is None or entry_date > last_access:
+                bucket["last_access_date"] = entry_date
+
+    summaries: list[dict[str, Any]] = []
+    for bucket in per_file.values():
+        helpfulness_values = cast(list[float], bucket.pop("helpfulness_values"))
+        session_ids = sorted(cast(set[str], bucket.pop("session_ids")))
+        source_access_logs = sorted(cast(set[str], bucket.pop("source_access_logs")))
+        last_access_date = cast(date | None, bucket["last_access_date"])
+        mean_helpfulness = (
+            round(sum(helpfulness_values) / len(helpfulness_values), 3)
+            if helpfulness_values
+            else None
+        )
+        summaries.append(
+            {
+                **bucket,
+                "mean_helpfulness": mean_helpfulness,
+                "session_count": len(session_ids),
+                "session_ids": session_ids,
+                "last_access_date": str(last_access_date) if last_access_date is not None else None,
+                "source_access_logs": source_access_logs,
+            }
+        )
+
+    summaries.sort(key=lambda item: (-int(item["entry_count"]), str(item["file"])))
+    return summaries
+
+
+def _detect_co_retrieval_clusters(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Detect same-session pairwise co-retrieval clusters."""
+    session_files: dict[str, set[str]] = {}
+    for entry in entries:
+        session_id = entry.get("session_id")
+        file_path = entry.get("file")
+        if not session_id or not file_path:
+            continue
+        session_files.setdefault(str(session_id), set()).add(str(file_path))
+
+    pair_counts: dict[tuple[str, str], set[str]] = {}
+    for session_id, files in session_files.items():
+        ordered_files = sorted(files)
+        for idx, left in enumerate(ordered_files):
+            for right in ordered_files[idx + 1 :]:
+                pair_counts.setdefault((left, right), set()).add(session_id)
+
+    clusters: list[dict[str, Any]] = []
+    for (left, right), sessions in pair_counts.items():
+        if len(sessions) < 3:
+            continue
+        folders = sorted({left.split("/", 1)[0], right.split("/", 1)[0]})
+        clusters.append(
+            {
+                "files": [left, right],
+                "folders": folders,
+                "co_retrieval_count": len(sessions),
+                "session_ids": sorted(sessions),
+            }
+        )
+
+    clusters.sort(key=lambda item: (-int(item["co_retrieval_count"]), item["files"]))
+    return clusters
+
+
+def _parse_last_periodic_review(repo_root: Path) -> date | None:
+    """Read the last periodic review date from meta/quick-reference.md."""
+    qr_path = repo_root / "meta" / "quick-reference.md"
+    if not qr_path.exists():
+        return None
+
+    text = qr_path.read_text(encoding="utf-8")
+    match = re.search(r"\*\*Date:\*\*\s*(\d{4}-\d{2}-\d{2})", text)
+    if match is None:
+        return None
+    return _parse_iso_date(match.group(1))
+
+
+def _parse_current_stage(repo_root: Path) -> str:
+    """Read the active maturity stage from meta/quick-reference.md."""
+    qr_path = repo_root / "meta" / "quick-reference.md"
+    if not qr_path.exists():
+        return "Exploration"
+
+    text = qr_path.read_text(encoding="utf-8")
+    match = re.search(r"## Current active stage:\s*([^\n]+)", text)
+    if match is None:
+        return "Exploration"
+
+    stage = match.group(1).strip()
+    if stage not in _STAGE_ORDER:
+        return "Exploration"
+    return stage
+
+
+def _load_content_files(root: Path) -> set[str]:
+    """Return repo-relative content files covered by maturity and review rules."""
+    content_files: set[str] = set()
+    for dirname in ("knowledge", "plans", "identity", "skills"):
+        dir_path = root / dirname
+        if not dir_path.is_dir():
+            continue
+        for md in dir_path.rglob("*.md"):
+            try:
+                content_files.add(md.relative_to(root).as_posix())
+            except ValueError:
+                continue
+    return content_files
+
+
+def _compute_maturity_signals(
+    root: Path,
+    repo: Any,
+    all_entries: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Compute the maturity signals used during periodic review."""
+    import statistics
+
+    from ..frontmatter_utils import read_with_frontmatter
+
+    if all_entries is None:
+        all_entries, _ = _load_access_entries(root)
+
+    session_ids: set[str] = set()
+    for entry in all_entries:
+        sid = entry.get("session_id")
+        if sid:
+            session_ids.add(str(sid))
+    total_sessions = len(session_ids)
+
+    access_density = len(all_entries)
+
+    content_files = _load_content_files(root)
+    total_content_files = len(content_files)
+
+    accessed_files: set[str] = set()
+    for entry in all_entries:
+        file_path = entry.get("file")
+        if file_path and file_path in content_files:
+            accessed_files.add(str(file_path))
+    files_accessed = len(accessed_files)
+    file_coverage_pct = (
+        round(100.0 * files_accessed / total_content_files, 1) if total_content_files else 0.0
+    )
+
+    high_trust_count = 0
+    for rel_str in content_files:
+        fp = root / rel_str
+        try:
+            fm, _ = read_with_frontmatter(fp)
+        except Exception:
+            continue
+        if fm and fm.get("trust") == "high":
+            high_trust_count += 1
+    confirmation_ratio = (
+        round(high_trust_count / total_content_files, 3) if total_content_files else 0.0
+    )
+
+    identity_stability: int | None = None
+    try:
+        proc = repo._run(
+            ["git", "log", "-1", "--format=%ad", "--date=short", "--", "identity/profile.md"],
+            check=False,
+        )
+        last_change_str = proc.stdout.strip()
+        if last_change_str:
+            last_change = datetime.strptime(last_change_str, "%Y-%m-%d").date()
+            session_dates: dict[str, date] = {}
+            for entry in all_entries:
+                sid = entry.get("session_id")
+                date_str = entry.get("date")
+                if not sid or not date_str:
+                    continue
+                try:
+                    entry_date = datetime.strptime(str(date_str), "%Y-%m-%d").date()
+                except ValueError:
+                    continue
+                sid_str = str(sid)
+                if sid_str not in session_dates or entry_date < session_dates[sid_str]:
+                    session_dates[sid_str] = entry_date
+            identity_stability = sum(
+                1 for entry_date in session_dates.values() if entry_date > last_change
+            )
+    except Exception:
+        identity_stability = None
+
+    helpfulness_values: list[float] = []
+    for entry in all_entries:
+        helpfulness = entry.get("helpfulness")
+        if helpfulness is None:
+            continue
+        try:
+            helpfulness_values.append(float(helpfulness))
+        except (TypeError, ValueError):
+            continue
+    mean_helpfulness = round(statistics.mean(helpfulness_values), 3) if helpfulness_values else 0.0
+
+    return {
+        "total_sessions": total_sessions,
+        "access_density": access_density,
+        "file_coverage_pct": file_coverage_pct,
+        "files_accessed": files_accessed,
+        "total_content_files": total_content_files,
+        "confirmation_ratio": confirmation_ratio,
+        "high_trust_files": high_trust_count,
+        "identity_stability": identity_stability,
+        "mean_helpfulness": mean_helpfulness,
+        "helpfulness_sample_size": len(helpfulness_values),
+        "computed_at": str(date.today()),
+    }
+
+
+def _classify_signal_stage(metric: str, value: object) -> str | None:
+    """Map a maturity signal value to its typical stage bucket."""
+    if value is None:
+        return None
+    if not isinstance(value, (int, float, str)):
+        return None
+    try:
+        numeric = float(value)
+    except ValueError:
+        return None
+    if metric == "total_sessions":
+        if numeric < 20:
+            return "Exploration"
+        if numeric <= 80:
+            return "Calibration"
+        return "Consolidation"
+    if metric == "access_density":
+        if numeric < 50:
+            return "Exploration"
+        if numeric <= 200:
+            return "Calibration"
+        return "Consolidation"
+    if metric == "file_coverage_pct":
+        if numeric < 30:
+            return "Exploration"
+        if numeric <= 60:
+            return "Calibration"
+        return "Consolidation"
+    if metric == "confirmation_ratio":
+        if numeric < 0.3:
+            return "Exploration"
+        if numeric <= 0.6:
+            return "Calibration"
+        return "Consolidation"
+    if metric == "identity_stability":
+        if numeric < 5:
+            return "Exploration"
+        if numeric <= 20:
+            return "Calibration"
+        return "Consolidation"
+    if metric == "mean_helpfulness":
+        if numeric < 0.5:
+            return "Exploration"
+        if numeric <= 0.75:
+            return "Calibration"
+        return "Consolidation"
+    return None
+
+
+def _assess_maturity_stage(signals: dict[str, Any], current_stage: str) -> dict[str, Any]:
+    """Assess the recommended maturity stage from the six periodic-review signals."""
+    metrics = (
+        "total_sessions",
+        "access_density",
+        "file_coverage_pct",
+        "confirmation_ratio",
+        "identity_stability",
+        "mean_helpfulness",
+    )
+    votes = {stage: 0 for stage in _STAGE_ORDER}
+    signal_votes: dict[str, str] = {}
+    for metric in metrics:
+        stage = _classify_signal_stage(metric, signals.get(metric))
+        if stage is None:
+            continue
+        votes[stage] += 1
+        signal_votes[metric] = stage
+
+    majority_stage: str | None = None
+    for stage in reversed(_STAGE_ORDER):
+        if votes[stage] >= 4:
+            majority_stage = stage
+            break
+
+    recommended_stage = current_stage
+    transition_recommended = False
+    regression_flag = False
+    rationale = "Retain current stage; no later-stage majority reached."
+
+    current_index = _STAGE_ORDER.index(current_stage)
+    if majority_stage is not None:
+        majority_index = _STAGE_ORDER.index(majority_stage)
+        if majority_index > current_index:
+            recommended_stage = majority_stage
+            transition_recommended = True
+            rationale = f"Advance to {majority_stage}; {votes[majority_stage]} of 6 signals favor the later stage."
+        elif majority_index < current_index:
+            regression_flag = True
+            rationale = f"{votes[majority_stage]} of 6 signals favor an earlier stage; flag for reassessment rather than auto-regressing."
+        else:
+            rationale = f"Retain {current_stage}; current stage still has majority support."
+
+    return {
+        "current_stage": current_stage,
+        "recommended_stage": recommended_stage,
+        "transition_recommended": transition_recommended,
+        "regression_flag": regression_flag,
+        "vote_counts": votes,
+        "signal_votes": signal_votes,
+        "rationale": rationale,
+    }
+
+
+def _parse_review_queue_entries(root: Path) -> list[dict[str, str]]:
+    """Parse review-queue markdown entries into structured metadata."""
+    queue_path = root / "meta" / "review-queue.md"
+    if not queue_path.exists():
+        return []
+
+    entries: list[dict[str, str]] = []
+    current: dict[str, str] | None = None
+    in_code_block = False
+    for raw_line in queue_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if line.startswith("```"):
+            in_code_block = not in_code_block
+            continue
+        if in_code_block:
+            continue
+        match = re.match(r"### \[(\d{4}-\d{2}-\d{2})\] (.+)", line)
+        if match is not None:
+            if current is not None:
+                entries.append(current)
+            current = {
+                "date": match.group(1),
+                "title": match.group(2),
+            }
+            continue
+        if current is None:
+            continue
+        field_match = re.match(r"\*\*(.+?):\*\*\s*(.+)", line)
+        if field_match is not None:
+            key = field_match.group(1).strip().lower().replace(" ", "_")
+            current[key] = field_match.group(2).strip()
+    if current is not None:
+        entries.append(current)
+    return entries
+
+
+def _find_conflict_tags(root: Path) -> list[str]:
+    """Return files in identity/ or knowledge/ that still contain [CONFLICT]."""
+    matches: list[str] = []
+    for dirname in ("identity", "knowledge"):
+        dir_path = root / dirname
+        if not dir_path.is_dir():
+            continue
+        for md_file in dir_path.rglob("*.md"):
+            try:
+                text = md_file.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            if "[CONFLICT]" in text:
+                matches.append(md_file.relative_to(root).as_posix())
+    return sorted(matches)
+
+
+def _scan_unverified_content(root: Path, low_threshold: int) -> dict[str, Any]:
+    """Summarize low-trust files in knowledge/_unverified/ for periodic review."""
+    from ..frontmatter_utils import read_with_frontmatter
+
+    folder = root / "knowledge" / "_unverified"
+    files: list[dict[str, Any]] = []
+    overdue: list[dict[str, Any]] = []
+    if not folder.is_dir():
+        return {"files": files, "overdue": overdue}
+
+    today = date.today()
+    for md_file in folder.rglob("*.md"):
+        if md_file.name == "SUMMARY.md":
+            continue
+        try:
+            fm_dict, _ = read_with_frontmatter(md_file)
+        except Exception:
+            continue
+        eff_date = _effective_date(fm_dict)
+        age_days = (today - eff_date).days if eff_date is not None else None
+        item = {
+            "path": md_file.relative_to(root).as_posix(),
+            "trust": fm_dict.get("trust") if fm_dict else None,
+            "source": fm_dict.get("source") if fm_dict else None,
+            "effective_date": str(eff_date) if eff_date is not None else None,
+            "age_days": age_days,
+        }
+        files.append(item)
+        if item["trust"] == "low" and age_days is not None and age_days > low_threshold:
+            overdue.append(item)
+
+    files.sort(key=lambda item: (-(item["age_days"] or -1), str(item["path"])))
+    overdue.sort(key=lambda item: (-(item["age_days"] or -1), str(item["path"])))
+    return {"files": files, "overdue": overdue}
+
+
+def _summarize_access_by_folder(file_summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Aggregate file-level ACCESS summaries to top-level folder summaries."""
+    folder_totals: dict[str, dict[str, Any]] = {}
+    for item in file_summaries:
+        folder = str(item.get("folder", ""))
+        if not folder:
+            continue
+        bucket = folder_totals.setdefault(
+            folder,
+            {
+                "folder": folder,
+                "entry_count": 0,
+                "files": 0,
+                "high_value_files": 0,
+                "low_value_files": 0,
+            },
+        )
+        bucket["entry_count"] += int(item.get("entry_count", 0))
+        bucket["files"] += 1
+        mean_helpfulness = item.get("mean_helpfulness")
+        if mean_helpfulness is not None and float(mean_helpfulness) >= 0.7:
+            bucket["high_value_files"] += 1
+        if mean_helpfulness is not None and float(mean_helpfulness) <= 0.3:
+            bucket["low_value_files"] += 1
+
+    summaries = list(folder_totals.values())
+    summaries.sort(key=lambda item: (-int(item["entry_count"]), str(item["folder"])))
+    return summaries
+
+
+def _detect_access_anomalies(
+    root: Path,
+    entries: list[dict[str, Any]],
+    staleness_days: int,
+) -> list[dict[str, Any]]:
+    """Detect read-only anomaly candidates for periodic review."""
+    from ..frontmatter_utils import read_with_frontmatter
+
+    by_file: dict[str, list[dict[str, Any]]] = {}
+    for entry in entries:
+        file_path = str(entry.get("file", ""))
+        if not file_path:
+            continue
+        by_file.setdefault(file_path, []).append(entry)
+
+    anomalies: list[dict[str, Any]] = []
+    for file_path, file_entries in by_file.items():
+        try:
+            fm_dict, _ = read_with_frontmatter(root / file_path)
+        except Exception:
+            fm_dict = {}
+
+        if (
+            len(file_entries) >= 5
+            and not fm_dict.get("last_verified")
+            and fm_dict.get("source") != "user-stated"
+        ):
+            anomalies.append(
+                {
+                    "type": "never_approved_high_retrieval",
+                    "file": file_path,
+                    "entry_count": len(file_entries),
+                    "recommended_action": "Review provenance",
+                }
+            )
+
+        dated_entries: list[tuple[date, str | None]] = []
+        for entry in file_entries:
+            entry_date = _parse_iso_date(entry.get("date"))
+            if entry_date is None:
+                continue
+            session_id = str(entry.get("session_id")) if entry.get("session_id") else None
+            dated_entries.append((entry_date, session_id))
+        if not dated_entries:
+            continue
+        dated_entries.sort()
+        latest_date = dated_entries[-1][0]
+        window_start = latest_date.fromordinal(latest_date.toordinal() - staleness_days)
+        recent_session_counts: dict[str, int] = {}
+        prior_recent = 0
+        for entry_date, session_id in dated_entries:
+            if entry_date < window_start:
+                continue
+            if session_id is None:
+                prior_recent += 1
+                continue
+            recent_session_counts[session_id] = recent_session_counts.get(session_id, 0) + 1
+        if prior_recent == 0:
+            for session_id, count in recent_session_counts.items():
+                if count >= 3:
+                    anomalies.append(
+                        {
+                            "type": "dormant_file_spike",
+                            "file": file_path,
+                            "session_id": session_id,
+                            "entry_count": count,
+                            "recommended_action": "Investigate access pattern",
+                        }
+                    )
+                    break
+
+    anomalies.sort(key=lambda item: (str(item["type"]), str(item["file"])))
+    return anomalies
+
+
+def _collect_recent_reflections(root: Path, limit: int = 5) -> list[dict[str, str]]:
+    """Collect recent reflection files with a short preview line."""
+    reflections: list[dict[str, str]] = []
+    for reflection_path in sorted(root.glob("chats/**/reflection.md"), reverse=True):
+        try:
+            text = reflection_path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        preview = ""
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            preview = stripped
+            break
+        reflections.append(
+            {
+                "path": reflection_path.relative_to(root).as_posix(),
+                "preview": preview,
+            }
+        )
+        if len(reflections) >= limit:
+            break
+    return reflections
+
+
+def _git_changed_files_since(repo: Any, since_date: date | None) -> list[str]:
+    """Return repo-relative files touched since the given review date."""
+    if since_date is None:
+        return []
+    try:
+        proc = repo._run(
+            ["git", "log", "--since", since_date.isoformat(), "--name-only", "--format="],
+            check=False,
+        )
+    except Exception:
+        return []
+
+    files = {line.strip() for line in proc.stdout.splitlines() if line.strip()}
+    return sorted(files)
+
+
+def _build_access_summary_for_file(
+    entries: list[dict[str, Any]],
+    rel_path: str,
+) -> dict[str, Any]:
+    """Return file-level ACCESS summary for a single repo-relative path."""
+    summaries = _summarize_access_by_file(
+        [entry for entry in entries if str(entry.get("file", "")) == rel_path]
+    )
+    if summaries:
+        return summaries[0]
+    return {
+        "file": rel_path,
+        "folder": rel_path.split("/", 1)[0] if "/" in rel_path else rel_path,
+        "entry_count": 0,
+        "mean_helpfulness": None,
+        "session_count": 0,
+        "session_ids": [],
+        "last_access_date": None,
+        "source_access_logs": [],
+    }
+
+
+def _git_file_history(repo: Any, rel_path: str, limit: int = 10) -> list[dict[str, str]]:
+    """Return recent commit history for a single file."""
+    safe_limit = min(max(limit, 1), 20)
+    result = repo._run(
+        [
+            "git",
+            "log",
+            f"-{safe_limit}",
+            "--follow",
+            "--format=%H%x1f%s%x1f%aI%x1f%an%x1f%ae",
+            "--",
+            rel_path,
+        ],
+        check=False,
+    )
+    if result.returncode not in (0, 1):
+        return []
+
+    history: list[dict[str, str]] = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\x1f")
+        if len(parts) != 5:
+            continue
+        history.append(
+            {
+                "sha": parts[0].strip(),
+                "message": parts[1].strip(),
+                "author_date": parts[2].strip(),
+                "author_name": parts[3].strip(),
+                "author_email": parts[4].strip(),
+            }
+        )
+    return history
+
+
+def _commit_metadata(repo: Any, sha: str) -> dict[str, str | None]:
+    """Return author/date metadata for a specific commit."""
+    result = repo._run(
+        ["git", "show", "--quiet", "--format=%aI%x1f%an%x1f%ae", sha],
+        check=False,
+    )
+    if result.returncode != 0:
+        return {
+            "author_date": None,
+            "author_name": None,
+            "author_email": None,
+        }
+
+    parts = result.stdout.strip().split("\x1f")
+    if len(parts) != 3:
+        return {
+            "author_date": None,
+            "author_name": None,
+            "author_email": None,
+        }
+    return {
+        "author_date": parts[0].strip() or None,
+        "author_name": parts[1].strip() or None,
+        "author_email": parts[2].strip() or None,
+    }
+
+
+def _recognized_commit_prefix(message: str) -> str | None:
+    """Return the bracketed commit prefix when it is in the allowed set."""
+    match = re.match(r"^(\[[^\]]+\])", message)
+    if match is None:
+        return None
+    prefix = match.group(1)
+    if prefix not in KNOWN_COMMIT_PREFIXES:
+        return None
+    return prefix
+
+
+def _requires_provenance_pause(path: str, frontmatter: dict[str, Any]) -> bool:
+    """Apply the retrieval provenance pause rule to a file path."""
+    top_level = path.split("/", 1)[0]
+    if top_level in {"meta", "chats", "HUMANS"}:
+        return False
+    source = frontmatter.get("source")
+    last_verified = frontmatter.get("last_verified")
+    return not (source == "user-stated" or bool(last_verified))
 
 
 def _repo_relative(path: Path, root: Path) -> Path:
@@ -415,6 +1267,502 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(commits, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_check_aggregation_triggers
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_check_aggregation_triggers",
+        annotations=_tool_annotations(
+            title="ACCESS Aggregation Trigger Status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_check_aggregation_triggers() -> str:
+        """Report which live ACCESS logs are below, near, or above aggregation trigger.
+
+        Uses the active aggregation threshold from meta/quick-reference.md and
+        counts valid non-empty entries in each live ACCESS.jsonl file.
+
+        Returns:
+            JSON with trigger metadata, per-log counts, and lists of files that
+            are near or above the aggregation threshold.
+        """
+        root = get_root()
+        trigger = _parse_aggregation_trigger(root)
+        _, access_counts = _load_access_entries(root)
+
+        report: list[dict[str, Any]] = []
+        above_trigger: list[str] = []
+        near_trigger: list[str] = []
+
+        for item in access_counts:
+            entry_count = int(item["entries"])
+            remaining = max(trigger - entry_count, 0)
+            if entry_count >= trigger:
+                status = "above"
+                above_trigger.append(cast(str, item["access_file"]))
+            elif remaining <= _NEAR_TRIGGER_WINDOW:
+                status = "near"
+                near_trigger.append(cast(str, item["access_file"]))
+            else:
+                status = "below"
+
+            report.append(
+                {
+                    **item,
+                    "trigger": trigger,
+                    "remaining_to_trigger": remaining,
+                    "status": status,
+                }
+            )
+
+        payload = {
+            "aggregation_trigger": trigger,
+            "near_trigger_window": _NEAR_TRIGGER_WINDOW,
+            "files_checked": len(report),
+            "above_trigger": above_trigger,
+            "near_trigger": near_trigger,
+            "reports": report,
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_aggregate_access
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_aggregate_access",
+        annotations=_tool_annotations(
+            title="Aggregate ACCESS Logs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_aggregate_access(
+        folder: str = "",
+        file_prefix: str = "",
+        start_date: str = "",
+        end_date: str = "",
+        min_helpfulness: float | None = None,
+        max_helpfulness: float | None = None,
+    ) -> str:
+        """Aggregate live ACCESS.jsonl entries into a maintenance report.
+
+        The first cut is read-only. It computes file-level access summaries,
+        high-value and low-value candidates, same-session co-retrieval clusters,
+        and preview targets for follow-up curation work.
+
+        Returns:
+            JSON report with filters, file summaries, clusters, and proposed
+            follow-up outputs for summary updates, review queue entries, and
+            archive targets.
+        """
+        root = get_root()
+        trigger = _parse_aggregation_trigger(root)
+        all_entries, access_counts = _load_access_entries(root)
+        filtered_entries = _filter_access_entries(
+            all_entries,
+            folder=folder,
+            file_prefix=file_prefix,
+            start_date=start_date,
+            end_date=end_date,
+            min_helpfulness=min_helpfulness,
+            max_helpfulness=max_helpfulness,
+        )
+        file_summaries = _summarize_access_by_file(filtered_entries)
+        clusters = _detect_co_retrieval_clusters(filtered_entries)
+
+        high_value_files = [
+            item
+            for item in file_summaries
+            if int(item["entry_count"]) >= 5
+            and item["mean_helpfulness"] is not None
+            and float(item["mean_helpfulness"]) >= 0.7
+        ]
+        low_value_files = [
+            item
+            for item in file_summaries
+            if int(item["entry_count"]) >= 3
+            and item["mean_helpfulness"] is not None
+            and float(item["mean_helpfulness"]) <= 0.3
+        ]
+
+        archive_targets: list[str] = []
+        if folder:
+            normalized_folder = folder.rstrip("/")
+            archive_targets = [
+                cast(str, item["access_file"])
+                for item in access_counts
+                if cast(str, item["access_file"]).startswith(f"{normalized_folder}/")
+                and int(item["entries"]) >= trigger
+            ]
+        else:
+            archive_targets = [
+                cast(str, item["access_file"])
+                for item in access_counts
+                if int(item["entries"]) >= trigger
+            ]
+
+        summary_update_targets = {
+            f"{item['folder']}/SUMMARY.md"
+            for item in high_value_files + low_value_files
+            if isinstance(item.get("folder"), str)
+        }
+        for cluster in clusters:
+            for folder_name in cast(list[str], cluster["folders"]):
+                summary_update_targets.add(f"{folder_name}/SUMMARY.md")
+        sorted_summary_update_targets = sorted(summary_update_targets)
+        review_queue_candidates = [
+            {
+                "file": item["file"],
+                "reason": "Consistently low-value ACCESS pattern",
+                "entry_count": item["entry_count"],
+                "mean_helpfulness": item["mean_helpfulness"],
+            }
+            for item in low_value_files
+        ]
+        task_group_candidates = [
+            {
+                "files": cluster["files"],
+                "folders": cluster["folders"],
+                "co_retrieval_count": cluster["co_retrieval_count"],
+            }
+            for cluster in clusters
+            if len(cast(list[str], cluster["folders"])) >= 2
+        ]
+
+        payload = {
+            "filters": {
+                "folder": folder or None,
+                "file_prefix": file_prefix or None,
+                "start_date": start_date or None,
+                "end_date": end_date or None,
+                "min_helpfulness": min_helpfulness,
+                "max_helpfulness": max_helpfulness,
+            },
+            "aggregation_trigger": trigger,
+            "entries_considered": len(filtered_entries),
+            "files_considered": len(file_summaries),
+            "high_value_files": high_value_files,
+            "low_value_files": low_value_files,
+            "co_retrieval_clusters": clusters,
+            "file_summaries": file_summaries,
+            "proposed_outputs": {
+                "summary_update_targets": sorted_summary_update_targets,
+                "access_archive_targets": archive_targets,
+                "review_queue_candidates": review_queue_candidates,
+                "task_group_candidates": task_group_candidates,
+            },
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_run_periodic_review
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_run_periodic_review",
+        annotations=_tool_annotations(
+            title="Periodic Review Report",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_run_periodic_review() -> str:
+        """Run the ordered periodic-review checklist as a read-only report.
+
+        The tool mirrors the checklist in meta/update-guidelines.md and returns
+        structured findings plus deferred write targets rather than mutating any
+        protected files directly.
+        """
+        root = get_root()
+        repo = get_repo()
+        low_threshold, _ = _parse_trust_thresholds(root)
+        current_stage = _parse_current_stage(root)
+        last_review = _parse_last_periodic_review(root)
+        today = date.today()
+        days_since_review = (today - last_review).days if last_review is not None else None
+
+        all_entries, access_counts = _load_access_entries(root)
+        file_summaries = _summarize_access_by_file(all_entries)
+        low_value_files = [
+            item
+            for item in file_summaries
+            if int(item["entry_count"]) >= 3
+            and item["mean_helpfulness"] is not None
+            and float(item["mean_helpfulness"]) <= 0.3
+        ]
+        clusters = _detect_co_retrieval_clusters(all_entries)
+        folder_summaries = _summarize_access_by_folder(file_summaries)
+        review_queue_entries = _parse_review_queue_entries(root)
+        security_entries = [
+            entry for entry in review_queue_entries if entry.get("type") == "security"
+        ]
+        pending_security_entries = [
+            entry
+            for entry in security_entries
+            if entry.get("status", "pending") in {"pending", "investigated"}
+        ]
+        pending_non_security_entries = [
+            entry
+            for entry in review_queue_entries
+            if entry.get("type") != "security" and entry.get("status", "pending") == "pending"
+        ]
+        false_positive_security = [
+            entry for entry in security_entries if entry.get("status") == "false-positive"
+        ]
+
+        unverified = _scan_unverified_content(root, low_threshold)
+        conflicts = _find_conflict_tags(root)
+        signals = _compute_maturity_signals(root, repo, all_entries)
+        maturity = _assess_maturity_stage(signals, current_stage)
+        anomaly_candidates = _detect_access_anomalies(root, all_entries, low_threshold)
+        reflections = _collect_recent_reflections(root)
+        recently_touched_files = _git_changed_files_since(repo, last_review)
+
+        if last_review is None:
+            review_due_reason = "No recorded periodic review date."
+        elif days_since_review is not None and days_since_review > _PERIODIC_REVIEW_DAYS:
+            review_due_reason = f"Last periodic review was {days_since_review} days ago, beyond the {_PERIODIC_REVIEW_DAYS}-day cadence."
+        else:
+            review_due_reason = "Periodic review cadence not yet exceeded."
+
+        folder_candidates = {
+            "high_access": [item for item in folder_summaries if int(item["entry_count"]) >= 15],
+            "low_access": [item for item in folder_summaries if int(item["entry_count"]) <= 2],
+        }
+        governance_review_queue_count = len(
+            [entry for entry in pending_non_security_entries if entry.get("type") == "governance"]
+        )
+        governance_evaluation = {
+            "threshold_effectiveness": {
+                "overdue_low_trust_files": len(cast(list[dict[str, Any]], unverified["overdue"])),
+                "low_value_files": len(low_value_files),
+            },
+            "signal_quality": {
+                "security_entries_total": len(security_entries),
+                "security_false_positive_count": len(false_positive_security),
+                "security_false_positive_ratio": (
+                    round(len(false_positive_security) / len(security_entries), 3)
+                    if security_entries
+                    else None
+                ),
+                "anomaly_candidates": anomaly_candidates,
+            },
+            "consistency_targets": [
+                "README.md",
+                "meta/quick-reference.md",
+                "meta/update-guidelines.md",
+            ],
+            "user_friendliness_notes": [
+                "Keep protected changes in deferred output rather than applying them silently.",
+                "Preserve metadata-first checks before loading expensive governance files.",
+            ],
+            "context_efficiency_notes": [
+                "Compact returning path remains the default routing surface.",
+                "Aggregation and periodic review stay read-first until a user approves protected writes.",
+            ],
+            "missing_coverage_prompt": governance_review_queue_count == 0,
+        }
+
+        summary_update_targets = {
+            f"{item['folder']}/SUMMARY.md"
+            for item in low_value_files
+            if isinstance(item.get("folder"), str)
+        }
+        for cluster in clusters:
+            for folder_name in cast(list[str], cluster["folders"]):
+                summary_update_targets.add(f"{folder_name}/SUMMARY.md")
+
+        deferred_write_targets = ["meta/belief-diff-log.md"]
+        if (
+            pending_non_security_entries
+            or pending_security_entries
+            or anomaly_candidates
+            or unverified["overdue"]
+        ):
+            deferred_write_targets.append("meta/review-queue.md")
+        if (
+            days_since_review is None
+            or (days_since_review is not None and days_since_review > _PERIODIC_REVIEW_DAYS)
+            or maturity["transition_recommended"]
+        ):
+            deferred_write_targets.append("meta/quick-reference.md")
+        deferred_write_targets.extend(sorted(summary_update_targets))
+
+        new_files_since_review = []
+        for rel_path in _load_content_files(root):
+            try:
+                text = (root / rel_path).read_text(encoding="utf-8")
+            except OSError:
+                continue
+            created_match = re.search(r"^created:\s*(\d{4}-\d{2}-\d{2})$", text, re.MULTILINE)
+            if created_match is None or last_review is None:
+                continue
+            created_date = _parse_iso_date(created_match.group(1))
+            if created_date is not None and created_date > last_review:
+                new_files_since_review.append(rel_path)
+
+        payload = {
+            "review_due": {
+                "last_periodic_review": str(last_review) if last_review is not None else None,
+                "days_since_review": days_since_review,
+                "due": last_review is None
+                or (days_since_review is not None and days_since_review > _PERIODIC_REVIEW_DAYS),
+                "reason": review_due_reason,
+            },
+            "ordered_checks": {
+                "security_flags": {
+                    "pending_count": len(pending_security_entries),
+                    "pending_entries": pending_security_entries,
+                    "generated_candidates": anomaly_candidates,
+                },
+                "unverified_content": {
+                    "total_files": len(cast(list[dict[str, Any]], unverified["files"])),
+                    "overdue_count": len(cast(list[dict[str, Any]], unverified["overdue"])),
+                    "overdue_files": unverified["overdue"],
+                },
+                "conflict_resolution": {
+                    "count": len(conflicts),
+                    "files": conflicts,
+                },
+                "review_queue": {
+                    "pending_non_security_count": len(pending_non_security_entries),
+                    "pending_non_security_entries": pending_non_security_entries,
+                },
+                "unhelpful_memory": {
+                    "count": len(low_value_files),
+                    "files": low_value_files,
+                },
+                "maturity_assessment": {
+                    **maturity,
+                    "signals": signals,
+                },
+                "governance_evaluation": governance_evaluation,
+                "folder_structure": {
+                    "folder_summaries": folder_summaries,
+                    "candidates": folder_candidates,
+                },
+                "emergent_categorization": {
+                    "cluster_count": len(clusters),
+                    "clusters": clusters,
+                },
+                "session_reflection_themes": {
+                    "reflection_count": len(reflections),
+                    "recent_reflections": reflections,
+                },
+            },
+            "belief_diff_preview": {
+                "new_files_since_review": sorted(new_files_since_review),
+                "recently_touched_files": recently_touched_files,
+            },
+            "aggregation_status": {
+                "trigger": _parse_aggregation_trigger(root),
+                "logs": access_counts,
+            },
+            "proposed_outputs": {
+                "deferred_write_targets": sorted(set(deferred_write_targets)),
+                "summary_update_targets": sorted(summary_update_targets),
+                "review_queue_candidates": [
+                    {
+                        "type": "security",
+                        "title": candidate["type"],
+                        "file": candidate["file"],
+                        "recommended_action": candidate["recommended_action"],
+                    }
+                    for candidate in anomaly_candidates
+                ],
+            },
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_get_file_provenance
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_get_file_provenance",
+        annotations=_tool_annotations(
+            title="File Provenance",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_get_file_provenance(path: str, history_limit: int = 10) -> str:
+        """Return provenance, ACCESS history, and git history for one file."""
+        from ..errors import NotFoundError
+        from ..frontmatter_utils import read_with_frontmatter
+
+        root = get_root()
+        repo = get_repo()
+        abs_path = repo.abs_path(path)
+        if not abs_path.exists() or not abs_path.is_file():
+            raise NotFoundError(f"File not found: {path}")
+
+        frontmatter, _ = read_with_frontmatter(abs_path)
+        version_token = repo.hash_object(path)
+        access_entries, _ = _load_access_entries(root)
+        access_summary = _build_access_summary_for_file(access_entries, path)
+        commit_history = _git_file_history(repo, path, limit=history_limit)
+        latest_commit = commit_history[0] if commit_history else None
+        first_tracked_date = repo.first_tracked_author_date(path)
+        effective_date = _effective_date(frontmatter)
+
+        payload = {
+            "path": path,
+            "version_token": version_token,
+            "tracked": first_tracked_date is not None,
+            "first_tracked_date": str(first_tracked_date)
+            if first_tracked_date is not None
+            else None,
+            "effective_date": str(effective_date) if effective_date is not None else None,
+            "frontmatter": frontmatter or None,
+            "requires_provenance_pause": _requires_provenance_pause(path, frontmatter),
+            "access_summary": access_summary,
+            "latest_commit": latest_commit,
+            "commit_history": commit_history,
+        }
+        return json.dumps(payload, indent=2, default=str)
+
+    # ------------------------------------------------------------------
+    # memory_inspect_commit
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_inspect_commit",
+        annotations=_tool_annotations(
+            title="Inspect Commit",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_inspect_commit(sha: str) -> str:
+        """Return structured metadata for a commit plus basic scope analysis."""
+        repo = get_repo()
+        commit = repo.inspect_commit(sha)
+        metadata = _commit_metadata(repo, str(commit["sha"]))
+        files_changed = [str(path) for path in cast(list[object], commit["files_changed"])]
+        top_levels = sorted({path.split("/", 1)[0] for path in files_changed if path})
+        message = str(commit["message"])
+
+        payload = {
+            **commit,
+            **metadata,
+            "requested_sha": sha,
+            "recognized_prefix": _recognized_commit_prefix(message),
+            "file_count": len(files_changed),
+            "top_level_paths": top_levels,
+            "is_head": str(commit["sha"]) == repo.current_head(),
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_diff
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -681,151 +2029,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                               helpfulness score
               computed_at             (str)   ISO date of computation
         """
-        import statistics
-
         root = get_root()
         repo = get_repo()
-
-        # --- Collect all ACCESS.jsonl files (skip dot-dir worktrees) ------
-        access_files: list[Path] = []
-        for af in root.rglob("ACCESS.jsonl"):
-            try:
-                rel = af.relative_to(root)
-            except ValueError:
-                continue
-            if rel.parts and rel.parts[0].startswith("."):
-                continue  # skip .claude/ and similar dot-dirs
-            access_files.append(af)
-
-        # --- Parse every entry ---------------------------------------------
-        all_entries: list[dict] = []
-        for af in access_files:
-            try:
-                text = af.read_text(encoding="utf-8")
-            except OSError:
-                continue
-            for raw_line in text.splitlines():
-                raw_line = raw_line.strip()
-                if not raw_line:
-                    continue
-                try:
-                    all_entries.append(json.loads(raw_line))
-                except json.JSONDecodeError:
-                    continue
-
-        # Signal 1: total sessions (distinct session_ids) -------------------
-        session_ids: set[str] = set()
-        for entry in all_entries:
-            sid = entry.get("session_id")
-            if sid:
-                session_ids.add(sid)
-        total_sessions = len(session_ids)
-
-        # Signal 2: ACCESS density (total entry count) ----------------------
-        access_density = len(all_entries)
-
-        # Signals 3+4: file coverage ----------------------------------------
-        _content_dirs = ["knowledge", "plans", "identity", "skills"]
-        content_files: set[str] = set()
-        for dirname in _content_dirs:
-            dir_path = root / dirname
-            if dir_path.is_dir():
-                for md in dir_path.rglob("*.md"):
-                    try:
-                        content_files.add(md.relative_to(root).as_posix())
-                    except ValueError:
-                        pass
-        total_content_files = len(content_files)
-
-        accessed_files: set[str] = set()
-        for entry in all_entries:
-            f = entry.get("file")
-            if f and f in content_files:
-                accessed_files.add(f)
-        files_accessed = len(accessed_files)
-        file_coverage_pct = (
-            round(100.0 * files_accessed / total_content_files, 1)
-            if total_content_files
-            else 0.0
-        )
-
-        # Signal 5: confirmation ratio (trust:high) -------------------------
-        from ..frontmatter_utils import read_with_frontmatter
-
-        high_trust_count = 0
-        for rel_str in content_files:
-            fp = root / rel_str
-            try:
-                fm, _ = read_with_frontmatter(fp)
-                if fm and fm.get("trust") == "high":
-                    high_trust_count += 1
-            except Exception:
-                pass
-        confirmation_ratio = (
-            round(high_trust_count / total_content_files, 3)
-            if total_content_files
-            else 0.0
-        )
-
-        # Signal 6: identity stability (sessions since last profile change) --
-        identity_stability: int | None = None
-        try:
-            proc = repo._run(
-                ["git", "log", "-1", "--format=%ad", "--date=short",
-                 "--", "identity/profile.md"],
-                check=False,
-            )
-            last_change_str = proc.stdout.strip()
-            if last_change_str:
-                last_change = datetime.strptime(last_change_str, "%Y-%m-%d").date()
-                # Build a map from session_id → earliest date seen in any entry
-                session_dates: dict[str, date] = {}
-                for entry in all_entries:
-                    sid = entry.get("session_id")
-                    date_str = entry.get("date")
-                    if not sid or not date_str:
-                        continue
-                    try:
-                        entry_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-                    except ValueError:
-                        continue
-                    if sid not in session_dates or entry_date < session_dates[sid]:
-                        session_dates[sid] = entry_date
-                identity_stability = sum(
-                    1 for d in session_dates.values() if d > last_change
-                )
-        except Exception:
-            identity_stability = None
-
-        # Signal 7: retrieval success rate (mean helpfulness) ---------------
-        helpfulness_values: list[float] = []
-        for entry in all_entries:
-            h = entry.get("helpfulness")
-            if h is not None:
-                try:
-                    helpfulness_values.append(float(h))
-                except (TypeError, ValueError):
-                    pass
-        mean_helpfulness = (
-            round(statistics.mean(helpfulness_values), 3)
-            if helpfulness_values
-            else 0.0
-        )
-        helpfulness_sample_size = len(helpfulness_values)
-
-        signals = {
-            "total_sessions": total_sessions,
-            "access_density": access_density,
-            "file_coverage_pct": file_coverage_pct,
-            "files_accessed": files_accessed,
-            "total_content_files": total_content_files,
-            "confirmation_ratio": confirmation_ratio,
-            "high_trust_files": high_trust_count,
-            "identity_stability": identity_stability,
-            "mean_helpfulness": mean_helpfulness,
-            "helpfulness_sample_size": helpfulness_sample_size,
-            "computed_at": str(date.today()),
-        }
+        signals = _compute_maturity_signals(root, repo)
         return json.dumps(signals, indent=2)
 
     return {
@@ -833,6 +2039,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_list_folder": memory_list_folder,
         "memory_search": memory_search,
         "memory_git_log": memory_git_log,
+        "memory_check_aggregation_triggers": memory_check_aggregation_triggers,
+        "memory_aggregate_access": memory_aggregate_access,
+        "memory_run_periodic_review": memory_run_periodic_review,
+        "memory_get_file_provenance": memory_get_file_provenance,
+        "memory_inspect_commit": memory_inspect_commit,
         "memory_diff": memory_diff,
         "memory_audit_trust": memory_audit_trust,
         "memory_validate": memory_validate,

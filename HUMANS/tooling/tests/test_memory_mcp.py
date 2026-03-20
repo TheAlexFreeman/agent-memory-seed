@@ -6,6 +6,8 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from types import ModuleType
+from typing import Any, ClassVar, cast
 
 import anyio
 from mcp.client.session import ClientSession
@@ -30,6 +32,8 @@ def load_memory_mcp_module():
 
 
 class MemoryMCPTests(unittest.TestCase):
+    module: ClassVar[ModuleType]
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.module = load_memory_mcp_module()
@@ -103,17 +107,23 @@ class MemoryMCPTests(unittest.TestCase):
                         "memory_read_file",
                         {"path": "AGENTS.md"},
                     )
-                    text_block = result.content[0]
-                    return json.loads(text_block.text)
+                    text_block = cast(Any, result.content[0])
+                    return cast(dict[str, object], json.loads(text_block.text))
 
         payload = anyio.run(run_call)
 
-        self.assertIn("Agent Memory System", payload["content"])
+        self.assertIn("Agent Memory System", cast(str, payload["content"]))
         self.assertIn("version_token", payload)
 
     def test_new_tools_are_exported(self) -> None:
         for name in (
             "memory_git_log",
+            "memory_check_aggregation_triggers",
+            "memory_aggregate_access",
+            "memory_run_periodic_review",
+            "memory_get_file_provenance",
+            "memory_inspect_commit",
+            "memory_record_periodic_review",
             "memory_mark_plan_item_complete",
             "memory_create_plan",
         ):

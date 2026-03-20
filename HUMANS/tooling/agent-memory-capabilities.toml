@@ -10,6 +10,11 @@ read_support = [
   "memory_list_folder",
   "memory_search",
   "memory_git_log",
+  "memory_check_aggregation_triggers",
+  "memory_aggregate_access",
+  "memory_run_periodic_review",
+  "memory_get_file_provenance",
+  "memory_inspect_commit",
   "memory_diff",
   "memory_audit_trust",
   "memory_validate",
@@ -37,6 +42,7 @@ semantic_extensions = [
   "memory_update_identity_trait",
   "memory_record_chat_summary",
   "memory_record_reflection",
+  "memory_record_periodic_review",
   "memory_log_access",
   "memory_flag_for_review",
   "memory_revert_commit",
@@ -134,6 +140,10 @@ session_id = "Chat Session"
 flagged_path = "Flagged Path"
 priority = "Review Priority"
 reflection_path = "Reflection Path"
+review_date = "Review Date"
+active_stage = "Active Stage"
+belief_diff_written = "Belief Diff Written"
+review_queue_written = "Review Queue Written"
 preview_token = "Preview Token"
 eligible = "Eligible for Revert"
 policy_reasons = "Policy Reasons"
@@ -359,6 +369,14 @@ tier = "semantic"
 operation_group = "chat"
 change_class = "automatic"
 
+[desktop_operations.record_periodic_review]
+status = "implemented"
+tool = "memory_record_periodic_review"
+tier = "semantic"
+operation_group = "governance"
+change_class = "protected"
+notes = "Protected meta-surface write for approved periodic-review outputs only."
+
 [operations.memory_create_plan]
 group = "plan"
 tier = "semantic"
@@ -387,7 +405,12 @@ owns_access_logs = []
 owns_review_queue = []
 result_fields = ["next_action", "phase_progress", "plan_progress", "status"]
 fallback_tools = ["memory_edit", "memory_update_frontmatter", "memory_commit"]
-error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+error_kinds = [
+  "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
 
 [operations.memory_update_plan_next_action]
 group = "plan"
@@ -410,7 +433,10 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
-writes = ["knowledge/_unverified/**/{file}.md", "knowledge/_unverified/SUMMARY.md"]
+writes = [
+  "knowledge/_unverified/**/{file}.md",
+  "knowledge/_unverified/SUMMARY.md",
+]
 owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
 owns_summaries = ["knowledge/_unverified/SUMMARY.md"]
 owns_access_logs = []
@@ -437,7 +463,12 @@ owns_access_logs = []
 owns_review_queue = []
 result_fields = ["new_path", "trust"]
 fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
-error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+error_kinds = [
+  "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
 
 [operations.memory_demote_knowledge]
 group = "knowledge"
@@ -457,7 +488,12 @@ owns_access_logs = []
 owns_review_queue = []
 result_fields = ["new_path", "trust"]
 fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
-error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+error_kinds = [
+  "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
 
 [operations.memory_archive_knowledge]
 group = "knowledge"
@@ -476,7 +512,12 @@ owns_access_logs = []
 owns_review_queue = []
 result_fields = ["archive_path"]
 fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
-error_kinds = ["ConflictError", "NotFoundError", "ValidationError", "StagingError"]
+error_kinds = [
+  "ConflictError",
+  "NotFoundError",
+  "ValidationError",
+  "StagingError",
+]
 
 [operations.memory_append_scratchpad]
 group = "scratchpad"
@@ -568,6 +609,30 @@ result_fields = ["reflection_path"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
 
+[operations.memory_record_periodic_review]
+group = "governance"
+tier = "semantic"
+change_class = "protected"
+commit_model = "auto_commit"
+commit_category_hint = "system"
+writes = [
+  "meta/quick-reference.md",
+  "meta/belief-diff-log.md",
+  "meta/review-queue.md",
+]
+owns_frontmatter = []
+owns_summaries = []
+owns_access_logs = []
+owns_review_queue = ["meta/review-queue.md"]
+result_fields = [
+  "review_date",
+  "active_stage",
+  "belief_diff_written",
+  "review_queue_written",
+]
+fallback_tools = ["memory_edit", "memory_commit"]
+error_kinds = ["NotFoundError", "ValidationError", "StagingError"]
+
 [operations.memory_revert_commit]
 group = "governance"
 tier = "semantic"
@@ -579,6 +644,13 @@ owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
 owns_review_queue = []
-result_fields = ["preview_token", "eligible", "policy_reasons", "mode", "reverted_sha", "new_sha"]
+result_fields = [
+  "preview_token",
+  "eligible",
+  "policy_reasons",
+  "mode",
+  "reverted_sha",
+  "new_sha",
+]
 fallback_tools = ["memory_commit"]
 error_kinds = ["ValidationError", "ConflictError", "StagingError"]

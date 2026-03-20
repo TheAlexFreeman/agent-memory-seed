@@ -14,9 +14,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = REPO_ROOT / "HUMANS" / "tooling" / "agent-memory-capabilities.toml"
-RESOLVER_PATH = (
-    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_memory_capabilities.py"
-)
+RESOLVER_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_memory_capabilities.py"
 
 SPEC = importlib.util.spec_from_file_location("resolve_memory_capabilities", RESOLVER_PATH)
 assert SPEC is not None
@@ -80,9 +78,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             change_classes["automatic"]["read_only_behavior"],
             "defer_and_emit_summary",
         )
-        self.assertEqual(
-            raw_fallback_policy["policy"], "inherit_operation_change_class"
-        )
+        self.assertEqual(raw_fallback_policy["policy"], "inherit_operation_change_class")
         self.assertEqual(raw_fallback_policy["runtime_export"], "opt_in")
         self.assertEqual(
             raw_fallback_policy["opt_in_env_var"],
@@ -248,12 +244,8 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ["preview_only", "read_only", "semantic_gap", "uninterpretable_target"],
         )
         self.assertTrue(fallback_behavior["semantic_gap"]["raw_tools_allowed"])
-        self.assertTrue(
-            fallback_behavior["semantic_gap"]["requires_contract_preservation"]
-        )
-        self.assertFalse(
-            fallback_behavior["uninterpretable_target"]["raw_tools_allowed"]
-        )
+        self.assertTrue(fallback_behavior["semantic_gap"]["requires_contract_preservation"])
+        self.assertFalse(fallback_behavior["uninterpretable_target"]["raw_tools_allowed"])
         self.assertEqual(
             fallback_behavior["preview_only"]["result"],
             "return_preview_without_writing",
@@ -328,12 +320,20 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "automatic",
         )
         self.assertEqual(
+            operations["memory_record_periodic_review"]["change_class"],
+            "protected",
+        )
+        self.assertEqual(
             desktop_operations["create_plan"]["change_class"],
             operations["memory_create_plan"]["change_class"],
         )
         self.assertEqual(
             desktop_operations["flag_for_review"]["change_class"],
             operations["memory_flag_for_review"]["change_class"],
+        )
+        self.assertEqual(
+            desktop_operations["record_periodic_review"]["change_class"],
+            operations["memory_record_periodic_review"]["change_class"],
         )
 
     def test_semantic_operations_declare_commit_category_hints(self) -> None:
@@ -360,6 +360,10 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             operations["memory_flag_for_review"]["commit_category_hint"],
             "curation",
         )
+        self.assertEqual(
+            operations["memory_record_periodic_review"]["commit_category_hint"],
+            "system",
+        )
 
     def test_error_taxonomy_marks_already_done_as_declared_but_not_emitted(self) -> None:
         manifest = tomllib.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
@@ -367,9 +371,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
 
         self.assertEqual(errors["ConflictError"]["status"], "implemented")
         self.assertEqual(errors["ValidationError"]["status"], "implemented")
-        self.assertEqual(
-            errors["AlreadyDoneError"]["status"], "defined_not_currently_emitted"
-        )
+        self.assertEqual(errors["AlreadyDoneError"]["status"], "defined_not_currently_emitted")
 
     def test_resolver_returns_integration_boundary(self) -> None:
         resolution = resolver.resolve_capabilities(REPO_ROOT, include_runtime=False)
@@ -400,13 +402,9 @@ class MemoryCapabilitiesTests(unittest.TestCase):
     def test_resolver_returns_structured_ui_feedback_for_semantic_mode(self) -> None:
         resolution = resolver.resolve_capabilities(REPO_ROOT)
         ui_feedback = resolution["ui_feedback"]
-        create_plan = next(
-            op for op in ui_feedback["operations"] if op["id"] == "create_plan"
-        )
+        create_plan = next(op for op in ui_feedback["operations"] if op["id"] == "create_plan")
         mark_complete = next(
-            op
-            for op in ui_feedback["operations"]
-            if op["id"] == "mark_plan_item_complete"
+            op for op in ui_feedback["operations"] if op["id"] == "mark_plan_item_complete"
         )
 
         self.assertEqual(ui_feedback["title"], "Governed Memory Writes")
@@ -431,14 +429,10 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             ],
         )
         self.assertTrue(
-            ui_feedback["preview"]["change_class_flows"]["proposed"][
-                "preview_required"
-            ]
+            ui_feedback["preview"]["change_class_flows"]["proposed"]["preview_required"]
         )
         self.assertFalse(
-            ui_feedback["preview"]["change_class_flows"]["automatic"][
-                "preview_required"
-            ]
+            ui_feedback["preview"]["change_class_flows"]["automatic"]["preview_required"]
         )
         self.assertTrue(create_plan["preview_required"])
         self.assertEqual(
