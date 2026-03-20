@@ -50,7 +50,6 @@ chats/2026/03/18/chat-005/reflection.md
 chats/ACCESS.jsonl
 chats/SUMMARY.md
 engram_mcp/__init__.py
-engram_mcp/memory_mcp.py
 engram_mcp/agent_memory_mcp/__init__.py
 engram_mcp/agent_memory_mcp/errors.py
 engram_mcp/agent_memory_mcp/frontmatter_utils.py
@@ -74,6 +73,7 @@ engram_mcp/agent_memory_mcp/tools/semantic/knowledge_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/plan_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/session_tools.py
 engram_mcp/agent_memory_mcp/tools/write_tools.py
+engram_mcp/memory_mcp.py
 engram_mcp/tests/__init__.py
 engram_mcp/tests/test_agent_memory_mcp_write_tools.py
 engram_mcp/tests/test_core_boundary.py
@@ -274,8 +274,8 @@ plans/codex-desktop-automation-continuity.md
 plans/codex-desktop-bootstrap-support.md
 plans/codex-desktop-github-network-ergonomics.md
 plans/codex-desktop-governed-memory-writes.md
-plans/compact-bootstrap-efficiency.md
 plans/cognitive-neuroscience-memory-research.md
+plans/compact-bootstrap-efficiency.md
 plans/cultural-evolution-epistemics-research.md
 plans/devops-docker-research.md
 plans/django-stack-research.md
@@ -288,6 +288,7 @@ plans/mcp-read-tools-improvements.md
 plans/mcp-reorganization.md
 plans/mcp-semantic-tools-improvements.md
 plans/mcp-write-and-crosscutting-improvements.md
+plans/memetic-security-research.md
 plans/personal-identity-memory-research.md
 plans/phenomenology-embodied-cognition-research.md
 plans/philosophy-history-survey.md

@@ -53,24 +53,32 @@ Blocks: none; structural prerequisites are complete.
 
 ### Research plans
 
-### `ai-frontier-research.md` · status: active · trust: medium · **TOP PRIORITY**
+### `memetic-security-research.md` · status: active · trust: medium · **TOP PRIORITY**
+
+Detail: plans/memetic-security-research.md
+Scope: Memetic security surface of Engram — injection vectors, drift phenomenology, capability-robustness coupling, mitigation audit, design implications.
+Progress: 0/18
+Next: Phase 1, item 1.1 — map context injection vectors in a running Engram session
+
+
+### `ai-frontier-research.md` · status: active · trust: medium
 
 Detail: plans/ai-frontier-research.md
-Scope: Frontier AI survey — reasoning, alignment, interpretability, multi-agent, retrieval/memory, emerging architectures.
-Progress: Phase 1 complete; Phase 2 extension complete (4/4)
-Next: Consider Phase 3 extension (RAG details, ColPali, late-chunking) or deeper agentic-framework follow-on work.
+Scope: Frontier AI survey — reasoning, alignment, interpretability, multi-agent, retrieval/memory, architectures.
+Progress: Phase 1 + Phase 2 extension complete (4/4)
+Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
 
 
 ### Research queue
 
-- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality; detail: plans/phenomenology-embodied-cognition-research.md
-- `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion; detail: plans/personal-identity-memory-research.md
-- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism; detail: plans/ethics-metaethics-research.md
-- `formal-logic-foundations-research.md` — 0/11; next: propositional and first-order logic; detail: plans/formal-logic-foundations-research.md
-- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium; detail: plans/game-theory-mechanism-design-research.md
-- `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy; detail: plans/information-theory-stat-learning-research.md
-- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic distinction; detail: plans/cognitive-neuroscience-memory-research.md
-- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept; detail: plans/cultural-evolution-epistemics-research.md
+- `phenomenology-embodied-cognition-research.md` — 0/12; next: Husserl intentionality
+- `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion
+- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism
+- `formal-logic-foundations-research.md` — 0/11; next: propositional/first-order logic
+- `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium
+- `information-theory-stat-learning-research.md` — 0/12; next: Shannon entropy
+- `cognitive-neuroscience-memory-research.md` — 0/11; next: Tulving episodic/semantic
+- `cultural-evolution-epistemics-research.md` — 0/12; next: meme concept
 
 ## Recent completions
 
