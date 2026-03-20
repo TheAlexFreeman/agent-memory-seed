@@ -18,6 +18,16 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = validator
 SPEC.loader.exec_module(validator)
 
+INSPECTOR_PATH = (
+    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "inspect_compact_budget.py"
+)
+INSPECTOR_SPEC = importlib.util.spec_from_file_location("inspect_compact_budget", INSPECTOR_PATH)
+assert INSPECTOR_SPEC is not None
+inspector = importlib.util.module_from_spec(INSPECTOR_SPEC)
+assert INSPECTOR_SPEC.loader is not None
+sys.modules[INSPECTOR_SPEC.name] = inspector
+INSPECTOR_SPEC.loader.exec_module(inspector)
+
 PROMPT_START_LINE = validator.PROMPT_START_LINE
 PROMPT_ROUTE_LINE = validator.PROMPT_ROUTE_LINE
 PROMPT_MCP_LINE = validator.PROMPT_MCP_LINE
@@ -824,6 +834,73 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     for error in result.errors
                 )
             )
+
+    def test_plans_summary_without_detail_reference_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "plans" / "SUMMARY.md",
+                textwrap.dedent(
+                    """\
+                    # Plans — Summary
+
+                    ## Active plans
+
+                    <!-- BEGIN: example -->
+                    ### `example.md` · status: active · trust: medium
+                    Scope: Example scope
+                    Progress: 0/2 complete
+                    Next: Do first step
+                    <!-- END: example -->
+
+                    ## Recent completions
+
+                    - [done.md](done.md) — done
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "must include a drill-down reference to plans/example.md" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_bootstrap_manifest_missing_optional_skip_rule_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "agent-bootstrap.toml",
+                VALID_BOOTSTRAP_MANIFEST.replace(
+                    '[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\ncost = "light"',
+                    1,
+                ),
+            )
+
+            result = validator.validate_repo(root)
+            self.assertTrue(
+                any(
+                    "must use skip_if = 'placeholder_or_empty'" in error
+                    for error in result.errors
+                )
+            )
+
+    def test_compact_budget_inspector_reports_file_breakdown(self) -> None:
+        report = inspector.build_report(REPO_ROOT)
+
+        self.assertIn("status", report)
+        self.assertIn("total_tokens", report)
+        self.assertIn("files", report)
+        self.assertTrue(any(entry["path"] == "meta/quick-reference.md" for entry in report["files"]))
+        self.assertEqual(
+            report["budget_limit"],
+            validator.COMPACT_RETURNING_BUDGET,
+        )
 
     def test_access_entry_with_malformed_session_id_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

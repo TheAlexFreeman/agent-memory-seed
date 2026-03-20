@@ -221,8 +221,9 @@ next_action: Do first step
 
 <!-- BEGIN: test-plan -->
 ### `test-plan.md` · status: active · trust: medium
-**Progress:** 0/2 items complete
-**Next action:** Do first step
+Detail: plans/test-plan.md
+Progress: 0/2 complete
+Next: Do first step
 <!-- END: test-plan -->
 """,
             }
@@ -359,8 +360,9 @@ next_action: Original next action
 
 <!-- BEGIN: test-plan -->
 ### `test-plan.md` · status: active · trust: medium
-**Progress:** 0/1 items complete
-**Next action:** Original next action
+Detail: plans/test-plan.md
+Progress: 0/1 complete
+Next: Original next action
 <!-- END: test-plan -->
 """,
             }

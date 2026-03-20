@@ -320,6 +320,7 @@ def build_plan_summary_block(
     lines = [
         f"<!-- BEGIN: {plan_id} -->",
         f"### `{plan_id}.md` · status: {status_str} · trust: {trust}",
+        f"Detail: plans/{plan_id}.md",
     ]
     if description:
         lines.append(f"Scope: {description}")

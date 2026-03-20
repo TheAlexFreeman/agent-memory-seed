@@ -1,10 +1,10 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 3, item 5: add drill-down reference checks to keep compact summaries pointing at deeper files instead of duplicating them"
+last_verified: 2026-03-20
+next_action: "Complete"
 origin_session: unknown
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 ---
@@ -104,7 +104,7 @@ Require compact summaries to point to the underlying detailed files instead of d
 Create or extend tooling so developers can quickly see the measured size contribution of each compact-path file without having to rerun the full test suite and manually inspect file sizes.
 
 **4.2 Add section-bound loading support if adopted in Phase 1**
-If the repo chooses the startup-safe-section model, update the bootstrap contract and any relevant tooling so compact startup reads only the top bounded section of rich files.
+Phase 1 explicitly chose whole-file compact startup surfaces instead of section-bound loading. No loader or manifest change is required as long as startup-loaded files remain compact entire documents.
 
 **4.3 Review bootstrap manifest and retrieval heuristics for avoidable startup reads**
 Verify that conditional loads remain conditional in practice. Examples: skip `chats/SUMMARY.md` when placeholder-only, skip `plans/SUMMARY.md` when there are no active plans, and keep `knowledge/SUMMARY.md` and `skills/SUMMARY.md` fully task-driven.
@@ -145,17 +145,19 @@ Update `CHANGELOG.md` and the relevant summary files so future maintainers under
 - [x] 3.2 Add per-file compact-budget checks
 - [x] 3.3 Add structural rules for compact summaries
 - [x] 3.4 Add archive-vs-summary drift checks
-- [ ] 3.5 Add drill-down reference checks
-- [ ] 4.1 Add a compact-budget inspection helper
-- [ ] 4.2 Add section-bound loading support if adopted
-- [ ] 4.3 Review bootstrap manifest and retrieval heuristics
+- [x] 3.5 Add drill-down reference checks
+- [x] 4.1 Add a compact-budget inspection helper
+- [x] 4.2 Add section-bound loading support if adopted
+- [x] 4.3 Review bootstrap manifest and retrieval heuristics
 - [x] 4.4 Add context-efficiency guidance to documentation
 - [x] 5.1 Update tests for the new compact formats
-- [ ] 5.2 Re-measure the compact payload after migration
+- [x] 5.2 Re-measure the compact payload after migration
 - [x] 5.3 Run repo-wide validation and targeted regressions
 - [x] 5.4 Record the optimization in changelog and summary surfaces
 
-**Progress:** 16/22 items complete
+**Progress:** 22/22 items complete
+
+**Latest measurement:** `inspect_compact_budget.py --json` reported `5705 / 7000` tokens with `1295` tokens of remaining headroom after the compact-path migration.
 
 ---
 

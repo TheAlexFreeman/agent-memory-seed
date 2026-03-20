@@ -25,6 +25,7 @@ HUMANS/tooling/scripts/onboard-export.sh
 HUMANS/tooling/scripts/resolve_memory_capabilities.py
 HUMANS/tooling/scripts/resolve_bootstrap_manifest.py
 HUMANS/tooling/scripts/resolve_task_readiness.py
+HUMANS/tooling/scripts/inspect_compact_budget.py
 HUMANS/tooling/scripts/validate_memory_repo.py
 tools/agent_memory_mcp/path_policy.py
 HUMANS/tooling/tests/test_bootstrap_resolver.py

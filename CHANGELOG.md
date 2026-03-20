@@ -28,7 +28,11 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 - **Added validator and test coverage for compact drift.** Extended the validator and seed fixtures to check the compact-path contract directly, including localized file-size budgets, aggregate returning-session budget measurement, summary-shape requirements, and drift heuristics for archive-like narrative sprawl.
 
-**Reasoning:** The compact returning path had drifted into an archive-like startup payload, blowing past its own budget and wasting recurring context on material that should have been loaded on demand. Making the compact contract explicit in the live router, preserving it in summary-generation helpers, and enforcing it in the validator closes that loop. This improves consistency between docs, tooling, and generated summaries; improves user-friendliness by keeping startup state readable and actionable; and improves context efficiency by restoring headroom in the returning-session path.
+- **Added explicit drill-down and startup-conditional enforcement.** The validator now requires compact plan blocks, chat continuity, and current scratchpad handoffs to include drill-down references, and it enforces the expected `skip_if` rules for optional startup reads so manifest intent matches actual retrieval behavior.
+
+- **Added a compact-budget inspection helper and recorded the post-migration measurement.** `HUMANS/tooling/scripts/inspect_compact_budget.py` now reports per-file compact-path usage in human or JSON form; the current compact startup payload measures `5705 / 7000` tokens, leaving `1295` tokens of headroom.
+
+**Reasoning:** The compact returning path had drifted into an archive-like startup payload, blowing past its own budget and wasting recurring context on material that should have been loaded on demand. Making the compact contract explicit in the live router, preserving it in summary-generation helpers, enforcing drill-down and conditional-load behavior in the validator, and adding a lightweight inspection helper closes that loop. This improves consistency between docs, tooling, manifest behavior, and generated summaries; improves user-friendliness by keeping startup state readable and actionable; and improves context efficiency by restoring measurable headroom in the returning-session path.
 
 **Approved by:** agent (pending review)
 

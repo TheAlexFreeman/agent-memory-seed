@@ -134,6 +134,12 @@ EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
     "meta/review-queue.md:load_only_when_non_placeholder",
     "ACCESS.jsonl:count_non_empty_lines",
 )
+EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
+    "chats/SUMMARY.md": "placeholder_or_empty",
+    "plans/SUMMARY.md": "no_active_plans",
+    "scratchpad/USER.md": "placeholder_or_empty",
+    "scratchpad/CURRENT.md": "placeholder_or_empty",
+}
 COMPACT_RETURNING_BUDGET = EXPECTED_BOOTSTRAP_TOKEN_BUDGETS["returning"]
 COMPACT_RETURNING_TARGETS = {
     "meta/quick-reference.md": 2600,
@@ -667,7 +673,21 @@ def iter_compact_startup_measurements(
     return measurements
 
 
-def validate_plans_summary_shape(path: Path, text: str, result: ValidationResult) -> None:
+def find_repo_path_references(text: str, root: Path, prefixes: tuple[str, ...]) -> list[str]:
+    references: list[str] = []
+    for token in re.findall(r"[A-Za-z0-9_./-]+", text):
+        normalized = normalize_repo_relative_path(token)
+        if normalized is None:
+            continue
+        if not normalized.startswith(prefixes):
+            continue
+        if not (root / normalized).exists():
+            continue
+        references.append(normalized)
+    return references
+
+
+def validate_plans_summary_shape(path: Path, text: str, root: Path, result: ValidationResult) -> None:
     for heading in ("## Active plans", "## Recent completions"):
         if heading not in text:
             result.error(f"{path}: missing compact plans heading {heading!r}")
@@ -684,22 +704,30 @@ def validate_plans_summary_shape(path: Path, text: str, result: ValidationResult
     for match in block_pattern.finditer(text):
         body = match.group("body")
         body_lines = [line.strip() for line in body.splitlines() if line.strip()]
+        expected_detail = f"plans/{match.group('id')}.md"
+        if expected_detail not in body:
+            result.error(
+                f"{path}: compact plan block {match.group('id')!r} must include a drill-down reference to {expected_detail}"
+            )
         if "Progress:" not in body:
             result.error(
                 f"{path}: compact plan block {match.group('id')!r} must include 'Progress:'"
             )
         if "Next:" not in body:
             result.error(f"{path}: compact plan block {match.group('id')!r} must include 'Next:'")
-        if len(body_lines) > 5:
+        if len(body_lines) > 6:
             result.error(
                 f"{path}: compact plan block {match.group('id')!r} is too long ({len(body_lines)} non-empty lines); move detail into the plan file"
             )
 
 
-def validate_chats_summary_shape(path: Path, text: str, result: ValidationResult) -> None:
+def validate_chats_summary_shape(path: Path, text: str, root: Path, result: ValidationResult) -> None:
     for heading in ("## Live themes", "## Recent continuity", "## Retrieval guide"):
         if heading not in text:
             result.error(f"{path}: missing compact chats heading {heading!r}")
+
+    if "## Drill-down paths" not in text:
+        result.error(f"{path}: missing compact chats heading '## Drill-down paths'")
 
     if re.search(r"^### chat-\d+", text, re.MULTILINE):
         result.error(
@@ -709,8 +737,11 @@ def validate_chats_summary_shape(path: Path, text: str, result: ValidationResult
     if "Load dated summaries" not in text and "Load dated summaries when" not in text:
         result.error(f"{path}: must include retrieval guidance for dated summaries")
 
+    if not find_repo_path_references(text, root, ("chats/",)):
+        result.error(f"{path}: must include at least one drill-down path into chats/")
 
-def validate_scratchpad_current_shape(path: Path, text: str, result: ValidationResult) -> None:
+
+def validate_scratchpad_current_shape(path: Path, text: str, root: Path, result: ValidationResult) -> None:
     for heading in (
         "## Active threads",
         "## Immediate next actions",
@@ -724,6 +755,13 @@ def validate_scratchpad_current_shape(path: Path, text: str, result: ValidationR
         result.error(
             f"{path}: compact CURRENT.md should not contain large tables; move analysis into a dated scratchpad"
         )
+
+    if not find_repo_path_references(
+        text,
+        root,
+        ("plans/", "scratchpad/", "knowledge/", "meta/", "chats/", "skills/", "identity/"),
+    ):
+        result.error(f"{path}: must include at least one drill-down reference into the repo")
 
 
 def validate_compact_startup_contract(root: Path, result: ValidationResult) -> None:
@@ -754,11 +792,11 @@ def validate_compact_startup_contract(root: Path, result: ValidationResult) -> N
 
         path = root / rel_path
         if rel_path == "plans/SUMMARY.md":
-            validate_plans_summary_shape(path, text, result)
+            validate_plans_summary_shape(path, text, root, result)
         elif rel_path == "chats/SUMMARY.md":
-            validate_chats_summary_shape(path, text, result)
+            validate_chats_summary_shape(path, text, root, result)
         elif rel_path == "scratchpad/CURRENT.md":
-            validate_scratchpad_current_shape(path, text, result)
+            validate_scratchpad_current_shape(path, text, root, result)
 
 
 def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> None:
@@ -901,6 +939,17 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
                 result.error(
                     f"{path}: modes.{mode_name}.steps[{index}].skip_if must be a string when present"
                 )
+
+            expected_skip_if = EXPECTED_OPTIONAL_STEP_SKIP_RULES.get(step_path)
+            if expected_skip_if is not None:
+                if step.get("required") is not False:
+                    result.error(
+                        f"{path}: modes.{mode_name}.steps[{index}] for {step_path!r} must remain optional"
+                    )
+                if skip_if != expected_skip_if:
+                    result.error(
+                        f"{path}: modes.{mode_name}.steps[{index}] for {step_path!r} must use skip_if = {expected_skip_if!r}"
+                    )
 
         expected_step_paths = list(EXPECTED_MODE_STEP_PATHS[mode_name])
         if step_paths != expected_step_paths:
