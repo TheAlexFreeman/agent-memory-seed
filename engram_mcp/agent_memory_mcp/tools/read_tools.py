@@ -406,6 +406,33 @@ def _word_count(text: str) -> int:
     return len(re.findall(r"\b\w+\b", text))
 
 
+def _resolve_default_base_branch(root: Path, requested_base: str) -> str:
+    candidate = requested_base.strip() or "core"
+    bootstrap_path = root / "agent-bootstrap.toml"
+    if not bootstrap_path.exists() or candidate != "core":
+        return candidate
+
+    try:
+        parsed = tomllib.loads(bootstrap_path.read_text(encoding="utf-8"))
+    except Exception:
+        return candidate
+
+    if not isinstance(parsed, dict):
+        return candidate
+
+    direct = parsed.get("default_branch")
+    if isinstance(direct, str) and direct.strip():
+        return direct.strip()
+
+    repository = parsed.get("repository")
+    if isinstance(repository, dict):
+        nested = repository.get("default_branch")
+        if isinstance(nested, str) and nested.strip():
+            return nested.strip()
+
+    return candidate
+
+
 def _filter_access_entries(
     entries: list[dict[str, Any]],
     *,
@@ -2310,6 +2337,161 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_diff_branch
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_diff_branch",
+        annotations=_tool_annotations(
+            title="Branch Divergence",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_diff_branch(base: str = "core") -> str:
+        """Compare the current branch against a base branch.
+
+        Returns structured divergence data for merge planning, including recent
+        commits and file-change counts grouped by top-level category.
+        """
+        root = get_root()
+        resolved_base = _resolve_default_base_branch(root, base)
+
+        def _git(args: list[str], *, check: bool = False) -> subprocess.CompletedProcess[str]:
+            return subprocess.run(
+                ["git", *args],
+                cwd=str(root),
+                capture_output=True,
+                text=True,
+                stdin=subprocess.DEVNULL,
+                check=check,
+            )
+
+        current_branch_result = _git(["symbolic-ref", "--quiet", "--short", "HEAD"])
+        current_branch = current_branch_result.stdout.strip() if current_branch_result.returncode == 0 else "HEAD"
+
+        def _resolve_base_ref() -> str | None:
+            local_result = _git(["rev-parse", "--verify", resolved_base])
+            if local_result.returncode == 0:
+                return resolved_base
+            remote_result = _git(["rev-parse", "--verify", f"origin/{resolved_base}"])
+            if remote_result.returncode == 0:
+                return f"origin/{resolved_base}"
+
+            fetch_result = _git(["fetch", "origin", resolved_base])
+            if fetch_result.returncode != 0:
+                return None
+
+            local_retry = _git(["rev-parse", "--verify", resolved_base])
+            if local_retry.returncode == 0:
+                return resolved_base
+            remote_retry = _git(["rev-parse", "--verify", f"origin/{resolved_base}"])
+            if remote_retry.returncode == 0:
+                return f"origin/{resolved_base}"
+            return None
+
+        base_ref = _resolve_base_ref()
+        if base_ref is None:
+            return json.dumps(
+                {
+                    "error": (
+                        f"Base branch '{resolved_base}' is not available locally and could not be fetched from origin."
+                    ),
+                    "base_branch": resolved_base,
+                    "current_branch": current_branch,
+                },
+                indent=2,
+            )
+
+        ahead_result = _git(["rev-list", "--count", f"{base_ref}..HEAD"], check=True)
+        name_status_result = _git(["diff", "--name-status", f"{base_ref}...HEAD"], check=True)
+        shortstat_result = _git(["diff", "--shortstat", f"{base_ref}...HEAD"], check=True)
+        log_result = _git(
+            [
+                "log",
+                f"{base_ref}..HEAD",
+                "--date=short",
+                "--format=%H%x09%ad%x09%s",
+                "-n",
+                "10",
+            ],
+            check=True,
+        )
+
+        category_order = [
+            "knowledge",
+            "plans",
+            "identity",
+            "meta",
+            "engram_mcp",
+            "skills",
+            "chats",
+            "scratchpad",
+            "other",
+        ]
+        by_category = {
+            category: {"added": 0, "modified": 0, "deleted": 0} for category in category_order
+        }
+
+        files_changed = 0
+        for raw_line in name_status_result.stdout.splitlines():
+            parts = raw_line.split("\t")
+            if len(parts) < 2:
+                continue
+            status = parts[0]
+            rel_path = parts[-1]
+            top_level = rel_path.split("/", 1)[0] if "/" in rel_path else "other"
+            category = top_level if top_level in by_category else "other"
+            if status.startswith("A"):
+                bucket = "added"
+            elif status.startswith("D"):
+                bucket = "deleted"
+            else:
+                bucket = "modified"
+            by_category[category][bucket] += 1
+            files_changed += 1
+
+        insertions = 0
+        deletions = 0
+        shortstat_text = shortstat_result.stdout.strip()
+        files_match = re.search(r"(\d+) files? changed", shortstat_text)
+        insertions_match = re.search(r"(\d+) insertions?\(\+\)", shortstat_text)
+        deletions_match = re.search(r"(\d+) deletions?\(-\)", shortstat_text)
+        if files_match:
+            files_changed = int(files_match.group(1))
+        if insertions_match:
+            insertions = int(insertions_match.group(1))
+        if deletions_match:
+            deletions = int(deletions_match.group(1))
+
+        recent_commits: list[dict[str, Any]] = []
+        for raw_line in log_result.stdout.splitlines():
+            sha, commit_date, message = (raw_line.split("\t", 2) + ["", "", ""])[:3]
+            if not sha:
+                continue
+            recent_commits.append(
+                {
+                    "sha": sha[:7],
+                    "message": message,
+                    "date": commit_date,
+                }
+            )
+
+        payload = {
+            "base_branch": resolved_base,
+            "resolved_base_ref": base_ref,
+            "current_branch": current_branch,
+            "commits_ahead": int(ahead_result.stdout.strip() or "0"),
+            "files_changed": files_changed,
+            "insertions": insertions,
+            "deletions": deletions,
+            "by_category": by_category,
+            "recent_commits": recent_commits,
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_git_log
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -3313,6 +3495,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
         "memory_access_analytics": memory_access_analytics,
+        "memory_diff_branch": memory_diff_branch,
         "memory_git_log": memory_git_log,
         "memory_session_health_check": memory_session_health_check,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,

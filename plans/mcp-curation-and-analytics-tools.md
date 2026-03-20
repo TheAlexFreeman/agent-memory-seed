@@ -1,10 +1,10 @@
 ---
 created: 2026-03-20
 last_verified: 2026-03-20
-next_action: "Phase 5, item 1: implement memory_diff_branch in read_tools.py"
+next_action: "Human review of the completed curation and analytics tool suite."
 origin_session: chats/2026/03/20/chat-002
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 category: build
@@ -369,17 +369,17 @@ Add to `read_tools.register()`. Add `readOnlyHint=True` annotation.
 - [x] 4.1 Implement `memory_access_analytics` in `read_tools.py`
 - [x] 4.2 Threshold alignment with curation policy
 - [x] 4.3 Register in read tools
-- [ ] 5.1 Implement `memory_diff_branch` in `read_tools.py`
-- [ ] 5.2 Handle missing base branch
-- [ ] 5.3 Register in read tools
+- [x] 5.1 Implement `memory_diff_branch` in `read_tools.py`
+- [x] 5.2 Handle missing base branch
+- [x] 5.3 Register in read tools
 - [x] 6.1 Tests for batch promote
 - [x] 6.2 Tests for cross-reference checker
 - [x] 6.3 Tests for summary generator
 - [x] 6.4 Tests for access analytics
-- [ ] 6.5 Tests for branch diff
+- [x] 6.5 Tests for branch diff
 - [x] 6.6 Capabilities TOML updates
 
-**Progress:** 18/22 items complete
+**Progress:** 22/22 items complete
 
 ---
 

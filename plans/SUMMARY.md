@@ -35,13 +35,13 @@ Next: Human review of the completed write/read/search improvements and follow-on
 Blocks: none; structural prerequisites are complete.
 
 
-### `mcp-curation-and-analytics-tools.md` · status: active · trust: medium · **TOP PRIORITY**
+### `mcp-curation-and-analytics-tools.md` · status: complete · trust: medium
 
 Detail: plans/mcp-curation-and-analytics-tools.md
 Scope: Batch knowledge promotion, cross-reference validation, SUMMARY generation, ACCESS analytics, and branch diff tools.
-Progress: 18/22 complete
-Next: Phase 5, item 1 — implement `memory_diff_branch` in `read_tools.py`
-Blocks: none; can begin immediately. Complements (does not duplicate) mcp-read-tools-improvements and mcp-write-and-crosscutting-improvements.
+Progress: 22/22 complete
+Next: Human review of the completed curation and analytics tool suite.
+Blocks: none; structural scope is complete. Complements (does not duplicate) mcp-read-tools-improvements and mcp-write-and-crosscutting-improvements.
 
 ### Research plans
 

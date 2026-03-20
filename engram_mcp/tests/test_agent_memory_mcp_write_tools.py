@@ -1265,6 +1265,58 @@ Detailed descriptions should preserve the first paragraph.
         self.assertEqual(payload["top_accessed"], [])
         self.assertEqual(payload["least_accessed"], [])
 
+    def test_memory_diff_branch_reports_branch_divergence(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/base.md": "# Base\n",
+            }
+        )
+        subprocess.run(
+            ["git", "branch", "-M", "core"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        subprocess.run(
+            ["git", "checkout", "-b", "feature/curation"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        self._write_and_commit(
+            repo_root,
+            {
+                "knowledge/new-note.md": "# New\n",
+                "meta/policy-note.md": "# Policy\n",
+                "notes.txt": "plain text\n",
+            },
+            "feature change",
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_diff_branch"](base="core")))
+
+        self.assertEqual(payload["base_branch"], "core")
+        self.assertEqual(payload["current_branch"], "feature/curation")
+        self.assertEqual(payload["commits_ahead"], 1)
+        self.assertEqual(payload["files_changed"], 3)
+        self.assertEqual(payload["by_category"]["knowledge"]["added"], 1)
+        self.assertEqual(payload["by_category"]["meta"]["added"], 1)
+        self.assertEqual(payload["by_category"]["other"]["added"], 1)
+        self.assertEqual(payload["recent_commits"][0]["message"], "feature change")
+
+    def test_memory_diff_branch_returns_clear_error_for_missing_base(self) -> None:
+        repo_root = self._init_repo({"knowledge/base.md": "# Base\n"})
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_diff_branch"](base="missing-base")))
+
+        self.assertIn("error", payload)
+        self.assertEqual(payload["base_branch"], "missing-base")
+        self.assertIn("could not be fetched from origin", payload["error"])
+
     def test_memory_delete_rejects_repo_root_files(self) -> None:
         repo_root = self._init_repo_with_file("README.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
