@@ -31,11 +31,13 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
     server: ClassVar[ModuleType]
     errors: ClassVar[ModuleType]
     frontmatter_utils: ClassVar[Any]
+    git_repo_module: ClassVar[ModuleType]
 
     @classmethod
     def setUpClass(cls) -> None:
         cls.server = load_server_module()
         cls.errors = importlib.import_module("engram_mcp.agent_memory_mcp.errors")
+        cls.git_repo_module = importlib.import_module("engram_mcp.agent_memory_mcp.git_repo")
         try:
             cls.frontmatter_utils = importlib.import_module(
                 "engram_mcp.agent_memory_mcp.frontmatter_utils"
@@ -781,7 +783,9 @@ Structured.
                 content="# Note\n",
             )
         )
-        asyncio.run(tools["memory_commit"](message="[knowledge] Add test note"))
+        payload = json.loads(
+            asyncio.run(tools["memory_commit"](message="[knowledge] Add test note"))
+        )
 
         head_files = subprocess.run(
             ["git", "show", "--name-only", "--format=%s", "HEAD"],
@@ -801,6 +805,9 @@ Structured.
         self.assertIn("knowledge/_unverified/test.md", head_files)
         self.assertNotIn("README.md", head_files)
         self.assertIn("README.md", still_staged)
+        self.assertEqual(payload["publication"]["mode"], "porcelain")
+        self.assertFalse(payload["publication"]["degraded"])
+        self.assertEqual(payload["warnings"], [])
 
     def test_memory_commit_rejects_unstaged_changes_on_tracked_paths(self) -> None:
         repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
@@ -828,6 +835,111 @@ Structured.
             text=True,
         ).stdout.strip()
         self.assertEqual(head_subject, "seed")
+
+    def test_memory_commit_falls_back_to_plumbing_for_tracked_paths(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "README.md": "# Project\n",
+                "knowledge/README.md": "# Knowledge\n",
+            }
+        )
+        _, tools, _, repo = self.server.create_mcp(
+            repo_root=repo_root,
+            enable_raw_write_tools=True,
+        )
+
+        (repo_root / "README.md").write_text("# Unrelated staged change\n", encoding="utf-8")
+        subprocess.run(
+            ["git", "add", "README.md"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        asyncio.run(
+            tools["memory_write"](
+                path="knowledge/_unverified/test.md",
+                content="# Note\n",
+            )
+        )
+
+        original_run = repo._run
+        commit_attempts = {"count": 0}
+
+        def fail_porcelain_commit(
+            args: list[str],
+            check: bool = True,
+            capture: bool = True,
+            *,
+            cwd: Path | None = None,
+            env: dict[str, str] | None = None,
+        ):
+            if args[:2] == ["git", "commit"]:
+                commit_attempts["count"] += 1
+                raise self.errors.StagingError(
+                    "`git commit -m` failed (exit 128): fatal: Unable to create '.git/index.lock': File exists.",
+                    stderr="fatal: Unable to create '.git/index.lock': File exists.",
+                )
+            return original_run(args, check=check, capture=capture, cwd=cwd, env=env)
+
+        repo._run = fail_porcelain_commit
+        self.addCleanup(setattr, repo, "_run", original_run)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_commit"](message="[knowledge] Add test note"))
+        )
+
+        head_files = subprocess.run(
+            ["git", "show", "--name-only", "--format=%s", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        still_staged = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+
+        self.assertEqual(commit_attempts["count"], 1)
+        self.assertIn("knowledge/_unverified/test.md", head_files)
+        self.assertNotIn("README.md", head_files)
+        self.assertIn("README.md", still_staged)
+        self.assertEqual(payload["publication"]["mode"], "plumbing")
+        self.assertTrue(payload["publication"]["degraded"])
+        self.assertIn("degraded plumbing path", payload["warnings"][0])
+
+    def test_memory_commit_blocks_when_single_writer_lock_is_held(self) -> None:
+        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        _, tools, _, repo = self.server.create_mcp(
+            repo_root=repo_root,
+            enable_raw_write_tools=True,
+        )
+
+        asyncio.run(
+            tools["memory_write"](
+                path="knowledge/_unverified/test.md",
+                content="# Note\n",
+            )
+        )
+
+        lock_path = repo.git_dir / getattr(self.git_repo_module, "_WRITE_LOCK_NAME")
+        lock_path.write_text("pid=999\npurpose=test\n", encoding="utf-8")
+        original_timeout = getattr(self.git_repo_module, "_WRITE_LOCK_TIMEOUT_SECONDS")
+        setattr(self.git_repo_module, "_WRITE_LOCK_TIMEOUT_SECONDS", 0.0)
+        self.addCleanup(
+            setattr, self.git_repo_module, "_WRITE_LOCK_TIMEOUT_SECONDS", original_timeout
+        )
+        self.addCleanup(lock_path.unlink)
+
+        with self.assertRaises(self.errors.StagingError) as ctx:
+            asyncio.run(tools["memory_commit"](message="[knowledge] Add test note"))
+
+        self.assertIn("Another writer is already publishing changes", str(ctx.exception))
 
     def test_memory_update_plan_next_action_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(
@@ -1156,6 +1268,8 @@ Next: Original next action
         self.assertIn("Original", restored)
         self.assertNotIn("Updated", restored)
         self.assertTrue(log_subject.startswith("Revert"))
+        self.assertEqual(payload["publication"]["mode"], "porcelain")
+        self.assertFalse(payload["publication"]["degraded"])
 
     def test_memory_revert_commit_blocks_non_memory_paths_on_confirm(self) -> None:
         repo_root = self._init_repo({"tools/example.py": "print('before')\n"})

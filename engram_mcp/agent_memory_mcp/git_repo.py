@@ -14,8 +14,12 @@ Design notes:
 
 from __future__ import annotations
 
+import os
 import subprocess
 import tempfile
+import time
+from contextlib import contextmanager
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
@@ -24,6 +28,25 @@ from .errors import StagingError
 
 _FALLBACK_AUTHOR_NAME = "Claude"
 _FALLBACK_AUTHOR_EMAIL = "agent@agent-memory"
+_WRITE_LOCK_NAME = "agent-memory-write.lock"
+_WRITE_LOCK_TIMEOUT_SECONDS = 5.0
+_WRITE_LOCK_POLL_INTERVAL_SECONDS = 0.05
+
+
+@dataclass(frozen=True)
+class GitPublicationResult:
+    sha: str
+    mode: str
+    degraded: bool = False
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "mode": self.mode,
+            "degraded": self.degraded,
+            "writer_lock": "exclusive-worktree",
+            "warnings": list(self.warnings),
+        }
 
 
 class GitRepo:
@@ -42,7 +65,18 @@ class GitRepo:
         if result.returncode != 0:
             raise ValueError(f"Not a git repository: {candidate_root}")
 
+        git_dir_result = subprocess.run(
+            ["git", "rev-parse", "--absolute-git-dir"],
+            cwd=str(candidate_root),
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+        )
+        if git_dir_result.returncode != 0:
+            raise ValueError(f"Not a git repository: {candidate_root}")
+
         self.root = Path(result.stdout.strip()).resolve()
+        self.git_dir = Path(git_dir_result.stdout.strip()).resolve()
 
     # ------------------------------------------------------------------
     # Internal runner
@@ -53,13 +87,17 @@ class GitRepo:
         args: list[str],
         check: bool = True,
         capture: bool = True,
+        *,
+        cwd: Path | None = None,
+        env: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess:
         result = subprocess.run(
             args,
-            cwd=str(self.root),
+            cwd=str(cwd or self.root),
             capture_output=capture,
             text=True,
             stdin=subprocess.DEVNULL,
+            env=env,
         )
         if check and result.returncode != 0:
             stderr = result.stderr.strip()
@@ -169,15 +207,95 @@ class GitRepo:
         result = self._run(cmd, check=False)
         return result.returncode == 1
 
-    def commit(
+    def _current_branch_ref(self) -> str:
+        result = self._run(["git", "symbolic-ref", "--quiet", "HEAD"], check=False)
+        if result.returncode != 0:
+            raise StagingError(
+                "The memory repository is in detached HEAD state. Attach HEAD to a branch "
+                "before publishing writes."
+            )
+        return result.stdout.strip()
+
+    def _head_tree(self) -> str:
+        result = self._run(["git", "rev-parse", "HEAD^{tree}"])
+        return result.stdout.strip()
+
+    def _staged_index_entry(self, rel_path: str) -> tuple[str, str] | None:
+        result = self._run(["git", "ls-files", "--stage", "--", rel_path], check=False)
+        lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        if not lines:
+            return None
+        if len(lines) != 1:
+            raise StagingError(
+                f"Path {rel_path} has multiple staged index entries; resolve conflicts before "
+                "publishing writes."
+            )
+
+        parts = lines[0].split(None, 3)
+        if len(parts) != 4:
+            raise StagingError(f"Could not parse staged index entry for {rel_path}")
+
+        mode, object_id, stage, path = parts
+        if stage != "0":
+            raise StagingError(
+                f"Path {path} is in a conflicted staged state; resolve conflicts before publishing."
+            )
+        return mode, object_id
+
+    def _write_lock_path(self) -> Path:
+        return self.git_dir / _WRITE_LOCK_NAME
+
+    @contextmanager
+    def write_lock(self, purpose: str):
+        """Serialize publication so each worktree has a single active writer."""
+        lock_path = self._write_lock_path()
+        deadline = time.monotonic() + _WRITE_LOCK_TIMEOUT_SECONDS
+        lock_payload = f"pid={os.getpid()}\npurpose={purpose}\nstarted_at={time.time()}\n"
+
+        while True:
+            try:
+                fd = os.open(str(lock_path), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                break
+            except FileExistsError:
+                if time.monotonic() >= deadline:
+                    try:
+                        owner = lock_path.read_text(encoding="utf-8").strip()
+                    except OSError:
+                        owner = ""
+                    suffix = f" Active writer: {owner}" if owner else ""
+                    raise StagingError(
+                        "Another writer is already publishing changes for this worktree. "
+                        f"Wait for that write to finish and retry.{suffix}"
+                    )
+                time.sleep(_WRITE_LOCK_POLL_INTERVAL_SECONDS)
+
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                handle.write(lock_payload)
+            yield
+        finally:
+            try:
+                lock_path.unlink()
+            except FileNotFoundError:
+                pass
+
+    def _should_fallback_to_plumbing(self, error: StagingError) -> bool:
+        stderr = (error.stderr or str(error)).lower()
+        markers = (
+            "index.lock",
+            "could not lock index",
+            "unable to create",
+            "another git process",
+        )
+        return any(marker in stderr for marker in markers)
+
+    def _commit_porcelain(
         self,
         message: str,
         *,
         paths: list[str] | None = None,
         allow_empty: bool = False,
-    ) -> str:
-        """Commit staged changes. Returns the new commit SHA."""
-        self.ensure_author_identity()
+    ) -> GitPublicationResult:
         cmd = ["git", "commit", "-m", message]
         if allow_empty:
             cmd.append("--allow-empty")
@@ -186,7 +304,86 @@ class GitRepo:
             cmd += ["--only", "--", *deduped_paths]
         self._run(cmd)
         sha_result = self._run(["git", "rev-parse", "HEAD"])
-        return sha_result.stdout.strip()
+        return GitPublicationResult(sha=sha_result.stdout.strip(), mode="porcelain")
+
+    def _commit_with_plumbing(
+        self,
+        message: str,
+        *,
+        paths: list[str] | None = None,
+        allow_empty: bool = False,
+    ) -> GitPublicationResult:
+        branch_ref = self._current_branch_ref()
+        parent_sha = self.current_head()
+        parent_tree = self._head_tree()
+        selected_paths = list(dict.fromkeys(paths)) if paths else self.staged_paths()
+
+        if not selected_paths and not allow_empty:
+            raise StagingError("Nothing staged to commit.")
+
+        with tempfile.TemporaryDirectory(prefix="agent-memory-commit-") as tmpdir:
+            temp_index = Path(tmpdir) / "index"
+            env = {**os.environ, "GIT_INDEX_FILE": str(temp_index)}
+            self._run(["git", "read-tree", "HEAD"], env=env)
+
+            for rel_path in selected_paths:
+                entry = self._staged_index_entry(rel_path)
+                if entry is None:
+                    self._run(
+                        ["git", "update-index", "--remove", "--force-remove", "--", rel_path],
+                        check=False,
+                        env=env,
+                    )
+                    continue
+
+                mode, object_id = entry
+                self._run(
+                    [
+                        "git",
+                        "update-index",
+                        "--add",
+                        "--cacheinfo",
+                        mode,
+                        object_id,
+                        rel_path,
+                    ],
+                    env=env,
+                )
+
+            tree_result = self._run(["git", "write-tree"], env=env)
+            tree_sha = tree_result.stdout.strip()
+
+        if tree_sha == parent_tree and not allow_empty:
+            raise StagingError("Nothing staged to commit.")
+
+        commit_result = self._run(["git", "commit-tree", tree_sha, "-p", parent_sha, "-m", message])
+        commit_sha = commit_result.stdout.strip()
+        self._run(["git", "update-ref", branch_ref, commit_sha, parent_sha])
+        return GitPublicationResult(
+            sha=commit_sha,
+            mode="plumbing",
+            degraded=True,
+            warnings=[
+                "Published via degraded plumbing path after porcelain commit could not lock the git index."
+            ],
+        )
+
+    def commit(
+        self,
+        message: str,
+        *,
+        paths: list[str] | None = None,
+        allow_empty: bool = False,
+    ) -> GitPublicationResult:
+        """Commit staged changes. Returns the new commit SHA."""
+        self.ensure_author_identity()
+        with self.write_lock("commit"):
+            try:
+                return self._commit_porcelain(message, paths=paths, allow_empty=allow_empty)
+            except StagingError as error:
+                if not self._should_fallback_to_plumbing(error):
+                    raise
+                return self._commit_with_plumbing(message, paths=paths, allow_empty=allow_empty)
 
     # ------------------------------------------------------------------
     # Inspection
@@ -307,12 +504,13 @@ class GitRepo:
                         stderr=stderr,
                     )
 
-    def revert(self, sha: str) -> str:
+    def revert(self, sha: str) -> GitPublicationResult:
         """Create a revert commit for *sha*. Returns the new HEAD commit SHA."""
         self.ensure_author_identity()
-        self._run(["git", "revert", "--no-edit", sha])
-        result = self._run(["git", "rev-parse", "HEAD"])
-        return result.stdout.strip()
+        with self.write_lock("revert"):
+            self._run(["git", "revert", "--no-edit", sha])
+            result = self._run(["git", "rev-parse", "HEAD"])
+            return GitPublicationResult(sha=result.stdout.strip(), mode="porcelain")
 
     def grep(
         self,

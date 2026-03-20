@@ -25,6 +25,7 @@ class MemoryWriteResult:
                           write                   → version_token
         warnings:       Non-fatal issues (e.g. SUMMARY.md section not found,
                         unrecognised commit prefix).
+        publication:    Publication metadata for committed operations.
     """
 
     files_changed: list[str]
@@ -32,6 +33,28 @@ class MemoryWriteResult:
     commit_message: str | None
     new_state: dict[str, Any]
     warnings: list[str] = field(default_factory=list)
+    publication: dict[str, Any] | None = None
+
+    @classmethod
+    def from_commit(
+        cls,
+        *,
+        files_changed: list[str],
+        commit_result: Any,
+        commit_message: str,
+        new_state: dict[str, Any],
+        warnings: list[str] | None = None,
+    ) -> "MemoryWriteResult":
+        publication = commit_result.to_dict()
+        combined_warnings = list(warnings or []) + list(publication.get("warnings", []))
+        return cls(
+            files_changed=files_changed,
+            commit_sha=commit_result.sha,
+            commit_message=commit_message,
+            new_state=new_state,
+            warnings=combined_warnings,
+            publication=publication,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -40,6 +63,7 @@ class MemoryWriteResult:
             "commit_message": self.commit_message,
             "new_state": self.new_state,
             "warnings": self.warnings,
+            "publication": self.publication,
         }
 
     def to_json(self, indent: int = 2) -> str:

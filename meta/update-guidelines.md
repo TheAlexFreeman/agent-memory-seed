@@ -168,6 +168,16 @@ Longer explanation if needed. Include reasoning for non-obvious changes.
 
 Categories: `[chat]`, `[knowledge]`, `[skill]`, `[identity]`, `[curation]`, `[system]`.
 
+### Publication semantics
+
+When the MCP has write access, governed publication uses a porcelain-first, plumbing-fallback model:
+
+- **Single-writer rule:** only one writer may publish commits for a worktree at a time. If a write lock is already held, the agent should wait briefly and then fail clearly rather than racing another publisher.
+- **Preferred publication path:** use standard git porcelain (`git commit`, `git revert`) whenever the index is available.
+- **Degraded publication path:** if porcelain fails because the index cannot be locked, the agent may publish through git plumbing by replaying the staged object IDs into an alternate index, writing a tree, creating the commit with `commit-tree`, and advancing the branch ref with `update-ref` guarded by the expected parent SHA.
+- **No silent scope widening:** degraded publication must preserve the governed staged snapshot only. It must not pull in unrelated staged files or unstaged working-tree edits.
+- **Visibility:** tool outputs should surface publication metadata and warnings so callers can distinguish normal publication from degraded publication.
+
 ## Read-only operation
 
 Some deployment contexts give the agent read access but not write access — sandboxed chat environments, models without tool use, or sessions where git commits are disabled. The memory system degrades gracefully.

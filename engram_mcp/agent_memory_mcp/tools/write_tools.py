@@ -520,16 +520,16 @@ def register(
                 )
 
         if staged_pending_paths:
-            sha = repo.commit(message, paths=staged_pending_paths)
+            commit_result = repo.commit(message, paths=staged_pending_paths)
             tracked_paths.clear()
             files_changed = staged_pending_paths
         else:
-            sha = repo.commit(message, allow_empty=allow_empty)
+            commit_result = repo.commit(message, allow_empty=allow_empty)
             files_changed = []
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=message,
             new_state={},
             warnings=warnings,

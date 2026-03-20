@@ -198,6 +198,15 @@ High-value files identified during aggregation should be actively enriched — c
 
 ## Principles for updating memory
 
+### Git publication model
+
+Write publication is serialized per worktree. Governed write tools assume a **single active writer** for each checked-out memory repository and acquire a worktree-scoped lock before publishing commits or reverts.
+
+- **Normal path:** publish with the standard `git commit` / `git revert` porcelain commands.
+- **Degraded path:** if publication cannot acquire the git index because another git process is holding it, governed commit flows may fall back to a plumbing path that reconstructs the staged snapshot from staged object IDs, writes a tree, creates a commit with `commit-tree`, and advances the branch ref with a compare-and-swap `update-ref`.
+- **Scope preservation:** degraded publication must preserve the exact staged snapshot for the governed paths. It must not silently broaden the commit to unrelated staged files or working-tree content.
+- **Tooling contract:** committed MCP write results include publication metadata so callers can see whether the write used the normal porcelain path or the degraded plumbing path.
+
 ### What to store
 
 - **Durable preferences**, not one-time requests. "I prefer TypeScript" is memory. "Use JavaScript for this task" is not.

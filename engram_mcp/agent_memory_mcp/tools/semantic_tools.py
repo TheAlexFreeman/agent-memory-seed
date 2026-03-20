@@ -369,7 +369,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 repo.add(summary_path)
 
         commit_msg = f"[plan] Mark {item_filename} complete ({plan_id} {plan_done}/{plan_total})"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
         new_state = {
             "next_action": stats["next_action"],
@@ -377,9 +377,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "plan_progress": stats["plan_progress"],
             "status": "complete" if all_complete else "active",
         }
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=[plan_path] + ([summary_path] if abs_summary.exists() else []),
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state=new_state,
             warnings=warnings,
@@ -522,11 +522,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         subject = infer_section_id_from_path(target_path)
         commit_msg = f"[curation] Promote {filename} to knowledge/{subject}/ (trust: {trust_level})"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"new_path": target_path, "trust": trust_level},
             warnings=warnings,
@@ -645,11 +645,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         reason_str = f" ({reason})" if reason else ""
         commit_msg = f"[curation] Demote {filename} to _unverified/{reason_str}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"new_path": target_path, "trust": "low"},
             warnings=warnings,
@@ -755,11 +755,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         reason_str = f" ({reason})" if reason else ""
         commit_msg = f"[curation] Archive {filename}{reason_str}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"archive_path": archive_path},
             warnings=warnings,
@@ -882,12 +882,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         files_changed = [path] + ([summary_path] if abs_summary.exists() else [])
         commit_msg = f"[knowledge] Add {filename}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
         new_token = repo.hash_object(path)
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"version_token": new_token},
             warnings=warnings,
@@ -971,11 +971,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.add(rel_path)
 
         commit_msg = f"[scratchpad] Append to {target}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=[rel_path],
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"target": rel_path},
         )
@@ -1080,11 +1080,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         _session_state["identity_updates"] += 1
 
         commit_msg = f"[identity] Update {key} in identity/{file}.md"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=[rel_path],
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={
                 "key": key,
@@ -1179,11 +1179,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 files_changed.append(chats_summary_rel)
 
         commit_msg = f"[chat] Record summary for {session_id}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"session_id": session_id},
             warnings=warnings,
@@ -1287,11 +1287,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             warnings.append(f"{summary_path} not found — plan entry not added to index.")
 
         commit_msg = f"[plan] Create {plan_id}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"plan_path": plan_path, "status": "active"},
             warnings=warnings,
@@ -1392,11 +1392,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 files_changed.append(summary_path)
 
         commit_msg = f"[plan] Update next-action for {plan_id}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"next_action": next_action},
             warnings=warnings,
@@ -1466,11 +1466,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.add(review_queue_rel)
 
         commit_msg = f"[curation] Flag {path} for review ({priority})"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=[review_queue_rel],
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"flagged_path": path, "priority": priority},
         )
@@ -1604,11 +1604,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         entry_count = updated.count("\n")
         commit_msg = f"[access] Log retrieval of {Path(file).name} (h={entry['helpfulness']:.1f})"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=[access_jsonl],
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"access_jsonl": access_jsonl, "entry_count": entry_count},
         )
@@ -1757,11 +1757,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         reflection_abs.write_text("".join(lines), encoding="utf-8")
         repo.add(reflection_rel)
         commit_msg = f"[chat] Add session reflection for {session_id}"
-        sha = repo.commit(commit_msg)
+        commit_result = repo.commit(commit_msg)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=[reflection_rel],
-            commit_sha=sha,
+            commit_result=commit_result,
             commit_message=commit_msg,
             new_state={"reflection_path": reflection_rel},
         )
@@ -1857,16 +1857,16 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
 
         resolved_sha = str(preview["resolved_sha"])
-        new_sha = repo.revert(resolved_sha)
+        commit_result = repo.revert(resolved_sha)
 
-        result = MemoryWriteResult(
+        result = MemoryWriteResult.from_commit(
             files_changed=cast(list[str], preview["files_changed"]),
-            commit_sha=new_sha,
+            commit_result=commit_result,
             commit_message=f"Revert {resolved_sha}",
             new_state={
                 "mode": "confirm",
                 "reverted_sha": resolved_sha,
-                "new_sha": new_sha,
+                "new_sha": commit_result.sha,
                 "preview_token": preview_token,
             },
         )
