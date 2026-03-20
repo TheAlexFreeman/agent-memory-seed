@@ -121,6 +121,7 @@ For the complete mapping of which files to load per session type, see `meta/quic
     │   ├── QUICKSTART.md  ← Setup guide. Start here if you're a person.
     │   ├── CORE.md        ← Core design decisions, architecture, and guiding philosophy.
     │   ├── DESIGN.md      ← Design philosophy, use cases, and future directions.
+    │   ├── MCP.md         ← Human guide to the repo-local MCP architecture and tool surface.
     │   └── GLOSSARY.md    ← Definitions of system terminology (human reference only).
     └── tooling/           ← Maintenance tooling and tests.
         ├── mcp-config-example.json ← Example Claude Desktop MCP configuration.

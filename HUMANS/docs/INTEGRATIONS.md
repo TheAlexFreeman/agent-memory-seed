@@ -73,7 +73,7 @@ class GitSeedCheckpointer(BaseCheckpointSaver):
     def __init__(self, repo_path: str):
         self.repo = git.Repo(repo_path)
         # Connect to MCP server started via:
-        #   python HUMANS/tooling/scripts/memory_mcp.py --repo-root <path>
+        #   MEMORY_REPO_ROOT=<path> python HUMANS/tooling/scripts/memory_mcp.py
 
     def get(self, thread_id):  # → loads relevant SUMMARY.md + chats
         ...
@@ -191,7 +191,7 @@ No other memory system in 2026 gives you this level of transparency by default.
 
 1. Clone the repo
 2. Run `./setup.sh`
-3. Start MCP server: `python HUMANS/tooling/scripts/memory_mcp.py --repo-root .`
+3. Start MCP server: `python HUMANS/tooling/scripts/memory_mcp.py`
 4. Test with any framework (OpenClaw or LangGraph example above)
 5. Commit a test reflection → watch `git log` and `ACCESS.jsonl`
 

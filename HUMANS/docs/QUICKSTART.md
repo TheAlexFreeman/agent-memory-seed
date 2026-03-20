@@ -65,6 +65,8 @@ bash setup.sh --platform claude-code --profile software-developer --user-name Al
 
 See [Platform setup](#platform-setup) below for your specific tool.
 
+If you want a human-readable explanation of the repo-local MCP layer itself, read [MCP.md](MCP.md).
+
 ### 4. Start your first session
 
 Open a conversation with your AI in the repo directory. The agent will:
@@ -206,6 +208,7 @@ Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.
 The `meta/` folder includes a **context loading manifest** (`meta/quick-reference.md`) that tells the agent exactly which files to load for each type of session — keeping token costs low while ensuring the right governance docs are available when needed. Some governance files (like `meta/curation-algorithms.md`) are loaded on-demand only during specific operations, not every session.
 
 For the full architecture, read [README.md](../../README.md). For governance details, see the files in `meta/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
+For the MCP contract, tool surface, and runtime boundary, see [MCP.md](MCP.md).
 
 ### Optional maintenance check
 
