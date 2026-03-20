@@ -1,10 +1,10 @@
 created: 2026-03-19
 last_verified: 2026-03-19
-next_action: "Phase 1, item 1: research Locke's memory criterion and early modern identity debates"
+next_action: "Complete — all 12 items done. Human review of knowledge/_unverified/philosophy/personal-identity/ files recommended."
 origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 
@@ -135,26 +135,26 @@ Files go in `knowledge/_unverified/philosophy/personal-identity/` with standard 
 ## Progress tracking
 
 ### Phase 1 — Early modern debate
-- [ ] 1.1 Locke's memory criterion
-- [ ] 1.2 Hume: the bundle theory
-- [ ] 1.3 The four-dimensionalist response
+- [x] 1.1 Locke's memory criterion
+- [x] 1.2 Hume: the bundle theory
+- [x] 1.3 The four-dimensionalist response
 
 ### Phase 2 — Parfit's reductionism
-- [ ] 2.1 Reductionism and the no-further-fact view
-- [ ] 2.2 What matters in survival
-- [ ] 2.3 Connectedness vs. continuity
+- [x] 2.1 Reductionism and the no-further-fact view
+- [x] 2.2 What matters in survival
+- [x] 2.3 Connectedness vs. continuity
 
 ### Phase 3 — Narrative identity
-- [ ] 3.1 Ricoeur: idem vs. ipse identity
-- [ ] 3.2 MacIntyre: narrative unity and virtue
-- [ ] 3.3 Schechtman: narrative self-constitution
+- [x] 3.1 Ricoeur: idem vs. ipse identity
+- [x] 3.2 MacIntyre: narrative unity and virtue
+- [x] 3.3 Schechtman: narrative self-constitution
 
 ### Phase 4 — AI identity synthesis
-- [ ] 4.1 Which account fits agents best?
-- [ ] 4.2 Identity failure modes
-- [ ] 4.3 Design recommendations from the philosophy
+- [x] 4.1 Which account fits agents best?
+- [x] 4.2 Identity failure modes
+- [x] 4.3 Design recommendations from the philosophy
 
-**Progress:** 0/12 items complete
+**Progress:** 12/12 items complete ✓
 
 ---
 

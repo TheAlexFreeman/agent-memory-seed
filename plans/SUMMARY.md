@@ -72,12 +72,13 @@ Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (co
 - `phenomenology-embodied-cognition-research.md` — 12/12 ✓ COMPLETE. Husserl → Heidegger → Merleau-Ponty → 4E cognition → grounding/synthesis; grounds the embodiment critique and LLM limitations analysis.
 
 **Tier 3 — Rich but Lower Urgency** ← **CURRENT PRIORITY**
-- `personal-identity-memory-research.md` — 0/12; next: Locke's memory criterion. Philosophical foundations for agent persistence and continuity of identity across sessions. **TOP PRIORITY** (next natural research plan after phenomenology completion).
-- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism. Normative frameworks and moral realism; relevant to alignment theory but less directly system-relevant.
+- `personal-identity-memory-research.md` — 12/12 ✓ COMPLETE. Locke → Hume → four-dimensionalism → Parfit → Ricoeur → MacIntyre → Schechtman → AI identity synthesis/failure modes/design recommendations.
+- `ethics-metaethics-research.md` — 0/13; next: classical utilitarianism. Normative frameworks and moral realism; relevant to alignment theory but less directly system-relevant. **TOP PRIORITY** (next natural research plan after personal-identity completion).
 - `game-theory-mechanism-design-research.md` — 0/12; next: Nash equilibrium. Mathematical foundations for multi-agent coordination and mechanism design.
 
 ## Recent completions
 
+- [personal-identity-memory-research.md](personal-identity-memory-research.md) — completed 2026-03-20; 12/12 items across 4 phases (early modern debate, Parfit's reductionism, narrative identity, AI identity synthesis); 12 knowledge files in `_unverified/philosophy/personal-identity/`; pending human review.
 - [phenomenology-embodied-cognition-research.md](phenomenology-embodied-cognition-research.md) — completed 2026-03-20; 12/12 items across 5 phases (Husserlian foundations, Heidegger, Merleau-Ponty, 4E cognition, application/synthesis); 12 knowledge files in `_unverified/philosophy/phenomenology/`; pending human review.
 - [formal-logic-foundations-research.md](formal-logic-foundations-research.md) — completed 2026-03-20; 11/11 items across 4 phases (classical logic, incompleteness/undecidability, type theory, set theory/alternatives); 11 knowledge files in `_unverified/mathematics/logic-foundations/`; pending human review.
 - [information-theory-stat-learning-research.md](information-theory-stat-learning-research.md) — completed 2026-03-20; 12/12 items across 4 phases (Shannon info theory, rate-distortion, statistical learning theory, synthesis); 12 knowledge files in `_unverified/mathematics/information-theory/`; pending human review.
