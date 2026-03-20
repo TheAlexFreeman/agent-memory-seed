@@ -1,7 +1,7 @@
 ---
 created: 2026-03-20
 last_verified: 2026-03-20
-next_action: "Phase 3, item 1: implement memory_generate_summary in read_tools.py"
+next_action: "Phase 4, item 1: implement memory_access_analytics in read_tools.py"
 origin_session: chats/2026/03/20/chat-002
 source: agent-generated
 status: active
@@ -363,9 +363,9 @@ Add to `read_tools.register()`. Add `readOnlyHint=True` annotation.
 - [x] 2.1 Implement `memory_check_cross_references` in `read_tools.py`
 - [x] 2.2 Performance guard (git ls-files, 500-file cap)
 - [x] 2.3 Register in read tools
-- [ ] 3.1 Implement `memory_generate_summary` in `read_tools.py`
-- [ ] 3.2 Subfolder awareness
-- [ ] 3.3 Register in read tools
+- [x] 3.1 Implement `memory_generate_summary` in `read_tools.py`
+- [x] 3.2 Subfolder awareness
+- [x] 3.3 Register in read tools
 - [ ] 4.1 Implement `memory_access_analytics` in `read_tools.py`
 - [ ] 4.2 Threshold alignment with curation policy
 - [ ] 4.3 Register in read tools
@@ -374,12 +374,12 @@ Add to `read_tools.register()`. Add `readOnlyHint=True` annotation.
 - [ ] 5.3 Register in read tools
 - [x] 6.1 Tests for batch promote
 - [x] 6.2 Tests for cross-reference checker
-- [ ] 6.3 Tests for summary generator
+- [x] 6.3 Tests for summary generator
 - [ ] 6.4 Tests for access analytics
 - [ ] 6.5 Tests for branch diff
 - [x] 6.6 Capabilities TOML updates
 
-**Progress:** 10/22 items complete
+**Progress:** 14/22 items complete
 
 ---
 

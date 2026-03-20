@@ -311,6 +311,59 @@ def _resolve_repo_relative_target(root: Path, source_file: Path, target: str) ->
     return rel_target, None
 
 
+def _format_summary_folder_title(folder_name: str) -> str:
+    return folder_name.replace("-", " ").replace("_", " ").strip().title() or "Repository"
+
+
+def _extract_heading_and_paragraph(body: str, fallback_title: str) -> tuple[str, str]:
+    lines = body.splitlines()
+    heading = fallback_title
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            heading = stripped[2:].strip() or fallback_title
+            break
+
+    paragraphs: list[str] = []
+    current: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            if current:
+                paragraphs.append(" ".join(current).strip())
+                current = []
+            continue
+        if not stripped:
+            if current:
+                paragraphs.append(" ".join(current).strip())
+                current = []
+            continue
+        current.append(stripped)
+    if current:
+        paragraphs.append(" ".join(current).strip())
+
+    description = paragraphs[0] if paragraphs else "Description pending review."
+    return heading, description
+
+
+def _build_summary_metadata(fm_dict: dict[str, Any]) -> str:
+    parts: list[str] = []
+    trust = fm_dict.get("trust")
+    if trust:
+        parts.append(f"trust: {trust}")
+    source = fm_dict.get("source")
+    if source:
+        parts.append(f"source: {source}")
+    verified = fm_dict.get("last_verified") or fm_dict.get("created")
+    if verified:
+        parts.append(f"verified: {verified}")
+    return "; ".join(parts)
+
+
+def _word_count(text: str) -> int:
+    return len(re.findall(r"\b\w+\b", text))
+
+
 def _filter_access_entries(
     entries: list[dict[str, Any]],
     *,
@@ -1900,6 +1953,111 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(result, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_generate_summary
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_generate_summary",
+        annotations=_tool_annotations(
+            title="Generate Summary Draft",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_generate_summary(path: str, style: str = "standard") -> str:
+        """Generate a paste-ready SUMMARY.md draft for a folder.
+
+        Reads Markdown files in a folder, extracts a title plus the first
+        descriptive paragraph from each, and returns a draft SUMMARY.md string.
+        The tool is read-only: it previews content but does not write it.
+        """
+        from ..errors import ValidationError
+        from ..frontmatter_utils import read_with_frontmatter
+
+        root = get_root()
+        requested_path = path.strip()
+        if not requested_path:
+            raise ValidationError("path is required")
+
+        folder_path = (root / requested_path).resolve()
+        try:
+            folder_path.relative_to(root)
+        except ValueError as exc:
+            raise ValidationError("path must stay within the repository root") from exc
+
+        if not folder_path.exists():
+            return f"Error: Path not found: {path}"
+        if not folder_path.is_dir():
+            return f"Error: Folder not found: {path}"
+        if style not in {"standard", "detailed"}:
+            raise ValidationError("style must be 'standard' or 'detailed'")
+
+        file_entries: list[str] = []
+        subfolder_entries: list[str] = []
+
+        for entry in sorted(folder_path.iterdir(), key=lambda item: (item.is_file(), item.name.lower())):
+            if entry.name.startswith(".") or entry.name in _IGNORED_NAMES:
+                continue
+            if entry.is_dir():
+                summary_file = entry / "SUMMARY.md"
+                if summary_file.exists():
+                    subfolder_entries.append(
+                        f"- **{entry.name}/** -- See [{entry.name}/SUMMARY.md]({entry.name}/SUMMARY.md)"
+                    )
+                continue
+            if entry.suffix.lower() != ".md" or entry.name == "SUMMARY.md":
+                continue
+
+            fm_dict, body = read_with_frontmatter(entry)
+            heading, description = _extract_heading_and_paragraph(body, entry.stem.replace("-", " ").title())
+            metadata = _build_summary_metadata(fm_dict)
+            link_target = entry.name
+            if style == "standard":
+                entry_line = f"- **[{entry.name}]({link_target})** -- {description}"
+                if metadata:
+                    entry_line += f" ({metadata})"
+            else:
+                detail_parts = [description]
+                if heading and heading != entry.name:
+                    detail_parts.append(f"Title: {heading}.")
+                if metadata:
+                    detail_parts.append(f"Metadata: {metadata}.")
+                entry_line = f"- **[{entry.name}]({link_target})** -- {' '.join(detail_parts)}"
+            file_entries.append(entry_line)
+
+        folder_title = _format_summary_folder_title(folder_path.name)
+        generated_on = str(date.today())
+        lines = [
+            f"<!-- Generated by memory_generate_summary on {generated_on}. Review before committing. -->",
+            f"# {folder_title} -- Summary",
+            "",
+            f"Source folder: `{requested_path}`. Style: `{style}`. Files: {len(file_entries)}. Subfolders: {len(subfolder_entries)}.",
+            "",
+        ]
+
+        if file_entries:
+            lines.append("## Files")
+            lines.append("")
+            lines.extend(file_entries)
+            lines.append("")
+
+        if subfolder_entries:
+            lines.append("## Subfolders")
+            lines.append("")
+            lines.extend(subfolder_entries)
+            lines.append("")
+
+        if not file_entries and not subfolder_entries:
+            lines.append("_No Markdown files or summarized subfolders found._")
+            lines.append("")
+
+        draft = "\n".join(lines).rstrip() + "\n"
+        word_count = _word_count(draft)
+        draft += f"\n<!-- Word count: {word_count} (target: 200-800 words) -->\n"
+        return draft
+
+    # ------------------------------------------------------------------
     # memory_git_log
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -2901,6 +3059,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_list_folder": memory_list_folder,
         "memory_search": memory_search,
         "memory_check_cross_references": memory_check_cross_references,
+        "memory_generate_summary": memory_generate_summary,
         "memory_git_log": memory_git_log,
         "memory_session_health_check": memory_session_health_check,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,
