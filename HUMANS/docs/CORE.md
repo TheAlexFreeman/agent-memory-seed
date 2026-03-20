@@ -99,6 +99,23 @@ Why:
 
 The underlying philosophy is that memory quality matters more than memory volume.
 
+### 4a. ACCESS logs are structured event streams
+
+Retrieval feedback is not just a loose note. It is a structured event stream with a few fields that now carry distinct meaning:
+
+- `session_id`: identifies the chat session when the access came from a real session boundary. When present consistently, it makes session-level analytics reliable.
+- `mode`: distinguishes `read`, `write`, `update`, and `create` so the system can tell whether a file was only consulted or actually changed.
+- `task_id`: provides a short controlled label such as `plan-review` or `validation` so repeated workflows can be grouped without depending on free-form task text.
+
+The hot log remains `ACCESS.jsonl`. That file is for the current working segment that session-start health checks and maturity signals inspect by default.
+
+Low-signal sweep events are not silently dropped. When a call sets a `min_helpfulness` threshold and an entry falls below it, the event is written to `ACCESS_SCANS.jsonl` in the same folder. That preserves auditability while keeping the hot log focused on the accesses that are most useful for retrieval analytics.
+
+This split matters because the system wants two things at once:
+
+- a high-signal operational log for everyday health checks and maturity metrics,
+- a fuller audit trail for sweep-like behavior that may still matter during later analysis.
+
 ### 5. Knowledge and instructions are kept separate
 
 Not every file is allowed to tell an agent what to do.

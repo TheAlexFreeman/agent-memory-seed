@@ -8,16 +8,16 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-### `access-log-tooling-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
+### `access-log-tooling-improvements.md` · status: complete · trust: medium
 
 Detail: plans/access-log-tooling-improvements.md
 Scope: Fix ACCESS logging noise, session identity, and missing coverage by adding batch writes and schema improvements.
-Progress: 11/13 complete
-Next: Phase 4, item 1 — finish coverage for batch access logging tests
-Blocks: none; structural prerequisites are complete.
+Progress: 13/13 complete
+Next: Human review of ACCESS analytics outputs or follow-on cleanup only.
+Blocks: none.
 
 
-### `mcp-read-tools-improvements.md` · status: active · trust: medium
+### `mcp-read-tools-improvements.md` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/mcp-read-tools-improvements.md
 Scope: Collapse manual session-start reads and improve git-log and trust-audit visibility.

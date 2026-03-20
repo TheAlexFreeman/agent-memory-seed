@@ -1,10 +1,10 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 4, item 1: finish coverage for batch access logging tests"
+next_action: "Plan complete; optional follow-up is human review of ACCESS analytics outputs"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 category: build
@@ -106,12 +106,12 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [x] 2.4 Define archive segmentation + materialized-summary refresh behavior
 - [x] 3.1 Extend `memory_validate` with coverage check
 - [x] 3.2 `memory_get_maturity_signals` fallback + coverage field
-- [ ] 4.1 Tests for batch tool
+- [x] 4.1 Tests for batch tool
 - [x] 4.2 Tests for coverage validator
 - [x] 4.3 Update capabilities TOML tests
-- [ ] 4.4 Document new fields in CORE.md
+- [x] 4.4 Document new fields in CORE.md
 
-**Progress:** 11/13 items complete
+**Progress:** 13/13 items complete
 
 ---
 
