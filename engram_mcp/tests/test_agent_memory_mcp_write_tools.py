@@ -1025,6 +1025,254 @@ Old guidance.
         self.assertIn("trust: medium", skill)
         self.assertIn("## Steps\n\nCreate the first guidance block.", skill)
 
+    def test_memory_run_aggregation_dry_run_previews_without_writing_files(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic.md": "# Topic\n",
+                "plans/demo.md": "# Demo\n",
+                "skills/session-start.md": "# Session Start\n",
+                "knowledge/SUMMARY.md": "# Knowledge\n\n## Usage patterns\n\n_No access data yet._\n",
+                "plans/SUMMARY.md": "# Plans\n\n## Usage patterns\n\n_No access data yet._\n",
+                "skills/SUMMARY.md": "# Skills\n\n## Usage patterns\n\n_No access data yet._\n",
+                "knowledge/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-18",
+                                "session_id": "chats/2026/03/18/chat-001",
+                                "file": "knowledge/topic.md",
+                                "helpfulness": 0.8,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-19",
+                                "session_id": "chats/2026/03/19/chat-001",
+                                "file": "knowledge/topic.md",
+                                "helpfulness": 0.8,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "session_id": "chats/2026/03/20/chat-001",
+                                "file": "knowledge/topic.md",
+                                "helpfulness": 0.8,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "plans/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-18",
+                                "session_id": "chats/2026/03/18/chat-001",
+                                "file": "plans/demo.md",
+                                "helpfulness": 0.7,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-19",
+                                "session_id": "chats/2026/03/19/chat-001",
+                                "file": "plans/demo.md",
+                                "helpfulness": 0.7,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "session_id": "chats/2026/03/20/chat-001",
+                                "file": "plans/demo.md",
+                                "helpfulness": 0.7,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "skills/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-18",
+                                "session_id": "chats/2026/03/18/chat-001",
+                                "file": "skills/session-start.md",
+                                "helpfulness": 0.9,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-19",
+                                "session_id": "chats/2026/03/19/chat-001",
+                                "file": "skills/session-start.md",
+                                "helpfulness": 0.9,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "session_id": "chats/2026/03/20/chat-001",
+                                "file": "skills/session-start.md",
+                                "helpfulness": 0.9,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+        before_access = (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8")
+        before_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+
+        raw = asyncio.run(tools["memory_run_aggregation"]())
+        payload = json.loads(raw)
+
+        self.assertIsNone(payload["commit_sha"])
+        self.assertEqual(payload["new_state"]["entries_processed"], 9)
+        self.assertEqual(payload["new_state"]["session_groups_processed"], 3)
+        self.assertEqual(len(payload["new_state"]["clusters"]), 1)
+        self.assertEqual(
+            payload["new_state"]["clusters"][0]["files"],
+            ["knowledge/topic.md", "plans/demo.md", "skills/session-start.md"],
+        )
+        self.assertEqual(
+            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8"),
+            before_access,
+        )
+        self.assertEqual(
+            (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8"),
+            before_summary,
+        )
+
+    def test_memory_run_aggregation_apply_updates_summaries_and_rotates_archives(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic.md": "# Topic\n",
+                "plans/demo.md": "# Demo\n",
+                "skills/session-start.md": "# Session Start\n",
+                "knowledge/SUMMARY.md": "# Knowledge\n\n## Usage patterns\n\n_No access data yet._\n",
+                "plans/SUMMARY.md": "# Plans\n\n## Usage patterns\n\n_No access data yet._\n",
+                "skills/SUMMARY.md": "# Skills\n\n## Usage patterns\n\n_No access data yet._\n",
+                "knowledge/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-18",
+                                "session_id": "chats/2026/03/18/chat-001",
+                                "file": "knowledge/topic.md",
+                                "helpfulness": 0.8,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-19",
+                                "file": "knowledge/topic.md",
+                                "helpfulness": 0.8,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "session_id": "chats/2026/03/20/chat-001",
+                                "file": "knowledge/topic.md",
+                                "helpfulness": 0.8,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "plans/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-18",
+                                "session_id": "chats/2026/03/18/chat-001",
+                                "file": "plans/demo.md",
+                                "helpfulness": 0.7,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-19",
+                                "file": "plans/demo.md",
+                                "helpfulness": 0.7,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "session_id": "chats/2026/03/20/chat-001",
+                                "file": "plans/demo.md",
+                                "helpfulness": 0.7,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+                "skills/ACCESS.jsonl": "\n".join(
+                    [
+                        json.dumps(
+                            {
+                                "date": "2026-03-18",
+                                "session_id": "chats/2026/03/18/chat-001",
+                                "file": "skills/session-start.md",
+                                "helpfulness": 0.9,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-19",
+                                "file": "skills/session-start.md",
+                                "helpfulness": 0.9,
+                            }
+                        ),
+                        json.dumps(
+                            {
+                                "date": "2026-03-20",
+                                "session_id": "chats/2026/03/20/chat-001",
+                                "file": "skills/session-start.md",
+                                "helpfulness": 0.9,
+                            }
+                        ),
+                    ]
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        raw = asyncio.run(tools["memory_run_aggregation"](dry_run=False))
+        payload = json.loads(raw)
+
+        knowledge_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+        plans_summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+        skills_summary = (repo_root / "skills" / "SUMMARY.md").read_text(encoding="utf-8")
+        knowledge_archive = (
+            repo_root / "knowledge" / "ACCESS.archive.2026-03.jsonl"
+        ).read_text(encoding="utf-8")
+        knowledge_access = (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8")
+        log_count = subprocess.run(
+            ["git", "rev-list", "--count", "HEAD"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        self.assertEqual(payload["commit_message"], f"[curation] Aggregate ACCESS logs ({date.today()})")
+        self.assertEqual(payload["new_state"]["entries_processed"], 9)
+        self.assertEqual(payload["new_state"]["legacy_fallback_entries"], 3)
+        self.assertIn(f"- Last aggregation: {date.today()}", knowledge_summary)
+        self.assertIn("knowledge/topic.md + plans/demo.md + skills/session-start.md", knowledge_summary)
+        self.assertIn(f"- Last aggregation: {date.today()}", plans_summary)
+        self.assertIn(f"- Last aggregation: {date.today()}", skills_summary)
+        self.assertIn('"file": "knowledge/topic.md"', knowledge_archive)
+        self.assertEqual(knowledge_access, "")
+        self.assertEqual(log_count, "2")
+
     # ------------------------------------------------------------------
     # P0-1: memory_write / memory_edit protected-path enforcement
     # ------------------------------------------------------------------

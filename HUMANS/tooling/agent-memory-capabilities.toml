@@ -42,6 +42,7 @@ semantic_extensions = [
   "memory_update_skill",
   "memory_update_identity_trait",
   "memory_record_session",
+  "memory_run_aggregation",
   "memory_record_chat_summary",
   "memory_record_reflection",
   "memory_record_periodic_review",
@@ -156,6 +157,11 @@ reverted_sha = "Reverted Commit"
 new_sha = "New Commit"
 access_jsonl = "Access Log File"
 entry_count = "Access Entry Count"
+entries_processed = "Entries Processed"
+session_groups_processed = "Session Groups Processed"
+legacy_fallback_entries = "Legacy Fallback Entries"
+summary_update_targets = "Summary Update Targets"
+archive_targets = "Archive Targets"
 
 [shared_result]
 fields = [
@@ -367,6 +373,14 @@ tool = "memory_record_session"
 tier = "semantic"
 operation_group = "chat"
 change_class = "automatic"
+
+[desktop_operations.run_aggregation]
+status = "implemented"
+tool = "memory_run_aggregation"
+tier = "semantic"
+operation_group = "governance"
+change_class = "proposed"
+notes = "Supports dry-run preview by default; apply mode compacts ACCESS logs, refreshes usage-pattern summaries, and archives immutable monthly segments."
 
 [desktop_operations.flag_for_review]
 status = "implemented"
@@ -629,6 +643,32 @@ owns_review_queue = []
 result_fields = ["session_id"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
+
+[operations.memory_run_aggregation]
+group = "governance"
+tier = "semantic"
+change_class = "proposed"
+commit_model = "auto_commit"
+commit_category_hint = "curation"
+writes = [
+  "{folder}/SUMMARY.md",
+  "{folder}/ACCESS.jsonl",
+  "{folder}/ACCESS.archive.YYYY-MM.jsonl",
+]
+owns_frontmatter = []
+owns_summaries = ["{folder}/SUMMARY.md"]
+owns_access_logs = ["{folder}/ACCESS.jsonl", "{folder}/ACCESS.archive.YYYY-MM.jsonl"]
+owns_review_queue = []
+result_fields = [
+  "entries_processed",
+  "session_groups_processed",
+  "legacy_fallback_entries",
+  "summary_update_targets",
+  "archive_targets",
+]
+fallback_tools = ["memory_edit", "memory_write", "memory_commit"]
+error_kinds = ["ValidationError", "StagingError"]
+notes = "Dry-run is the default preview path. Apply mode groups by session_id, falls back to date for legacy entries without session_id, updates Usage patterns sections, rotates immutable monthly archive segments, and clears the processed hot logs in one commit."
 
 [operations.memory_flag_for_review]
 group = "governance"

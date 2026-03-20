@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import date
 from pathlib import Path, PurePosixPath
@@ -270,6 +271,225 @@ def _append_access_entries(
         repo.add(access_jsonl)
         changed_files.append(access_jsonl)
     return changed_files
+
+
+def _normalize_aggregation_folders(folders: list[str] | None) -> list[str] | None:
+    from ...errors import ValidationError
+
+    if folders is None:
+        return None
+    if not isinstance(folders, list) or not all(isinstance(item, str) for item in folders):
+        raise ValidationError("folders must be a list of repo folder prefixes")
+
+    normalized: list[str] = []
+    allowed = {"identity", "knowledge", "knowledge/_unverified", "skills", "plans", "chats"}
+    for raw_folder in folders:
+        folder = raw_folder.strip().rstrip("/")
+        if folder not in allowed:
+            raise ValidationError(f"Unsupported aggregation folder: {raw_folder}")
+        if folder not in normalized:
+            normalized.append(folder)
+    return normalized
+
+
+def _filter_aggregation_entries(
+    entries: list[dict[str, Any]],
+    folders: list[str] | None,
+) -> list[dict[str, Any]]:
+    if folders is None:
+        return entries
+
+    filtered: list[dict[str, Any]] = []
+    for entry in entries:
+        access_file = str(entry.get("_access_file", ""))
+        folder = access_file.rsplit("/", 1)[0] if "/" in access_file else ""
+        if folder in folders:
+            filtered.append(entry)
+    return filtered
+
+
+def _build_aggregation_session_groups(
+    entries: list[dict[str, Any]],
+) -> tuple[dict[str, set[str]], int]:
+    groups: dict[str, set[str]] = {}
+    legacy_fallback_entries = 0
+    for entry in entries:
+        file_path = entry.get("file")
+        if not file_path:
+            continue
+        session_id = entry.get("session_id")
+        if session_id:
+            group_id = str(session_id)
+        else:
+            legacy_fallback_entries += 1
+            group_id = f"legacy:{entry.get('date', 'unknown')}"
+        groups.setdefault(group_id, set()).add(str(file_path))
+    return groups, legacy_fallback_entries
+
+
+def _build_phase1_clusters(
+    entries: list[dict[str, Any]],
+    threshold: int,
+) -> tuple[list[dict[str, Any]], int, int]:
+    session_groups, legacy_fallback_entries = _build_aggregation_session_groups(entries)
+    pair_sessions: dict[tuple[str, str], set[str]] = {}
+
+    for group_id, group_files in session_groups.items():
+        ordered_files = sorted(group_files)
+        for index, left in enumerate(ordered_files):
+            for right in ordered_files[index + 1 :]:
+                pair_sessions.setdefault((left, right), set()).add(group_id)
+
+    adjacency: dict[str, set[str]] = {}
+    for (left, right), supporting_groups in pair_sessions.items():
+        if len(supporting_groups) < threshold:
+            continue
+        adjacency.setdefault(left, set()).add(right)
+        adjacency.setdefault(right, set()).add(left)
+
+    maximal_cliques: list[set[str]] = []
+
+    def bron_kerbosch(r_set: set[str], p_set: set[str], x_set: set[str]) -> None:
+        if not p_set and not x_set:
+            if len(r_set) >= 3:
+                maximal_cliques.append(set(r_set))
+            return
+
+        for node in list(p_set):
+            bron_kerbosch(
+                r_set | {node},
+                p_set & adjacency.get(node, set()),
+                x_set & adjacency.get(node, set()),
+            )
+            p_set.remove(node)
+            x_set.add(node)
+
+    bron_kerbosch(set(), set(adjacency), set())
+
+    clusters: list[dict[str, Any]] = []
+    seen: set[tuple[str, ...]] = set()
+    for clique in maximal_cliques:
+        clique_files = sorted(clique)
+        folders = sorted({file_path.split("/", 1)[0] for file_path in clique_files})
+        if len(folders) < 2:
+            continue
+        key = tuple(clique_files)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        pair_counts: list[int] = []
+        supporting_session_groups: set[str] = set()
+        for index, left in enumerate(clique_files):
+            for right in clique_files[index + 1 :]:
+                sessions = pair_sessions.get((left, right)) or pair_sessions.get((right, left)) or set()
+                pair_counts.append(len(sessions))
+                supporting_session_groups.update(sessions)
+        clusters.append(
+            {
+                "files": clique_files,
+                "folders": folders,
+                "co_retrieval_count": min(pair_counts) if pair_counts else 0,
+                "session_groups": sorted(supporting_session_groups),
+            }
+        )
+
+    clusters.sort(key=lambda item: (-int(item["co_retrieval_count"]), item["files"]))
+    return clusters, len(session_groups), legacy_fallback_entries
+
+
+def _render_usage_patterns_section(
+    *,
+    folder: str,
+    entries: list[dict[str, Any]],
+    clusters: list[dict[str, Any]],
+    aggregation_date: str,
+    legacy_fallback_entries: int,
+) -> str:
+    from ..read_tools import _summarize_access_by_file
+
+    file_summaries = _summarize_access_by_file(entries)
+    high_value_files = [
+        item
+        for item in file_summaries
+        if int(item["entry_count"]) >= 5
+        and item["mean_helpfulness"] is not None
+        and float(item["mean_helpfulness"]) >= 0.7
+    ]
+    low_value_files = [
+        item
+        for item in file_summaries
+        if int(item["entry_count"]) >= 3
+        and item["mean_helpfulness"] is not None
+        and float(item["mean_helpfulness"]) <= 0.3
+    ]
+    relevant_clusters = [
+        cluster for cluster in clusters if folder in cast(list[str], cluster["folders"])
+    ]
+    session_groups, _ = _build_aggregation_session_groups(entries)
+
+    high_line = (
+        "; ".join(
+            f"{item['file']} ({item['entry_count']} retrievals, mean {item['mean_helpfulness']})"
+            for item in high_value_files
+        )
+        if high_value_files
+        else "none."
+    )
+    low_line = (
+        "; ".join(
+            f"{item['file']} ({item['entry_count']} retrievals, mean {item['mean_helpfulness']})"
+            for item in low_value_files
+        )
+        if low_value_files
+        else "none."
+    )
+    cluster_line = (
+        "; ".join(
+            f"{' + '.join(cast(list[str], cluster['files']))} ({cluster['co_retrieval_count']} session groups)"
+            for cluster in relevant_clusters
+        )
+        if relevant_clusters
+        else "none."
+    )
+
+    lines = [
+        "## Usage patterns",
+        "",
+        f"- Last aggregation: {aggregation_date}",
+        f"- Entries processed: {len(entries)}",
+        f"- Session groups processed: {len(session_groups)}",
+        f"- High-value files: {high_line}",
+        f"- Low-value files: {low_line}",
+        f"- Co-retrieval clusters: {cluster_line}",
+    ]
+    if legacy_fallback_entries:
+        lines.append(
+            f"- Legacy fallback entries: {legacy_fallback_entries} entries lacked session_id and were grouped by date."
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _replace_usage_patterns_section(content: str, new_section: str) -> str:
+    match = re.search(r"(?m)^## Usage patterns\s*$", content)
+    if match is None:
+        return content.rstrip() + "\n\n" + new_section
+
+    start = match.start()
+    following = re.search(r"(?m)^## ", content[match.end() :])
+    end = match.end() + following.start() if following else len(content)
+    prefix = content[:start].rstrip()
+    suffix = content[end:].lstrip("\n")
+    rebuilt = prefix + "\n\n" + new_section.rstrip() + "\n"
+    if suffix:
+        rebuilt += "\n" + suffix
+    return rebuilt
+
+
+def _archive_segment_name(entries: list[dict[str, Any]]) -> str:
+    dates = sorted(str(entry.get("date", "")) for entry in entries if entry.get("date"))
+    source_date = dates[-1] if dates else str(date.today())
+    return f"ACCESS.archive.{source_date[:7]}.jsonl"
 
 
 def _resolve_scratchpad_target(target: str) -> str:
@@ -947,6 +1167,156 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return result.to_json()
 
     @mcp.tool(
+        name="memory_run_aggregation",
+        annotations=_tool_annotations(
+            title="Run ACCESS Aggregation",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_run_aggregation(
+        folders: list[str] | None = None,
+        dry_run: bool = True,
+    ) -> str:
+        """Aggregate hot ACCESS logs into summary updates and archive segments.
+
+        Phase 1 uses session_id as the primary grouping key and falls back to
+        date-based legacy grouping for older ACCESS entries that do not include
+        session_id. Use dry_run=True to preview summary/archive targets before
+        applying the aggregation commit.
+        """
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+        selected_folders = _normalize_aggregation_folders(folders)
+        default_access_folders = ["identity", "knowledge", "knowledge/_unverified", "skills", "plans", "chats"]
+
+        access_files = [
+            f"{folder}/ACCESS.jsonl"
+            for folder in (selected_folders or default_access_folders)
+        ]
+
+        raw_entries: list[dict[str, Any]] = []
+        entries_by_access_file: dict[str, list[dict[str, Any]]] = {}
+        for access_file in access_files:
+            abs_access = root / access_file
+            if not abs_access.exists():
+                continue
+            file_entries: list[dict[str, Any]] = []
+            for line in abs_access.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                entry = json.loads(line)
+                if isinstance(entry, dict) and entry.get("file"):
+                    file_entries.append(entry)
+            normalized_entries: list[dict[str, Any]] = []
+            for entry in file_entries:
+                normalized = dict(entry)
+                normalized["_access_file"] = access_file
+                normalized_entries.append(normalized)
+            if normalized_entries:
+                entries_by_access_file[access_file] = normalized_entries
+                raw_entries.extend(normalized_entries)
+
+        filtered_entries = _filter_aggregation_entries(raw_entries, selected_folders)
+        clusters, session_group_count, legacy_fallback_entries = _build_phase1_clusters(
+            filtered_entries,
+            threshold=3,
+        )
+
+        entries_by_folder: dict[str, list[dict[str, Any]]] = {}
+        for entry in filtered_entries:
+            folder = str(entry["file"]).split("/", 1)[0]
+            entries_by_folder.setdefault(folder, []).append(entry)
+
+        summary_targets = [
+            f"{folder}/SUMMARY.md"
+            for folder, folder_entries in sorted(entries_by_folder.items())
+            if folder_entries and (root / folder / "SUMMARY.md").exists()
+        ]
+        archive_targets = sorted(
+            {
+                f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(entries)}"
+                for access_file, entries in entries_by_access_file.items()
+                if _filter_aggregation_entries(entries, selected_folders)
+            }
+        )
+
+        preview_state = {
+            "mode": "dry_run" if dry_run else "apply",
+            "folders": selected_folders or sorted(entries_by_folder),
+            "entries_processed": len(filtered_entries),
+            "session_groups_processed": session_group_count,
+            "legacy_fallback_entries": legacy_fallback_entries,
+            "summary_update_targets": summary_targets,
+            "archive_targets": archive_targets,
+            "clusters": clusters,
+        }
+
+        if dry_run or not filtered_entries:
+            result = MemoryWriteResult(
+                files_changed=summary_targets + archive_targets,
+                commit_sha=None,
+                commit_message=None,
+                new_state=preview_state,
+            )
+            return result.to_json()
+
+        changed_files: list[str] = []
+        aggregation_date = str(date.today())
+
+        for summary_rel in summary_targets:
+            folder = summary_rel.split("/", 1)[0]
+            abs_summary = root / summary_rel
+            updated_content = _replace_usage_patterns_section(
+                abs_summary.read_text(encoding="utf-8"),
+                _render_usage_patterns_section(
+                    folder=folder,
+                    entries=entries_by_folder.get(folder, []),
+                    clusters=clusters,
+                    aggregation_date=aggregation_date,
+                    legacy_fallback_entries=legacy_fallback_entries,
+                ),
+            )
+            abs_summary.write_text(updated_content, encoding="utf-8")
+            repo.add(summary_rel)
+            changed_files.append(summary_rel)
+
+        for access_file, file_entries in entries_by_access_file.items():
+            filtered_file_entries = _filter_aggregation_entries(file_entries, selected_folders)
+            if not filtered_file_entries:
+                continue
+            abs_access = root / access_file
+            archive_rel = f"{access_file.rsplit('/', 1)[0]}/{_archive_segment_name(filtered_file_entries)}"
+            abs_archive = root / archive_rel
+            archive_existing = abs_archive.read_text(encoding="utf-8") if abs_archive.exists() else ""
+            hot_content = abs_access.read_text(encoding="utf-8")
+            appended_archive = (
+                archive_existing.rstrip("\n") + "\n" + hot_content.strip("\n") + "\n"
+                if archive_existing.strip()
+                else hot_content.strip("\n") + ("\n" if hot_content.strip() else "")
+            )
+            abs_archive.parent.mkdir(parents=True, exist_ok=True)
+            abs_archive.write_text(appended_archive, encoding="utf-8")
+            abs_access.write_text("", encoding="utf-8")
+            repo.add(archive_rel)
+            repo.add(access_file)
+            changed_files.extend([archive_rel, access_file])
+
+        commit_msg = f"[curation] Aggregate ACCESS logs ({aggregation_date})"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=changed_files,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state=preview_state,
+        )
+        return result.to_json()
+
+    @mcp.tool(
         name="memory_record_reflection",
         annotations=_tool_annotations(
             title="Record Session Reflection",
@@ -1201,6 +1571,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_resolve_review_item": memory_resolve_review_item,
         "memory_log_access": memory_log_access,
         "memory_record_session": memory_record_session,
+        "memory_run_aggregation": memory_run_aggregation,
         "memory_record_reflection": memory_record_reflection,
         "memory_record_periodic_review": memory_record_periodic_review,
         "memory_revert_commit": memory_revert_commit,

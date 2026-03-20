@@ -1,10 +1,10 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 5, item 1: implement memory_run_aggregation with Phase 1 algorithm"
+next_action: "Shift focus to worktree-integration.md Phase 0, item 1"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 category: build
@@ -203,18 +203,18 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 - [x] 4.1 Implement `memory_record_session` composite
 - [x] 4.2 Update individual chat/reflection tool docstrings
 - [x] 4.3 Update `skills/session-wrapup.md`
-- [ ] 5.1 Implement `memory_run_aggregation` with Phase 1 algorithm
-- [ ] 5.2 Register tool in capabilities contract (both modes)
-- [ ] 5.3 Update `skills/session-start.md` with aggregation instruction
-- [ ] 5.4 Document retroactive backfill and session_id fallback behavior
+- [x] 5.1 Implement `memory_run_aggregation` with Phase 1 algorithm
+- [x] 5.2 Register tool in capabilities contract (both modes)
+- [x] 5.3 Update `skills/session-start.md` with aggregation instruction
+- [x] 5.4 Document retroactive backfill and session_id fallback behavior
 - [x] 6.1 Tests for `memory_append_scratchpad`
 - [x] 6.2 Tests for `memory_resolve_review_item`
 - [x] 6.3 Tests for `memory_update_skill`
 - [x] 6.4 Tests for `memory_record_session`
-- [ ] 6.5 Tests for `memory_run_aggregation`
+- [x] 6.5 Tests for `memory_run_aggregation`
 - [x] 6.6 Full capabilities TOML update
 
-**Progress:** 18/22 items complete
+**Progress:** 23/23 items complete
 
 ---
 
@@ -235,7 +235,8 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 - 2026-03-20: Phase 1 and Phase 2 landed together. `memory_append_scratchpad` now accepts dated scratchpad slug targets, `memory_flag_for_review` emits stable `item_id` values, and `memory_resolve_review_item` provides a governed path for review-queue cleanup.
 - 2026-03-20: Phase 3 landed. `memory_update_skill` now provides a protected semantic path for updating or creating skill files, with tests and manifest coverage. Focus now shifts to session recording and aggregation.
 - 2026-03-20: Phase 4 landed. `memory_record_session` now writes summary, optional reflection, chat index updates, and ACCESS entries under one `[chat]` commit. The wrap-up skill now points to the composite path, while the legacy summary/reflection tools remain available for single-purpose writes.
+- 2026-03-20: Phase 5 landed. `memory_run_aggregation` now previews and applies Phase 1 ACCESS compaction, grouping by `session_id` with date fallback for legacy entries, refreshing Usage patterns sections, rotating immutable monthly archive segments, and clearing processed hot logs under one `[curation]` commit.
 
 - 2026-03-19: Adjacent semantic groundwork landed outside this checklist: `memory_record_periodic_review` now provides a protected governance write path for approved periodic-review outputs. That does not directly complete checklist items here, but it validates the manifest, approval, and publication patterns needed for future protected semantic tools.
 - 2026-03-19: The read-side additions from the same session (`memory_run_periodic_review`, provenance inspection, commit inspection) also reduce uncertainty around future `memory_resolve_review_item`, `memory_record_session`, and aggregation-oriented flows.
-- 2026-03-20: The remaining direct scope is now aggregation execution.
+- 2026-03-20: The direct scope of this plan is complete. Promote the next build priority from `plans/SUMMARY.md`.
