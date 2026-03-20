@@ -32,8 +32,8 @@ Next: Human review of knowledge/_unverified/social-science/cultural-evolution/ f
 
 Detail: plans/ai-frontier-research.md
 Scope: Frontier AI survey — reasoning, alignment, interpretability, multi-agent, retrieval/memory, architectures.
-Progress: Phase 1 + Phase 2 extension complete (4/4)
-Next: Phase 3 extension (RAG details, ColPali) or agentic-framework follow-ons.
+Progress: All 7 phases + Phase 2 infrastructure extension complete (25/25 ✓). Optional Phase 3 extension (RAG depth/ColPali, agentic frameworks) not yet written.
+Next: Phase 3 extension items are discretionary — pursue when frontier AI is the session focus.
 
 
 ### Research queue
