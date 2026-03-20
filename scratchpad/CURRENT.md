@@ -9,27 +9,28 @@ See `meta/scratchpad-guidelines.md` for the full write protocol, promotion crite
 ## Active threads
 
 - ACCESS logging is noisy and under-scoped: `plans/ACCESS.jsonl` dominates, sweep-style reads are overlogged, and `session_id` coverage is still very low.
-- Compact bootstrap enforcement is now a first-class engineering task: keep startup files as handoff/index surfaces rather than narrative archives.
-- Multi-agent support likely wants worktree-level isolation plus single-writer promotion rules before true concurrent memory writes.
-<!-- 2026-03-19, session: chats/2026/03/19/chat-001 -->
-- Observation (unconfirmed): the MCP implementation work is now bifurcating into two layers of progress: direct checklist burn-down in the active plans, and adjacent contract-hardening work that reduces risk without moving those counters. Keep recording both explicitly so the plans do not understate architectural progress.
+- Multi-agent support likely wants worktree-level isolation plus single-writer promotion rules before true concurrent memory writes. No `agent_id` claim protocol exists yet.
+- `identity/SUMMARY.md` is ~628 tokens against a 450-token compact budget target (+178 over). Overall budget still has headroom (5959/7000). Decision needed: trim SUMMARY, redistribute budget, or formally raise the target.
+- The `_unverified/` backlog (80+ files across 8+ subdirectories) is growing faster than review capacity. Files start auto-archiving mid-July 2026. Promotion cadence should be discussed.
+<!-- 2026-03-20, session: chats/2026/03/20/cowork-enrichment -->
 
 ## Immediate next actions
 
-- Finish the compact-bootstrap plan by aligning summary formats, validator checks, and tests.
-- Keep access-log tooling improvements queued behind the `mcp-reorganization.md` dependency chain.
-- Treat `memory_session_health_check`, batch ACCESS logging, and governed review-queue resolution as the most valuable follow-on MCP improvements.
+- Aggregate `plans/ACCESS.jsonl` (100 entries, 6× over trigger — review-queue item from 2026-03-19).
+- Worktree integration Phase 1, item 8 requires protected-file approval for `meta/quick-reference.md`.
+- Treat batch ACCESS logging and governed review-queue resolution as the most valuable follow-on MCP improvements.
 
 ## Open questions
 
-- Is whole-file compact mode sufficient long term, or will startup-safe subsections be needed later?
-- Should low-value ACCESS sweep entries be skipped, downgraded into a scan log, or retained with richer metadata?
+- Should `identity/SUMMARY.md`'s compact-path budget be formally raised to ~650 tokens to accommodate the richer portrait?
 - What minimum `agent_id` or claim protocol is needed before multiple agents can safely share one repo?
+- Is the knowledge flooding alarm (5 files/day) actually operational, or only documented? It should have fired during the initial research burst.
 
 ## Drill-down refs
 
+- `scratchpad/2026-03-20-architecture-review-notes.md` ← full review from this session
 - `scratchpad/2026-03-18-automation-backlog.md`
 - `scratchpad/2026-03-19-multi-agent-management-notes.md`
 - `scratchpad/2026-03-19-mcp-tooling-development-notes.md`
 - `plans/access-log-tooling-improvements.md`
-- `plans/compact-bootstrap-efficiency.md`
+- `plans/worktree-integration.md`
