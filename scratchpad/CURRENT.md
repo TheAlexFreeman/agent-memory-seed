@@ -11,6 +11,8 @@ See `meta/scratchpad-guidelines.md` for the full write protocol, promotion crite
 - ACCESS logging is noisy and under-scoped: `plans/ACCESS.jsonl` dominates, sweep-style reads are overlogged, and `session_id` coverage is still very low.
 - Compact bootstrap enforcement is now a first-class engineering task: keep startup files as handoff/index surfaces rather than narrative archives.
 - Multi-agent support likely wants worktree-level isolation plus single-writer promotion rules before true concurrent memory writes.
+<!-- 2026-03-19, session: chats/2026/03/19/chat-001 -->
+- Observation (unconfirmed): the MCP implementation work is now bifurcating into two layers of progress: direct checklist burn-down in the active plans, and adjacent contract-hardening work that reduces risk without moving those counters. Keep recording both explicitly so the plans do not understate architectural progress.
 
 ## Immediate next actions
 
@@ -28,5 +30,6 @@ See `meta/scratchpad-guidelines.md` for the full write protocol, promotion crite
 
 - `scratchpad/2026-03-18-automation-backlog.md`
 - `scratchpad/2026-03-19-multi-agent-management-notes.md`
+- `scratchpad/2026-03-19-mcp-tooling-development-notes.md`
 - `plans/access-log-tooling-improvements.md`
 - `plans/compact-bootstrap-efficiency.md`

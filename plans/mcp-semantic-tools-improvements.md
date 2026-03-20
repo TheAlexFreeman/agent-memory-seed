@@ -226,3 +226,11 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 - `memory_resolve_review_item` operates on `meta/review-queue.md` which is a system-governed path; it must be a Tier 1 semantic tool and must not use Tier 2 primitives internally.
 - All new tools must be registered in `server.py` and returned from their module's `register()` function.
 - All new tools must have operations tables before the `test_semantic_operations_own_required_contract_fields` test is run.
+
+---
+
+## Notes
+
+- 2026-03-19: Adjacent semantic groundwork landed outside this checklist: `memory_record_periodic_review` now provides a protected governance write path for approved periodic-review outputs. That does not directly complete checklist items here, but it validates the manifest, approval, and publication patterns needed for future protected semantic tools.
+- 2026-03-19: The read-side additions from the same session (`memory_run_periodic_review`, provenance inspection, commit inspection) also reduce uncertainty around future `memory_resolve_review_item`, `memory_record_session`, and aggregation-oriented flows.
+- 2026-03-19: Keep `next_action` unchanged. The remaining direct scope is still scratchpad targeting, review-queue lifecycle, skill updates, session recording, and aggregation execution.

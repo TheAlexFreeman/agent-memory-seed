@@ -140,3 +140,10 @@ Add `memory_session_health_check` to `read_support` list. Ensure `warn_pct` and 
 - `warn_pct` must satisfy `0 < warn_pct < 1`; raise `ValidationError` on out-of-range values.
 - `since` must be validated as a valid ISO date string before being passed to git; raise `ValidationError` on bad format.
 - `memory_session_health_check` must not require a separate `meta/quick-reference.md` read from the agent — it reads that file internally.
+
+---
+
+## Notes
+
+- 2026-03-19: Adjacent read-side groundwork landed outside this checklist: `memory_run_periodic_review`, `memory_get_file_provenance`, `memory_inspect_commit`, and a shared maturity-signal helper refactor. This does not directly complete any items in this plan, but it reduces implementation risk for future session-health and trust-audit improvements.
+- 2026-03-19: Keep `next_action` unchanged. The remaining direct scope is still `memory_git_log` filters, `memory_session_health_check`, and the `memory_audit_trust` warning band.
