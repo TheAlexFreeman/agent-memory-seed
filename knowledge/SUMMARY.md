@@ -20,33 +20,20 @@ Key files:
 - `cognitive-linguistics-metaphor-blending.md` — Lakoff & Johnson's CMT, Fauconnier & Turner's blending theory, Sweetser's polysemy and viewpoint work. Synthesis with dynamical systems framework and LLM implications.
 - `blending-compression-coupling-construal.md` — Focused synthesis: blending-as-compression, structural coupling and metaphor, subjective construal and narrative viewpoint. Narrative as cognitive triangulation.
 
-<!-- section: django -->
-### `_unverified/django/` — Django 6.0 + stack knowledge (ingested 2026-03-18, trust: low)
+<!-- section: software-engineering -->
+### `software-engineering/` — Django, React, DevOps stack (promoted 2026-03-20, trust: medium)
 
-Ten files covering Django 6.0, DRF API design/testing, pytest performance testing, structlog/Sentry observability, Celery, Redis caching, and production-stack operations. The cluster was revised with current official Django, DRF, Celery, pytest-django, structlog, and Sentry docs on 2026-03-18, and the Celery depth track now includes a dedicated Canvas/workflow note. Pending Alex's review for promotion.
+Forty-one files covering Alex's primary development stack: Django 6.0 + DRF + Celery, React 19 + Chakra UI 3, and Docker-based DevOps. Sanity-checked and promoted from `_unverified/` on 2026-03-20.
 
-Key files:
-- `django-6.0-whats-new.md` — Django 6.0 release-line overview with 6.0.1/6.0.3 patch-line notes and stack-relevant upgrade concerns
-- `django-tasks-framework.md` — Corrected `django.tasks` model: built-in dev/test backends only, transaction caveats, and Celery decision boundary
-- `django-orm-postgres.md` — Advanced ORM patterns, Postgres features, `Lexeme`, indexing guidance, and production-oriented DB notes
-- `django-caching-redis.md` — Native Redis cache backend, replication/topology, versioning, invalidation, and operational separation from Celery
-- `celery-advanced-patterns.md` — Idempotency, ack strategy, retries, queue isolation, result-storage discipline, and Celery-vs-Django-tasks boundary
-- `django-react-drf.md` — React-facing API design with DRF: auth mode choices, CSRF/CORS, pagination, filtering, throttling, and error contracts
-- `django-production-stack.md` — Cross-cutting operational guidance for Django + Postgres + Redis + Celery + Docker
-- `celery-canvas-in-depth.md` — Chain/group/chord semantics, immutable signatures, chord backend implications, and workflow composition patterns
-- `drf-testing-pytest-django-perf-rec.md` — DRF contract/testing patterns plus `pytest-django` and `django-perf-rec` guidance for API teams
-- `django-observability-structlog-sentry.md` — Structured logging and monitoring patterns for Django/Celery stacks using structlog and Sentry
+Subfolders:
+- `django/` — 19 files: Django 6.0, ORM, DRF, Celery, migrations, observability, production stack
+- `react/` — 13 files: React 19, Chakra 3, TanStack, Vite, testing
+- `devops/` — 9 files: Docker Compose, production config, CI/CD, Celery workers, monitoring
 
-<!-- section: react -->
-### `_unverified/react/` — React + Chakra frontend research (ingested 2026-03-18, trust: low)
-
-Four files covering React 19 and Chakra UI 3. Sourced from official React and Chakra docs/blog pages, with a focus on modern React frontends and design-system-driven styling.
-
-Key files:
-- `react-19-overview.md` — Stable release status, Actions/forms APIs, `use`, metadata/assets support, upgrade hazards, TS changes, and React 19.2 additions
-- `chakra-ui-3-overview.md` — Chakra 3 architecture, migration surface, state-machine components, performance changes, and ecosystem shifts from v2
-- `chakra-ui-3-styling-system.md` — `createSystem`, tokens, semantic tokens, recipes, slot recipes, virtual colors, cascade layers, and CLI typegen
-- `chakra-ui-3-react-frontend-patterns.md` — Practical synthesis for building consistent, accessible, responsive, and mode-aware React frontends with Chakra 3
+Key entry points:
+- `django/django-production-stack.md` — Service boundaries, startup order, Redis topology
+- `react/react-19-overview.md` — Actions, forms, upgrade path
+- `devops/docker-production-config.md` — Production Docker patterns
 
 <!-- section: ai-history -->
 ### `ai-history/` — AI paradigm genealogy (promoted 2026-03-19, trust: medium)
