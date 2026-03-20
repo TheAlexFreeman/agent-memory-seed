@@ -51,6 +51,12 @@ chats/ACCESS.jsonl
 chats/SUMMARY.md
 engram_mcp/__init__.py
 engram_mcp/agent_memory_mcp/__init__.py
+engram_mcp/agent_memory_mcp/core/__init__.py
+engram_mcp/agent_memory_mcp/core/errors.py
+engram_mcp/agent_memory_mcp/core/frontmatter_utils.py
+engram_mcp/agent_memory_mcp/core/git_repo.py
+engram_mcp/agent_memory_mcp/core/models.py
+engram_mcp/agent_memory_mcp/core/path_policy.py
 engram_mcp/agent_memory_mcp/errors.py
 engram_mcp/agent_memory_mcp/frontmatter_utils.py
 engram_mcp/agent_memory_mcp/git_repo.py
@@ -58,12 +64,6 @@ engram_mcp/agent_memory_mcp/models.py
 engram_mcp/agent_memory_mcp/path_policy.py
 engram_mcp/agent_memory_mcp/server.py
 engram_mcp/agent_memory_mcp/server_main.py
-engram_mcp/agent_memory_mcp/core/__init__.py
-engram_mcp/agent_memory_mcp/core/errors.py
-engram_mcp/agent_memory_mcp/core/frontmatter_utils.py
-engram_mcp/agent_memory_mcp/core/git_repo.py
-engram_mcp/agent_memory_mcp/core/models.py
-engram_mcp/agent_memory_mcp/core/path_policy.py
 engram_mcp/agent_memory_mcp/tools/__init__.py
 engram_mcp/agent_memory_mcp/tools/read_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/__init__.py
@@ -237,6 +237,10 @@ knowledge/ai-history/synthesis/how-the-current-ai-paradigm-formed.md
 knowledge/literature/galatea-2-2-ai-discourse.md
 knowledge/literature/man-who-was-thursday.md
 knowledge/literature/tree-of-smoke-top-down-bottom-up.md
+knowledge/self/engram-governance-model.md
+knowledge/self/engram-system-overview.md
+knowledge/self/intellectual-threads.md
+knowledge/self/session-2026-03-20.md
 knowledge/systems-architecture/SUMMARY.md
 knowledge/systems-architecture/append-only-logs-and-compaction.md
 knowledge/systems-architecture/concurrency-models-for-local-state.md
