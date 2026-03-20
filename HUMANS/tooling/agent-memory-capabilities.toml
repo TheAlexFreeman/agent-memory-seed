@@ -13,6 +13,7 @@ read_support = [
   # parameters; returned commit entries may include `truncated` when `n`
   # clips matches before the date window is exhausted.
   "memory_git_log",
+  "memory_session_health_check",
   "memory_check_aggregation_triggers",
   "memory_aggregate_access",
   "memory_run_periodic_review",
@@ -186,12 +187,7 @@ raw_commit_model = "stage_then_memory_commit"
 semantic_commit_model = "auto_commit_on_success"
 
 [access_logging]
-task_ids = [
-  "plan-review",
-  "research-write",
-  "validation",
-  "health-check",
-]
+task_ids = ["plan-review", "research-write", "validation", "health-check"]
 
 [change_classes.automatic]
 approval = "none"

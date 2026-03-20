@@ -2688,7 +2688,9 @@ Next: Original next action
 
         payload = json.loads(asyncio.run(tools["memory_git_log"](n=2)))
 
-        self.assertEqual([entry["message"] for entry in payload], ["update plan", "update identity"])
+        self.assertEqual(
+            [entry["message"] for entry in payload], ["update plan", "update identity"]
+        )
         self.assertEqual([entry["truncated"] for entry in payload], [False, False])
 
     def test_memory_git_log_filters_by_since_with_truncation_flag(self) -> None:
@@ -3067,6 +3069,97 @@ Next: Original next action
         self.assertEqual(payload["reports"][0]["entries"], 1)
         self.assertEqual(payload["reports"][0]["invalid_lines"], 1)
         self.assertEqual(payload["reports"][0]["status"], "below")
+
+    def test_memory_session_health_check_reports_due_aggregation(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "| Aggregation trigger | 15 entries | Exploration |\n\n"
+                    "## Last periodic review\n\n"
+                    "**Date:** 2026-03-19\n"
+                ),
+                "plans/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": f"plans/item-{idx}.md",
+                            "date": "2026-03-19",
+                            "task": "planning",
+                            "helpfulness": 0.7,
+                            "note": "useful",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(15)
+                ),
+                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_session_health_check"]()))
+
+        self.assertEqual(payload["aggregation_threshold"], 15)
+        self.assertEqual(
+            payload["aggregation_due"],
+            [{"folder": "plans/", "entries": 15, "threshold": 15, "overdue": True}],
+        )
+        self.assertEqual(payload["review_queue_pending"], 0)
+        self.assertFalse(payload["periodic_review_due"])
+
+    def test_memory_session_health_check_reports_periodic_review_overdue(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "| Aggregation trigger | 15 entries | Exploration |\n\n"
+                    "## Last periodic review\n\n"
+                    "**Date:** 2026-01-01\n"
+                ),
+                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_session_health_check"]()))
+
+        self.assertEqual(payload["last_periodic_review"], "2026-01-01")
+        self.assertTrue(payload["periodic_review_due"])
+        self.assertGreater(payload["days_since_review"], 30)
+
+    def test_memory_session_health_check_counts_only_pending_review_queue_items(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": (
+                    "| Aggregation trigger | 15 entries | Exploration |\n\n"
+                    "## Last periodic review\n\n"
+                    "**Date:** 2026-03-19\n"
+                ),
+                "meta/review-queue.md": """# Review Queue
+
+## Format
+
+### [YYYY-MM-DD] Brief title
+**Type:** proposed | protected
+**Description:** What the agent wants to change and why.
+**Status:** pending | approved | rejected | superseded
+
+### [2026-03-20] Real pending item
+**Type:** proposed
+**Description:** Needs review.
+**Status:** pending
+
+### [2026-03-19] Already resolved item
+**Type:** proposed
+**Description:** Done already.
+**Status:** resolved
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_session_health_check"]()))
+
+        self.assertEqual(payload["review_queue_pending"], 1)
+        self.assertEqual(payload["aggregation_due"], [])
 
     def test_memory_aggregate_access_reports_high_low_and_clusters(self) -> None:
         repo_root = self._init_repo(

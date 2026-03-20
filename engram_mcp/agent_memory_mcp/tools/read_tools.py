@@ -6,6 +6,7 @@ These extend the existing read-only tool set with:
   - memory_list_folder : unchanged from existing (re-implemented here)
   - memory_search      : unchanged from existing (re-implemented here)
   - memory_git_log     : recent commit history
+    - memory_session_health_check : session-start maintenance status
     - memory_check_knowledge_freshness : host-repo freshness for knowledge files
   - memory_diff        : working tree status
   - memory_audit_trust : trust decay audit
@@ -367,6 +368,21 @@ def _parse_last_periodic_review(repo_root: Path) -> date | None:
     return _parse_iso_date(match.group(1))
 
 
+def _parse_periodic_review_window(repo_root: Path) -> int:
+    """Read the periodic-review cadence from meta/quick-reference.md when present."""
+    qr_path = repo_root / "meta" / "quick-reference.md"
+    if not qr_path.exists():
+        return _PERIODIC_REVIEW_DAYS
+
+    text = qr_path.read_text(encoding="utf-8")
+    match = re.search(r"periodic review[^\n]*?(\d+)-day cadence", text, re.IGNORECASE)
+    if match is None:
+        match = re.search(r"(\d+)-day cadence", text, re.IGNORECASE)
+    if match is None:
+        return _PERIODIC_REVIEW_DAYS
+    return int(match.group(1))
+
+
 def _parse_current_stage(repo_root: Path) -> str:
     """Read the active maturity stage from meta/quick-reference.md."""
     qr_path = repo_root / "meta" / "quick-reference.md"
@@ -430,7 +446,9 @@ def _compute_maturity_signals(
         task_bucket = str(task_id_value).strip() if task_id_value else "unspecified"
         access_density_by_task_id[task_bucket] = access_density_by_task_id.get(task_bucket, 0) + 1
         date_value = str(entry.get("date", "")).strip()
-        proxy_task_value = str(task_id_value).strip() if task_id_value else str(entry.get("task", "")).strip()
+        proxy_task_value = (
+            str(task_id_value).strip() if task_id_value else str(entry.get("task", "")).strip()
+        )
         if date_value and proxy_task_value:
             proxy_session_keys.add((date_value, proxy_task_value))
     total_sessions = len(session_ids)
@@ -1597,6 +1615,80 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_session_health_check
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_session_health_check",
+        annotations=_tool_annotations(
+            title="Session Health Check",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_session_health_check() -> str:
+        """Return session-start maintenance status for ACCESS, review queue, and review cadence.
+
+        Reads the active aggregation trigger and last periodic review date from
+        meta/quick-reference.md, counts hot ACCESS.jsonl entries, and summarizes
+        pending review-queue items.
+
+        Returns:
+            JSON with aggregation_due, aggregation_threshold, review_queue_pending,
+            periodic_review_due, days_since_review, last_periodic_review, checked_at.
+        """
+        root = get_root()
+        trigger = _parse_aggregation_trigger(root)
+        review_window_days = _parse_periodic_review_window(root)
+        _, access_counts = _load_access_entries(root)
+        last_review = _parse_last_periodic_review(root)
+        today = date.today()
+        days_since_review = (today - last_review).days if last_review is not None else None
+
+        aggregation_due = []
+        for item in access_counts:
+            entry_count = int(item["entries"])
+            if entry_count < trigger:
+                continue
+            folder = str(item["folder"]).rstrip("/")
+            aggregation_due.append(
+                {
+                    "folder": f"{folder}/",
+                    "entries": entry_count,
+                    "threshold": trigger,
+                    "overdue": True,
+                }
+            )
+
+        aggregation_due.sort(
+            key=lambda item: (-cast(int, item["entries"]), cast(str, item["folder"]))
+        )
+
+        review_queue_entries = _parse_review_queue_entries(root)
+        pending_review_queue = [
+            entry
+            for entry in review_queue_entries
+            if entry.get("status", "pending") == "pending"
+            or (
+                entry.get("type") == "security"
+                and entry.get("status", "pending") == "investigated"
+            )
+        ]
+
+        payload = {
+            "aggregation_due": aggregation_due,
+            "aggregation_threshold": trigger,
+            "review_queue_pending": len(pending_review_queue),
+            "periodic_review_due": last_review is None
+            or (days_since_review is not None and days_since_review > review_window_days),
+            "days_since_review": days_since_review,
+            "last_periodic_review": str(last_review) if last_review is not None else None,
+            "checked_at": str(today),
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_check_aggregation_triggers
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -1816,6 +1908,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         current_stage = _parse_current_stage(root)
         last_review = _parse_last_periodic_review(root)
         today = date.today()
+        review_window_days = _parse_periodic_review_window(root)
         days_since_review = (today - last_review).days if last_review is not None else None
 
         all_entries, access_counts = _load_access_entries(root)
@@ -1857,8 +1950,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         if last_review is None:
             review_due_reason = "No recorded periodic review date."
-        elif days_since_review is not None and days_since_review > _PERIODIC_REVIEW_DAYS:
-            review_due_reason = f"Last periodic review was {days_since_review} days ago, beyond the {_PERIODIC_REVIEW_DAYS}-day cadence."
+        elif days_since_review is not None and days_since_review > review_window_days:
+            review_due_reason = f"Last periodic review was {days_since_review} days ago, beyond the {review_window_days}-day cadence."
         else:
             review_due_reason = "Periodic review cadence not yet exceeded."
 
@@ -1919,7 +2012,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             deferred_write_targets.append("meta/review-queue.md")
         if (
             days_since_review is None
-            or (days_since_review is not None and days_since_review > _PERIODIC_REVIEW_DAYS)
+            or (days_since_review is not None and days_since_review > review_window_days)
             or maturity["transition_recommended"]
         ):
             deferred_write_targets.append("meta/quick-reference.md")
@@ -1943,7 +2036,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "last_periodic_review": str(last_review) if last_review is not None else None,
                 "days_since_review": days_since_review,
                 "due": last_review is None
-                or (days_since_review is not None and days_since_review > _PERIODIC_REVIEW_DAYS),
+                or (days_since_review is not None and days_since_review > review_window_days),
                 "reason": review_due_reason,
             },
             "ordered_checks": {
@@ -2413,6 +2506,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_list_folder": memory_list_folder,
         "memory_search": memory_search,
         "memory_git_log": memory_git_log,
+        "memory_session_health_check": memory_session_health_check,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,
         "memory_check_aggregation_triggers": memory_check_aggregation_triggers,
         "memory_aggregate_access": memory_aggregate_access,

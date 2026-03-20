@@ -16,6 +16,24 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Read-tool git filters and session health check landed
+
+**Changed:**
+
+- **Extended `memory_git_log` with practical filters.** Added optional `since` and `path_filter` parameters, validated ISO dates and repo-relative path filters, and surfaced `truncated` in returned commit entries when the `n` limit clips a date-filtered history window.
+
+- **Added a compact session-start health probe.** Introduced `memory_session_health_check`, which reads the active aggregation threshold and last periodic review date from `meta/quick-reference.md`, counts hot `ACCESS.jsonl` entries, and reports pending review-queue items in one read-only call.
+
+- **Aligned session-start guidance and capability discovery.** Updated `skills/session-start.md` to prefer the new single-call maintenance probe with a manual fallback path, and added the new tool to the repo capability manifest.
+
+- **Expanded regression coverage for the new read surface.** Added focused tests covering default and filtered git-log behavior, aggregation-due reporting, overdue periodic-review detection, and review-queue pending-item counting.
+
+**Reasoning:** Returning sessions previously needed multiple read calls to answer a simple maintenance question, and git history inspection was still too coarse once commit volume increased. These changes reduce startup orchestration overhead, make session health checks cheap enough to use routinely, and make git-backed change inspection more precise without expanding write risk.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Worktree validator profile and CI enforcement landed
 
 **Changed:**

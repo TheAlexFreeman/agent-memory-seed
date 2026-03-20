@@ -28,9 +28,11 @@ When local agent-memory MCP tools are available, prefer them for memory reads an
 
 ### 2. Check pending items (silent)
 
-- Use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them.
-- Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag it for session-end handling. At wrap-up, preview the compaction with `memory_run_aggregation(dry_run=True)` before deciding whether to apply summary/archive updates.
-- Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
+- When available, call `memory_session_health_check()` first and treat its output as the authoritative compact maintenance probe.
+- If `memory_session_health_check()` reports pending review-queue items, load `meta/review-queue.md` only when you need the actual entries or the user asks about them.
+- If `memory_session_health_check()` reports one or more folders in `aggregation_due`, flag them for session-end handling. At wrap-up, preview the compaction with `memory_run_aggregation(dry_run=True)` before deciding whether to apply summary/archive updates.
+- If `memory_session_health_check()` reports `periodic_review_due: true`, note that during the greeting.
+- Manual fallback when the MCP tool is unavailable: use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them. Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag it for session-end handling. Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
 
 ### 3. Check write access (silent)
 
