@@ -73,6 +73,7 @@ knowledge/ACCESS.jsonl
 knowledge/SUMMARY.md
 knowledge/_unverified/ACCESS.jsonl
 knowledge/_unverified/SUMMARY.md
+knowledge/_unverified/ai-frontier/agentic-frameworks.md
 knowledge/_unverified/ai-frontier/alignment/frontier-alignment-research.md
 knowledge/_unverified/ai-frontier/alignment/instruction-following.md
 knowledge/_unverified/ai-frontier/alignment/rlhf-reward-models.md
@@ -82,6 +83,9 @@ knowledge/_unverified/ai-frontier/architectures/synthetic-data-self-improvement.
 knowledge/_unverified/ai-frontier/epistemology/compression-and-intelligence.md
 knowledge/_unverified/ai-frontier/epistemology/knowledge-and-knowing.md
 knowledge/_unverified/ai-frontier/epistemology/llms-as-dynamical-systems.md
+knowledge/_unverified/ai-frontier/foundation-model-governance.md
+knowledge/_unverified/ai-frontier/hardware-efficiency.md
+knowledge/_unverified/ai-frontier/inference-time-compute.md
 knowledge/_unverified/ai-frontier/interpretability/emergence-phase-transitions.md
 knowledge/_unverified/ai-frontier/interpretability/llm-representation-confabulation.md
 knowledge/_unverified/ai-frontier/interpretability/mechanistic-interpretability.md
@@ -134,6 +138,8 @@ knowledge/_unverified/mcp/mcp-server-design-patterns.md
 knowledge/_unverified/philosophy/blending-compression-coupling-construal.md
 knowledge/_unverified/philosophy/cognitive-linguistics-metaphor-blending.md
 knowledge/_unverified/philosophy/compression-intelligence-ait.md
+knowledge/_unverified/philosophy/cs-lewis-abolition-of-man.md
+knowledge/_unverified/philosophy/cs-lewis-space-trilogy.md
 knowledge/_unverified/philosophy/emergence-consciousness-iit.md
 knowledge/_unverified/philosophy/free-energy-autopoiesis-cybernetics.md
 knowledge/_unverified/philosophy/history/SUMMARY.md
@@ -202,6 +208,7 @@ knowledge/_unverified/react/vite-react-build.md
 knowledge/_unverified/react/vitest-rtl-msw.md
 knowledge/_unverified/system-notes/2026-03-19-tmp-data-loss-incident.md
 knowledge/_unverified/system-notes/2026-03-20-git-session-followup.md
+knowledge/_unverified/system-notes/environment-capability-asymmetry.md
 knowledge/ai-history/SUMMARY.md
 knowledge/ai-history/deep-learning/convnets-rnns-and-lstm-inductive-biases.md
 knowledge/ai-history/deep-learning/gpus-imagenet-and-the-deep-learning-turn.md
@@ -302,6 +309,3 @@ tools/agent_memory_mcp/tools/__init__.py
 tools/agent_memory_mcp/tools/read_tools.py
 tools/agent_memory_mcp/tools/semantic_tools.py
 tools/agent_memory_mcp/tools/write_tools.py
-knowledge/_unverified/philosophy/cs-lewis-abolition-of-man.md
-knowledge/_unverified/philosophy/cs-lewis-space-trilogy.md
-knowledge/_unverified/system-notes/environment-capability-asymmetry.md
