@@ -16,6 +16,26 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-20] Worktree-init foundation landed
+
+**Changed:**
+
+- **Added the first worktree deployment flow.** Created `setup/init-worktree.sh` so an existing host repository can spawn a dedicated `agent-memory` orphan branch, seed it through a temporary detached worktree, and materialize the final `.agent-memory` worktree without rewriting the host checkout.
+
+- **Defined a minimal worktree seed.** Added `setup/init-worktree-paths.txt` to copy only the generic MCP/runtime/governance surfaces into the memory branch while generating fresh identity, plans, chats, knowledge, and scratchpad stubs instead of cloning personalized repo content.
+
+- **Wired host-side MCP output into the flow.** The new init script appends `host_repo_root` to the deployed bootstrap file, writes host-root Codex config when requested, and emits a generic MCP example for other clients.
+
+- **Added host-root agent adapters for worktree mode.** `init-worktree.sh` now writes trimmed `AGENTS.md`, `CLAUDE.md`, and `.cursorrules` files into the host repository so agent sessions start from the memory worktree's `meta/quick-reference.md` instead of assuming the host root is the memory store.
+
+- **Extended setup regression coverage.** Added end-to-end setup tests for orphan-branch creation, committed worktree materialization, worktree-targeted MCP config paths, and `--dry-run` safety. Also refreshed `setup/initial-commit-paths.txt`, `.gitattributes`, and the setup fixture so the new worktree tooling is preserved in the canonical seed commit.
+
+**Reasoning:** The top-priority build plan was blocked on having a real entry point for worktree mode. Landing the Phase 0 path first creates a usable deployment command, proves the orphan-branch topology in tests, and establishes the minimal seed boundary that later adapter, validator, and host-repo freshness work can build on without mixing user-specific content into new worktree branches.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] MCP runtime boundary formalized and semantic shim removed
 
 **Changed:**

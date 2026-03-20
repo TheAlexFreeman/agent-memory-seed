@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
-last_verified: 2026-03-19
-next_action: "Phase 0, item 1 — write init-worktree.sh scaffold"
+last_verified: 2026-03-20
+next_action: "Phase 1, item 6 — refine platform-specific MCP config output for worktree mode"
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: active
@@ -55,7 +55,7 @@ Goal: one command turns any git repo into a host with a live memory worktree.
 
 ### Items
 
-1. ☐ Write `setup/init-worktree.sh`
+1. ☑ Write `setup/init-worktree.sh`
 
    The script should, in order:
    - Verify it is run from a git repo root (fail loudly otherwise).
@@ -69,7 +69,7 @@ Goal: one command turns any git repo into a host with a live memory worktree.
      `codebase_root` trait pointing at the host repo root).
    - Write the MCP config (see Phase 1) and print a "next steps" summary.
 
-2. ☐ Define the minimal worktree seed file set
+2. ☑ Define the minimal worktree seed file set
 
    The orphan branch should contain only what is needed for the memory store — not the
    tooling, not the setup scripts, not the CI/CD that belongs to the standalone seed:
@@ -96,12 +96,12 @@ Goal: one command turns any git repo into a host with a live memory worktree.
    Capture this as `setup/init-worktree-paths.txt` alongside the existing
    `setup/initial-commit-paths.txt`.
 
-3. ☐ Add `--dry-run` flag to `init-worktree.sh`
+3. ☑ Add `--dry-run` flag to `init-worktree.sh`
 
    Print every git command that would be run without executing any of them. Lets users
    inspect what will happen before committing.
 
-4. ☐ Write tests for `init-worktree.sh` in `test_setup_flows.py`
+4. ☑ Write tests for `init-worktree.sh` in `test_setup_flows.py`
 
    Cover: orphan branch exists and has no shared history with main; worktree is
    checked out at the expected path; identity/profile.md contains codebase_root; MCP
@@ -116,7 +116,7 @@ work correctly when the memory store is a worktree inside a larger project.
 
 ### Items
 
-5. ☐ Extend `setup/init-worktree.sh` to write adapter files to the host root
+5. ☑ Extend `setup/init-worktree.sh` to write adapter files to the host root
 
    In standalone mode, `CLAUDE.md`/`AGENTS.md`/`.cursorrules` live in the memory repo
    root — they _are_ the project root. In worktree mode, agents run from the host
@@ -388,3 +388,4 @@ no change.
 | Date | Action |
 |---|---|
 | 2026-03-19 | Plan created following design discussion on orphan-branch worktree integration strategy |
+| 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 item 5 by writing host-root adapter files that point agents at the worktree router and host-side MCP config. Next priority: Phase 1 item 6 MCP config refinement. |

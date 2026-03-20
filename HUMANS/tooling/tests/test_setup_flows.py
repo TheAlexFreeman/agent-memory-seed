@@ -38,6 +38,7 @@ def build_setup_repo(root: Path) -> None:
         "README.md",
         "CHANGELOG.md",
         "agent-bootstrap.toml",
+        "pyproject.toml",
         "setup.sh",
         "setup.html",
         "AGENTS.md",
@@ -87,6 +88,65 @@ class SetupFlowTests(unittest.TestCase):
             [bash, str(root / "setup.sh"), *args],
             cwd=root,
             env=env,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def run_init_worktree(
+        self,
+        seed_root: Path,
+        host_root: Path,
+        *args: str,
+    ) -> subprocess.CompletedProcess[str]:
+        bash = find_bash()
+        if bash is None:
+            self.skipTest("bash is not available in this environment")
+
+        env = isolated_env(host_root / ".home")
+        return subprocess.run(
+            [bash, str(seed_root / "setup" / "init-worktree.sh"), *args],
+            cwd=host_root,
+            env=env,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+    def init_host_repo(self, root: Path) -> None:
+        subprocess.run(
+            ["git", "init", "--initial-branch=core"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "Test User"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "test@example.com"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        (root / "src").mkdir()
+        (root / "src" / "app.py").write_text("print('host repo')\n", encoding="utf-8")
+        subprocess.run(
+            ["git", "add", "."],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", "host init"],
+            cwd=root,
             check=True,
             capture_output=True,
             text=True,
@@ -166,6 +226,99 @@ class SetupFlowTests(unittest.TestCase):
                 config_text,
             )
             self.assertNotIn(str(REPO_ROOT).replace("\\", "\\\\"), config_text)
+
+    def test_init_worktree_creates_orphan_branch_with_committed_memory_worktree(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as seed_tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+            seed_root = Path(seed_tempdir)
+            host_root = Path(host_tempdir)
+            build_setup_repo(seed_root)
+            self.init_host_repo(host_root)
+
+            self.run_init_worktree(
+                seed_root,
+                host_root,
+                "--non-interactive",
+                "--profile",
+                "software-developer",
+                "--platform",
+                "codex",
+            )
+
+            merge_base = subprocess.run(
+                ["git", "merge-base", "core", "agent-memory"],
+                cwd=host_root,
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(0, merge_base.returncode)
+
+            worktree_root = host_root / ".agent-memory"
+            self.assertTrue(worktree_root.is_dir())
+
+            branch_name = subprocess.run(
+                ["git", "symbolic-ref", "--short", "HEAD"],
+                cwd=worktree_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            self.assertEqual("agent-memory", branch_name)
+
+            profile_text = (worktree_root / "identity" / "profile.md").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn("**codebase_root:**", profile_text)
+            self.assertIn(str(host_root), profile_text)
+
+            codex_config = (host_root / ".codex" / "config.toml").read_text(encoding="utf-8")
+            self.assertIn(str(worktree_root).replace("\\", "\\\\"), codex_config)
+            self.assertIn(
+                str(worktree_root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\"),
+                codex_config,
+            )
+
+            host_agents = (host_root / "AGENTS.md").read_text(encoding="utf-8")
+            host_claude = (host_root / "CLAUDE.md").read_text(encoding="utf-8")
+            host_cursor = (host_root / ".cursorrules").read_text(encoding="utf-8")
+            worktree_agents = (worktree_root / "AGENTS.md").read_text(encoding="utf-8")
+
+            self.assertIn(".agent-memory/meta/quick-reference.md", host_agents)
+            self.assertIn(".codex/config.toml", host_agents)
+            self.assertIn("agent-memory", host_agents)
+            self.assertIn(".agent-memory/meta/quick-reference.md", host_claude)
+            self.assertIn(".agent-memory/meta/quick-reference.md", host_cursor)
+            self.assertNotEqual(worktree_agents, host_agents)
+
+    def test_init_worktree_dry_run_prints_commands_without_mutating_repo(self) -> None:
+        with tempfile.TemporaryDirectory() as seed_tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+            seed_root = Path(seed_tempdir)
+            host_root = Path(host_tempdir)
+            build_setup_repo(seed_root)
+            self.init_host_repo(host_root)
+
+            result = self.run_init_worktree(
+                seed_root,
+                host_root,
+                "--dry-run",
+                "--platform",
+                "codex",
+            )
+
+            self.assertIn("git worktree add --detach", result.stdout)
+            self.assertIn("git -C", result.stdout)
+            self.assertIn("git worktree add", result.stdout)
+            self.assertFalse((host_root / ".agent-memory").exists())
+
+            branches = subprocess.run(
+                ["git", "branch", "--list", "agent-memory"],
+                cwd=host_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            self.assertEqual("", branches)
 
     def test_shell_and_browser_setup_sources_keep_profile_summary_copy_aligned(
         self,

@@ -72,6 +72,7 @@ engram_mcp/agent_memory_mcp/tools/semantic/identity_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/knowledge_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/plan_tools.py
 engram_mcp/agent_memory_mcp/tools/semantic/session_tools.py
+engram_mcp/agent_memory_mcp/tools/semantic/skill_tools.py
 engram_mcp/agent_memory_mcp/tools/write_tools.py
 engram_mcp/memory_mcp.py
 engram_mcp/tests/__init__.py
@@ -310,6 +311,8 @@ scratchpad/CURRENT.md
 scratchpad/USER.md
 setup.html
 setup.sh
+setup/init-worktree-paths.txt
+setup/init-worktree.sh
 setup/initial-commit-paths.txt
 setup/setup.html
 setup/setup.sh

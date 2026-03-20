@@ -12,8 +12,8 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 Detail: plans/worktree-integration.md
 Scope: Support using this repo as an orphan-branch worktree attached to an existing project.
-Progress: 0/24 complete
-Next: Phase 0, item 1 — write init-worktree.sh scaffold
+Progress: 5/24 complete
+Next: Phase 1, item 6 — refine platform-specific MCP config output for worktree mode
 Blocks: none; worktree-specific implementation can proceed.
 
 

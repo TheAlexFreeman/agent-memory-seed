@@ -1,2 +1,3 @@
 *.sh text eol=lf
 setup/initial-commit-paths.txt text eol=lf
+setup/init-worktree-paths.txt text eol=lf
