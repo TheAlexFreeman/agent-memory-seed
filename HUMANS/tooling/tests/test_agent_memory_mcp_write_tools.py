@@ -807,6 +807,9 @@ Structured.
         self.assertIn("README.md", still_staged)
         self.assertEqual(payload["publication"]["mode"], "porcelain")
         self.assertFalse(payload["publication"]["degraded"])
+        self.assertEqual(payload["publication"]["operation"], "commit")
+        self.assertRegex(payload["publication"]["published_at"], r"\+00:00$")
+        self.assertRegex(payload["publication"]["parent_sha"], r"^[0-9a-f]{40}$")
         self.assertEqual(payload["warnings"], [])
 
     def test_memory_commit_rejects_unstaged_changes_on_tracked_paths(self) -> None:
@@ -911,6 +914,9 @@ Structured.
         self.assertIn("README.md", still_staged)
         self.assertEqual(payload["publication"]["mode"], "plumbing")
         self.assertTrue(payload["publication"]["degraded"])
+        self.assertEqual(payload["publication"]["operation"], "commit")
+        self.assertRegex(payload["publication"]["published_at"], r"\+00:00$")
+        self.assertRegex(payload["publication"]["parent_sha"], r"^[0-9a-f]{40}$")
         self.assertIn("degraded plumbing path", payload["warnings"][0])
 
     def test_memory_commit_blocks_when_single_writer_lock_is_held(self) -> None:
@@ -1270,6 +1276,9 @@ Next: Original next action
         self.assertTrue(log_subject.startswith("Revert"))
         self.assertEqual(payload["publication"]["mode"], "porcelain")
         self.assertFalse(payload["publication"]["degraded"])
+        self.assertEqual(payload["publication"]["operation"], "revert")
+        self.assertRegex(payload["publication"]["published_at"], r"\+00:00$")
+        self.assertRegex(payload["publication"]["parent_sha"], r"^[0-9a-f]{40}$")
 
     def test_memory_revert_commit_blocks_non_memory_paths_on_confirm(self) -> None:
         repo_root = self._init_repo({"tools/example.py": "print('before')\n"})

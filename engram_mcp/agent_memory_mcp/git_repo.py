@@ -20,7 +20,7 @@ import tempfile
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 from .errors import StagingError
@@ -36,12 +36,18 @@ _WRITE_LOCK_POLL_INTERVAL_SECONDS = 0.05
 @dataclass(frozen=True)
 class GitPublicationResult:
     sha: str
+    parent_sha: str
+    published_at: str
+    operation: str
     mode: str
     degraded: bool = False
     warnings: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
         return {
+            "parent_sha": self.parent_sha,
+            "published_at": self.published_at,
+            "operation": self.operation,
             "mode": self.mode,
             "degraded": self.degraded,
             "writer_lock": "exclusive-worktree",
@@ -296,6 +302,7 @@ class GitRepo:
         paths: list[str] | None = None,
         allow_empty: bool = False,
     ) -> GitPublicationResult:
+        parent_sha = self.current_head()
         cmd = ["git", "commit", "-m", message]
         if allow_empty:
             cmd.append("--allow-empty")
@@ -304,7 +311,13 @@ class GitRepo:
             cmd += ["--only", "--", *deduped_paths]
         self._run(cmd)
         sha_result = self._run(["git", "rev-parse", "HEAD"])
-        return GitPublicationResult(sha=sha_result.stdout.strip(), mode="porcelain")
+        return GitPublicationResult(
+            sha=sha_result.stdout.strip(),
+            parent_sha=parent_sha,
+            published_at=datetime.now(timezone.utc).isoformat(),
+            operation="commit",
+            mode="porcelain",
+        )
 
     def _commit_with_plumbing(
         self,
@@ -361,6 +374,9 @@ class GitRepo:
         self._run(["git", "update-ref", branch_ref, commit_sha, parent_sha])
         return GitPublicationResult(
             sha=commit_sha,
+            parent_sha=parent_sha,
+            published_at=datetime.now(timezone.utc).isoformat(),
+            operation="commit",
             mode="plumbing",
             degraded=True,
             warnings=[
@@ -508,9 +524,16 @@ class GitRepo:
         """Create a revert commit for *sha*. Returns the new HEAD commit SHA."""
         self.ensure_author_identity()
         with self.write_lock("revert"):
+            parent_sha = self.current_head()
             self._run(["git", "revert", "--no-edit", sha])
             result = self._run(["git", "rev-parse", "HEAD"])
-            return GitPublicationResult(sha=result.stdout.strip(), mode="porcelain")
+            return GitPublicationResult(
+                sha=result.stdout.strip(),
+                parent_sha=parent_sha,
+                published_at=datetime.now(timezone.utc).isoformat(),
+                operation="revert",
+                mode="porcelain",
+            )
 
     def grep(
         self,
