@@ -19,7 +19,7 @@ Close three gaps identified during a full-stack MCP tooling review that span Tie
 
 ## Problem statement
 
-**Gap 9 — No bulk frontmatter update:** The current `memory_update_frontmatter` handles one file at a time. During a mass backfill operation in the prior session, 35+ individual calls were needed to add `origin_session: unknown` to files missing the field. Each call produces its own `[system]` commit, polluting git history with dozens of one-line commits. A `[{path, updates}]` batch form that stages all changes and produces a single commit is the natural solution.
+**Gap 9 — No bulk frontmatter update:** The current `memory_update_frontmatter` handles one file at a time. During a mass backfill operation in the prior session, 35+ individual calls were needed to add `origin_session: unknown` to files missing the field. Each call produces its own `[system]` commit, polluting git history with dozens of one-line commits. A `[{path, updates}]` batch form that stages all changes and produces a single commit is the natural solution. The systems-architecture research sharpens this further: the tool should behave like a staged transaction, with fail-before-publish validation and explicit rollback of any partial staged state.
 
 **Gap 10 — Capability discovery is not tool-native:** The capabilities contract (`HUMANS/tooling/agent-memory-capabilities.toml`) declares a `[capability_discovery]` section specifying `well_known_paths`, `requires_kind`, and `supported_versions`. But there is no MCP tool that implements this discovery protocol. Capability discovery currently requires: call `memory_list_folder("HUMANS/tooling", include_humans=True)` → call `memory_read_file("HUMANS/tooling/agent-memory-capabilities.toml")` → parse TOML manually in the agent's context. A dedicated `memory_get_capabilities` tool would make this self-consistent and available to any runtime without TOML parsing logic.
 
@@ -61,13 +61,13 @@ For each entry:
 3. Apply `fields` dict: if `create_missing_keys=True` add missing keys; otherwise only update existing keys
 4. Write file with updated frontmatter and stage with `repo.add(path)`
 
-Returns `MemoryWriteResult` with `files_changed` listing all staged paths, `new_state.updated_count`, and `new_state.skipped_count` (files where no field values changed). One call to `memory_commit` is required after to finalize.
+Returns `MemoryWriteResult` with `files_changed` listing all staged paths, `new_state.updated_count`, `new_state.skipped_count` (files where no field values changed), and `new_state.transaction_state = "staged"`. One call to `memory_commit` is required after to finalize.
 
 **1.2 Enforce batch size limit**
 Reject batches of more than 100 files with `ValidationError`. This is a soft safeguard against model-generated runaway batches.
 
 **1.3 Handle partial validation failure**
-If any path in the batch fails validation (protected directory, file not found, version conflict), fail the entire batch before staging anything. Return a clear error listing which paths failed and why.
+If any path in the batch fails validation (protected directory, file not found, version conflict), fail the entire batch before staging anything. If a filesystem write or `repo.add()` fails after staging has begun, explicitly unstage and clean up any partial transaction state before returning an error. Return a clear error listing which paths failed and why.
 
 **1.4 Add `memory_update_frontmatter_bulk` to capabilities TOML**
 Add to `raw_fallback` list (it is a Tier 2 raw tool). Document `max_batch_size: 100` in an informational comment.
@@ -87,6 +87,12 @@ Reads `HUMANS/tooling/agent-memory-capabilities.toml` (using the well-known path
 {
   "version": 1,
   "kind": "agent-memory-capabilities",
+  "contract_versions": {
+    "frontmatter": 1,
+    "access": 1,
+    "mcp": 1,
+    "capabilities": 1
+  },
   "read_support": [...],
   "raw_fallback": [...],
   "semantic_extensions": [...],
@@ -107,7 +113,13 @@ The full TOML is large. Add a `summary` field:
     "total_tools": 24,
     "read_tools": 10,
     "semantic_tools": 14,
-    "declared_gaps": 0
+    "declared_gaps": 0,
+    "contract_versions": {
+      "frontmatter": 1,
+      "access": 1,
+      "mcp": 1,
+      "capabilities": 1
+    }
   }
 }
 ```
@@ -144,6 +156,7 @@ Context lines should not count toward `max_results`. Only matching lines count. 
 - Multi-file batch: all files staged; single `memory_commit` finalizes
 - `create_missing_keys=False`: existing key updated, missing key skipped
 - Batch with invalid path: fails before staging anything, error lists failing path
+- Mid-batch staging failure: tool rolls back partial staged state and leaves no dirty transaction residue
 - Batch > 100 files: rejected with ValidationError
 - Batch touching protected directory: rejected
 
@@ -189,6 +202,7 @@ Extend `test_memory_capabilities.py` to assert `memory_get_capabilities` is in `
 
 - `memory_update_frontmatter_bulk` is a Tier 2 tool: it stages but does NOT auto-commit. The caller must call `memory_commit` explicitly. This is intentional — bulk changes benefit from a manual review step before committing.
 - `memory_get_capabilities` must not modify any files. If the TOML cannot be found, return a structured error, not an exception.
+- `memory_update_frontmatter_bulk` must behave like a staged transaction: validate first, publish later, and leave no partial staged residue on failure.
 - `context_lines` cap of 10 is non-configurable via params (only via source changes). The ceiling prevents accidentally dumping full files through search.
 - `memory_update_frontmatter_bulk` respects the same protected-directory restrictions as other Tier 2 tools: `identity/`, `meta/`, `chats/`, `skills/` are blocked. For governed writes to those dirs, callers must use the appropriate Tier 1 semantic tools.
 - All three tools must be added to `server.py`'s `register()` call chain before they are callable.

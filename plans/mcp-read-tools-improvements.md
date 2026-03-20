@@ -55,7 +55,7 @@ async def memory_session_health_check() -> str
 
 Reads the following without requiring agent orchestration:
 - `meta/quick-reference.md` → extract `aggregation_trigger` value and `last_periodic_review` date
-- All `*/ACCESS.jsonl` paths (plans, knowledge, knowledge/_unverified, skills, identity, chats) → count non-empty lines per file
+- All hot `*/ACCESS.jsonl` paths (plans, knowledge, knowledge/_unverified, skills, identity, chats) → count non-empty lines per file without scanning archive segments
 - `meta/review-queue.md` → count real pending items (lines that are not headings, blank, or matching the placeholder pattern)
 
 Returns structured JSON:
@@ -73,7 +73,7 @@ Returns structured JSON:
 }
 ```
 
-`aggregation_due` is a list of folders where `entries >= threshold`. `periodic_review_due` is true when `days_since_review` exceeds a configurable window (default: 30 days, readable from `quick-reference.md`).
+`aggregation_due` is a list of folders where hot-log `entries >= threshold`. `periodic_review_due` is true when `days_since_review` exceeds a configurable window (default: 30 days, readable from `quick-reference.md`).
 
 **2.2 Register in `server.py` and `read_support` list**
 Add `memory_session_health_check` to the `read_support` list in `HUMANS/tooling/agent-memory-capabilities.toml` and ensure `register()` in `read_tools.py` returns it.
@@ -136,6 +136,7 @@ Add `memory_session_health_check` to `read_support` list. Ensure `warn_pct` and 
 
 - All changes are additive: no existing params removed, no return schema fields removed.
 - `memory_session_health_check` is read-only (`readOnlyHint=True`): it must never stage or commit.
+- `memory_session_health_check` must operate on hot ACCESS logs only; archive segments are historical state and should not inflate routine session-start maintenance checks.
 - `warn_pct` must satisfy `0 < warn_pct < 1`; raise `ValidationError` on out-of-range values.
 - `since` must be validated as a valid ISO date string before being passed to git; raise `ValidationError` on bad format.
 - `memory_session_health_check` must not require a separate `meta/quick-reference.md` read from the agent — it reads that file internally.

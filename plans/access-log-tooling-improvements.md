@@ -13,7 +13,7 @@ type: implementation-plan
 
 ## Goals
 
-Improve the quality, efficiency, and analytical utility of the memory system's access-logging layer. The current `memory_log_access` tool works, but an audit of 128 real ACCESS.jsonl entries exposed structural gaps that reduce the value of every downstream consumer: `memory_get_maturity_signals`, session health checks, and human review.
+Improve the quality, efficiency, and analytical utility of the memory system's access-logging layer. The current `memory_log_access` tool works, but an audit of 128 real ACCESS.jsonl entries exposed structural gaps that reduce the value of every downstream consumer: `memory_get_maturity_signals`, session health checks, and human review. The systems-architecture research also makes clear that ACCESS is an append-only event log, so this plan now treats aggregation as compaction plus materialized-summary refresh rather than as ad hoc cleanup.
 
 ---
 
@@ -28,6 +28,8 @@ Analysis of the full ACCESS.jsonl corpus (128 entries, 6 folders, 2026-03-16 to 
 3. **Read-only blind spot** — no entries record which files were *written* in a session. The log only tracks inputs, not outputs.
 
 4. **Coverage gaps** — `meta/`, `scratchpad/`, and most `chats/` files are entirely unlogged despite active use. No existing check surfaces this.
+
+5. **No archive segmentation or materialized-view discipline** — the repo documents `ACCESS.archive.jsonl` conceptually but does not yet define how hot logs rotate into immutable archive segments or how aggregation updates folder summaries as rebuildable derived state.
 
 ---
 
@@ -55,7 +57,15 @@ Add an optional `mode` field to each access entry with values: `read`, `write`, 
 Add an optional `task_id` field (lowercase slug, e.g., `"plan-review"`, `"research-write"`, `"validation"`, `"health-check"`). Define the canonical set in `HUMANS/tooling/agent-memory-capabilities.toml`. Update `memory_get_maturity_signals` to group `access_density` by `task_id` bucket.
 
 **2.3 `min_helpfulness` sweep filter**
-Add an optional `min_helpfulness` param to `memory_log_access` and the batch variant. Entries below threshold are written to a sidecar `ACCESS_SCANS.jsonl` (same folder) rather than the main `ACCESS.jsonl`. This keeps the primary log high-signal.
+Add an optional `min_helpfulness` param to `memory_log_access` and the batch variant. Entries below threshold are written to a sidecar `ACCESS_SCANS.jsonl` (same folder) rather than the main `ACCESS.jsonl`. This keeps the primary log high-signal while preserving the scans as append-only audit data rather than silently dropping them.
+
+**2.4 Archive segmentation and hot-log reset**
+Define the post-aggregation storage model explicitly:
+- current reads land only in the hot `ACCESS.jsonl`
+- aggregation rotates processed entries into immutable dated segments such as `ACCESS.archive.2026-03.jsonl`
+- `SUMMARY.md` usage patterns are treated as materialized views derived from those raw events
+
+Update `memory_get_maturity_signals` and any future aggregation tooling to operate on the hot segment by default, not the entire historical archive.
 
 ---
 
@@ -93,6 +103,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [ ] 2.1 Add `mode` field + maturity signal update
 - [ ] 2.2 Add `task_id` short code + maturity signal grouping
 - [ ] 2.3 Add `min_helpfulness` sweep filter + sidecar file
+- [ ] 2.4 Define archive segmentation + materialized-summary refresh behavior
 - [ ] 3.1 Extend `memory_validate` with coverage check
 - [ ] 3.2 `memory_get_maturity_signals` fallback + coverage field
 - [ ] 4.1 Tests for batch tool
@@ -100,7 +111,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 - [ ] 4.3 Update capabilities TOML tests
 - [ ] 4.4 Document new fields in CORE.md
 
-**Progress:** 0/12 items complete
+**Progress:** 0/13 items complete
 
 ---
 
@@ -108,6 +119,7 @@ Document the `mode`, `task_id`, `session_id` fields and the `ACCESS_SCANS.jsonl`
 
 - All new fields are optional; existing ACCESS.jsonl entries remain valid.
 - The `ACCESS_SCANS.jsonl` sidecar must not be included in maturity signal calculations.
+- `ACCESS.jsonl` is the hot append-only log; archive segments are immutable and are processed separately from the session-start hot-path health check.
 - `memory_log_access_batch` must use a single `auto_commit` (not one commit per entry).
 - `min_helpfulness` default is `None` (no filtering) to avoid breaking existing call sites.
 - `task_id` values are a controlled vocabulary defined in the TOML; free strings are rejected.

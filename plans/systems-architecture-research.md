@@ -1,10 +1,11 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-19'
-next_action: '`write-ahead-logging-and-wal-design.md`'
+completed: '2026-03-19'
+next_action: null
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: research-plan
 ---
@@ -189,7 +190,7 @@ resilient by design rather than by luck.
 
 ---
 
-### Phase 3 — Append-only logs, WAL design, and compaction · ☐ 0/2 complete
+### Phase 3 — Append-only logs, WAL design, and compaction · ☑ 2/2 complete
 
 **Why third:** `ACCESS.jsonl` is an append-only log. The governance spec calls for
 aggregation at 15 entries per folder — a trivial threshold that will be hit frequently
@@ -197,7 +198,7 @@ as the system matures. Understanding how production systems manage growing appen
 logs informs both the immediate implementation of the aggregation trigger and the
 longer-term question of whether JSONL is the right format at scale.
 
-6. ☐ `write-ahead-logging-and-wal-design.md`
+6. ☑ `write-ahead-logging-and-wal-design.md`
 
    - **WAL fundamentals:** why write-ahead logging (WAL) is the universal mechanism
      for durable, crash-recoverable writes, the invariant ("log before apply"), the
@@ -222,7 +223,7 @@ longer-term question of whether JSONL is the right format at scale.
      WAL-style pattern; the gap is the absence of rollback if staging fails partway
      through.
 
-7. ☐ `append-only-logs-and-compaction.md`
+7. ☑ `append-only-logs-and-compaction.md`
 
    - **Log-structured storage:** the append-only log as the universal write path, why
      appending is faster than random writes (sequential I/O), the trade-off: reads
@@ -254,7 +255,7 @@ longer-term question of whether JSONL is the right format at scale.
 
 ---
 
-### Phase 4 — Concurrency, CRDTs, and conflict-free writes · ☐ 0/2 complete
+### Phase 4 — Concurrency, CRDTs, and conflict-free writes · ☑ 2/2 complete
 
 **Why fourth:** The system currently assumes one writer at a time. The worktree
 integration and codebase-knowledge use case both increase the likelihood of multiple
@@ -262,7 +263,7 @@ agents (or a human + an agent) writing to the same memory branch concurrently.
 Understanding the concurrency design space distinguishes "we haven't designed for
 this" from "we can't design for this."
 
-8. ☐ `concurrency-models-for-local-state.md`
+8. ☑ `concurrency-models-for-local-state.md`
 
    - **Optimistic vs. pessimistic concurrency control:** pessimistic (take a lock
      before reading, hold until write complete), optimistic (read without locking,
@@ -287,7 +288,7 @@ this" from "we can't design for this."
      writes, informs the version token implementation in `semantic_tools.py`, and
      provides the background for CRDT-based text merging.
 
-9. ☐ `crdts-and-collaborative-text.md`
+9. ☑ `crdts-and-collaborative-text.md`
 
    - **CRDT fundamentals:** convergent replicated data types (CvRDTs / state-based)
      vs. commutative replicated data types (CmRDTs / operation-based), the
@@ -321,14 +322,14 @@ this" from "we can't design for this."
 
 ---
 
-### Phase 5 — Provenance, trust, and temporal data modeling · ☐ 0/2 complete
+### Phase 5 — Provenance, trust, and temporal data modeling · ☑ 2/2 complete
 
 **Why fifth:** The system's most distinctive architectural feature is its trust and
 provenance model. Understanding how the research community and industry have formally
 modeled provenance — and how temporal databases handle time-varying facts — will
 enrich this model and expose gaps the current design doesn't address.
 
-10. ☐ `provenance-and-trust-models.md`
+10. ☑ `provenance-and-trust-models.md`
 
     - **W3C PROV-O:** the W3C provenance ontology, the three core concepts (Entity,
       Activity, Agent), the seven provenance relations (`wasGeneratedBy`,
@@ -358,7 +359,7 @@ enrich this model and expose gaps the current design doesn't address.
       PROV-O and SLSA provide formal vocabulary for refining it; Biba provides
       theoretical backing for the instruction-containment rule.
 
-11. ☐ `temporal-data-modeling.md`
+11. ☑ `temporal-data-modeling.md`
 
     - **Bi-temporal modeling:** the two independent time axes in temporal databases —
       valid time (when a fact was true in the world) and transaction time (when the
@@ -391,14 +392,14 @@ enrich this model and expose gaps the current design doesn't address.
 
 ---
 
-### Phase 6 — Schema evolution and contract versioning · ☐ 0/2 complete
+### Phase 6 — Schema evolution and contract versioning · ☑ 2/2 complete
 
 **Why sixth:** The production readiness roadmap identifies schema versioning as a
 required deliverable before the system can be safely adopted. Understanding how
 established schema evolution systems work — what guarantees they make and what
 migration patterns they enforce — directly informs Phase 2 of the production roadmap.
 
-12. ☐ `schema-evolution-strategies.md`
+12. ☑ `schema-evolution-strategies.md`
 
     - **Protocol Buffers compatibility rules:** field numbers as the stability
       contract (never reuse), backward-compatible changes (add optional fields, add
@@ -426,7 +427,7 @@ migration patterns they enforce — directly informs Phase 2 of the production r
       `production-readiness-roadmap.md` (version the contracts). The expand/contract
       pattern gives a concrete migration strategy for every frontmatter schema change.
 
-13. ☐ `content-addressable-storage-and-integrity.md`
+13. ☑ `content-addressable-storage-and-integrity.md`
 
     - **Content-addressable storage (CAS) fundamentals:** the invariant (same content
       → same address, different content → different address), SHA-based addressing
@@ -527,3 +528,5 @@ until reviewed.
 |---|---|
 | 2026-03-19 | Plan created following discussion of git/filesystem/distributed-systems research areas relevant to memory system architecture |
 | 2026-03-19 | Completed git-object-model.md (systems-architecture-research 1/13) || 2026-03-19 | Completed git-worktrees-and-hooks.md (systems-architecture-research 2/13) || 2026-03-19 | Completed git-plumbing-and-automation.md (systems-architecture-research 3/13) || 2026-03-19 | Completed filesystem-atomicity-and-locking.md (systems-architecture-research 4/13) || 2026-03-19 | Completed filesystems-for-developers.md (systems-architecture-research 5/13) |
+| 2026-03-19 | Completed write-ahead-logging-and-wal-design.md (systems-architecture-research 6/13) || 2026-03-19 | Completed append-only-logs-and-compaction.md (systems-architecture-research 7/13) || 2026-03-19 | Completed concurrency-models-for-local-state.md (systems-architecture-research 8/13) || 2026-03-19 | Completed crdts-and-collaborative-text.md (systems-architecture-research 9/13) |
+| 2026-03-19 | Completed provenance-and-trust-models.md (systems-architecture-research 10/13) || 2026-03-19 | Completed temporal-data-modeling.md (systems-architecture-research 11/13) || 2026-03-19 | Completed schema-evolution-strategies.md (systems-architecture-research 12/13) || 2026-03-19 | Completed content-addressable-storage-and-integrity.md (systems-architecture-research 13/13) |

@@ -29,8 +29,11 @@ across unrelated tools.
 The system also lacks a formal layer boundary between the *memory format* (the
 file schema, governance rules, and git operations — things that work without Python)
 and the *MCP runtime* (the governed write layer that requires Python and `mcp`).
-This boundary exists conceptually but is not reflected in the directory structure
-or the dependency graph.
+This boundary exists conceptually but is not reflected in the directory structure,
+the dependency graph, or the repository's contract-version surface. The
+systems-architecture research also clarifies that this runtime boundary is the natural
+single-writer actor for governed mutations, so the reorganization should make that
+ownership explicit rather than leave it implicit.
 
 ## Goals
 
@@ -41,7 +44,7 @@ or the dependency graph.
 4. Add a `[project.scripts]` CLI entrypoint so the server runs as `memory-mcp`
    after `pip install -e .[server]` — no path arithmetic required.
 5. Split `semantic_tools.py` into four focused submodules grouped by domain.
-6. Make the format/validation layer importable without the `mcp` dependency.
+6. Make the format/validation layer importable without the `mcp` dependency, with centralized schema-version and contract constants that adapters can expose consistently.
 7. Update every hardcoded path reference: config files, setup scripts, adapter
    files, capability manifests, and the worktree integration plan.
 8. Keep the test suite green throughout. Treat a failing test at any point as a

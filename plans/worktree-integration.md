@@ -25,7 +25,11 @@ aren't obvious, aren't tested, and will silently break if the host changes shape
 
 The goal is a single command — `memory-init` or `bash setup/init-worktree.sh` — that a
 developer runs once from an existing project root, after which the memory store is live,
-the MCP server is configured, and agents can start working immediately.
+the MCP server is configured, and agents can start working immediately. The
+systems-architecture research adds one important design constraint: the first-cut
+worktree topology should assume a single governed writer per memory worktree, with
+provenance anchored to host-repo commits rather than CRDT-style concurrent editing of
+protected Markdown files.
 
 ## Scope
 
@@ -182,19 +186,24 @@ enabling knowledge staleness detection as source files change.
     - `source_files`: list of files referenced in the knowledge file's frontmatter
       `related` field or inferred from the file's content directory structure
     - `last_verified`: date from frontmatter
+    - `verified_against_commit`: optional commit SHA recorded in frontmatter when the
+      knowledge file was last reviewed against the host repo
+    - `current_head`: current host-repo commit SHA used for the freshness comparison
     - `host_changes_since`: number of commits to matched source files since
       `last_verified`
     - `suggested_action`: `promote` / `reverify` / `downgrade_trust` / `none`
 
-    This makes the trust decay policy machine-enforceable rather than advisory.
+    This makes the trust decay policy machine-enforceable rather than advisory and gives
+    freshness checks a stronger provenance anchor than date-only comparisons.
 
 11. ☐ Update `memory_audit_trust` to use freshness data when `host_repo_root` is set
 
     The existing audit tool checks `last_verified` dates against fixed thresholds.
     Extend it so that when host repo access is available, stale thresholds are
-    supplemented by actual change activity: a knowledge file with a 6-month-old
-    `last_verified` but zero host-repo changes to its source files is less urgent
-    than one with a 2-week-old `last_verified` but 40 intervening commits.
+    supplemented by actual change activity and, when present, `verified_against_commit`.
+    A knowledge file with a 6-month-old `last_verified` but zero host-repo changes to
+    its source files is less urgent than one with a 2-week-old `last_verified` but 40
+    intervening commits.
 
 12. ☐ Add test coverage for items 9–11
 

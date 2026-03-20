@@ -29,7 +29,7 @@ The Tier 1 semantic layer currently has five structural gaps:
 
 **Gap 7 — Session wrap-up produces two commits:** `memory_record_chat_summary` and `memory_record_reflection` are always called sequentially at session end, producing two `[chat]` commits with no causal link and no ACCESS log entry. A composite `memory_record_session` tool would atomically write both files, update `chats/SUMMARY.md`, and log one ACCESS entry — in a single commit.
 
-**Gap 8 — Aggregation is fully manual despite being fully specified:** `meta/curation-algorithms.md` defines the Phase 1 co-occurrence clustering algorithm in detail. `plans/ACCESS.jsonl` is already at 100 entries (6.7× the 15-entry aggregation trigger), but running the algorithm requires manual multi-step orchestration across 6 ACCESS.jsonl files with no tool support. This is the highest-effort gap.
+**Gap 8 — Aggregation is fully manual despite being fully specified:** `meta/curation-algorithms.md` defines the Phase 1 co-occurrence clustering algorithm in detail. `plans/ACCESS.jsonl` is already at 100 entries (6.7× the 15-entry aggregation trigger), but running the algorithm requires manual multi-step orchestration across 6 ACCESS.jsonl files with no tool support. The systems-architecture research tightens the target behavior here: aggregation should not stop at a report. It should behave like log compaction plus materialized-summary refresh while keeping raw archive segments immutable.
 
 ---
 
@@ -137,7 +137,7 @@ Replace the two-step `memory_record_chat_summary` → `memory_record_reflection`
 
 ### Phase 5 — `memory_run_aggregation`
 
-**5.1 Implement Phase 1 co-occurrence clustering in `read_tools.py`**
+**5.1 Implement Phase 1 co-occurrence clustering and compaction preview**
 New Tier 0 tool (read-only computation; it does not write cluster results automatically). Signature:
 ```python
 async def memory_run_aggregation(
@@ -146,19 +146,19 @@ async def memory_run_aggregation(
 ) -> str
 ```
 
-Reads all ACCESS.jsonl files in the specified folders (default: all governed folders). Executes the Phase 1 algorithm from `meta/curation-algorithms.md`:
+Reads all ACCESS.jsonl hot logs in the specified folders (default: all governed folders). Executes the Phase 1 algorithm from `meta/curation-algorithms.md`:
 1. Group entries by `session_id` when present; fall back to `date` for legacy entries
 2. Build a co-retrieval matrix across all session groups
 3. Identify cluster candidates: 3+ files from 2+ folders where every pair co-occurs in 3+ session groups
-4. Return a `clusters` list, a `sessions_processed` count, `entries_processed`, and a `recommend_summary_update` flag when clusters are found
+4. Return a `clusters` list, `sessions_processed`, `entries_processed`, a `summary_updates` preview, and `archive_segments` that would be created if the run is applied
 
-When `dry_run=False`, writes a `meta/task-groups.md` file recording the cluster results and commits as `[curation] Aggregation: Phase 1 cluster analysis ({date})`. Protected by requiring user confirmation via the `change_class: proposed` governance path before any write.
+When `dry_run=False`, updates the affected folder `SUMMARY.md` usage sections, rotates processed entries into immutable archive segments such as `ACCESS.archive.2026-03.jsonl`, clears the hot `ACCESS.jsonl`, and commits as `[curation] Aggregate access log ({date})`. Protected by requiring user confirmation via the `change_class: proposed` governance path before any write.
 
 **5.2 Add `memory_run_aggregation` to `read_support` (when dry_run=True) / `semantic_extensions` (when writing)**
 The tool is read-only by default. Only the writing variant needs semantic extension registration. Model both behaviors in the capabilities TOML, noting the dual mode.
 
 **5.3 Update `skills/session-start.md`**
-When `memory_session_health_check` (from the Tier 0 plan) reports `aggregation_due`, include an instruction to call `memory_run_aggregation(dry_run=True)` and report the cluster summary to the user before deciding whether to commit results.
+When `memory_session_health_check` (from the Tier 0 plan) reports `aggregation_due`, include an instruction to call `memory_run_aggregation(dry_run=True)` and report the compaction preview to the user before deciding whether to apply the summary/archive updates.
 
 **5.4 Handle the retroactive backfill case**
 Document in the tool's docstring that the Exploration stage algorithm (Phase 1) does not require `task_id` or `category` fields. Flag entries missing `session_id` in the output summary so the user can see how much data is lost to the legacy fallback.
@@ -180,7 +180,7 @@ Test: section upsert; mode=append; mode=replace; file not found raises NotFoundE
 Test: both SUMMARY.md and reflection.md written; chats/SUMMARY.md updated; access entries have session_id injected; single commit produced.
 
 **6.5 Tests for `memory_run_aggregation`**
-Test: co-occurrence pairs correctly identified; cluster threshold enforcement (requires 3+ sessions); dry_run=True produces no file writes; dry_run=False writes meta/task-groups.md.
+Test: co-occurrence pairs correctly identified; cluster threshold enforcement (requires 3+ sessions); dry_run=True produces no file writes; dry_run=False updates folder summaries, rotates a dated archive segment, and clears only the processed hot log.
 
 **6.6 Full capabilities TOML update**
 Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tables. Update the test that checks `semantic_extensions` length.
@@ -222,6 +222,7 @@ Add all new tools to `semantic_extensions` and add their `[operations.XXX]` tabl
 - `memory_update_skill` churn guard: omitted for now; revisit when skill update frequency data is available.
 - `memory_record_session` must fall back gracefully when only `summary` is provided (no reflection, no access entries); it should still produce a valid session record.
 - `memory_run_aggregation` in `dry_run=True` mode must never write any file; enforce with `readOnlyHint=True` annotation in that mode.
+- Aggregation must treat raw ACCESS events as immutable history: compaction means rotate and materialize, never rewrite old archive entries in place.
 - `memory_resolve_review_item` operates on `meta/review-queue.md` which is a system-governed path; it must be a Tier 1 semantic tool and must not use Tier 2 primitives internally.
 - All new tools must be registered in `server.py` and returned from their module's `register()` function.
 - All new tools must have operations tables before the `test_semantic_operations_own_required_contract_fields` test is run.

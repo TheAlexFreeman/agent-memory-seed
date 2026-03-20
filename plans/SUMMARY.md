@@ -20,12 +20,12 @@ Reorganize the MCP tooling out of `HUMANS/` and into a proper `mcp/` package wit
 <!-- END: mcp-reorganization -->
 
 <!-- BEGIN: systems-architecture-research -->
-### `systems-architecture-research.md` · status: active · trust: medium
+### `systems-architecture-research.md` · status: complete · trust: medium
 
 Research program on the storage, concurrency, and data modeling primitives underlying the memory system. 13 files across 6 phases, each tied to a specific open architectural issue: git object model and index locking (Phase 1), filesystem atomicity and POSIX locking (Phase 2), WAL design and append-only log compaction (Phase 3), CRDT/concurrency models (Phase 4), provenance/trust/temporal modeling (Phase 5), schema evolution and content-addressable storage (Phase 6). Output in `knowledge/_unverified/systems-architecture/`.
 
-**Progress:** 5/13 items complete
-**Next action:** `write-ahead-logging-and-wal-design.md`
+**Progress:** 13/13 items complete
+**Completed:** 2026-03-19
 <!-- END: systems-architecture-research -->
 
 <!-- BEGIN: worktree-integration -->
@@ -244,12 +244,12 @@ Reorganize the MCP tooling out of `HUMANS/` and into a proper `mcp/` package wit
 <!-- END: mcp-reorganization -->
 
 <!-- BEGIN: systems-architecture-research -->
-### `systems-architecture-research.md` · status: active · trust: medium
+### `systems-architecture-research.md` · status: complete · trust: medium
 
 Research program on the storage, concurrency, and data modeling primitives underlying the memory system. 13 files across 6 phases, each tied to a specific open architectural issue: git object model and index locking (Phase 1), filesystem atomicity and POSIX locking (Phase 2), WAL design and append-only log compaction (Phase 3), CRDT/concurrency models (Phase 4), provenance/trust/temporal modeling (Phase 5), schema evolution and content-addressable storage (Phase 6). Output in `knowledge/_unverified/systems-architecture/`.
 
-**Progress:** 0/13 files complete
-**Next action:** Phase 1, item 1 — git-object-model.md
+**Progress:** 13/13 items complete
+**Completed:** 2026-03-19
 <!-- END: systems-architecture-research -->
 
 <!-- BEGIN: worktree-integration -->
