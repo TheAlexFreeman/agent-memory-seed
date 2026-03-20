@@ -89,6 +89,7 @@ System-internal analysis files produced by the Engram agent analyzing its own ar
 - **`2026-03-19-tmp-data-loss-incident.md`** — Incident report on data loss and git-reset handling.
 - **`2026-03-20-git-session-followup.md`** — Follow-up notes on git session recovery.
 - **`environment-capability-asymmetry.md`** — Notes on capability asymmetry across environments.
+- **[memetic-security-mitigation-audit.md](knowledge/_unverified/system-notes/memetic-security-mitigation-audit.md)** — Comprehensive audit of Engram's five existing security mitigations — trust tiers, validator, identity anchors, git trail, human review gate — with gap analysis and cross-cutting defense-in-depth assessment.
 
 <!-- section: ai-frontier -->
 ### `ai-frontier/` — Frontier AI technical knowledge base (created 2026-03-19)
