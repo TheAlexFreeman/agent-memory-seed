@@ -1,10 +1,10 @@
 ---
 created: 2026-03-19
 last_verified: 2026-03-20
-next_action: "Phase 5, item 24 — decide whether deployed worktrees should satisfy the full validator contract or a worktree-specific CI contract"
+next_action: ""
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
-status: active
+status: complete
 trust: medium
 type: implementation-plan
 category: build
@@ -344,7 +344,7 @@ worktree configuration, preventing silent misconfiguration.
     fails; `host_repo_root` pointing inside the worktree fails; shared history
     detected as a warning; duplicate adapter content produces a warning.
 
-24. ☐ Add CI job for `init-worktree.sh` end-to-end test
+24. ☑ Add CI job for `init-worktree.sh` end-to-end test
 
     In `.github/workflows/ci.yml`, add a job that:
     - Creates a minimal host git repo in a temp dir.
@@ -391,4 +391,4 @@ no change.
 | 2026-03-20 | Completed Phase 0 by adding `setup/init-worktree.sh`, the minimal `setup/init-worktree-paths.txt` seed manifest, `--dry-run` support, host-root Codex/generic MCP config output, and setup-flow coverage for orphan-branch creation and dry-run behavior. Then completed Phase 1 items 5-8 by writing host-root adapter files, preferring `engram-mcp` over the path-based script when available, formalizing optional `host_repo_root` support in the bootstrap resolver and validator, and updating `meta/quick-reference.md` for host-root worktree routing. Also completed Phase 2 item 9 by teaching `memory_git_log` to read from the configured host repo with path-safety checks. Next planned item: Phase 2 item 10 (`memory_check_knowledge_freshness`). |
 | 2026-03-20 | Completed Phase 2 items 10-12 by adding `memory_check_knowledge_freshness`, reusing the host-repo bootstrap contract to resolve related source files and compare them against host git history, and folding the same freshness signal into `memory_audit_trust` so stale host-backed notes are escalated by change activity while unchanged notes stay lower priority. Added targeted MCP coverage for stale, fresh, unknown-host, and export behavior; targeted tests passed (`98 passed`). Next planned item: Phase 3 item 13 (`HUMANS/docs/INTEGRATIONS.md` worktree guidance). |
 | 2026-03-20 | Completed Phase 3 items 13-16 by rewriting `HUMANS/docs/INTEGRATIONS.md` around actual worktree deployment concerns, adding CI/CD exemption and tooling-bleed guidance, and generating `.ignore` plus `.editorconfig` in deployed worktrees. Also completed Phase 4 items 17-20 by adding a starter `codebase-survey` plan template, `knowledge/codebase/` stub files, a `skills/codebase-survey.md` workflow, codebase-context placeholders in the setup profile templates, and setup-flow assertions that the new scaffolds appear after `init-worktree.sh`. Targeted setup regression coverage passed (`13 passed`). Next planned item: Phase 5 item 21 (`validate_memory_repo.py` worktree mode detection). |
-| 2026-03-20 | Completed Phase 5 items 21-23 by teaching `validate_memory_repo.py` to recognize worktree mode from `host_repo_root`, verify host/memory topology with git-backed checks, warn on shared history and duplicated host/worktree adapter files, and adding targeted validator coverage for valid, missing, nested, shared-history, and duplicate-adapter scenarios. Also added a dedicated Windows CI job for the existing worktree init end-to-end setup test and fixed `setup/init-worktree.sh` so deployed `agent-bootstrap.toml` writes `host_repo_root` at top level using normalized forward-slash paths. Targeted Phase 5 regression coverage passed (`6 passed`). Next planned item: Phase 5 item 24, which still needs a final decision on whether deployed worktrees should satisfy the full standalone validator contract or a narrower worktree-specific CI contract. |
+| 2026-03-20 | Completed Phase 5 items 21-24 by teaching `validate_memory_repo.py` to recognize worktree mode from `host_repo_root`, verify host/memory topology with git-backed checks, warn on shared history and duplicated host/worktree adapter files, and adding targeted validator coverage for valid, missing, nested, shared-history, duplicate-adapter, and deployed-worktree-profile scenarios. Finalized the deployed-worktree contract by removing standalone `CHANGELOG.md` bootstrap steps from worktree manifests, skipping standalone-only validator surfaces in deployed worktree mode, normalizing init-generated template provenance/placeholders to the validator contract, and restoring the validator-backed `init-worktree.sh` end-to-end test in CI. Targeted Phase 5 regression coverage passed (`6 passed`). Plan complete; next build priority moves to `plans/access-log-tooling-improvements.md`. |

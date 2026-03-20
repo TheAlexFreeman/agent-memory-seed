@@ -318,7 +318,7 @@ install_profile() {
     else
         write_text_file "$destination" "---
 source: template
-origin_session: setup/init-worktree.sh
+origin_session: setup
 created: $TODAY
 trust: medium
 ---
@@ -354,9 +354,7 @@ write_memory_stubs() {
 
     write_text_file "$worktree_root/chats/SUMMARY.md" "# Chats Summary
 
-No session history has been recorded for this worktree yet.
-
-Start logging continuity after the first working session."
+_Nothing here yet._"
     write_text_file "$worktree_root/knowledge/SUMMARY.md" "# Knowledge Summary
 
 No codebase knowledge has been captured yet.
@@ -370,9 +368,9 @@ Use this area for external research and unverified notes until they are reviewed
 No active plans yet.
 
 Create a build or research plan when the host project needs multi-session tracking."
-    write_text_file "$worktree_root/scratchpad/CURRENT.md" "# Current Scratchpad
+    write_text_file "$worktree_root/scratchpad/CURRENT.md" "# Agent working notes
 
-Active thread placeholder for this worktree."
+_No current notes._"
     write_text_file "$worktree_root/scratchpad/USER.md" "# User Scratchpad
 
 User-authored constraints and reminders for this codebase belong here."
@@ -443,7 +441,7 @@ Starter codebase notes for $project_name live under [codebase/SUMMARY.md](codeba
 Begin with [codebase/architecture.md](codebase/architecture.md), then fill the
 data model, operations, and design-rationale stubs as the survey plan advances."
 
-    write_text_file "$worktree_root/plans/SUMMARY.md" "# Plans - Summary
+    write_text_file "$worktree_root/plans/SUMMARY.md" "# Plans — Summary
 
 Compact returning-session view of multi-session work for this deployed memory worktree.
 
@@ -451,13 +449,19 @@ Compact returning-session view of multi-session work for this deployed memory wo
 
 ### Build plans
 
+<!-- BEGIN: codebase-survey -->
 ### \`codebase-survey.md\` · status: active · trust: medium · **TOP PRIORITY**
 
 Detail: plans/codebase-survey.md
 Scope: Capture the architecture, interfaces, operations, and design rationale for $project_name.
 Progress: 0/12 complete
-Next: Phase 0, item 1 - identify the application entry points and boot sequence
+Next: Phase 0, item 1 — identify the application entry points and boot sequence
 Blocks: none; survey templates are installed in knowledge/codebase/ and ready to fill.
+<!-- END: codebase-survey -->
+
+## Recent completions
+
+_None yet._
 
 ## Usage notes
 
@@ -470,6 +474,7 @@ update_bootstrap_file() {
     local host_root_native="$2"
     local host_root_toml
     local temp_path
+    local normalized_path
 
     host_root_toml="${host_root_native//\\//}"
 
@@ -495,6 +500,57 @@ update_bootstrap_file() {
                 }
             }
         ' "$bootstrap_path" > "$temp_path"
+    mv "$temp_path" "$bootstrap_path"
+
+    temp_path="$(mktemp)"
+    awk '
+        function flush_block() {
+            if (!in_step_block) {
+                return
+            }
+            if (!drop_block) {
+                printf "%s", block
+            }
+            block = ""
+            drop_block = 0
+            in_step_block = 0
+        }
+
+        BEGIN {
+            block = ""
+            drop_block = 0
+            in_step_block = 0
+        }
+
+        /^\[\[modes\.(full_bootstrap|periodic_review)\.steps\]\]$/ {
+            flush_block()
+            in_step_block = 1
+            block = $0 ORS
+            next
+        }
+
+        in_step_block {
+            if ($0 ~ /^\[\[/ || $0 ~ /^\[/) {
+                flush_block()
+                print
+                next
+            }
+
+            block = block $0 ORS
+            if ($0 == "path = \"CHANGELOG.md\"") {
+                drop_block = 1
+            }
+            next
+        }
+
+        {
+            print
+        }
+
+        END {
+            flush_block()
+        }
+    ' "$bootstrap_path" > "$temp_path"
     mv "$temp_path" "$bootstrap_path"
 }
 

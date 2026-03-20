@@ -17,7 +17,7 @@ See `meta/scratchpad-guidelines.md` for the full write protocol, promotion crite
 ## Immediate next actions
 
 - Aggregate `plans/ACCESS.jsonl` (100 entries, 6× over trigger — review-queue item from 2026-03-19).
-- Worktree integration Phase 5, item 24 is next: decide whether deployed worktrees should satisfy the full standalone validator contract or a worktree-specific CI contract.
+- Access-log tooling is the next build priority: implement `memory_log_access_batch` in `write_tools.py` and start reducing `plans/ACCESS.jsonl` write noise.
 - Treat batch ACCESS logging and governed review-queue resolution as the most valuable follow-on MCP improvements.
 
 ## Open questions
