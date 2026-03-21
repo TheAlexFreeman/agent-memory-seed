@@ -202,4 +202,11 @@ _No access data yet._ After aggregation, this section will contain:
 - **[latour-actor-network-theory.md](knowledge/social-science/sociology-of-knowledge/latour-actor-network-theory.md)** — ANT: translation, enrollment, black-boxing, inscription, immutable mobiles; symmetry between human and nonhuman actors
 - **[social-construction-of-scientific-knowledge.md](knowledge/social-science/sociology-of-knowledge/social-construction-of-scientific-knowledge.md)** — Edinburgh strong programme (Bloor), experimenter's regress (Collins), science wars (Sokal), synthesis position
 
+#### `collective-action/` — Collective action theory and institutional economics (promoted 2026-03-21, trust: low — awaiting review)
+- **[olson-logic-of-collective-action.md](knowledge/social-science/collective-action/olson-logic-of-collective-action.md)** — Free-rider problem, public goods, large vs small groups, selective incentives; the foundational collective action pessimism
+- **[ostrom-governing-the-commons.md](knowledge/social-science/collective-action/ostrom-governing-the-commons.md)** — Eight design principles for commons governance; polycentric governance; empirical challenge to Hardin and Olson
+- **[north-institutions-institutional-change.md](knowledge/social-science/collective-action/north-institutions-institutional-change.md)** — Institutions as rules of the game; formal vs informal; transaction costs; path dependence; adaptive efficiency
+- **[acemoglu-robinson-inclusive-institutions.md](knowledge/social-science/collective-action/acemoglu-robinson-inclusive-institutions.md)** — Inclusive vs extractive institutions; critical junctures; creative destruction; political economy of institutional persistence
+- **[collective-action-synthesis-ai-governance.md](knowledge/social-science/collective-action/collective-action-synthesis-ai-governance.md)** — Synthesis: Olson-Ostrom-North-A&R applied to AI capability race, safety coordination, and governance design
+
 ---

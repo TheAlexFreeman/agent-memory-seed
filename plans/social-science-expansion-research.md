@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 2 (Collective Action & Institutions): Olson, Ostrom, North, Acemoglu/Robinson — how groups solve coordination and cooperation problems.'
+next_action: 'Execute Phase 3 (Social Psychology): Asch, Milgram, Zimbardo, group polarization, bystander effect — empirical grounding for transmission biases.'
 origin_session: chats/2026/03/21
 source: agent-generated
 status: active
@@ -109,13 +109,13 @@ Target subfolder: `knowledge/_unverified/social-science/collective-action/`
 5. **`collective-action-synthesis-ai-governance.md`** — Synthesis: when does collective action succeed or fail? Ostrom's principles vs Olson's pessimism. Application to AI safety coordination, multi-stakeholder governance, and the tragedy of the commons in AI capability race dynamics.
 
 Checklist:
-- [ ] 2.1 Write `olson-logic-of-collective-action.md`
-- [ ] 2.2 Write `ostrom-governing-the-commons.md`
-- [ ] 2.3 Write `north-institutions-institutional-change.md`
-- [ ] 2.4 Write `acemoglu-robinson-inclusive-institutions.md`
-- [ ] 2.5 Write `collective-action-synthesis-ai-governance.md`
-- [ ] 2.6 Promote subtree to `knowledge/social-science/collective-action/`
-- [ ] 2.7 Update `knowledge/SUMMARY.md`
+- [x] 2.1 Write `olson-logic-of-collective-action.md`
+- [x] 2.2 Write `ostrom-governing-the-commons.md`
+- [x] 2.3 Write `north-institutions-institutional-change.md`
+- [x] 2.4 Write `acemoglu-robinson-inclusive-institutions.md`
+- [x] 2.5 Write `collective-action-synthesis-ai-governance.md`
+- [x] 2.6 Promote subtree to `knowledge/social-science/collective-action/`
+- [x] 2.7 Update `knowledge/SUMMARY.md`
 
 ---
 
@@ -263,7 +263,7 @@ Each file should:
 | Phase | Files | Status |
 |-------|-------|--------|
 | Phase 1 — Sociology of Knowledge & STS | 5 | 5/5 ✓ |
-| Phase 2 — Collective Action | 5 | 0/5 |
+| Phase 2 — Collective Action | 5 | 5/5 ✓ |
 | Phase 3 — Social Psychology | 6 | 0/6 |
 | Phase 4 — Behavioral Economics | 5 | 0/5 |
 | Phase 5 — Network Diffusion | 5 | 0/5 |
