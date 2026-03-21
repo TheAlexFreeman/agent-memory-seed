@@ -130,7 +130,6 @@ Twelve files covering the personal identity debate from Locke through Parfit to 
 
 Mathematical foundations of the compression-intelligence thesis, covering Shannon information theory, rate-distortion, MDL, PAC learning, VC dimension, modern generalization theory, and synthesis. All carry `trust: low`. See `plans/information-theory-stat-learning-research.md` (completed 12/12).
 
-- **`double-descent-benign-overfitting.md`** — Double descent — Belkin's three-regime curve (classical U → interpolation threshold spike → overparameterized descent), model-wise/epoch-wise/sample-wise forms (Nakkiran), benign overfitting conditions (Bartlett: high effective rank, thin noise), implicit regularization (SGD minimum-norm bias, edge of stability, architecture priors), scaling laws in the overparameterized regime, Chinchilla compute-optimal balancing, and knowledge base robustness through overparameterized redundancy for Engram.
 - **`limits-open-questions.md`** — Open questions and limits — theory-practice generalization gap, compression-as-explanation limits, why power-law scaling laws, emergence debate (Wei vs Schaeffer), distribution shift bounds, in-context learning theory, complexity measure quest, scaling saturation uncertainty, and epistemic humility guidelines for Engram knowledge file writing.
 ### `mathematics/logic-foundations/` — Formal logic and foundations of mathematics (started 2026-03-20)
 
