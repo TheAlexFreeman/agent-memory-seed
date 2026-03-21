@@ -243,13 +243,13 @@ Target subfolder: `knowledge/mathematics/optimization/`
 5. **`online-learning-regret-bounds.md`** — Online convex optimization, the regret framework, the follow-the-regularized-leader (FTRL) algorithm, multiplicative weights / Hedge, regret bounds of $O(\sqrt{T})$. The connection to statistical learning theory (excess risk vs regret) and to game theory (no-regret dynamics converge to correlated equilibria).
 
 Checklist:
-- ☐ Write `convex-analysis-separation.md`
-- ☐ Write `duality-theory-minimax.md`
-- ☐ Write `gradient-descent-convergence.md`
-- ☐ Write `nonconvex-landscapes-saddle-points.md`
-- ☐ Write `online-learning-regret-bounds.md`
-- ☐ Promote all 5 files to `knowledge/mathematics/optimization/`
-- ☐ Update `knowledge/SUMMARY.md` entry
+- ☑ Write `convex-analysis-separation.md` (2026-03-21)
+- ☑ Write `duality-theory-minimax.md` (2026-03-21)
+- ☑ Write `gradient-descent-convergence.md` (2026-03-21)
+- ☑ Write `nonconvex-landscapes-saddle-points.md` (2026-03-21)
+- ☑ Write `online-learning-regret-bounds.md` (2026-03-21)
+- ☑ Promote all 5 files to `knowledge/mathematics/optimization/` (2026-03-21)
+- ☑ Update `knowledge/SUMMARY.md` entry (2026-03-21)
 
 ---
 
