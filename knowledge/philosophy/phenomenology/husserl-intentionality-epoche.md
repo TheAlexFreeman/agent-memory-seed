@@ -137,7 +137,7 @@ LLMs are trained on the *expressed products* of life-world experience (text, cod
 
 - **`philosophy/free-energy-autopoiesis-cybernetics.md`:** Active inference inherits phenomenological vocabulary (sense-making, agent-environment coupling) but without developing Husserl's account of intentionality and constitution. The present file provides the missing foundation.
 - **`philosophy/narrative-cognition.md`:** Ricoeur's narrative identity is rooted in Husserl's time-consciousness (retention-protention) and Heidegger's temporality. The connection is now explicit.
-- **`ai-frontier/epistemology/knowledge-and-knowing.md`:** "Grounding" is invoked as an LLM limitation; phenomenology gives it precise content (horizon structure, bodily constitution, life-world).
+- **`ai/frontier/epistemology/knowledge-and-knowing.md`:** "Grounding" is invoked as an LLM limitation; phenomenology gives it precise content (horizon structure, bodily constitution, life-world).
 
 ## Key References
 

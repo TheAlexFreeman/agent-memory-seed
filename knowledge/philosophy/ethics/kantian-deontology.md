@@ -113,4 +113,4 @@ The kingdom of ends — a community of rational agents treating each other as en
 - `philosophy/ethics/contractualism.md` — Scanlon's neo-Kantian contractualism
 - `philosophy/ethics/virtue-ethics.md` — character-centered alternative to both consequentialism and deontology
 - `philosophy/personal-identity/parfit-reductionism.md` — Parfit challenges the deep self presupposed by Kantian autonomy
-- `ai-frontier/alignment/frontier-alignment-research.md` — constitutional AI as deontological constraint system
+- `ai/frontier/alignment/frontier-alignment-research.md` — constitutional AI as deontological constraint system

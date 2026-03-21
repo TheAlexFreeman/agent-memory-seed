@@ -17,7 +17,7 @@ Personal identity is the philosophical question most directly about what this re
 Primary connections to existing files:
 - `plans/agent-memory-mcp.md` (completed) — the identity-continuity mechanisms being built
 - `philosophy/narrative-cognition.md` — Ricoeur's narrative identity is the other major approach
-- `ai-frontier/epistemology/knowledge-and-knowing.md` — "knowledge" as dispositional connects to identity as continuity of dispositions
+- `ai/frontier/epistemology/knowledge-and-knowing.md` — "knowledge" as dispositional connects to identity as continuity of dispositions
 - `philosophy-history-survey.md` (completed) — Aristotle hylomorphism and the soul question is the ancient precursor
 
 ---
@@ -128,7 +128,7 @@ The repo currently reasons about agent continuity in operational terms: session 
 
 ## Output format
 
-Files go in `knowledge/_unverified/philosophy/personal-identity/` with standard frontmatter. Phase 4 files may go in `knowledge/_unverified/ai-frontier/epistemology/` if they are primarily about AI rather than philosophy.
+Files go in `knowledge/_unverified/philosophy/personal-identity/` with standard frontmatter. Phase 4 files may go in `knowledge/ai/frontier/epistemology/` if they are primarily about AI rather than philosophy.
 
 ---
 

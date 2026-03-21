@@ -55,7 +55,7 @@ This plan builds directly on several existing knowledge areas:
 - **Rationalist community survey** (`_unverified/rationalist-community/`) —
   provides the social and institutional context. This plan adds the AI-specific
   intellectual assessment that the survey intentionally deferred.
-- **AI frontier research** (`_unverified/ai-frontier/`) — alignment files
+- **AI frontier research** (`ai/frontier/`) — alignment files
   (`alignment/frontier-alignment-research.md`, `alignment/instruction-following.md`,
   `alignment/rlhf-reward-models.md`) cover the technical landscape. This plan
   asks how rationalist ideas relate to that landscape.
@@ -100,7 +100,7 @@ broader question of how communities of practice shape technological development.
 **Out of scope:**
 - The broader EA movement's relationship to AI (covered tangentially but not
   the focus)
-- Technical details of alignment research (covered in `_unverified/ai-frontier/
+- Technical details of alignment research (covered in `ai/frontier/
   alignment/`)
 - The rationalist community's non-AI intellectual contributions (covered in the
   existing community survey)
@@ -390,7 +390,7 @@ changed the landscape.
 
 - `_unverified/rationalist-community/` — the existing community survey
   (this plan extends it, doesn't replace it)
-- `_unverified/ai-frontier/alignment/` — technical alignment landscape
+- `ai/frontier/alignment/` — technical alignment landscape
 - `knowledge/ai/history/` — the causal history of the current AI paradigm
 - `_unverified/philosophy/ethics/` — utilitarian and longtermist moral
   philosophy underlying the community's AI risk arguments

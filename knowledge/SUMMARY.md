@@ -145,37 +145,37 @@ _No access data yet._ After aggregation, this section will contain:
 - **Retrieval trends** — frequency and helpfulness changes since last aggregation
 
 <!-- section: ai-frontier -->
-### Ai Frontier
-- **[agentic-frameworks.md](knowledge/ai-frontier/agentic-frameworks.md)** — Agentic Frameworks
-- **[frontier-alignment-research.md](knowledge/ai-frontier/alignment/frontier-alignment-research.md)** — Frontier Alignment Research
-- **[instruction-following.md](knowledge/ai-frontier/alignment/instruction-following.md)** — Instruction Following
-- **[rlhf-reward-models.md](knowledge/ai-frontier/alignment/rlhf-reward-models.md)** — Rlhf Reward Models
-- **[mixture-of-experts.md](knowledge/ai-frontier/architectures/mixture-of-experts.md)** — Mixture Of Experts
-- **[state-space-models.md](knowledge/ai-frontier/architectures/state-space-models.md)** — State Space Models
-- **[synthetic-data-self-improvement.md](knowledge/ai-frontier/architectures/synthetic-data-self-improvement.md)** — Synthetic Data Self Improvement
-- **[compression-and-intelligence.md](knowledge/ai-frontier/epistemology/compression-and-intelligence.md)** — Compression And Intelligence
-- **[knowledge-and-knowing.md](knowledge/ai-frontier/epistemology/knowledge-and-knowing.md)** — Knowledge And Knowing
-- **[llms-as-dynamical-systems.md](knowledge/ai-frontier/epistemology/llms-as-dynamical-systems.md)** — Llms As Dynamical Systems
-- **[foundation-model-governance.md](knowledge/ai-frontier/foundation-model-governance.md)** — Foundation Model Governance
-- **[hardware-efficiency.md](knowledge/ai-frontier/hardware-efficiency.md)** — AI Hardware and Efficiency Trends
-- **[inference-time-compute.md](knowledge/ai-frontier/inference-time-compute.md)** — Inference-Time Compute Infrastructure
-- **[emergence-phase-transitions.md](knowledge/ai-frontier/interpretability/emergence-phase-transitions.md)** — Emergence Phase Transitions
-- **[llm-representation-confabulation.md](knowledge/ai-frontier/interpretability/llm-representation-confabulation.md)** — Llm Representation Confabulation
-- **[mechanistic-interpretability.md](knowledge/ai-frontier/interpretability/mechanistic-interpretability.md)** — Mechanistic Interpretability
-- **[memetic-security-capability-robustness.md](knowledge/ai-frontier/memetic-security-capability-robustness.md)** — Memetic Security Capability Robustness
-- **[agent-architecture-patterns.md](knowledge/ai-frontier/multi-agent/agent-architecture-patterns.md)** — Agent Architecture Patterns
-- **[human-in-the-loop.md](knowledge/ai-frontier/multi-agent/human-in-the-loop.md)** — Human In The Loop
-- **[multi-agent-coordination.md](knowledge/ai-frontier/multi-agent/multi-agent-coordination.md)** — Multi Agent Coordination
-- **[benchmarking-reasoning.md](knowledge/ai-frontier/reasoning/benchmarking-reasoning.md)** — Benchmarking Reasoning
-- **[reasoning-models.md](knowledge/ai-frontier/reasoning/reasoning-models.md)** — Reasoning Models
-- **[test-time-compute-scaling.md](knowledge/ai-frontier/reasoning/test-time-compute-scaling.md)** — Test Time Compute Scaling
-- **[agentic-rag-patterns.md](knowledge/ai-frontier/retrieval-memory/agentic-rag-patterns.md)** — Agentic Rag Patterns
-- **[colpali-visual-document-retrieval.md](knowledge/ai-frontier/retrieval-memory/colpali-visual-document-retrieval.md)** — Colpali Visual Document Retrieval
-- **[hyde-query-expansion.md](knowledge/ai-frontier/retrieval-memory/hyde-query-expansion.md)** — Hyde Query Expansion
-- **[late-chunking-contextual-embeddings.md](knowledge/ai-frontier/retrieval-memory/late-chunking-contextual-embeddings.md)** — Late Chunking Contextual Embeddings
-- **[long-context-architecture.md](knowledge/ai-frontier/retrieval-memory/long-context-architecture.md)** — Long Context Architecture
-- **[persistent-memory-architectures.md](knowledge/ai-frontier/retrieval-memory/persistent-memory-architectures.md)** — Persistent Memory Architectures
-- **[rag-architecture.md](knowledge/ai-frontier/retrieval-memory/rag-architecture.md)** — Rag Architecture
-- **[reranking-two-stage-retrieval.md](knowledge/ai-frontier/retrieval-memory/reranking-two-stage-retrieval.md)** — Reranking Two Stage Retrieval
+### AI frontier (ai/frontier/)
+- **[agentic-frameworks.md](knowledge/ai/frontier/agentic-frameworks.md)** — Agentic Frameworks
+- **[frontier-alignment-research.md](knowledge/ai/frontier/alignment/frontier-alignment-research.md)** — Frontier Alignment Research
+- **[instruction-following.md](knowledge/ai/frontier/alignment/instruction-following.md)** — Instruction Following
+- **[rlhf-reward-models.md](knowledge/ai/frontier/alignment/rlhf-reward-models.md)** — Rlhf Reward Models
+- **[mixture-of-experts.md](knowledge/ai/frontier/architectures/mixture-of-experts.md)** — Mixture Of Experts
+- **[state-space-models.md](knowledge/ai/frontier/architectures/state-space-models.md)** — State Space Models
+- **[synthetic-data-self-improvement.md](knowledge/ai/frontier/architectures/synthetic-data-self-improvement.md)** — Synthetic Data Self Improvement
+- **[compression-and-intelligence.md](knowledge/ai/frontier/epistemology/compression-and-intelligence.md)** — Compression And Intelligence
+- **[knowledge-and-knowing.md](knowledge/ai/frontier/epistemology/knowledge-and-knowing.md)** — Knowledge And Knowing
+- **[llms-as-dynamical-systems.md](knowledge/ai/frontier/epistemology/llms-as-dynamical-systems.md)** — Llms As Dynamical Systems
+- **[foundation-model-governance.md](knowledge/ai/frontier/foundation-model-governance.md)** — Foundation Model Governance
+- **[hardware-efficiency.md](knowledge/ai/frontier/hardware-efficiency.md)** — AI Hardware and Efficiency Trends
+- **[inference-time-compute.md](knowledge/ai/frontier/inference-time-compute.md)** — Inference-Time Compute Infrastructure
+- **[emergence-phase-transitions.md](knowledge/ai/frontier/interpretability/emergence-phase-transitions.md)** — Emergence Phase Transitions
+- **[llm-representation-confabulation.md](knowledge/ai/frontier/interpretability/llm-representation-confabulation.md)** — Llm Representation Confabulation
+- **[mechanistic-interpretability.md](knowledge/ai/frontier/interpretability/mechanistic-interpretability.md)** — Mechanistic Interpretability
+- **[memetic-security-capability-robustness.md](knowledge/ai/frontier/memetic-security-capability-robustness.md)** — Memetic Security Capability Robustness
+- **[agent-architecture-patterns.md](knowledge/ai/frontier/multi-agent/agent-architecture-patterns.md)** — Agent Architecture Patterns
+- **[human-in-the-loop.md](knowledge/ai/frontier/multi-agent/human-in-the-loop.md)** — Human In The Loop
+- **[multi-agent-coordination.md](knowledge/ai/frontier/multi-agent/multi-agent-coordination.md)** — Multi Agent Coordination
+- **[benchmarking-reasoning.md](knowledge/ai/frontier/reasoning/benchmarking-reasoning.md)** — Benchmarking Reasoning
+- **[reasoning-models.md](knowledge/ai/frontier/reasoning/reasoning-models.md)** — Reasoning Models
+- **[test-time-compute-scaling.md](knowledge/ai/frontier/reasoning/test-time-compute-scaling.md)** — Test Time Compute Scaling
+- **[agentic-rag-patterns.md](knowledge/ai/frontier/retrieval-memory/agentic-rag-patterns.md)** — Agentic Rag Patterns
+- **[colpali-visual-document-retrieval.md](knowledge/ai/frontier/retrieval-memory/colpali-visual-document-retrieval.md)** — Colpali Visual Document Retrieval
+- **[hyde-query-expansion.md](knowledge/ai/frontier/retrieval-memory/hyde-query-expansion.md)** — Hyde Query Expansion
+- **[late-chunking-contextual-embeddings.md](knowledge/ai/frontier/retrieval-memory/late-chunking-contextual-embeddings.md)** — Late Chunking Contextual Embeddings
+- **[long-context-architecture.md](knowledge/ai/frontier/retrieval-memory/long-context-architecture.md)** — Long Context Architecture
+- **[persistent-memory-architectures.md](knowledge/ai/frontier/retrieval-memory/persistent-memory-architectures.md)** — Persistent Memory Architectures
+- **[rag-architecture.md](knowledge/ai/frontier/retrieval-memory/rag-architecture.md)** — Rag Architecture
+- **[reranking-two-stage-retrieval.md](knowledge/ai/frontier/retrieval-memory/reranking-two-stage-retrieval.md)** — Reranking Two Stage Retrieval
 
 ---

@@ -16,7 +16,7 @@ The existing knowledge base covers alignment technically — reward modeling, co
 
 Primary connections to existing files:
 - `rationalist-community/` — EA movement theoretical foundations
-- `ai-frontier/alignment/frontier-alignment-research.md` — technical alignment needs philosophical foundations
+- `ai/frontier/alignment/frontier-alignment-research.md` — technical alignment needs philosophical foundations
 - `philosophy/narrative-cognition.md` — ethical life as narrative (MacIntyre thread)
 - `plans/personal-identity-memory-research.md` — Parfit appears in both plans; build on that work
 
@@ -147,7 +147,7 @@ Without systematic ethics, alignment debates default to folk intuitions applied 
 
 ## Output format
 
-Files go in `knowledge/_unverified/philosophy/ethics/` with standard frontmatter. Phase 4 files may also be placed in `knowledge/_unverified/ai-frontier/alignment/` given direct application to alignment debates.
+Files go in `knowledge/_unverified/philosophy/ethics/` with standard frontmatter. Phase 4 files may also be placed in `knowledge/ai/frontier/alignment/` given direct application to alignment debates.
 
 ---
 

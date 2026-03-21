@@ -327,7 +327,7 @@ What cannot be engineered away.
 
 ## Design constraints
 
-- Research outputs go in `knowledge/_unverified/ai-frontier/` (threat taxonomy,
+- Research outputs go in `knowledge/ai/frontier/` (threat taxonomy,
   capability-robustness) and `knowledge/_unverified/system-notes/` (Engram-specific
   design implications).
 - Phase 4 design specs should be written to be actionable — sufficient detail that

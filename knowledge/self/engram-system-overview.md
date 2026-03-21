@@ -84,7 +84,7 @@ agent-memory-seed/
 │   ├── tooling/                 # Operational tooling notes (promoted)
 │   ├── self/                    # This folder — self-knowledge (promoted)
 │   └── _unverified/             # Agent-written, awaiting human review
-│       ├── ai-frontier/         # Frontier AI research
+│       ├── ai/frontier/         # Frontier AI research
 │       ├── ai-tools/            # AI tooling landscape
 │       ├── devops/              # DevOps/Docker research
 │       ├── django/              # Django stack research

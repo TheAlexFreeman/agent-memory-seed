@@ -131,4 +131,4 @@ If we take virtue ethics seriously, we should ask: what does flourishing look li
 - `philosophy/ethics/kantian-deontology.md` — the deontological rival
 - `philosophy/personal-identity/macintyre-narrative-unity.md` — MacIntyre's narrative framework for the virtues
 - `philosophy/phenomenology/merleau-ponty-embodied-perception.md` — embodied skill and perception, relevant to virtue as skill
-- `ai-frontier/alignment/frontier-alignment-research.md` — RLHF as moral habituation
+- `ai/frontier/alignment/frontier-alignment-research.md` — RLHF as moral habituation

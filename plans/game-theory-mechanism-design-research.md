@@ -14,10 +14,10 @@ type: research-plan
 The multi-agent AI files cover coordination challenges operationally — context sharing, trust hierarchies, tool conflicts — without the mathematical game-theoretic foundation that explains *why* coordination is hard and *how* to design systems that produce desired coordination outcomes. Game theory is that foundation. Mechanism design extends it to the design question: given that agents pursue self-interest, how do you design the rules of interaction so that self-interested behavior produces socially desirable outcomes? This is precisely the central question of AI alignment read at the system level, and it connects directly to everything from RLHF reward design to AI safety arguments about competitive AI development races.
 
 Primary connections to existing files:
-- `ai-frontier/multi-agent/multi-agent-coordination.md` — game-theoretic foundations of coordination failure
-- `ai-frontier/alignment/frontier-alignment-research.md` — mechanism design perspective on alignment
+- `ai/frontier/multi-agent/multi-agent-coordination.md` — game-theoretic foundations of coordination failure
+- `ai/frontier/alignment/frontier-alignment-research.md` — mechanism design perspective on alignment
 - `rationalist-community/` — prisoner's dilemma reasoning, cooperation, defection pervade EA discourse
-- `ai-frontier/epistemology/compression-and-intelligence.md` — evolutionary game theory connects to the intelligence-as-adaptation frame
+- `ai/frontier/epistemology/compression-and-intelligence.md` — evolutionary game theory connects to the intelligence-as-adaptation frame
 
 ---
 
@@ -142,7 +142,7 @@ When multiple AI agents interact, or when AI systems interact with humans, the o
 
 ## Output format
 
-Files go in `knowledge/_unverified/mathematics/game-theory/` with standard frontmatter. Phase 5 may go in `knowledge/_unverified/ai-frontier/multi-agent/` given direct application.
+Files go in `knowledge/_unverified/mathematics/game-theory/` with standard frontmatter. Phase 5 may go in `knowledge/ai/frontier/multi-agent/` given direct application.
 
 ---
 

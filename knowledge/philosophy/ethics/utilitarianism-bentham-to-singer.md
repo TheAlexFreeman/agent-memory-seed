@@ -132,4 +132,4 @@ Utilitarianism is the implicit moral framework of much AI alignment research. Ma
 - `philosophy/ethics/parfit-population-ethics.md` — the Repugnant Conclusion and its aftermath
 - `philosophy/personal-identity/parfit-what-matters-survival.md` — Parfit's personal identity work motivates his ethics
 - `rationalist-community/effective-altruism.md` — EA as applied utilitarianism
-- `ai-frontier/alignment/frontier-alignment-research.md` — RLHF and constitutional AI as utilitarian implementations
+- `ai/frontier/alignment/frontier-alignment-research.md` — RLHF and constitutional AI as utilitarian implementations

@@ -50,7 +50,7 @@ to stand on.
   governance design is aligned with the user's interests rather than the agent's? The
   answer is "git history + periodic human review" — a genuine answer, but not a clean one.
 
-- *Alignment research* (`knowledge/_unverified/ai-frontier/alignment/`): Constitutional AI,
+- *Alignment research* (`knowledge/ai/frontier/alignment/`): Constitutional AI,
   RLHF, scalable oversight — all are attempts to specify values for AI systems. All face
   the Conditioner problem at some level of description.
 
@@ -92,7 +92,7 @@ therefore intelligence is, at root, the capacity to find short descriptions of d
 
 **The thread's tension**: compression captures prediction accuracy but may miss something
 about the phenomenology of understanding — what it is *like* to grasp something, not just
-to predict it accurately. The thread connects to the epistemology files in `ai-frontier/epistemology/`.
+to predict it accurately. The thread connects to the epistemology files in `ai/frontier/epistemology/`.
 
 ---
 
@@ -110,7 +110,7 @@ persists through context management.
   same insight — that the context window is the agent's working memory, and structuring
   it carefully is the central design problem.
 
-- *Persistent memory architectures* (`ai-frontier/retrieval-memory/`): MemGPT, knowledge
+- *Persistent memory architectures* (`ai/frontier/retrieval-memory/`): MemGPT, knowledge
   graphs, vector stores — all are external memory systems whose purpose is to extend
   the effective context window beyond its physical limit. Engram is this system's answer
   to the same problem.
@@ -143,7 +143,7 @@ of dynamics."
 
 **Where it reappears**:
 
-- *LLMs as dynamical systems* (`ai-frontier/epistemology/`): LLMs as fixed-weight dynamical
+- *LLMs as dynamical systems* (`ai/frontier/epistemology/`): LLMs as fixed-weight dynamical
   systems; the input sequence as initial conditions; inference as a trajectory through
   activation space. Chain-of-thought as extended trajectory — literally giving the dynamics
   longer to integrate. Reasoning models as systems tuned for exploration of activation space
@@ -153,7 +153,7 @@ of dynamics."
   Friston's free energy principle and autopoietic systems theory as alternative framings
   of intelligence-as-dynamics. Different vocabulary, overlapping territory.
 
-- *Emergence and phase transitions* (`ai-frontier/interpretability/`): the capability jumps
+- *Emergence and phase transitions* (`ai/frontier/interpretability/`): the capability jumps
   observed in large models (emergent abilities) as phase transitions in the dynamical
   landscape — sudden regime changes rather than smooth scaling.
 

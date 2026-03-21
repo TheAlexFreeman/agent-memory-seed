@@ -66,7 +66,7 @@ kind of maintenance debt that accumulates quietly.
 ## 4. The `_unverified/` backlog is growing
 
 The knowledge base has a large number of files in `_unverified/` across
-django/, react/, devops/, philosophy/, rationalist-community/, ai-frontier/,
+django/, react/, devops/, philosophy/, rationalist-community/, ai/frontier/,
 ai-tools/, mcp/, and system-notes/. The 120-day low-trust retirement
 threshold means these files will start auto-archiving around mid-July 2026
 if not reviewed. Some of these (django stack, react stack) are directly

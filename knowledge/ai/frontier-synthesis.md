@@ -9,7 +9,7 @@ type: knowledge
 
 # AI Frontier Research: Synthesis for This System
 
-*A distillation of the `_unverified/ai-frontier/` knowledge base, filtered for direct relevance to the agent-memory-seed design and operation. For the broader ecosystem position, see [tools/agent-memory-in-ai-ecosystem.md](tools/agent-memory-in-ai-ecosystem.md). Original files remain in `_unverified/`; trust: low throughout.*
+*A distillation of the `ai/frontier/` knowledge base, filtered for direct relevance to the agent-memory-seed design and operation. For the broader ecosystem position, see [tools/agent-memory-in-ai-ecosystem.md](tools/agent-memory-in-ai-ecosystem.md).*
 
 ---
 
@@ -46,9 +46,9 @@ Vector stores are the dominant persistent memory architecture. They fail on the 
 
 **No human-readable audit trail.** Git diffs are the complete change record. Vector databases have no equivalent.
 
-**Concurrent writes.** RAG systems have no concurrency semantics. Git's merge model provides principled multi-agent write coordination — each agent in its own branch, conflicts detected at merge, resolution explicit. The multi-agent coordination literature (see `_unverified/ai-frontier/multi-agent/multi-agent-coordination.md`) confirms git as a rare principled solution to the concurrent-write problem that otherwise requires dedicated write agents or orchestrator serialization.
+**Concurrent writes.** RAG systems have no concurrency semantics. Git's merge model provides principled multi-agent write coordination — each agent in its own branch, conflicts detected at merge, resolution explicit. The multi-agent coordination literature (see [multi-agent/multi-agent-coordination.md](frontier/multi-agent/multi-agent-coordination.md)) confirms git as a rare principled solution to the concurrent-write problem that otherwise requires dedicated write agents or orchestrator serialization.
 
-**Chunking problem avoided.** All RAG pipelines must chunk documents for embedding. Chunking severs cross-passage references, pronoun resolution, and argument structure across boundaries. This system's knowledge files are intentionally written at single-topic granularity: **the retrieval unit is identical to the storage unit**, eliminating the coherence-loss problem. Late chunking and contextual retrieval techniques (see `_unverified/ai-frontier/retrieval-memory/`) are engineering mitigations for a problem this design avoids by construction.
+**Chunking problem avoided.** All RAG pipelines must chunk documents for embedding. Chunking severs cross-passage references, pronoun resolution, and argument structure across boundaries. This system's knowledge files are intentionally written at single-topic granularity: **the retrieval unit is identical to the storage unit**, eliminating the coherence-loss problem. Late chunking and contextual retrieval techniques (see [frontier/retrieval-memory/](frontier/retrieval-memory/)) are engineering mitigations for a problem this design avoids by construction.
 
 ---
 
@@ -146,16 +146,16 @@ The following files contain the primary source material for this synthesis, in p
 
 | File | Key insight for this system |
 |---|---|
-| [retrieval-memory/persistent-memory-architectures.md](../_unverified/ai-frontier/retrieval-memory/persistent-memory-architectures.md) | Vector store failure modes; cognitive memory taxonomy; git-backed design argument |
-| [retrieval-memory/rag-architecture.md](../_unverified/ai-frontier/retrieval-memory/rag-architecture.md) | Chunking problem; retrieval pollution; HyDE; lost-in-the-middle |
-| [alignment/rlhf-reward-models.md](../_unverified/ai-frontier/alignment/rlhf-reward-models.md) | Goodhart's Law; sycophancy; why `trust: low` is the right default |
-| [interpretability/llm-representation-confabulation.md](../_unverified/ai-frontier/interpretability/llm-representation-confabulation.md) | Hallucination taxonomy; calibration; world model status |
-| [multi-agent/multi-agent-coordination.md](../_unverified/ai-frontier/multi-agent/multi-agent-coordination.md) | Prompt injection; git as coordination; tool conflict |
-| [multi-agent/human-in-the-loop.md](../_unverified/ai-frontier/multi-agent/human-in-the-loop.md) | Approval gate design; reversibility; MCP elicitation |
-| [multi-agent/agent-architecture-patterns.md](../_unverified/ai-frontier/multi-agent/agent-architecture-patterns.md) | ReAct vs. plan-and-execute; MCP tool interface; context window as working memory |
-| [alignment/frontier-alignment-research.md](../_unverified/ai-frontier/alignment/frontier-alignment-research.md) | Scalable oversight; constitutional AI values problem |
-| [interpretability/mechanistic-interpretability.md](../_unverified/ai-frontier/interpretability/mechanistic-interpretability.md) | SAEs; superposition; safety-relevant features |
-| [reasoning/reasoning-models.md](../_unverified/ai-frontier/reasoning/reasoning-models.md) | When chain-of-thought helps; PRMs; test-time compute scaling |
-| [architectures/synthetic-data-self-improvement.md](../_unverified/ai-frontier/architectures/synthetic-data-self-improvement.md) | Source field importance; trust inflation from synthetic data |
-| [retrieval-memory/reranking-two-stage-retrieval.md](../_unverified/ai-frontier/retrieval-memory/reranking-two-stage-retrieval.md) | Two-stage retrieval baseline; position bias in context |
-| [agentic-frameworks.md](../_unverified/ai-frontier/agentic-frameworks.md) | LangGraph/CrewAI/LlamaIndex; the right framework theory for different failure modes |
+| [retrieval-memory/persistent-memory-architectures.md](frontier/retrieval-memory/persistent-memory-architectures.md) | Vector store failure modes; cognitive memory taxonomy; git-backed design argument |
+| [retrieval-memory/rag-architecture.md](frontier/retrieval-memory/rag-architecture.md) | Chunking problem; retrieval pollution; HyDE; lost-in-the-middle |
+| [alignment/rlhf-reward-models.md](frontier/alignment/rlhf-reward-models.md) | Goodhart's Law; sycophancy; why `trust: low` is the right default |
+| [interpretability/llm-representation-confabulation.md](frontier/interpretability/llm-representation-confabulation.md) | Hallucination taxonomy; calibration; world model status |
+| [multi-agent/multi-agent-coordination.md](frontier/multi-agent/multi-agent-coordination.md) | Prompt injection; git as coordination; tool conflict |
+| [multi-agent/human-in-the-loop.md](frontier/multi-agent/human-in-the-loop.md) | Approval gate design; reversibility; MCP elicitation |
+| [multi-agent/agent-architecture-patterns.md](frontier/multi-agent/agent-architecture-patterns.md) | ReAct vs. plan-and-execute; MCP tool interface; context window as working memory |
+| [alignment/frontier-alignment-research.md](frontier/alignment/frontier-alignment-research.md) | Scalable oversight; constitutional AI values problem |
+| [interpretability/mechanistic-interpretability.md](frontier/interpretability/mechanistic-interpretability.md) | SAEs; superposition; safety-relevant features |
+| [reasoning/reasoning-models.md](frontier/reasoning/reasoning-models.md) | When chain-of-thought helps; PRMs; test-time compute scaling |
+| [architectures/synthetic-data-self-improvement.md](frontier/architectures/synthetic-data-self-improvement.md) | Source field importance; trust inflation from synthetic data |
+| [retrieval-memory/reranking-two-stage-retrieval.md](frontier/retrieval-memory/reranking-two-stage-retrieval.md) | Two-stage retrieval baseline; position bias in context |
+| [agentic-frameworks.md](frontier/agentic-frameworks.md) | LangGraph/CrewAI/LlamaIndex; the right framework theory for different failure modes |

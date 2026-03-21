@@ -15,10 +15,10 @@ type: research-plan
 Two files in the knowledge base — `compression-intelligence-ait.md` and `compression-and-intelligence.md` — gesture at Shannon information theory and Kolmogorov complexity but don't develop either rigorously. Statistical learning theory (PAC learning, VC dimension, double descent) provides the formal language for understanding *why* neural network scaling works — what the conditions are under which learned functions generalize beyond training data. This plan builds the mathematical infrastructure that underpins the compression-intelligence thesis and the scaling law discussion in the AI frontier files. It is notably more technical than most research plans in this system; the target audience is the synthesis files that connect technical AI to philosophical claims about compression, intelligence, and generalization.
 
 Primary connections to existing files:
-- `ai-frontier/epistemology/compression-and-intelligence.md` — needs Shannon, rate-distortion, MDL formalism
+- `ai/frontier/epistemology/compression-and-intelligence.md` — needs Shannon, rate-distortion, MDL formalism
 - `philosophy/compression-intelligence-ait.md` — needs Shannon as the information-theoretic foundation
-- `ai-frontier/reasoning/test-time-compute-scaling.md` — scaling laws as empirical instances of PAC-learning-style trade-offs
-- `ai-frontier/architectures/synthetic-data-self-improvement.md` — model collapse as a statistical learning phenomenon
+- `ai/frontier/reasoning/test-time-compute-scaling.md` — scaling laws as empirical instances of PAC-learning-style trade-offs
+- `ai/frontier/architectures/synthetic-data-self-improvement.md` — model collapse as a statistical learning phenomenon
 
 ---
 
@@ -136,7 +136,7 @@ The compression thesis — that intelligence is compression efficiency — is in
 
 ## Output format
 
-Files go in `knowledge/_unverified/mathematics/information-theory/` with standard frontmatter. Phase 4 synthesis files may cross-post to `knowledge/_unverified/ai-frontier/` as appropriate.
+Files go in `knowledge/_unverified/mathematics/information-theory/` with standard frontmatter. Phase 4 synthesis files may cross-post to `knowledge/_unverified/ai/frontier/` as appropriate.
 
 ---
 

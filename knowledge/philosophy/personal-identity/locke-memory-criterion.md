@@ -91,4 +91,4 @@ Locke's criterion maps remarkably well onto persistent AI memory:
 - `philosophy/personal-identity/parfit-reductionism.md` — Parfit's refinement of the psychological criterion
 - `philosophy/narrative-cognition.md` — narrative identity as alternative to memory criterion
 - `philosophy/phenomenology/husserl-time-consciousness.md` — retention/protention as a deeper account of how temporal experience works
-- `ai-frontier/epistemology/knowledge-and-knowing.md` — "knowing" as dispositional connects to what memory preserves
+- `ai/frontier/epistemology/knowledge-and-knowing.md` — "knowing" as dispositional connects to what memory preserves

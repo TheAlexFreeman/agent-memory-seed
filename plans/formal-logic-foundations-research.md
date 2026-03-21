@@ -15,9 +15,9 @@ type: research-plan
 Two threads in the existing knowledge base invoke logical foundations without developing them: the AI reasoning files (what LLMs can and can't prove/infer) and the compression-intelligence files (what formal systems can express). Gödel's incompleteness theorems are the deepest results in mathematical foundations and bear directly on questions about the limits of AI reasoning: no sufficiently powerful formal system can prove all truths. The Curry-Howard isomorphism (proofs as programs) connects mathematical logic to type theory and programming. Type theory connects to dependent types and proof assistants — relevant to the code-verification ambitions in AI systems. This plan provides the mathematical substory underlying all discussions of reasoning, knowledge, and limitation.
 
 Primary connections to existing files:
-- `ai-frontier/reasoning/reasoning-models.md` — benchmarks test formal reasoning; incompleteness sets limits
-- `ai-frontier/epistemology/knowledge-and-knowing.md` — formal vs. informal knowledge; what proof adds
-- `ai-frontier/epistemology/compression-and-intelligence.md` — Kolmogorov complexity is a logical concept; undecidability is its cousin
+- `ai/frontier/reasoning/reasoning-models.md` — benchmarks test formal reasoning; incompleteness sets limits
+- `ai/frontier/epistemology/knowledge-and-knowing.md` — formal vs. informal knowledge; what proof adds
+- `ai/frontier/epistemology/compression-and-intelligence.md` — Kolmogorov complexity is a logical concept; undecidability is its cousin
 - `rationalist-community/origins/heuristics-biases-bayes-and-bounded-rationality.md` — Bayesian reasoning as an extension of probability logic
 
 ---

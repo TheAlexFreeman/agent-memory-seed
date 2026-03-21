@@ -15,7 +15,7 @@ type: research-plan
 This repository's curation design — temporal decay, archiving, consolidation seasons, episodic vs. semantic vs. procedural distinctions — is based on folk intuitions about memory. There is a rich empirical science here. The goal of this plan is to ground those design intuitions in what is actually known about biological memory systems. Where the biological design supports the repo's choices, confidence increases. Where it diverges, there may be design improvements. Several findings are particularly interesting: memory reconsolidation (memories are rewritten when recalled, not simply retrieved read-only), the role of sleep in consolidation (offline replay enables transfer from hippocampus to cortex), and Ebbinghaus's forgetting curves (the form of temporal decay is well-characterized empirically).
 
 Primary connections to existing files:
-- `ai-frontier/retrieval-memory/persistent-memory-architectures.md` — episodic/semantic/procedural applied to AI
+- `ai/frontier/retrieval-memory/persistent-memory-architectures.md` — episodic/semantic/procedural applied to AI
 - `meta/curation-policy.md` — temporal decay thresholds and consolidation design
 - `philosophy/free-energy-autopoiesis-cybernetics.md` — free energy principle's predictive processing is a memory theory
 - `plans/personal-identity-memory-research.md` — philosophical identity questions are grounded in memory continuity claims

@@ -16,7 +16,7 @@ Build a deep knowledge base on phenomenology as the philosophical discipline mos
 
 Primary connections to existing files:
 - `philosophy/free-energy-autopoiesis-cybernetics.md` — active inference assumes phenomenological vocabulary without developing it
-- `ai-frontier/epistemology/knowledge-and-knowing.md` — "grounding" and "embodiment" are invoked as limits of LLMs, but the concept of embodied understanding needs development
+- `ai/frontier/epistemology/knowledge-and-knowing.md` — "grounding" and "embodiment" are invoked as limits of LLMs, but the concept of embodied understanding needs development
 - `philosophy/synthesis-intelligence-as-dynamical-regime.md` — needs phenomenological enrichment to distinguish intentional from mechanical dynamics
 - `philosophy/narrative-cognition.md` — Ricoeur's narrative identity is phenomenological; his background in Husserl is important
 

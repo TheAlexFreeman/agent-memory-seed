@@ -142,7 +142,7 @@ For the purposes of Engram and this knowledge base, the moderate reading is most
 ## Connection to Existing Knowledge
 
 - **All preceding phenomenology files:** This file is the capstone that draws on every previous analysis. Intentional grounding (Husserl), practical grounding (Heidegger), bodily grounding (Merleau-Ponty), social grounding (Merleau-Ponty + intercorporeality), and enacted grounding (Varela et al.) are all synthesized here.
-- **`ai-frontier/epistemology/knowledge-and-knowing.md`:** The existing "grounding" discussion in that file is now given precise phenomenological content by this analysis.
+- **`ai/frontier/epistemology/knowledge-and-knowing.md`:** The existing "grounding" discussion in that file is now given precise phenomenological content by this analysis.
 - **`philosophy/free-energy-autopoiesis-cybernetics.md`:** The free energy principle offers a *formal* model of grounding through surprise minimization, but the phenomenological analysis shows that this formalism captures only one dimension (the organism-environment coupling) without addressing bodily, affective, and social grounding.
 - **`social-science/cultural-evolution/cumulative-culture-ratchet.md`:** Social grounding of meaning depends on cultural practices of transmission and sedimentation — meaning is historically constituted, not just individually acquired.
 

@@ -18,7 +18,7 @@ Primary connections to existing files:
 - `rationalist-community/` — describes a cultural phenomenon; cultural evolution explains the mechanism
 - `ai-history/` — describes how AI ideas spread; cultural evolution explains the spread
 - `philosophy/synthesis-intelligence-as-dynamical-regime.md` — both biological and cultural evolution are instances of the self-organizing dynamics frame
-- `ai-frontier/epistemology/compression-and-intelligence.md` — culture as accumulated compressed worldly structure
+- `ai/frontier/epistemology/compression-and-intelligence.md` — culture as accumulated compressed worldly structure
 
 ---
 

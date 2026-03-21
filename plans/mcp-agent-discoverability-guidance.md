@@ -19,7 +19,7 @@ Address friction points identified during the 2026-03-21 AI frontier promotion s
 
 **Tool relationship ambiguity.** `memory_list_pending_reviews` and `memory_prepare_unverified_review` both relate to unverified content but serve different purposes. Descriptions do not clearly distinguish "review queue verdicts" from "survey folder for promotion decisions."
 
-**Routing prefers batch over subtree.** For intents like "promote all unverified ai-frontier," `memory_route_intent` recommends `memory_promote_knowledge_batch` instead of `memory_promote_knowledge_subtree`. Subtree is the right tool for full-folder moves with nested structure.
+**Routing prefers batch over subtree.** For intents like "promote all unverified ai/frontier", `memory_route_intent` recommends `memory_promote_knowledge_batch` instead of `memory_promote_knowledge_subtree`. Subtree is the right tool for full-folder moves with nested structure.
 
 **Opaque promotion warnings.** Subtree promotion warns "Section not found in knowledge/_unverified/SUMMARY.md" without clarifying that the operation succeeded and no action is required.
 
@@ -64,7 +64,7 @@ When recommending promotion, include a short `workflow_hint` field: e.g. "1) mem
 
 **2.3 Add regression test for subtree vs batch routing**
 
-Cover: "promote all unverified ai-frontier" → subtree; "promote these 5 specific files" → batch.
+Cover: "promote all unverified ai/frontier" → subtree; "promote these 5 specific files" → batch.
 
 **Checklist:**
 - [ ] 2.1 Implement subtree vs batch discrimination in memory_route_intent

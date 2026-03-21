@@ -1,9 +1,9 @@
 ---
 created: 2026-03-20
-domain: ai-frontier
+domain: ai/frontier
 last_verified: '2026-03-21'
 origin_session: chats/2026/03/20/chat-001
-related: knowledge/_unverified/ai-frontier/multi-agent/multi-agent-coordination.md
+related: knowledge/ai/frontier/multi-agent/multi-agent-coordination.md
 source: external-research
 tags:
 - agentic-ai

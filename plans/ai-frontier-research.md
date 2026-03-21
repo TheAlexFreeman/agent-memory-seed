@@ -247,7 +247,7 @@ This phase connects directly to the philosophical framework from `knowledge/_unv
 
 ## Output format
 
-Each research item produces one knowledge file in `knowledge/_unverified/ai-frontier/` with:
+Each research item produces one knowledge file in `knowledge/ai/frontier/` with:
 - Frontmatter: `source: external-research`, `trust: low`, `created`, `origin_session`, `topic`
 - Summary lede: one paragraph situating the topic in the four through-lines from the AI history plan
 - Technical depth: mechanisms, not just descriptions
@@ -256,7 +256,7 @@ Each research item produces one knowledge file in `knowledge/_unverified/ai-fron
 
 Group files by phase subfolder:
 ```
-knowledge/_unverified/ai-frontier/
+knowledge/ai/frontier/
   reasoning/
   alignment/
   retrieval-memory/

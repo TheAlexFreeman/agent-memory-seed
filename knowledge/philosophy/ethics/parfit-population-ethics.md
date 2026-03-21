@@ -153,4 +153,4 @@ Given the impossibility results, alignment researchers cannot resolve population
 - `philosophy/ethics/parfit-consequentialism-ethics.md` — Parfit's constructive consequentialism
 - `philosophy/personal-identity/parfit-reductionism.md` — reductionism about persons motivates impersonal population ethics
 - `philosophy/personal-identity/parfit-what-matters-survival.md` — if identity doesn't matter, person-affecting principles are weakened
-- `ai-frontier/alignment/frontier-alignment-research.md` — long-termist alignment stakes
+- `ai/frontier/alignment/frontier-alignment-research.md` — long-termist alignment stakes
