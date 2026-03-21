@@ -4,18 +4,19 @@ Tier 0 — Enhanced read tools.
 These extend the existing read-only tool set with:
   - memory_read_file   : returns version_token + parsed frontmatter
   - memory_list_folder : unchanged from existing (re-implemented here)
-  - memory_search      : unchanged from existing (re-implemented here)
+    - memory_search      : unchanged from existing (re-implemented here)
     - memory_route_intent: recommend the best governed operation for an intent
     - memory_get_policy_state: compile the live policy contract for an operation/path
-  - memory_git_log     : recent commit history
+    - memory_get_tool_profiles: report tool-profile metadata for host-side narrowing
+    - memory_git_log     : recent commit history
     - memory_session_health_check : session-start maintenance status
     - memory_session_bootstrap : compact returning-session bundle
     - memory_prepare_unverified_review : compact unverified-review bundle
     - memory_prepare_promotion_batch : compact promotion-prep bundle
     - memory_prepare_periodic_review : compact periodic-review prep bundle
     - memory_check_knowledge_freshness : host-repo freshness for knowledge files
-  - memory_diff        : working tree status
-  - memory_audit_trust : trust decay audit
+    - memory_diff        : working tree status
+    - memory_audit_trust : trust decay audit
     - memory_check_aggregation_triggers : ACCESS.jsonl trigger status
 
 All tools are registered onto the FastMCP instance passed in via register().
@@ -114,6 +115,8 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(contract_versions, dict):
         contract_versions = {}
     desktop_ops = _desktop_operations(manifest)
+    tool_profile_contract = _tool_profile_contract(manifest)
+    tool_profiles = _tool_profile_definitions(manifest)
     preview_capable_operations = sorted(
         key
         for key, value in desktop_ops.items()
@@ -135,6 +138,12 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "contract_versions": contract_versions,
         "preview_capable_operation_count": len(preview_capable_operations),
         "preview_capable_operations": preview_capable_operations,
+        "tool_profile_count": len(tool_profiles),
+        "tool_profiles": sorted(tool_profiles),
+        "default_tool_profile": tool_profile_contract.get("default_profile"),
+        "profile_selection_mode": tool_profile_contract.get("selection_mode"),
+        "dynamic_profile_switching": tool_profile_contract.get("dynamic_runtime_switching") is True,
+        "list_changed_supported": tool_profile_contract.get("list_changed_supported") is True,
     }
 
 
@@ -192,6 +201,72 @@ def _desktop_operations(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
     if not isinstance(raw_ops, dict):
         return {}
     return {key: value for key, value in raw_ops.items() if isinstance(value, dict)}
+
+
+def _tool_profile_definitions(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    raw_profiles = manifest.get("tool_profiles")
+    if not isinstance(raw_profiles, dict):
+        return {}
+    return {key: value for key, value in raw_profiles.items() if isinstance(value, dict)}
+
+
+def _tool_profile_contract(manifest: dict[str, Any]) -> dict[str, Any]:
+    raw_contract = manifest.get("tool_profile_contract")
+    if not isinstance(raw_contract, dict):
+        return {}
+    return dict(raw_contract)
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, str)]
+
+
+def _manifest_tool_sets(manifest: dict[str, Any]) -> dict[str, list[str]]:
+    raw_tool_sets = manifest.get("tool_sets")
+    if not isinstance(raw_tool_sets, dict):
+        return {}
+    return {name: _string_list(value) for name, value in raw_tool_sets.items() if isinstance(name, str)}
+
+
+def _expand_tool_profile(
+    manifest: dict[str, Any], profile_name: str, profile_definition: dict[str, Any]
+) -> dict[str, Any]:
+    tool_sets = _manifest_tool_sets(manifest)
+    selected_tool_sets = _string_list(profile_definition.get("tool_sets"))
+    tools: list[str] = []
+    for tool_set_name in selected_tool_sets:
+        tools.extend(tool_sets.get(tool_set_name, []))
+    tools.extend(_string_list(profile_definition.get("tools")))
+    excluded_tools = set(_string_list(profile_definition.get("exclude_tools")))
+    unique_tools = sorted({tool for tool in tools if isinstance(tool, str) and tool not in excluded_tools})
+
+    return {
+        "name": profile_name,
+        "label": profile_definition.get("label", profile_name.replace("_", " ").title()),
+        "description": profile_definition.get("description"),
+        "default": profile_definition.get("default") is True,
+        "tool_sets": selected_tool_sets,
+        "tools": unique_tools,
+        "tool_count": len(unique_tools),
+    }
+
+
+def _build_tool_profile_payload(manifest: dict[str, Any]) -> dict[str, Any]:
+    contract = _tool_profile_contract(manifest)
+    profiles = _tool_profile_definitions(manifest)
+    expanded_profiles = {
+        name: _expand_tool_profile(manifest, name, definition)
+        for name, definition in sorted(profiles.items())
+    }
+    return {
+        "contract": contract,
+        "default_profile": contract.get("default_profile"),
+        "dynamic_runtime_switching": contract.get("dynamic_runtime_switching") is True,
+        "list_changed_supported": contract.get("list_changed_supported") is True,
+        "profiles": expanded_profiles,
+    }
 
 
 def _manifest_operations(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -1983,6 +2058,34 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         payload = dict(cast(dict[str, Any], manifest))
         payload["summary"] = _build_capabilities_summary(payload)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_get_tool_profiles
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_get_tool_profiles",
+        annotations=_tool_annotations(
+            title="Get Tool Profiles",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_get_tool_profiles() -> str:
+        """Return advisory tool-profile metadata for host-side narrowing.
+
+        Profiles are declarative metadata only. The current runtime exports a
+        static tool surface, so hosts should treat these profiles as discovery
+        hints rather than dynamic switching commands.
+        """
+        root = get_root()
+        manifest, error_payload = _load_capabilities_manifest(root)
+        if error_payload is not None:
+            return json.dumps(error_payload, indent=2)
+
+        payload = _build_tool_profile_payload(cast(dict[str, Any], manifest))
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
@@ -4498,6 +4601,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     return {
         "memory_get_capabilities": memory_get_capabilities,
+        "memory_get_tool_profiles": memory_get_tool_profiles,
         "memory_get_policy_state": memory_get_policy_state,
         "memory_route_intent": memory_route_intent,
         "memory_read_file": memory_read_file,

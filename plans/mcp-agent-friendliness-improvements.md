@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
-last_verified: '2026-03-20'
-next_action: 'Phase 5: define tool profiles and expose profile metadata without breaking non-profile-aware hosts.'
+last_verified: '2026-03-21'
+next_action: 'Phase 6: expose stable read/navigation state through MCP-native resources and prompts.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -184,10 +184,10 @@ If profile switching changes the live surface, declare and emit tool-list change
 Publish profile boundaries, host expectations, and degradation behavior. Make sure the compact path still works for clients that cannot consume profiles.
 
 Checklist:
-- [ ] 5.1 Define coherent tool profiles and selection rules
-- [ ] 5.2 Implement profile-aware exposure or profile metadata reporting
-- [ ] 5.3 Add `listChanged` support where runtime-safe
-- [ ] 5.4 Update capability docs and fallback behavior for non-profile-aware hosts
+- [x] 5.1 Define coherent tool profiles and selection rules
+- [x] 5.2 Implement profile-aware exposure or profile metadata reporting
+- [x] 5.3 Add `listChanged` support where runtime-safe
+- [x] 5.4 Update capability docs and fallback behavior for non-profile-aware hosts
 
 ---
 
@@ -272,10 +272,10 @@ Checklist:
 - [ ] 4.2 Implement unverified-review, promotion-prep, and periodic-review bundle tools
 - [ ] 4.3 Keep bundle tools read-only and layered over existing semantics
 - [ ] 4.4 Add compactness/truncation rules and tests
-- [ ] 5.1 Define coherent tool profiles and selection rules
-- [ ] 5.2 Implement profile-aware exposure or profile metadata reporting
-- [ ] 5.3 Add `listChanged` support where runtime-safe
-- [ ] 5.4 Update capability docs and fallback behavior for non-profile-aware hosts
+- [x] 5.1 Define coherent tool profiles and selection rules
+- [x] 5.2 Implement profile-aware exposure or profile metadata reporting
+- [x] 5.3 Add `listChanged` support where runtime-safe
+- [x] 5.4 Update capability docs and fallback behavior for non-profile-aware hosts
 - [ ] 6.1 Add stable MCP resources for capability, policy, health, and active-plan state
 - [ ] 6.2 Add prompts for review, promotion preview, periodic review, and session wrap-up workflows
 - [ ] 6.3 Document resources-vs-tools boundaries
@@ -285,7 +285,7 @@ Checklist:
 - [ ] 7.3 Implement structured large-file extraction tool
 - [ ] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 19/31 items complete
+**Progress:** 23/31 items complete
 
 ---
 
@@ -321,3 +321,4 @@ Checklist:
 - 2026-03-20: Completed Phase 2. Added `memory_route_intent` and `memory_get_policy_state` to the Tier 0 read surface, compiled policy responses from the capability manifest plus governance-file signals, handled ambiguous and uninterpretable targets with explicit fallback state, and added focused tests for plan creation, knowledge promotion, protected meta paths, automatic ACCESS logging, and unsupported targets.
 - 2026-03-20: Completed Phase 3. Added a shared governed preview envelope to `MemoryWriteResult`, published preview support in the capability manifest and read-side summaries, wired preview mode into representative proposed/protected semantic writes including plan creation, knowledge promotion/demotion/archive, skill and identity updates, review-queue resolution, periodic review recording, and revert flows, and added preview-vs-apply equivalence coverage plus apply-regression checks.
 - 2026-03-20: Completed Phase 4. Added compact workflow-bundle read tools for session bootstrap, unverified review prep, promotion prep, and periodic review prep; kept them read-only and layered over existing health/review/reporting primitives; published the new bundle tools in the read-support surface; and added truncation-focused tests to keep the payloads bounded.
+- 2026-03-21: Completed Phase 5. Added manifest-declared advisory tool profiles plus a `memory_get_tool_profiles` read tool for host-side narrowing, extended capability summaries with profile and `listChanged` metadata, explicitly reported that the current runtime keeps a static tool surface with `listChanged` disabled, and added focused runtime tests for profile reporting and export coverage.

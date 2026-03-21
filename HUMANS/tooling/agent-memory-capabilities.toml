@@ -15,6 +15,7 @@ preview = 1
 read_support = [
   # Self-referential by design: this tool reads the manifest that declares it.
   "memory_get_capabilities",
+  "memory_get_tool_profiles",
   "memory_get_policy_state",
   "memory_route_intent",
   "memory_read_file",
@@ -135,6 +136,31 @@ read_only_detection = "minimum_read_tools_without_write_tools"
 semantic_result = "repo_local_semantic_mcp"
 read_only_result = "codex_native_preview_and_policy"
 incompatible_result = "raw_fallback_or_defer"
+
+[tool_profile_contract]
+version = 1
+selection_mode = "host_side_narrowing_only"
+dynamic_runtime_switching = false
+list_changed_supported = false
+default_profile = "full"
+profile_argument = "profile"
+compatibility_note = "Tool profiles are advisory metadata only; the MCP runtime exports a static tool surface."
+
+[tool_profiles.full]
+label = "Full Surface"
+description = "Expose the complete governed surface, including raw fallback tools when the host opts in."
+tool_sets = ["read_support", "semantic_extensions", "raw_fallback"]
+default = true
+
+[tool_profiles.guided_write]
+label = "Guided Writes"
+description = "Prefer governed read and semantic tools while excluding raw fallback writes from host discovery."
+tool_sets = ["read_support", "semantic_extensions"]
+
+[tool_profiles.read_only]
+label = "Read Only"
+description = "Limit host discovery to read and reporting tools when writes are unavailable or undesired."
+tool_sets = ["read_support"]
 
 [ui_feedback]
 panel_title = "Governed Memory Writes"

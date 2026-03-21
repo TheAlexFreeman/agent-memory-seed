@@ -101,6 +101,25 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertIn("memory_get_capabilities", payload["tool_sets"]["read_support"])
         self.assertEqual(payload["summary"]["contract_versions"]["mcp"], 1)
         self.assertGreaterEqual(payload["summary"]["total_tools"], 1)
+        self.assertGreaterEqual(payload["summary"]["tool_profile_count"], 1)
+        self.assertIn("full", payload["summary"]["tool_profiles"])
+        self.assertEqual(payload["summary"]["default_tool_profile"], "full")
+        self.assertFalse(payload["summary"]["dynamic_profile_switching"])
+        self.assertFalse(payload["summary"]["list_changed_supported"])
+
+    def test_get_tool_profiles_returns_expanded_advisory_profiles(self) -> None:
+        raw = asyncio.run(self.module.memory_get_tool_profiles())
+        payload = json.loads(raw)
+
+        self.assertEqual(payload["default_profile"], "full")
+        self.assertFalse(payload["dynamic_runtime_switching"])
+        self.assertFalse(payload["list_changed_supported"])
+        self.assertIn("full", payload["profiles"])
+        self.assertIn("guided_write", payload["profiles"])
+        self.assertIn("read_only", payload["profiles"])
+        self.assertIn("memory_get_capabilities", payload["profiles"]["read_only"]["tools"])
+        self.assertNotIn("memory_write", payload["profiles"]["guided_write"]["tools"])
+        self.assertIn("memory_write", payload["profiles"]["full"]["tools"])
 
     def test_read_file_works_over_stdio_transport(self) -> None:
         if not VENV_PYTHON.exists():
@@ -134,6 +153,7 @@ class MemoryMCPTests(unittest.TestCase):
         for name in (
             "memory_git_log",
             "memory_get_capabilities",
+            "memory_get_tool_profiles",
             "memory_check_cross_references",
             "memory_generate_summary",
             "memory_access_analytics",
