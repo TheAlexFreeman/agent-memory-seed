@@ -5759,6 +5759,63 @@ Topic A.
         self.assertEqual(ordered["session_reflection_themes"]["reflection_count"], 1)
         self.assertIn("meta/review-queue.md", payload["proposed_outputs"]["deferred_write_targets"])
 
+    def test_memory_run_periodic_review_handles_missing_session_ids_on_same_date(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+## Last periodic review
+
+**Date:** 2026-03-19
+
+| Low-trust retirement threshold | 120 days | Exploration |
+| Aggregation trigger | 15 entries | Exploration |
+""",
+                "knowledge/_unverified/topic.md": """---
+source: external-research
+origin_session: chats/2026/03/01/chat-001
+created: 2026-03-01
+trust: low
+---
+
+Topic.
+""",
+                "knowledge/ACCESS.jsonl": "".join(
+                    [
+                        json.dumps(
+                            {
+                                "file": "knowledge/_unverified/topic.md",
+                                "date": "2026-03-20",
+                                "task": "maintenance",
+                                "helpfulness": 0.4,
+                                "note": "missing session id",
+                            }
+                        )
+                        + "\n",
+                        json.dumps(
+                            {
+                                "file": "knowledge/_unverified/topic.md",
+                                "date": "2026-03-20",
+                                "task": "maintenance",
+                                "helpfulness": 0.5,
+                                "note": "has session id",
+                                "session_id": "chats/2026/03/20/chat-002",
+                            }
+                        )
+                        + "\n",
+                    ]
+                ),
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_run_periodic_review"]()))
+
+        self.assertEqual(payload["review_due"]["last_periodic_review"], "2026-03-19")
+        self.assertEqual(payload["ordered_checks"]["security_flags"]["pending_count"], 0)
+
     def test_memory_get_file_provenance_returns_frontmatter_access_and_history(self) -> None:
         repo_root = self._init_repo(
             {

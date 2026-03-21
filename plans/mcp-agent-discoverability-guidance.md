@@ -1,108 +1,116 @@
 ---
-type: build
-category: build
-status: draft
-next_action: Execute Phase 1 — Server name discovery doc and tool description disambiguation
-last_verified: 2026-03-21
+created: '2026-03-21'
+last_verified: '2026-03-21'
+next_action: 'Execute Phase 2 — add the missing quick-reference discovery note, then add workflow hints and subtree-aware promotion prep outputs.'
+origin_session: manual
+source: agent-generated
+status: active
+title: MCP Agent Discoverability and Guidance Improvements
 trust: medium
+type: implementation-plan
+category: build
 ---
 
-# MCP Agent Discoverability and Guidance Improvements
+# Implementation Plan: MCP Agent Discoverability and Guidance Improvements
 
 ## Scope
 
-Address friction points identified during the 2026-03-21 AI frontier promotion session. Prioritize highest-leverage improvements: server discovery, tool-relationship clarity, routing accuracy for promotion workflows, and warning clarity. Build on the existing mcp-agent-friendliness surface (`memory_route_intent`, `memory_get_policy_state`, workflow bundles).
+Tighten the last remaining MCP discoverability and workflow-guidance gaps that still make agents reconstruct behavior from implementation details. The plan now focuses only on gaps still present in the live code after the 2026-03-21 review of the knowledge base, capability manifest, validator output, and current tool implementations.
 
-## Problem statement
+## Review findings
 
-**Server name discovery.** Cursor exposes the MCP server under a project-namespaced identifier (e.g. `project-0-agent-memory-seed-agent-memory`), not the config key (`agent-memory`). Agents must fail once to discover the correct name.
+The original plan drifted behind the implementation.
 
-**Tool relationship ambiguity.** `memory_list_pending_reviews` and `memory_prepare_unverified_review` both relate to unverified content but serve different purposes. Descriptions do not clearly distinguish "review queue verdicts" from "survey folder for promotion decisions."
+Already landed in the live MCP surface:
+- `memory_review_unverified`, `memory_prepare_unverified_review`, and `memory_list_pending_reviews` already exist and cover the review/verdict split.
+- `memory_promote_knowledge_subtree` and `memory_promote_knowledge_batch` already carry subtree-vs-flat-list guidance.
+- `memory_route_intent` already prefers subtree when the target is a directory and the intent contains nested-subtree wording.
+- The unverified-review prompt already tells callers when to use single-file, batch, or subtree promotion.
 
-**Routing prefers batch over subtree.** For intents like "promote all unverified ai/frontier", `memory_route_intent` recommends `memory_promote_knowledge_batch` instead of `memory_promote_knowledge_subtree`. Subtree is the right tool for full-folder moves with nested structure.
+Still missing or still broken:
+- `meta/quick-reference.md` has no compact MCP discovery note for project-prefixed server names.
+- `memory_route_intent` recommends an operation but does not yet emit a compact workflow hint for the next governed calls.
+- `memory_prepare_promotion_batch` still defaults to single-file vs batch and does not surface subtree as the preferred path for nested folders.
+- `memory_prepare_unverified_review` still truncates by design and there is no cheap full-path enumeration mode.
+- `memory_run_periodic_review` currently fails at runtime in this repo instead of producing the intended report, which blocks one of the key review-oriented guidance surfaces.
 
-**Opaque promotion warnings.** Subtree promotion warns "Section not found in knowledge/_unverified/SUMMARY.md" without clarifying that the operation succeeded and no action is required.
-
-**No cheap full-file list for batch prep.** `memory_prepare_unverified_review` truncates (e.g. 12 of 31 files). For batch promotion with manual selection, agents cannot cheaply see all paths.
+Related knowledge-base review findings to keep in view but not expand scope around here:
+- Validator warnings show 51 unverified low-trust files and multiple legacy plan-frontmatter issues.
+- Compact startup summaries are over budget, especially `plans/SUMMARY.md`.
 
 ---
 
 ## Phases
 
-### Phase 1 — Server name discovery and tool disambiguation (high leverage, low effort)
+### Phase 1 — Re-baseline against the live MCP surface (complete)
 
-**1.1 Add MCP server discovery note to quick-reference**
+This phase is already complete and replaces the stale assumptions in the original draft.
 
-In `meta/quick-reference.md`, add a compact "MCP discovery" note: Cursor may expose the agent-memory server under a project-prefixed name; if a tool call fails with "server does not exist," use the server name from the error's "Available servers" list.
+Checklist:
+- [x] Audit the live capability manifest and tool registry against the draft plan
+- [x] Confirm review-verdict vs review-digest tools already exist
+- [x] Confirm subtree-vs-batch guidance already exists in the semantic promotion tools
+- [x] Confirm route heuristics and prompts already cover basic subtree selection
 
-**1.2 Clarify memory_list_pending_reviews vs memory_prepare_unverified_review**
+### Phase 2 — Discovery note and workflow guidance (high leverage)
 
-- `memory_list_pending_reviews`: Add "Use when: You need the latest approve/defer/reject verdicts for files already in the review workflow. Use memory_prepare_unverified_review instead when surveying a folder to decide what to promote."
-- `memory_prepare_unverified_review`: Add "Use when: Surveying an unverified folder to decide promote vs defer. Returns a digest with extracts and recommended operation. Use memory_list_pending_reviews for verdict status of files already in the queue."
+**2.1 Add MCP discovery note to quick-reference**
 
-**1.3 Add subtree vs batch disambiguation to promotion tools**
+Add a compact note to `meta/quick-reference.md`: hosts may expose the Engram server under a project-prefixed name; if a call fails with a server-name error, use the identifier shown in the host's available-server list.
 
-- `memory_promote_knowledge_subtree`: Add "Use when the source is a nested folder hierarchy; preserves structure. Use memory_promote_knowledge_batch when promoting a flat list of specific file paths."
-- `memory_promote_knowledge_batch`: Add "Use when promoting a flat list of specific paths. Use memory_promote_knowledge_subtree when moving an entire nested folder tree."
+**2.2 Add workflow hints to route results**
 
-**Checklist:**
-- [ ] 1.1 Add MCP server discovery note to meta/quick-reference.md
-- [ ] 1.2 Update memory_list_pending_reviews and memory_prepare_unverified_review descriptions
-- [ ] 1.3 Add subtree vs batch disambiguation to promotion tool descriptions
+Extend `memory_route_intent` so promotion-related recommendations include a short `workflow_hint` field. Keep it compact and operational, for example: review digest -> dry run -> apply.
 
----
+**2.3 Make promotion prep subtree-aware**
 
-### Phase 2 — Routing accuracy for promotion intents (high leverage, medium effort)
+Update `memory_prepare_promotion_batch` so directory inputs with nested content can suggest `memory_promote_knowledge_subtree` instead of defaulting to the flat batch path.
 
-**2.1 Extend memory_route_intent for subtree vs batch**
+**2.4 Add focused regression coverage**
 
-When intent suggests "promote all" or "promote entire folder" and path is a directory, check if the path has nested subdirectories. If yes, recommend `memory_promote_knowledge_subtree` with subtree rationale; otherwise recommend batch.
+Add tests that cover nested-folder promotion routing and subtree-aware promotion-prep output.
 
-**2.2 Add workflow hint to route result**
+Checklist:
+- [ ] 2.1 Add the quick-reference MCP discovery note
+- [ ] 2.2 Add `workflow_hint` to promotion route results
+- [ ] 2.3 Make `memory_prepare_promotion_batch` surface subtree when appropriate
+- [ ] 2.4 Add regression tests for route-result and promotion-prep guidance
 
-When recommending promotion, include a short `workflow_hint` field: e.g. "1) memory_prepare_unverified_review(folder_path) for digest; 2) memory_promote_knowledge_subtree(source, dest, dry_run=True); 3) memory_promote_knowledge_subtree(..., dry_run=False)".
+### Phase 3 — Enumeration and reliability fixes (high leverage)
 
-**2.3 Add regression test for subtree vs batch routing**
+**3.1 Add cheap full-path enumeration for unverified review**
 
-Cover: "promote all unverified ai/frontier" → subtree; "promote these 5 specific files" → batch.
+Add either a `paths_only` mode to `memory_prepare_unverified_review` or a dedicated lightweight listing tool so callers can enumerate full review candidates without extracts.
 
-**Checklist:**
-- [ ] 2.1 Implement subtree vs batch discrimination in memory_route_intent
-- [ ] 2.2 Add workflow_hint to promotion route results
-- [ ] 2.3 Add routing tests for subtree and batch intents
+**3.2 Clarify or suppress non-actionable subtree warnings**
 
----
+If subtree promotion succeeds and only the source summary section is absent, make the warning explicitly non-actionable or suppress it.
 
-### Phase 3 — Warning clarity and full-file list (medium leverage)
+**3.3 Fix `memory_run_periodic_review` runtime failure**
 
-**3.1 Clarify subtree promotion warning**
+Repair the current type error and add regression coverage so periodic-review preparation remains a usable discoverability surface.
 
-Change the "Section not found in source SUMMARY" warning to: "No matching section in source SUMMARY; target SUMMARY was updated. No action required." Or suppress when the operation succeeded and target was updated.
-
-**3.2 Add paths-only option for unverified enumeration**
-
-Add optional parameter `paths_only: bool = False` to `memory_prepare_unverified_review`, or a lightweight `memory_list_unverified_paths(folder_path)` tool. When paths_only is true / when using the new tool, return only file paths (no extracts), enabling cheap full enumeration for folders with many files.
-
-**Checklist:**
-- [ ] 3.1 Improve subtree promotion section-not-found warning
-- [ ] 3.2 Add paths_only option or memory_list_unverified_paths tool
+Checklist:
+- [ ] 3.1 Add a full-path enumeration mode for unverified review
+- [ ] 3.2 Make subtree-promotion warnings clearly actionable or clearly ignorable
+- [ ] 3.3 Fix `memory_run_periodic_review` and add a regression test
 
 ---
 
 ## Success criteria
 
-- Agents can discover the correct MCP server name without trial-and-error.
-- Tool descriptions reduce confusion between list_pending_reviews and prepare_unverified_review.
-- `memory_route_intent` recommends subtree for full-folder promotion intents.
-- Promotion workflow is discoverable via route result `workflow_hint`.
-- Subtree promotion warnings are actionable or clearly non-actionable.
-- Agents can enumerate full file list for unverified folders when needed.
+- Agents can discover the correct Engram MCP server name without trial-and-error.
+- Promotion-related route results provide a concrete next-step workflow, not just a tool name.
+- Promotion-prep outputs distinguish flat batches from nested subtree moves.
+- Agents can cheaply enumerate all unverified candidate paths when manual selection is needed.
+- Periodic-review guidance tools return usable reports instead of runtime errors.
 
 ---
 
 ## References
 
-- `plans/mcp-agent-friendliness-improvements.md` — completed; memory_route_intent, workflow bundles, tool profiles
-- `plans/mcp-unverified-review-workflow-improvements.md` — completed; prepare_unverified_review, subtree promotion
-- `meta/quick-reference.md` — session routing, compact path
-- `HUMANS/tooling/agent-memory-capabilities.toml` — capability manifest
+- `plans/mcp-agent-friendliness-improvements.md` — completed baseline for routing, previews, workflow bundles, tool profiles, resources, prompts, and provenance reads
+- `plans/mcp-unverified-review-workflow-improvements.md` — completed baseline for review digests and subtree promotion
+- `meta/quick-reference.md` — compact startup routing surface and the right home for discovery notes
+- `knowledge/SUMMARY.md` — current promoted-knowledge surface reviewed through Engram MCP during this re-baseline
+- `HUMANS/tooling/agent-memory-capabilities.toml` — repo capability manifest reflected by `memory_get_capabilities`

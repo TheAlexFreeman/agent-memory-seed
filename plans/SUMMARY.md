@@ -10,6 +10,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 - [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: memory_find_references, memory_validate_links, memory_reorganize_preview, memory_reorganize_path, memory_suggest_structure; Phase 1 next (reference extractor + find_references).
 - [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, warning clarity, paths-only enum; Phase 1 next.
+- [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: re-baselined against the live MCP surface; remaining work is quick-reference discovery note, route workflow hints, subtree-aware promotion prep, paths-only enum, and periodic-review reliability; Phase 2 next.
 - [checklist-app-architecture.md](checklist-app-architecture.md) — Django/React checklist tool for task management and progress tracking; Phase 1 next (Django scaffold + models).
 
 ### Research plans
@@ -92,11 +93,11 @@ Next: Execute Phase 1 (Dynamical Systems & Chaos): highest priority — Alex's s
 ---
 
 <!-- BEGIN: mcp-agent-discoverability-guidance -->
-### MCP Agent Discoverability and Guidance · status: draft · trust: medium
+### MCP Agent Discoverability and Guidance · status: active · trust: medium
 Detail: plans/mcp-agent-discoverability-guidance.md
-Scope: Server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, workflow hints, warning clarity, paths-only enum. Friction identified during 2026-03-21 AI frontier promotion.
-Progress: 0/8 checklist items
-Next: Execute Phase 1 — Server name discovery note in quick-reference, tool description updates.
+Scope: Re-baselined after reviewing the live Engram MCP surface, knowledge-base health, and validator output. The remaining scope is the missing server-discovery note, workflow hints in route results, subtree-aware promotion prep, full-path unverified enumeration, warning polish, and the broken periodic-review report.
+Progress: 4/11 checklist items complete; the old draft assumptions about tool disambiguation and subtree guidance were already satisfied in code.
+Next: Execute Phase 2 — add the quick-reference discovery note, then add workflow hints and subtree-aware promotion prep outputs.
 <!-- END: mcp-agent-discoverability-guidance -->
 
 ---

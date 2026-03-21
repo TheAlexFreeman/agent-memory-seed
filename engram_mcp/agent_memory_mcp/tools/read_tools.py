@@ -1854,7 +1854,7 @@ def _detect_access_anomalies(
             dated_entries.append((entry_date, session_id))
         if not dated_entries:
             continue
-        dated_entries.sort()
+        dated_entries.sort(key=lambda item: (item[0], item[1] or ""))
         latest_date = dated_entries[-1][0]
         window_start = latest_date.fromordinal(latest_date.toordinal() - staleness_days)
         recent_session_counts: dict[str, int] = {}
