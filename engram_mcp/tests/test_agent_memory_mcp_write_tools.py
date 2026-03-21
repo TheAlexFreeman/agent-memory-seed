@@ -1740,9 +1740,7 @@ See [target](../knowledge/topic/target.md).
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(
-                tools["memory_find_references"]("knowledge/topic/target.md")
-            )
+            asyncio.run(tools["memory_find_references"]("knowledge/topic/target.md"))
         )
 
         self.assertEqual(payload["query"], "knowledge/topic/target.md")
@@ -1862,7 +1860,9 @@ See [topic](../knowledge/topic/target.md).
         self.assertEqual(payload["ok_count"], 2)
         self.assertEqual(payload["broken"], [])
 
-    def test_memory_reorganize_preview_includes_moves_reference_updates_and_summary_targets(self) -> None:
+    def test_memory_reorganize_preview_includes_moves_reference_updates_and_summary_targets(
+        self,
+    ) -> None:
         repo_root = self._init_repo(
             {
                 "knowledge/ai-frontier/alpha.md": "# Alpha\n",
@@ -1936,6 +1936,101 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
 
         self.assertIn("Destination already exists: knowledge/ai/frontier", payload["warnings"])
         self.assertIn("Destination conflict: knowledge/ai/frontier/alpha.md", payload["warnings"])
+
+    def test_memory_reorganize_path_dry_run_returns_governed_preview(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+                "plans/reorg.md": "See [alpha](../knowledge/ai-frontier/alpha.md).\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_reorganize_path"](
+                    source="knowledge/ai-frontier",
+                    dest="knowledge/ai/frontier",
+                )
+            )
+        )
+
+        self.assertIsNone(payload["commit_sha"])
+        self.assertTrue(payload["new_state"]["dry_run"])
+        self.assertTrue(payload["new_state"]["would_commit"])
+        self.assertEqual(payload["preview"]["mode"], "preview")
+        self.assertTrue((repo_root / "knowledge/ai-frontier/alpha.md").exists())
+        self.assertFalse((repo_root / "knowledge/ai/frontier/alpha.md").exists())
+
+    def test_memory_reorganize_path_applies_move_and_reference_updates(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/shared/guide.md": "# Guide\n",
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai-frontier/alignment/beta.md": """---
+related:
+  - ../../shared/guide.md
+---
+
+# Beta
+
+See [alpha](../alpha.md).
+""",
+                "knowledge/SUMMARY.md": "- [alpha](ai-frontier/alpha.md)\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+                "plans/reorg.md": "See [alpha](../knowledge/ai-frontier/alpha.md).\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_reorganize_path"](
+                    source="knowledge/ai-frontier",
+                    dest="knowledge/ai/frontier",
+                    dry_run=False,
+                )
+            )
+        )
+
+        self.assertIsNotNone(payload["commit_sha"])
+        self.assertFalse(payload["new_state"]["dry_run"])
+        self.assertTrue((repo_root / "knowledge/ai/frontier/alpha.md").exists())
+        self.assertTrue((repo_root / "knowledge/ai/frontier/alignment/beta.md").exists())
+        self.assertFalse((repo_root / "knowledge/ai-frontier/alpha.md").exists())
+        self.assertFalse((repo_root / "knowledge/ai-frontier").exists())
+        beta_text = (repo_root / "knowledge/ai/frontier/alignment/beta.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("../../../shared/guide.md", beta_text)
+        self.assertIn("../alpha.md", beta_text)
+        summary_text = (repo_root / "knowledge/SUMMARY.md").read_text(encoding="utf-8")
+        self.assertIn("ai/frontier/alpha.md", summary_text)
+        plan_text = (repo_root / "plans/reorg.md").read_text(encoding="utf-8")
+        self.assertIn("../knowledge/ai/frontier/alpha.md", plan_text)
+
+    def test_memory_reorganize_path_blocks_existing_destination_without_mutation(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai/frontier/alpha.md": "# Existing\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        with self.assertRaises(self.errors.ValidationError):
+            asyncio.run(
+                tools["memory_reorganize_path"](
+                    source="knowledge/ai-frontier",
+                    dest="knowledge/ai/frontier",
+                    dry_run=False,
+                )
+            )
+
+        self.assertTrue((repo_root / "knowledge/ai-frontier/alpha.md").exists())
+        self.assertTrue((repo_root / "knowledge/ai/frontier/alpha.md").exists())
 
     def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())

@@ -18,6 +18,7 @@ from ...path_policy import (
     validate_top_level_root,
 )
 from ...preview_contract import build_governed_preview, preview_target
+from ..reference_extractor import plan_reorganization
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -59,6 +60,10 @@ _ARCHIVE_META = _GovernedKnowledgeOperationMeta(
     name="memory_archive_knowledge",
     title="Archive Knowledge File",
 )
+_REORGANIZE_META = _GovernedKnowledgeOperationMeta(
+    name="memory_reorganize_path",
+    title="Reorganize Knowledge Path",
+)
 _ADD_META = _GovernedKnowledgeOperationMeta(
     name="memory_add_knowledge_file",
     title="Add Knowledge File to Unverified",
@@ -75,6 +80,90 @@ def _governed_knowledge_annotations(meta: _GovernedKnowledgeOperationMeta) -> An
         idempotentHint=False,
         openWorldHint=False,
     )
+
+
+_FRONTMATTER_TOKEN_RE = re.compile(r"([^.\[]+)|\[(\d+)\]")
+_MARKDOWN_LINK_TARGET_RE = re.compile(r"\[([^\]]+)\]\(([^)\n]+)\)")
+
+
+def _parse_frontmatter_key_path(key_path: str) -> list[str | int]:
+    tokens: list[str | int] = []
+    for key, index in _FRONTMATTER_TOKEN_RE.findall(key_path):
+        if key:
+            tokens.append(key)
+        else:
+            tokens.append(int(index))
+    return tokens
+
+
+def _set_frontmatter_value(frontmatter: dict[str, Any], key_path: str, value: str) -> bool:
+    tokens = _parse_frontmatter_key_path(key_path)
+    current: Any = frontmatter
+    for token in tokens[:-1]:
+        current = current[token]
+    last_token = tokens[-1]
+    if current[last_token] == value:
+        return False
+    current[last_token] = value
+    return True
+
+
+def _rewrite_markdown_targets(body: str, replacements: dict[str, str]) -> str:
+    if not replacements:
+        return body
+
+    def _replace(match: re.Match[str]) -> str:
+        target = match.group(2)
+        rewritten = replacements.get(target)
+        if rewritten is None or rewritten == target:
+            return match.group(0)
+        return f"[{match.group(1)}]({rewritten})"
+
+    return _MARKDOWN_LINK_TARGET_RE.sub(_replace, body)
+
+
+def _apply_reorganization_updates(abs_path: Path, refs: list[dict[str, Any]]) -> bool:
+    from ...frontmatter_utils import read_with_frontmatter, write_with_frontmatter
+
+    frontmatter, body = read_with_frontmatter(abs_path)
+    frontmatter_changed = False
+    markdown_replacements: dict[str, str] = {}
+
+    for ref in refs:
+        ref_type = cast(str, ref["type"])
+        if ref_type == "frontmatter_path":
+            ref_key = cast(str | None, ref.get("ref_key"))
+            if ref_key is None:
+                continue
+            frontmatter_changed = _set_frontmatter_value(
+                frontmatter,
+                ref_key,
+                cast(str, ref["new"]),
+            ) or frontmatter_changed
+        elif ref_type == "markdown_link":
+            markdown_replacements[cast(str, ref["old"])] = cast(str, ref["new"])
+
+    updated_body = _rewrite_markdown_targets(body, markdown_replacements)
+    if not frontmatter_changed and updated_body == body:
+        return False
+
+    write_with_frontmatter(abs_path, frontmatter, updated_body)
+    return True
+
+
+def _prune_empty_directories(root: Path, start_path: Path) -> None:
+    start_dir = start_path if start_path.is_dir() else start_path.parent
+    nested_dirs = [path for path in start_dir.rglob("*") if path.is_dir()]
+    for candidate in sorted(nested_dirs, key=lambda path: len(path.parts), reverse=True):
+        if candidate.exists() and not any(candidate.iterdir()):
+            candidate.rmdir()
+
+    current = start_dir
+    while current != root and current.exists():
+        if any(current.iterdir()):
+            break
+        current.rmdir()
+        current = current.parent
 
 
 def _normalize_batch_source_paths(raw_source_paths: str, repo, root: Path) -> list[str]:
@@ -685,6 +774,182 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "dry_run": False,
             },
             warnings=warnings,
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_reorganize_path",
+        annotations=_governed_knowledge_annotations(_REORGANIZE_META),
+    )
+    async def memory_reorganize_path(
+        source: str,
+        dest: str,
+        dry_run: bool = True,
+    ) -> str:
+        """Move a verified knowledge file or subtree and update governed references atomically."""
+        from ...errors import NotFoundError, ValidationError
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        source, abs_source = resolve_repo_path(repo, source, field_name="source")
+        dest, abs_dest = resolve_repo_path(repo, dest, field_name="dest")
+        validate_top_level_root(source, allowed_roots=("knowledge",), field_name="source")
+        validate_top_level_root(dest, allowed_roots=("knowledge",), field_name="dest")
+        forbid_prefix(source, "knowledge/_unverified", field_name="source")
+        forbid_prefix(dest, "knowledge/_unverified", field_name="dest")
+
+        if not abs_source.exists():
+            raise NotFoundError(f"Source path not found: {source}")
+        if abs_dest.parent != root and not abs_dest.parent.exists():
+            raise ValidationError(
+                f"destination parent does not exist: {abs_dest.parent.relative_to(root).as_posix()}"
+            )
+
+        plan = plan_reorganization(root, source, dest)
+        if not cast(list[str], plan["files_to_move"]):
+            raise ValidationError(f"No files found under source path: {source}")
+
+        warnings = list(cast(list[str], plan["warnings"]))
+        preview_only_refs = sum(
+            1
+            for file_plan in cast(list[dict[str, Any]], plan["files_with_references"])
+            for ref in cast(list[dict[str, Any]], file_plan["refs"])
+            if not bool(ref.get("applies_in_execution", True))
+        )
+        if preview_only_refs:
+            warnings.append(
+                f"{preview_only_refs} plain body-path mention(s) are previewed but not rewritten automatically."
+            )
+
+        conflict_warnings = [
+            warning for warning in warnings if warning.startswith("Destination ")
+        ]
+        file_moves = cast(list[dict[str, str]], plan["file_moves"])
+        reference_files = cast(list[dict[str, Any]], plan["files_with_references"])
+        ref_update_count = sum(
+            1
+            for file_plan in reference_files
+            for ref in cast(list[dict[str, Any]], file_plan["refs"])
+            if bool(ref.get("applies_in_execution", True))
+        )
+        commit_msg = (
+            f"[curation] Reorganize {source} -> {dest} "
+            f"({len(file_moves)} files, {ref_update_count} reference updates)"
+        )
+        new_state = {
+            "source": source,
+            "dest": dest,
+            "dry_run": dry_run,
+            "moved_count": len(file_moves),
+            "refs_updated": ref_update_count,
+            "summary_updates": cast(list[str], plan["summary_updates"]),
+            "files_to_move": cast(list[str], plan["files_to_move"]),
+            "would_commit": True,
+        }
+        preview_payload = build_governed_preview(
+            mode="preview" if dry_run else "apply",
+            change_class="proposed",
+            summary=f"Reorganize {source} into {dest} and rewrite governed references.",
+            reasoning="Knowledge reorganization is a proposed semantic write because it changes durable paths, updates references, and commits the move atomically.",
+            target_files=[
+                *[preview_target(move["source"], "move_from") for move in file_moves],
+                *[
+                    preview_target(move["dest"], "move_to", from_path=move["source"])
+                    for move in file_moves
+                ],
+                *[
+                    preview_target(
+                        cast(str, file_plan.get("current_path") or file_plan["path"]),
+                        "update",
+                    )
+                    for file_plan in reference_files
+                    if any(
+                        bool(ref.get("applies_in_execution", True))
+                        for ref in cast(list[dict[str, Any]], file_plan["refs"])
+                    )
+                ],
+            ],
+            invariant_effects=[
+                "Rewrites markdown-link and frontmatter path references before moving files so staged content stays consistent.",
+                "Commits source removals, destination additions, and reference updates in one atomic publication.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+            warnings=warnings,
+        )
+        preview_files_changed = list(
+            dict.fromkeys(
+                [
+                    *[move["source"] for move in file_moves],
+                    *[move["dest"] for move in file_moves],
+                    *[
+                        cast(str, file_plan.get("current_path") or file_plan["path"])
+                        for file_plan in reference_files
+                        if any(
+                            bool(ref.get("applies_in_execution", True))
+                            for ref in cast(list[dict[str, Any]], file_plan["refs"])
+                        )
+                    ],
+                ]
+            )
+        )
+
+        if dry_run:
+            result = MemoryWriteResult(
+                files_changed=preview_files_changed,
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                warnings=warnings,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
+        if conflict_warnings:
+            raise ValidationError("Reorganization aborted:\n- " + "\n- ".join(conflict_warnings))
+
+        touched_paths: list[str] = []
+        files_changed: list[str] = []
+        try:
+            for file_plan in reference_files:
+                applicable_refs = [
+                    ref
+                    for ref in cast(list[dict[str, Any]], file_plan["refs"])
+                    if bool(ref.get("applies_in_execution", True))
+                ]
+                if not applicable_refs:
+                    continue
+                current_path = cast(str, file_plan.get("current_path") or file_plan["path"])
+                abs_current = repo.abs_path(current_path)
+                if not abs_current.exists():
+                    raise NotFoundError(f"Reference source not found during apply: {current_path}")
+                if _apply_reorganization_updates(abs_current, applicable_refs):
+                    repo.add(current_path)
+                    touched_paths.append(current_path)
+                    files_changed.append(current_path)
+
+            for move in file_moves:
+                repo.mv(move["source"], move["dest"])
+                touched_paths.extend([move["source"], move["dest"]])
+                files_changed.extend([move["source"], move["dest"]])
+
+            _prune_empty_directories(root, abs_source)
+
+            commit_result = repo.commit(commit_msg)
+        except Exception:
+            if touched_paths:
+                repo.restore_paths(*list(dict.fromkeys(touched_paths)), source="HEAD")
+            raise
+
+        result = MemoryWriteResult.from_commit(
+            files_changed=list(dict.fromkeys(files_changed)),
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={**new_state, "dry_run": False},
+            warnings=warnings,
+            preview=preview_payload,
         )
         return result.to_json()
 
@@ -1397,6 +1662,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     return {
         "memory_promote_knowledge_batch": memory_promote_knowledge_batch,
         "memory_promote_knowledge_subtree": memory_promote_knowledge_subtree,
+        "memory_reorganize_path": memory_reorganize_path,
         "memory_promote_knowledge": memory_promote_knowledge,
         "memory_demote_knowledge": memory_demote_knowledge,
         "memory_archive_knowledge": memory_archive_knowledge,

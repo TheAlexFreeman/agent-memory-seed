@@ -2,7 +2,7 @@
 type: build
 category: build
 status: active
-next_action: Execute Phase 4 — define governance and implement memory_reorganize_path
+next_action: Optional Phase 5 — evaluate advisory structure suggestions via memory_suggest_structure
 last_verified: 2026-03-21
 trust: medium
 ---
@@ -219,11 +219,11 @@ memory_reorganize_path(source: str, dest: str, dry_run: bool = True) -> str
 - Rollback or no-op on validation failure
 
 **Checklist:**
-- [ ] 4.1 Document governance (change class, preview, protection)
-- [ ] 4.2 Implement reorganization executor
-- [ ] 4.3 Implement and register `memory_reorganize_path`
-- [ ] 4.4 Handle edge cases and add safeguards
-- [ ] 4.5 Add tests (dry run, execute, failure modes)
+- [x] 4.1 Document governance (change class, preview, protection)
+- [x] 4.2 Implement reorganization executor
+- [x] 4.3 Implement and register `memory_reorganize_path`
+- [x] 4.4 Handle edge cases and add safeguards
+- [x] 4.5 Add tests (dry run, execute, failure modes)
 
 ---
 

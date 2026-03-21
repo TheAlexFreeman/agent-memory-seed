@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from posixpath import relpath as posix_relpath
-from typing import Any
+from typing import Any, cast
 
 from ..frontmatter_utils import read_with_frontmatter
 
@@ -74,7 +74,9 @@ def _resolve_reference(from_path: str, target: str, root: Path) -> str | None:
         return None
 
 
-def _resolve_target_path(from_path: str, target: str, root: Path) -> tuple[str | None, str | None, str | None]:
+def _resolve_target_path(
+    from_path: str, target: str, root: Path
+) -> tuple[str | None, str | None, str | None]:
     raw_path, anchor = _split_target_and_anchor(target)
     if not raw_path and anchor:
         return from_path, anchor, None
@@ -399,10 +401,14 @@ def _normalize_repo_path(path: str) -> str:
     return path.strip().replace("\\", "/").strip("/")
 
 
+def _path_is_within(path: str, prefix: str) -> bool:
+    return path == prefix or path.startswith(f"{prefix}/")
+
+
 def _replace_path_prefix(path: str, source: str, dest: str) -> str:
     if path == source:
         return dest
-    return f"{dest}/{path[len(source) + 1:]}"
+    return f"{dest}/{path[len(source) + 1 :]}"
 
 
 def _source_descendants(root: Path, source: str) -> list[str]:
@@ -457,49 +463,125 @@ def _summary_targets_for_reorganization(source: str, dest: str) -> list[str]:
     return sorted(targets)
 
 
-def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
+def plan_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
     normalized_source = _normalize_repo_path(source)
     normalized_dest = _normalize_repo_path(dest)
     files_to_move = _source_descendants(root, normalized_source)
+    future_paths = {
+        path: _replace_path_prefix(path, normalized_source, normalized_dest)
+        for path in files_to_move
+    }
     file_moves = [
         {
             "source": path,
-            "dest": _replace_path_prefix(path, normalized_source, normalized_dest),
+            "dest": future_paths[path],
         }
         for path in files_to_move
     ]
 
+    refs_by_file: dict[str, dict[str, Any]] = {}
+
+    def add_ref_update(
+        *,
+        current_path: str,
+        display_path: str,
+        ref_type: str,
+        old_value: str,
+        new_value: str,
+        line: int | None,
+        resolved_old: str | None,
+        resolved_new: str | None,
+        ref_key: str | None = None,
+        applies_in_execution: bool,
+    ) -> None:
+        if old_value == new_value:
+            return
+        bucket = refs_by_file.setdefault(
+            display_path,
+            {
+                "path": display_path,
+                "current_path": current_path,
+                "refs": [],
+            },
+        )
+        bucket["refs"].append(
+            {
+                "type": ref_type,
+                "old": old_value,
+                "new": new_value,
+                "line": line,
+                "ref_key": ref_key,
+                "resolved_old": resolved_old,
+                "resolved_new": resolved_new,
+                "applies_in_execution": applies_in_execution,
+            }
+        )
+
     source_refs = find_references(root, normalized_source, include_body=True)
-    refs_by_file: dict[str, list[dict[str, Any]]] = {}
     for match in source_refs:
+        current_from_path = str(match["from_path"])
+        if current_from_path in future_paths:
+            continue
         resolved_path = match.get("resolved_path")
-        if not isinstance(resolved_path, str) or not (
-            resolved_path == normalized_source
-            or resolved_path.startswith(f"{normalized_source}/")
-        ):
+        if not isinstance(resolved_path, str) or not _path_is_within(resolved_path, normalized_source):
             continue
         new_resolved_path = _replace_path_prefix(resolved_path, normalized_source, normalized_dest)
-        refs_by_file.setdefault(str(match["from_path"]), []).append(
-            {
-                "type": match["ref_type"],
-                "old": match["ref_value"],
-                "new": _rewrite_reference_target(
-                    str(match["from_path"]),
-                    str(match["ref_value"]),
-                    new_resolved_path,
-                ),
-                "resolved_old": resolved_path,
-                "resolved_new": new_resolved_path,
-                "line": match.get("line"),
-            }
+        add_ref_update(
+            current_path=current_from_path,
+            display_path=current_from_path,
+            ref_type=str(match["ref_type"]),
+            old_value=str(match["ref_value"]),
+            new_value=_rewrite_reference_target(
+                current_from_path,
+                str(match["ref_value"]),
+                new_resolved_path,
+            ),
+            line=cast(int | None, match.get("line")),
+            resolved_old=resolved_path,
+            resolved_new=new_resolved_path,
+            ref_key=cast(str | None, match.get("ref_key")),
+            applies_in_execution=str(match["ref_type"]) != "body_path",
+        )
+
+    for item in _iter_validation_targets(root, normalized_source):
+        current_from_path = str(item["from_path"])
+        future_from_path = future_paths.get(current_from_path, current_from_path)
+        resolved_path = cast(str | None, item.get("resolved_path"))
+        future_resolved_path = (
+            _replace_path_prefix(resolved_path, normalized_source, normalized_dest)
+            if isinstance(resolved_path, str) and _path_is_within(resolved_path, normalized_source)
+            else resolved_path
+        )
+        add_ref_update(
+            current_path=current_from_path,
+            display_path=future_from_path,
+            ref_type=str(item["ref_type"]),
+            old_value=str(item["target"]),
+            new_value=_rewrite_reference_target(
+                future_from_path,
+                str(item["target"]),
+                future_resolved_path or current_from_path,
+            ),
+            line=cast(int | None, item.get("line")),
+            resolved_old=resolved_path,
+            resolved_new=future_resolved_path,
+            ref_key=cast(str | None, item.get("ref_key")),
+            applies_in_execution=True,
         )
 
     files_with_references = [
         {
-            "path": from_path,
-            "refs": refs,
+            **payload,
+            "refs": sorted(
+                cast(list[dict[str, Any]], payload["refs"]),
+                key=lambda item: (
+                    str(item["type"]),
+                    int(item["line"] or 0),
+                    str(item["old"]),
+                ),
+            ),
         }
-        for from_path, refs in sorted(refs_by_file.items())
+        for _, payload in sorted(refs_by_file.items())
     ]
 
     warnings: list[str] = []
@@ -518,9 +600,14 @@ def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]
         "files_to_move": files_to_move,
         "file_moves": file_moves,
         "files_with_references": files_with_references,
+        "reference_updates": sum(len(item["refs"]) for item in files_with_references),
         "summary_updates": _summary_targets_for_reorganization(
             normalized_source,
             normalized_dest,
         ),
         "warnings": sorted(set(warnings)),
     }
+
+
+def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
+    return plan_reorganization(root, source, dest)

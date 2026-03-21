@@ -8,7 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-- [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: Phases 1-3 landed with `memory_find_references`, `memory_validate_links`, and `memory_reorganize_preview`; next is governed execution.
+- [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: Phases 1-4 landed with reference discovery, validation, preview, and governed execution; optional Phase 5 remains.
 - [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, warning clarity, paths-only enum; Phase 1 next.
 - [checklist-app-architecture.md](checklist-app-architecture.md) — Django/React checklist tool for task management and progress tracking; Phase 1 next (Django scaffold + models).
 
@@ -116,6 +116,6 @@ Next: All planned phases complete.
 ### MCP Knowledge Base Reorganization Tools · status: active · trust: medium
 Detail: plans/mcp-knowledge-reorganization-tools.md
 Scope: Reference discovery (memory_find_references), link validation (memory_validate_links), reorganization preview and execution (memory_reorganize_preview, memory_reorganize_path), optional structure suggestions (memory_suggest_structure). Friction from 2026-03-21 ai-frontier → ai/frontier move.
-Progress: 12/17 checklist items complete; Phases 1-3 reference discovery, link validation, and read-only preview are now in.
-Next: Phase 4 — define governance and implement `memory_reorganize_path`.
+Progress: 17/21 checklist items complete; Phases 1-4 reference discovery, link validation, read-only preview, and governed execution are now in.
+Next: Optional Phase 5 — evaluate advisory `memory_suggest_structure` heuristics.
 <!-- END: mcp-knowledge-reorganization-tools -->
