@@ -254,7 +254,7 @@ next_question_id: 4
 # Open Questions
 
 ## q-001: <question text>
-**Asked:** YYYY-MM-DD | **Context:** <why this question matters>
+**Asked:** YYYY-MM-DD | **Last touched:** YYYY-MM-DD | **Context:** <why this question matters>
 **Resolves by:** <agent-research | human-decision | joint-evaluation | human-only>
 **Agent contribution:** <what the agent can do to help — even for human-only questions>
 
@@ -265,7 +265,7 @@ next_question_id: 4
 # Resolved Questions
 
 ## q-003: <question text>
-**Asked:** YYYY-MM-DD | **Resolved:** YYYY-MM-DD
+**Asked:** YYYY-MM-DD | **Last touched:** YYYY-MM-DD | **Resolved:** YYYY-MM-DD
 **Disposition:** <answered | superseded | refactored | no-longer-applicable>
 **Answer:** <the resolution — concise, linking to knowledge files if detailed>
 
@@ -274,15 +274,19 @@ next_question_id: 4
 
 The frontmatter is deliberately light: `type` for validation and
 `next_question_id` so MCP tools can allocate IDs without parsing the file body.
-This avoids a class of race conditions in question ID allocation and is
-future-forward in case we want to enrich the frontmatter later (e.g., question
-count caches, category tags).
+This avoids a class of race conditions in question ID allocation and keeps
+question-level recency as explicit per-question metadata rather than
+overloading `Asked`. The file is future-forward in case we want to enrich the
+frontmatter later (e.g., question count caches, category tags).
 
 Design notes on questions:
 - Questions use natural language. They can be precise ("which ORM should we
   use?") or exploratory ("what are the failure modes of this approach?").
 - Every question gets a stable machine ID (`q-001`, `q-002`, ...). Tools refer
   to the ID; humans read and edit the text.
+- `Asked` records provenance: when the question entered the project. `Last
+  touched` records machine-readable recency for stale-question review,
+  triage, and activity-sensitive tooling.
 - Resolved questions stay visible with their answers. The resolution history is
   itself valuable knowledge — it records the project's epistemic trajectory.
 - A question can be resolved by answering it, by deciding it's no longer
@@ -335,7 +339,8 @@ agent-only housekeeping task. The protocol:
 3. **Agent records the resolution.** Resolved questions move to the Resolved
   section with their machine ID and disposition preserved. Questions that the
   human confirms as still relevant keep the same machine ID and get their
-  `Asked` date refreshed to prevent repeated flagging.
+  `Last touched` date refreshed to prevent repeated flagging while preserving
+  the original `Asked` provenance.
 
 This is the metacognitive monitoring pattern from the trust system (externalized
 calibration compensating for the agent's inability to self-assess relevance)
@@ -849,6 +854,12 @@ restructuring:
 - [x] Decide: fixed thresholds for collaborative question review (3+ sessions
   dormant, 10+ open questions). May revisit with maturity-guided thresholds
   if tuning proves necessary.
+- [x] Decide: a temporarily broken intermediate branch is acceptable during the
+  cutover. The migration does not need to preserve bootstrap/validator
+  correctness after every sub-phase as long as the final branch lands cleanly.
+- [x] Decide: questions get a machine-readable `Last touched` field. `Asked`
+  preserves provenance; stale-question review and question-activity heuristics
+  use `Last touched`.
 - [x] Decide: orient-evaluate-protocol plan merged into this plan. The orient–
   evaluate pattern at single-task, multi-session-arc, and system-level scales,
   plus complementarity documentation and knowledge base extension, are now
@@ -868,6 +879,9 @@ restructuring:
     "By project" structured index (for browsing and promotion tracking).
   - questions.md: light frontmatter with `type` and `next_question_id` for
     tool-safe ID allocation; future-forward for enrichment.
+  - Routing cache ownership: individual project/question/plan tools update the
+    touched project's routing frontmatter atomically; `memory_regenerate_navigator`
+    exists as a full repair/correction pass, not the default write path.
 
 ### Phase 1: Core folder structure and migration
 - [ ] Create `projects/` directory with top-level SUMMARY.md and ACCESS.jsonl
@@ -888,7 +902,8 @@ restructuring:
   general-knowledge-base) with SUMMARY.md and questions.md (demo-app-build
   deferred)
 - [ ] Write `projects/SUMMARY.md` with the new cross-project navigator format
-- [ ] Remove the old `plans/` folder entirely
+- [ ] Remove the old `plans/` folder entirely once the cutover branch has the
+  replacement `projects/` surfaces and tool updates in place
 
 ### Phase 2: MCP tool updates
 - [ ] Update `path_policy.py`: replace `"plans"` with `"projects"` in
@@ -909,12 +924,13 @@ restructuring:
   - `memory_add_question` — adds an open question to a project's questions.md;
     allocates a stable question ID and accepts optional `resolves_by`
     (agent-research | human-decision | joint-evaluation | human-only) and
-    `agent_contribution` fields
+    `agent_contribution` fields; initializes `Last touched`
   - `memory_resolve_question` — moves a question from open to resolved by
     machine ID with answer text and optional disposition (answered |
-    superseded | refactored | no-longer-applicable)
+    superseded | refactored | no-longer-applicable); preserves `Asked`, stamps
+    final `Last touched`, and records `Resolved`
   - `memory_update_question` — updates question text or routing metadata by
-    machine ID without changing the question's identity
+    machine ID without changing the question's identity; refreshes `Last touched`
   - `memory_load_project` — read tool optimized for the frequent project-
     context-loading path. Returns SUMMARY.md + questions.md in a single call.
     Optional `depth` parameter: `summary` (default, SUMMARY.md only),
@@ -941,8 +957,9 @@ restructuring:
   Accepts optional `promotion_target` for artifacts destined for the global KB.
 - [ ] Add `memory_regenerate_navigator` tool — reads all project SUMMARY.md
   frontmatter and regenerates `projects/SUMMARY.md`. Called automatically by
-  any tool that modifies a project's routing frontmatter. Also callable
-  manually for repair.
+  a full repair/correction pass and callable manually for validation. Normal
+  project/question/plan tools update the touched project's routing frontmatter
+  directly and only regenerate the top-level navigator as a derived surface.
 - [ ] Update `server.py` if there are any direct references to plans path
 
 ### Phase 3: Validation and CI updates
@@ -1082,7 +1099,8 @@ restructuring:
 multiple files and folders, users might resist using the system for quick tasks.
 Mitigation: the MCP `memory_create_project` tool handles all scaffolding in a
 single call. A minimal project is just SUMMARY.md + questions.md + empty `IN/`.
-The global `projects/OUT/` directory already exists; per-project OUT
+The global `projects/OUT/` directory is created as part of the repository-level
+project scaffolding; per-project OUT
 subdirectories are created on demand when the project first publishes an
 artifact. The plans/ subfolder is likewise created on demand.
 
@@ -1094,9 +1112,10 @@ working on." The demo-app-build project is explicitly optional.
 
 **Risk: Question sprawl.** Open-ended projects could accumulate dozens of
 unresolved questions, making questions.md unwieldy. Mitigation: machine IDs and
-format enforcement make the file governable by tools, and the agent should
+format enforcement make the file governable by tools, `Last touched` provides a
+cheap machine-readable recency signal, and the agent should
 periodically review questions for relevance (similar to the existing knowledge
-freshness check). Questions that have been open for N sessions without activity
+freshness check). Questions that have been open for 3+ sessions without activity
 can be proposed for resolution ("still relevant?") or archival.
 
 **Risk: `IN/` / `OUT/` boundary confusion.** If findings live in both a
