@@ -217,4 +217,11 @@ _No access data yet._ After aggregation, this section will contain:
 - **[bystander-effect-diffusion-responsibility.md](knowledge/social-science/social-psychology/bystander-effect-diffusion-responsibility.md)** — Latané-Darley; diffusion of responsibility; pluralistic ignorance; collective inaction parallel to Olson
 - **[social-psychology-transmission-biases-synthesis.md](knowledge/social-science/social-psychology/social-psychology-transmission-biases-synthesis.md)** — Full mapping: Asch→conformist bias, Milgram→authority bias, Zimbardo→role transmission, polarization→echo chambers
 
+#### `behavioral-economics/` — Heuristics, biases, prospect theory, nudge theory, bounded rationality (promoted 2026-03-21, trust: low — awaiting review)
+- **[kahneman-tversky-heuristics-biases.md](knowledge/social-science/behavioral-economics/kahneman-tversky-heuristics-biases.md)** — Availability, representativeness, anchoring heuristics; dual-process framework; System 1/2; Gigerenzen debate
+- **[prospect-theory-loss-aversion.md](knowledge/social-science/behavioral-economics/prospect-theory-loss-aversion.md)** — Reference dependence, S-shaped value function, loss aversion (λ≈2.25), probability weighting; endowment effect; status quo bias
+- **[thaler-sunstein-nudge-theory.md](knowledge/social-science/behavioral-economics/thaler-sunstein-nudge-theory.md)** — Choice architecture: defaults, salience, social proof, framing; libertarian paternalism; mental accounting; debiasing via environment design
+- **[bounded-rationality-simon.md](knowledge/social-science/behavioral-economics/bounded-rationality-simon.md)** — Herbert Simon's satisficing; aspiration levels; procedural vs substantive rationality; attention as scarce resource; AI design implications
+- **[behavioral-economics-rationality-synthesis.md](knowledge/social-science/behavioral-economics/behavioral-economics-rationality-synthesis.md)** — Rationality landscape (EUT, K&T, Gigerenzen, Simon); domain specificity of biases; what debiasing works; connections to rationalist community and cultural evolution
+
 ---

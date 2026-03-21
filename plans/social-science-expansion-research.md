@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 4 (Behavioral Economics): Kahneman/Tversky heuristics, prospect theory, nudge theory, bounded rationality, synthesis — bridging cognitive science and economic choice.'
+next_action: 'Execute Phase 5 (Network Diffusion): Granovetter weak ties, Rogers diffusion, Watts cascades, Surowiecki wisdom of crowds, synthesis — network structure of social transmission.'
 origin_session: chats/2026/03/21
 source: agent-generated
 status: active
@@ -170,13 +170,13 @@ Target subfolder: `knowledge/_unverified/social-science/behavioral-economics/`
 5. **`behavioral-economics-rationality-synthesis.md`** — Synthesis: when do biases matter? Domain specificity, individual differences, debiasing. The rationality debate in light of heuristics and biases. Connection to rationalist community epistemology and calibration.
 
 Checklist:
-- [ ] 4.1 Write `kahneman-tversky-heuristics-biases.md`
-- [ ] 4.2 Write `prospect-theory-loss-aversion.md`
-- [ ] 4.3 Write `thaler-sunstein-nudge-theory.md`
-- [ ] 4.4 Write `bounded-rationality-simon.md`
-- [ ] 4.5 Write `behavioral-economics-rationality-synthesis.md`
-- [ ] 4.6 Promote subtree to `knowledge/social-science/behavioral-economics/`
-- [ ] 4.7 Update `knowledge/SUMMARY.md`
+- [x] 4.1 Write `kahneman-tversky-heuristics-biases.md`
+- [x] 4.2 Write `prospect-theory-loss-aversion.md`
+- [x] 4.3 Write `thaler-sunstein-nudge-theory.md`
+- [x] 4.4 Write `bounded-rationality-simon.md`
+- [x] 4.5 Write `behavioral-economics-rationality-synthesis.md`
+- [x] 4.6 Promote subtree to `knowledge/social-science/behavioral-economics/`
+- [x] 4.7 Update `knowledge/SUMMARY.md`
 
 ---
 
@@ -265,7 +265,7 @@ Each file should:
 | Phase 1 — Sociology of Knowledge & STS | 5 | 5/5 ✓ |
 | Phase 2 — Collective Action | 5 | 5/5 ✓ |
 | Phase 3 — Social Psychology | 6 | 6/6 ✓ |
-| Phase 4 — Behavioral Economics | 5 | 0/5 |
+| Phase 4 — Behavioral Economics | 5 | 5/5 ✓ |
 | Phase 5 — Network Diffusion | 5 | 0/5 |
 | Phase 6 — Social Epistemology | 4 | 0/4 |
-| **Total** | **30** | **16/30** |
+| **Total** | **30** | **21/30** |
