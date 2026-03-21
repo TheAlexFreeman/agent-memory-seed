@@ -47,7 +47,7 @@ def build_repo(
         "meta/integrity-checklist.md",
         "identity/SUMMARY.md",
         "chats/SUMMARY.md",
-        "plans/SUMMARY.md",
+        "projects/SUMMARY.md",
     ):
         write(root / path, f"# {Path(path).stem}\n")
 
@@ -71,12 +71,12 @@ def build_repo(
     if not first_run:
         write(root / "chats" / "2026" / "03" / "18" / "chat-001" / "SUMMARY.md", "# Chat\n")
 
-    plans_summary = (
-        "### `example.md` · status: active · trust: medium\n"
+    projects_summary = (
+        "---\ntype: projects-navigator\ngenerated: 2026-03-21 12:00\nproject_count: 1\n---\n\n# Projects\n\n| Project | Status | Mode | Open Qs | Focus | Last activity |\n|---|---|---|---|---|---|\n| example-project | ongoing | exploration | 2 | Example focus | 2026-03-21 |\n"
         if active_plans
-        else "# Plans\n\n_No active plans._\n"
+        else "---\ntype: projects-navigator\ngenerated: 2026-03-21 12:00\nproject_count: 0\n---\n\n# Projects\n\n_No active or ongoing projects._\n"
     )
-    write(root / "plans" / "SUMMARY.md", plans_summary)
+    write(root / "projects" / "SUMMARY.md", projects_summary)
 
     if placeholder_scratchpad:
         write(
@@ -178,7 +178,7 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(mode, "first_run")
             self.assertEqual(source, "first_run_heuristic")
 
-    def test_returning_trace_skips_placeholders_and_no_active_plans(self) -> None:
+    def test_returning_trace_skips_placeholders_and_no_active_projects(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_repo(root, active_plans=False, placeholder_scratchpad=True)
@@ -193,8 +193,8 @@ class BootstrapResolverTests(unittest.TestCase):
             )
             self.assertEqual(resolution.startup_panel.loaded_count, 3)
             self.assertEqual(resolution.startup_panel.skipped_count, 3)
-            self.assertEqual(trace_by_path["plans/SUMMARY.md"].status, "skipped")
-            self.assertEqual(trace_by_path["plans/SUMMARY.md"].reason, "no_active_plans")
+            self.assertEqual(trace_by_path["projects/SUMMARY.md"].status, "skipped")
+            self.assertEqual(trace_by_path["projects/SUMMARY.md"].reason, "no_active_projects")
             self.assertEqual(trace_by_path["scratchpad/USER.md"].status, "skipped")
             self.assertEqual(trace_by_path["scratchpad/USER.md"].reason, "placeholder_or_empty")
             self.assertEqual(trace_by_path["scratchpad/CURRENT.md"].status, "skipped")
@@ -302,8 +302,8 @@ class BootstrapResolverTests(unittest.TestCase):
                     "[modes.returning]\ntoken_budget = 2500",
                     1,
                 ).replace(
-                    '[[modes.returning.steps]]\npath = "plans/SUMMARY.md"\nrole = "plan-summary"\nrequired = false\nskip_if = "no_active_plans"\ncost = "light"',
-                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "plans/SUMMARY.md"\nrole = "plan-summary"\nrequired = false\nskip_if = "no_active_plans"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"',
                     1,
                 ),
             )

@@ -30,7 +30,7 @@ Use this table to determine which files to read for each session type. Load file
 | Session type | Files to load |
 |---|---|
 | **First run** | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
-| **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `plans/SUMMARY.md` _(skip if no active plans)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
+| **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `projects/SUMMARY.md` _(skip if no active or ongoing projects)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
 | **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
 | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
 | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
@@ -59,7 +59,7 @@ Compact startup files are live-state surfaces, not archives. They should answer 
 | `meta/quick-reference.md` | Routing authority, active thresholds, compact contract, decision triggers | Long rationale, runbooks, full algorithms | ~2,600 tokens |
 | `identity/SUMMARY.md` | User portrait, working style, active durable goal | Detailed profile evidence | ~450 tokens |
 | `chats/SUMMARY.md` | Live themes, recent continuity, retrieval guidance | Chat-by-chat narrative | ~750 tokens |
-| `plans/SUMMARY.md` | Active-plan priority, scope, progress, next actions, recent completions | Full plan detail | ~1,700 tokens |
+| `projects/SUMMARY.md` | Active-project routing, cognitive mode, open questions, current focus | Full project detail | ~1,700 tokens |
 | `scratchpad/USER.md` | User-authored current constraints | Historical notes that no longer affect current work | ~400 tokens |
 | `scratchpad/CURRENT.md` | Active threads, immediate next actions, open questions, drill-down refs | Extended analysis and large tables | ~650 tokens |
 
@@ -67,7 +67,7 @@ These targets intentionally leave reserve headroom inside the 7k returning-sessi
 
 ## Compact file success criteria
 
-- `plans/SUMMARY.md` must preserve active-plan priority and next actions while keeping completed work to a compact recent-completions block.
+- `projects/SUMMARY.md` must preserve active-project routing, cognitive mode, current focus, and recent activity in a compact navigator table.
 - `chats/SUMMARY.md` must preserve current themes, recent continuity, and a clear retrieval guide.
 - `scratchpad/CURRENT.md` must preserve active threads, immediate next actions, unresolved questions, and drill-down references.
 - `meta/quick-reference.md` must preserve live routing, active thresholds, and the current compact contract without importing long explanatory policy text.

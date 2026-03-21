@@ -354,17 +354,22 @@ def is_placeholder_or_empty(path: Path) -> bool:
     return any(snippet in text for snippet in PLACEHOLDER_SNIPPETS)
 
 
-def has_active_plans(path: Path) -> bool:
+def has_active_projects(path: Path) -> bool:
     if not path.exists():
         return False
     text = read_text(path)
-    return "status: active" in text or "Priority order for active work:" in text
+    return (
+        "| active |" in text
+        or "| ongoing |" in text
+        or "status: active" in text
+        or "status: ongoing" in text
+    )
 
 
 def resolve_skip_reason(path: Path, skip_if: str | None) -> str | None:
     if skip_if == "placeholder_or_empty" and is_placeholder_or_empty(path):
         return skip_if
-    if skip_if == "no_active_plans" and not has_active_plans(path):
+    if skip_if == "no_active_projects" and not has_active_projects(path):
         return skip_if
     return None
 

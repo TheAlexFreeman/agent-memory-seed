@@ -67,10 +67,10 @@ skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.returning.steps]]
-path = "plans/SUMMARY.md"
-role = "plan-summary"
+path = "projects/SUMMARY.md"
+role = "project-summary"
 required = false
-skip_if = "no_active_plans"
+skip_if = "no_active_projects"
 cost = "light"
 
 [[modes.returning.steps]]
@@ -122,10 +122,10 @@ skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "plans/SUMMARY.md"
-role = "plan-summary"
+path = "projects/SUMMARY.md"
+role = "project-summary"
 required = false
-skip_if = "no_active_plans"
+skip_if = "no_active_projects"
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
@@ -195,10 +195,10 @@ skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "plans/SUMMARY.md"
-role = "plan-summary"
+path = "projects/SUMMARY.md"
+role = "project-summary"
 required = false
-skip_if = "no_active_plans"
+skip_if = "no_active_projects"
 cost = "light"
 
 [[modes.periodic_review.steps]]
@@ -287,8 +287,8 @@ skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.automation.steps]]
-path = "plans/SUMMARY.md"
-role = "plan-summary"
+path = "projects/SUMMARY.md"
+role = "project-summary"
 required = false
-skip_if = "no_active_plans"
+skip_if = "no_active_projects"
 cost = "light"

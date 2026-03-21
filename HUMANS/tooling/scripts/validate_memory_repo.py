@@ -99,7 +99,7 @@ EXPECTED_RETURNING_STEP_PATHS = (
     "meta/quick-reference.md",
     "identity/SUMMARY.md",
     "chats/SUMMARY.md",
-    "plans/SUMMARY.md",
+    "projects/SUMMARY.md",
     "scratchpad/USER.md",
     "scratchpad/CURRENT.md",
 )
@@ -113,7 +113,7 @@ EXPECTED_FULL_BOOTSTRAP_STEP_PATHS = (
     "README.md",
     "identity/SUMMARY.md",
     "chats/SUMMARY.md",
-    "plans/SUMMARY.md",
+    "projects/SUMMARY.md",
     "scratchpad/USER.md",
     "scratchpad/CURRENT.md",
     "CHANGELOG.md",
@@ -136,7 +136,7 @@ EXPECTED_AUTOMATION_STEP_PATHS = (
     "meta/quick-reference.md",
     "scratchpad/USER.md",
     "scratchpad/CURRENT.md",
-    "plans/SUMMARY.md",
+    "projects/SUMMARY.md",
 )
 EXPECTED_MODE_STEP_PATHS = {
     "first_run": EXPECTED_FIRST_RUN_STEP_PATHS,
@@ -159,7 +159,7 @@ EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
 )
 EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
     "chats/SUMMARY.md": "placeholder_or_empty",
-    "plans/SUMMARY.md": "no_active_plans",
+    "projects/SUMMARY.md": "no_active_projects",
     "scratchpad/USER.md": "placeholder_or_empty",
     "scratchpad/CURRENT.md": "placeholder_or_empty",
 }
@@ -168,7 +168,7 @@ COMPACT_RETURNING_TARGETS = {
     "meta/quick-reference.md": 2600,
     "identity/SUMMARY.md": 450,
     "chats/SUMMARY.md": 750,
-    "plans/SUMMARY.md": 1700,
+    "projects/SUMMARY.md": 1700,
     "scratchpad/USER.md": 400,
     "scratchpad/CURRENT.md": 650,
 }
@@ -899,8 +899,13 @@ def is_placeholder_or_empty_text(text: str) -> bool:
     return any(snippet in stripped for snippet in PLACEHOLDER_SNIPPETS)
 
 
-def plans_summary_has_active_plans(text: str) -> bool:
-    return "status: active" in text or "Priority order for active work:" in text
+def projects_summary_has_active_projects(text: str) -> bool:
+    return (
+        "| active |" in text
+        or "| ongoing |" in text
+        or "status: active" in text
+        or "status: ongoing" in text
+    )
 
 
 def iter_compact_startup_measurements(
@@ -920,7 +925,7 @@ def iter_compact_startup_measurements(
         if rel_path in {"chats/SUMMARY.md", "scratchpad/USER.md", "scratchpad/CURRENT.md"}:
             if is_placeholder_or_empty_text(text):
                 continue
-        if rel_path == "plans/SUMMARY.md" and not plans_summary_has_active_plans(text):
+        if rel_path == "projects/SUMMARY.md" and not projects_summary_has_active_projects(text):
             continue
 
         measurements.append((rel_path, estimate_token_count(text), text))
@@ -942,40 +947,48 @@ def find_repo_path_references(text: str, root: Path, prefixes: tuple[str, ...]) 
     return references
 
 
-def validate_plans_summary_shape(
+def validate_projects_summary_shape(
     path: Path, text: str, root: Path, result: ValidationResult
 ) -> None:
-    for heading in ("## Active plans", "## Recent completions"):
-        if heading not in text:
-            result.error(f"{path}: missing compact plans heading {heading!r}")
+    if not text.lstrip().startswith("---"):
+        result.error(f"{path}: projects navigator must begin with YAML frontmatter")
+        return
 
-    if "## Completed plans" in text:
+    post = fmlib.loads(text)
+    if post.metadata.get("type") != "projects-navigator":
+        result.error(f"{path}: frontmatter must set type: projects-navigator")
+    if "generated" not in post.metadata:
+        result.error(f"{path}: frontmatter must include generated timestamp")
+    if "project_count" not in post.metadata:
+        result.error(f"{path}: frontmatter must include project_count")
+
+    body = post.content
+    if "# Projects" not in body:
+        result.error(f"{path}: missing '# Projects' heading")
+
+    required_header = "| Project | Status | Mode | Open Qs | Focus | Last activity |"
+    if required_header not in body:
+        result.error(f"{path}: missing canonical navigator table header")
+        return
+
+    row_pattern = re.compile(
+        r"^\| (?P<project>[^|]+) \| (?P<status>active|ongoing|completed|archived) \| (?P<mode>[^|]+) \| (?P<open_qs>\d+) \| (?P<focus>[^|]+) \| (?P<activity>\d{4}-\d{2}-\d{2}) \|$",
+        re.MULTILINE,
+    )
+    rows = list(row_pattern.finditer(body))
+    if not rows:
+        result.error(f"{path}: navigator must contain at least one project row")
+        return
+
+    project_count = post.metadata.get("project_count")
+    if isinstance(project_count, int) and project_count != len(rows):
         result.error(
-            f"{path}: completed-plan narratives must be collapsed into '## Recent completions'"
+            f"{path}: project_count={project_count} does not match navigator row count {len(rows)}"
         )
 
-    block_pattern = re.compile(
-        r"<!-- BEGIN: (?P<id>[^ ]+) -->\n(?P<body>.*?)<!-- END: (?P=id) -->",
-        re.DOTALL,
-    )
-    for match in block_pattern.finditer(text):
-        body = match.group("body")
-        body_lines = [line.strip() for line in body.splitlines() if line.strip()]
-        expected_detail = f"plans/{match.group('id')}.md"
-        if expected_detail not in body:
-            result.error(
-                f"{path}: compact plan block {match.group('id')!r} must include a drill-down reference to {expected_detail}"
-            )
-        if "Progress:" not in body:
-            result.error(
-                f"{path}: compact plan block {match.group('id')!r} must include 'Progress:'"
-            )
-        if "Next:" not in body:
-            result.error(f"{path}: compact plan block {match.group('id')!r} must include 'Next:'")
-        if len(body_lines) > 6:
-            result.error(
-                f"{path}: compact plan block {match.group('id')!r} is too long ({len(body_lines)} non-empty lines); move detail into the plan file"
-            )
+    activity_dates = [match.group("activity") for match in rows]
+    if activity_dates != sorted(activity_dates, reverse=True):
+        result.error(f"{path}: navigator rows must be sorted by last activity descending")
 
 
 def validate_chats_summary_shape(
@@ -1052,8 +1065,8 @@ def validate_compact_startup_contract(root: Path, result: ValidationResult) -> N
             )
 
         path = root / rel_path
-        if rel_path == "plans/SUMMARY.md":
-            validate_plans_summary_shape(path, text, root, result)
+        if rel_path == "projects/SUMMARY.md":
+            validate_projects_summary_shape(path, text, root, result)
         elif rel_path == "chats/SUMMARY.md":
             validate_chats_summary_shape(path, text, root, result)
         elif rel_path == "scratchpad/CURRENT.md":
@@ -1453,7 +1466,7 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
     required_compact_markers = (
         "identity/SUMMARY.md",
         "chats/SUMMARY.md",
-        "plans/SUMMARY.md",
+        "projects/SUMMARY.md",
         "scratchpad/USER.md",
         "scratchpad/CURRENT.md",
         "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",

@@ -68,7 +68,7 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     | Session type | Files to load |
     |---|---|
     | **First run** | `README.md` → `meta/first-run.md` |
-    | **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty)_ → `plans/SUMMARY.md` _(skip if no active plans)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
+    | **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty)_ → `projects/SUMMARY.md` _(skip if no active or ongoing projects)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
     | **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
     | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
     | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` |
@@ -93,13 +93,13 @@ VALID_QUICK_REFERENCE = textwrap.dedent(
     | `meta/quick-reference.md` | Routing and thresholds | Longer rationale | ~2,600 tokens |
     | `identity/SUMMARY.md` | User portrait | Detailed evidence | ~450 tokens |
     | `chats/SUMMARY.md` | Themes and retrieval guidance | Narrative history | ~750 tokens |
-    | `plans/SUMMARY.md` | Active plans and next actions | Full plan detail | ~1,700 tokens |
+    | `projects/SUMMARY.md` | Active project routing and current focus | Full project detail | ~1,700 tokens |
     | `scratchpad/USER.md` | Current user notes | Older context | ~400 tokens |
     | `scratchpad/CURRENT.md` | Active threads and refs | Extended analysis | ~650 tokens |
 
     ## Compact file success criteria
 
-    - `plans/SUMMARY.md` must preserve active-plan priority and next actions.
+    - `projects/SUMMARY.md` must preserve active-project routing and current focus.
     - `chats/SUMMARY.md` must preserve current themes and retrieval guidance.
     - `scratchpad/CURRENT.md` must preserve active threads and drill-down refs.
 
@@ -202,10 +202,10 @@ VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
     cost = "light"
 
     [[modes.returning.steps]]
-    path = "plans/SUMMARY.md"
-    role = "plan-summary"
+    path = "projects/SUMMARY.md"
+    role = "project-summary"
     required = false
-    skip_if = "no_active_plans"
+    skip_if = "no_active_projects"
     cost = "light"
 
     [[modes.returning.steps]]
@@ -257,10 +257,10 @@ VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
     cost = "light"
 
     [[modes.full_bootstrap.steps]]
-    path = "plans/SUMMARY.md"
-    role = "plan-summary"
+    path = "projects/SUMMARY.md"
+    role = "project-summary"
     required = false
-    skip_if = "no_active_plans"
+    skip_if = "no_active_projects"
     cost = "light"
 
     [[modes.full_bootstrap.steps]]
@@ -330,10 +330,10 @@ VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
     cost = "light"
 
     [[modes.periodic_review.steps]]
-    path = "plans/SUMMARY.md"
-    role = "plan-summary"
+    path = "projects/SUMMARY.md"
+    role = "project-summary"
     required = false
-    skip_if = "no_active_plans"
+    skip_if = "no_active_projects"
     cost = "light"
 
     [[modes.periodic_review.steps]]
@@ -422,10 +422,10 @@ VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
     cost = "light"
 
     [[modes.automation.steps]]
-    path = "plans/SUMMARY.md"
-    role = "plan-summary"
+    path = "projects/SUMMARY.md"
+    role = "project-summary"
     required = false
-    skip_if = "no_active_plans"
+    skip_if = "no_active_projects"
     cost = "light"
     """
 )
@@ -607,6 +607,30 @@ def build_minimal_repo(root: Path) -> None:
     for dirname in ("identity", "knowledge", "skills", "plans", "chats"):
         write(root / dirname / "SUMMARY.md", f"# {dirname} summary\n")
         write(root / dirname / "ACCESS.jsonl", "")
+
+    write(root / "projects" / "ACCESS.jsonl", "")
+    write(
+        root / "projects" / "SUMMARY.md",
+        textwrap.dedent(
+            """\
+            ---
+            type: projects-navigator
+            generated: 2026-03-16
+            project_count: 1
+            ---
+
+            # Projects
+
+            | Project | Status | Mode | Open Qs | Focus | Last activity |
+            | --- | --- | --- | --- | --- | --- |
+            | seed-project | completed | verification | 0 | Baseline fixture | 2026-03-16 |
+            """
+        ),
+    )
+    write(
+        root / "projects" / "seed-project" / "SUMMARY.md",
+        "# Seed project\n\nFixture content.\n",
+    )
 
     write(
         root / "chats" / "SUMMARY.md",
@@ -1118,28 +1142,25 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 )
             )
 
-    def test_plans_summary_without_detail_reference_fails(self) -> None:
+    def test_projects_summary_without_rows_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "plans" / "SUMMARY.md",
+                root / "projects" / "SUMMARY.md",
                 textwrap.dedent(
                     """\
-                    # Plans — Summary
+                    ---
+                    type: projects-navigator
+                    generated: 2026-03-16
+                    project_count: 1
+                    ---
 
-                    ## Active plans
+                    # Projects
 
-                    <!-- BEGIN: example -->
-                    ### `example.md` · status: active · trust: medium
-                    Scope: Example scope
-                    Progress: 0/2 complete
-                    Next: Do first step
-                    <!-- END: example -->
-
-                    ## Recent completions
-
-                    - [done.md](done.md) — done
+                    | Project | Status | Mode | Open Qs | Focus | Last activity |
+                    | --- | --- | --- | --- | --- | --- |
+                    | broken-project | active | execution | 2 | Missing date cell |
                     """
                 ),
             )
@@ -1147,7 +1168,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(
                 any(
-                    "must include a drill-down reference to plans/example.md" in error
+                    "navigator must contain at least one project row" in error
                     for error in result.errors
                 )
             )
@@ -2025,7 +2046,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertNotIn("session-checklists", compact_row)
         self.assertIn("identity/SUMMARY.md", compact_row)
         self.assertIn("chats/SUMMARY.md", compact_row)
-        self.assertIn("plans/SUMMARY.md", compact_row)
+        self.assertIn("projects/SUMMARY.md", compact_row)
         self.assertIn("task-relevant `knowledge/SUMMARY.md`", compact_row)
 
     def test_context_budget_copy_uses_canonical_ranges(self) -> None:
@@ -2050,7 +2071,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         compact_paths = [
             REPO_ROOT / "meta" / "quick-reference.md",
             REPO_ROOT / "identity" / "SUMMARY.md",
-            REPO_ROOT / "plans" / "SUMMARY.md",
+            REPO_ROOT / "projects" / "SUMMARY.md",
             REPO_ROOT / "scratchpad" / "USER.md",
             REPO_ROOT / "scratchpad" / "CURRENT.md",
         ]
