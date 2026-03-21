@@ -161,7 +161,10 @@ projects/
 
 ### Project SUMMARY.md
 
-Each project's `SUMMARY.md` is its status dashboard. It contains:
+Each project's `SUMMARY.md` is its status dashboard. **Routing fields live in
+YAML frontmatter** so tools and automations can parse them without reading the
+markdown body. The markdown body carries narrative context for humans and agents
+that have loaded the project for active work.
 
 ```markdown
 ---
@@ -171,6 +174,11 @@ created: YYYY-MM-DD
 trust: medium
 type: project
 status: active | ongoing | completed | archived
+cognitive_mode: exploration | evaluation | crystallization | execution | verification
+open_questions: N
+active_plans: N
+last_activity: YYYY-MM-DD
+current_focus: "<one-line summary of the most important open item>"
 ---
 
 # Project: <title>
@@ -178,24 +186,29 @@ status: active | ongoing | completed | archived
 ## Description
 <1-3 sentences: what this project is about and why it exists>
 
-## Status
-- Open questions: N
-- Active plans: N
-- Status: <active|ongoing|completed|archived>
-- Last activity: YYYY-MM-DD
+## Cognitive mode
+<1-2 sentences: what the current mode means for session routing — e.g., "agent
+surveying the space; human evaluation needed before we proceed">
 
 ## Artifact flow
 - IN/: <what kind of accumulated research material lives here>
 - OUT contributions: <what this project has published to projects/OUT/>
 
-## Current focus
-<The most important open question or active plan item right now>
-
-## Cognitive mode
-<exploration | evaluation | crystallization | execution | verification>
-<1 sentence: what this means for session routing — e.g., "agent surveying;
-human evaluation needed before we proceed">
+## Notes
+<optional: context that doesn't fit in frontmatter — design rationale,
+cross-project connections, things to watch>
 ```
+
+The frontmatter fields are the **routing contract** — the fields that
+`memory_load_project`, the top-level navigator generator, and returning-session
+bootstrap all depend on. Specifically:
+
+- `status`, `cognitive_mode`, `open_questions`, `active_plans`, `last_activity`,
+  and `current_focus` are the fields the navigator table is generated from.
+- An agent reading only the frontmatter (via `memory_load_project` at `summary`
+  depth) can make a routing decision without parsing markdown.
+- The markdown body is loaded when the agent engages with the project for active
+  work — it provides context the frontmatter can't capture.
 
 The cognitive mode field captures what *kind* of work the project currently
 needs, which tells a returning agent how to engage with it:
@@ -233,6 +246,11 @@ human-readable, but every question also carries a stable machine ID so MCP
 tools can reference it reliably even if the wording changes:
 
 ```markdown
+---
+type: questions
+next_question_id: 4
+---
+
 # Open Questions
 
 ## q-001: <question text>
@@ -246,13 +264,19 @@ tools can reference it reliably even if the wording changes:
 
 # Resolved Questions
 
-## q-001: <question text>
+## q-003: <question text>
 **Asked:** YYYY-MM-DD | **Resolved:** YYYY-MM-DD
 **Disposition:** <answered | superseded | refactored | no-longer-applicable>
 **Answer:** <the resolution — concise, linking to knowledge files if detailed>
 
 <optional: how we got here, what changed our understanding>
 ```
+
+The frontmatter is deliberately light: `type` for validation and
+`next_question_id` so MCP tools can allocate IDs without parsing the file body.
+This avoids a class of race conditions in question ID allocation and is
+future-forward in case we want to enrich the frontmatter later (e.g., question
+count caches, category tags).
 
 Design notes on questions:
 - Questions use natural language. They can be precise ("which ORM should we
@@ -337,24 +361,40 @@ project-scoped accumulation from system-wide availability:
   available across all projects, without loading any individual project's
   context.
 
-The global outbox has a **`projects/OUT/SUMMARY.md`** that serves as a
-structured index. This file lists available artifacts grouped by originating
-project, with enough metadata (title, date, one-line description, promotion
-status) that an agent or automation can quickly survey what's new:
+The global outbox has a **`projects/OUT/SUMMARY.md`** that serves as a hybrid
+index — a "recently added" section for automations to scan what's new, plus a
+full structured index grouped by project for browsing and promotion tracking:
 
 ```markdown
 # Projects Outbox
 
-## rationalist-ai-discourse
+## Recently added
+| Date | Project | Artifact | Status |
+|---|---|---|---|
+| 2026-03-19 | rationalist-ai-discourse | prediction-failures.md | pending |
+| 2026-03-18 | rationalist-ai-discourse | canonical-ideas-synthesis.md | promoted |
+| 2026-03-15 | getting-to-know-you | profile-v1.md | promoted |
+
+## By project
+
+### rationalist-ai-discourse
 - `rationalist-ai-discourse/canonical-ideas-synthesis.md` — synthesized
-  assessment of rationalist AI canonical ideas (2026-03-18, promoted to KB)
+  assessment of rationalist AI canonical ideas (2026-03-18, promoted to
+  knowledge/rationalist-community/)
 - `rationalist-ai-discourse/prediction-failures.md` — analysis of prediction
   track record (2026-03-19, pending promotion)
 
-## getting-to-know-you
+### getting-to-know-you
 - `getting-to-know-you/profile-v1.md` — initial user profile snapshot
   (2026-03-15, promoted to identity/)
 ```
+
+The "Recently added" table is what automations read — it answers "what's new
+since I last looked?" without parsing the whole file. It has a fixed depth
+(last ~15 entries) so it doesn't grow unbounded. The "By project" section is
+the human browsing surface and the reference for promotion tracking. Both
+sections are tool-generated — the MCP tool that publishes an artifact to the
+outbox updates both sections atomically.
 
 Key design properties:
 
@@ -626,6 +666,52 @@ design must optimize for this path:
   without loading any individual project. This file is part of the compact
   returning orientation path.
 
+### Top-level navigator (`projects/SUMMARY.md`)
+
+The navigator is **tool-generated from per-project frontmatter** — no anchor
+blocks, no manual sync. An MCP tool reads all `projects/*/SUMMARY.md`
+frontmatter, extracts the routing fields, and writes the navigator as a compact
+markdown table. This eliminates the BEGIN/END anchor manipulation logic in the
+current `frontmatter_utils.py`, which is the single most complex piece of
+string manipulation in the MCP codebase.
+
+```markdown
+---
+type: projects-navigator
+generated: YYYY-MM-DD HH:MM
+project_count: N
+---
+
+# Projects
+
+| Project | Status | Mode | Open Qs | Focus | Last activity |
+|---|---|---|---|---|---|
+| getting-to-know-you | ongoing | exploration | 4 | What are the user's intellectual interests? | 2026-03-21 |
+| system-literacy | ongoing | exploration | 3 | Has the user seen persistent memory in action? | 2026-03-21 |
+| rationalist-ai-discourse | active | execution | 2 | Complete Phase 3 synthesis | 2026-03-20 |
+| onboarding-redesign | active | crystallization | 5 | Finalize phase structure | 2026-03-19 |
+| general-knowledge-base | ongoing | exploration | 6 | What areas is the user actively learning? | 2026-03-18 |
+```
+
+Design properties:
+
+- **Single source of truth is per-project frontmatter.** The navigator is
+  derived, never hand-edited. Any tool that updates a project's SUMMARY.md
+  frontmatter should regenerate the navigator afterward.
+- **The table is sorted by last_activity descending** — most recently active
+  projects first. This gives returning agents the right scan order.
+- **Frontmatter on the navigator itself** tracks `generated` timestamp and
+  `project_count` for staleness detection. Automations can compare the
+  `generated` timestamp to the most recent project's `last_activity` to check
+  if the navigator is stale.
+- **Agent-friendly and protocol-governed.** Because this is one of the most
+  frequently loaded orientation documents, the format is strict — the table
+  schema is validator-enforced, and the generation logic is a single MCP tool
+  call, not ad hoc markdown assembly.
+- **Replaces the current `plans/SUMMARY.md` anchor system entirely.** The
+  `frontmatter_utils.py` BEGIN/END block builder, plan-block appender, and
+  anchor manipulation functions are removed in favor of the table generator.
+
 ### Cross-project knowledge flow
 
 Projects don't exist in isolation. Key mechanisms for cross-pollination:
@@ -703,7 +789,14 @@ restructuring:
 - Migration of existing plans to project containers or archive
 - Hard-coded starter project templates (getting-to-know-you, system-literacy,
   general-knowledge-base); demo-app-build deferred
-- MCP tool updates: plan tools become project-aware, new project/question tools
+- Tool-generated table navigator (`projects/SUMMARY.md`) replacing BEGIN/END
+  anchor system; validator-enforced schema, sorted by last_activity
+- Hybrid outbox index (`projects/OUT/SUMMARY.md`) with recent table + by-project
+  structured index; tool-generated on publish
+- Routing-fields-in-frontmatter convention for per-project SUMMARY.md; light
+  frontmatter on questions.md with `next_question_id`
+- MCP tool updates: plan tools become project-aware, new project/question tools,
+  navigator generator, outbox publisher
 - Path policy updates: `projects` replaces `plans` in mutation roots
 - Bootstrap updates: projects become a root-level orientation surface
 - Validator updates: new validation rules for project structure
@@ -763,6 +856,18 @@ restructuring:
 - [x] Decide: project context loading is a first-class optimization target.
   `memory_load_project` read tool added to Phase 2 scope. SUMMARY.md designed
   as a single-read routing surface.
+- [x] Decide: frontmatter and summary protocols (2026-03-21):
+  - Per-project SUMMARY.md: routing fields in YAML frontmatter (`status`,
+    `cognitive_mode`, `open_questions`, `active_plans`, `last_activity`,
+    `current_focus`); narrative context in markdown body.
+  - Top-level navigator (`projects/SUMMARY.md`): tool-generated table from
+    per-project frontmatter. Replaces BEGIN/END anchor system entirely.
+    Sorted by last_activity descending. Validator-enforced schema.
+  - Global outbox index (`projects/OUT/SUMMARY.md`): hybrid format with a
+    "Recently added" table (last ~15 entries, for automations) and a
+    "By project" structured index (for browsing and promotion tracking).
+  - questions.md: light frontmatter with `type` and `next_question_id` for
+    tool-safe ID allocation; future-forward for enrichment.
 
 ### Phase 1: Core folder structure and migration
 - [ ] Create `projects/` directory with top-level SUMMARY.md and ACCESS.jsonl
@@ -821,8 +926,23 @@ restructuring:
   `_ACCESS_ROOTS` and `_REVERT_ALLOWED_TOP_LEVELS`
 - [ ] Update `read_tools.py`: update directory enumeration and startup resources
   to use `projects/` as a root-level orientation feature
-- [ ] Update `frontmatter_utils.py`: update anchor conventions comment and any
-  hardcoded `plans/` references
+- [ ] Rewrite `frontmatter_utils.py`:
+  - Remove all BEGIN/END anchor manipulation logic (plan-block builder,
+    plan-block appender, anchor parsing). This is the single largest
+    simplification in the MCP tool refactor.
+  - Replace with a navigator table generator: reads all
+    `projects/*/SUMMARY.md` frontmatter, extracts routing fields, writes
+    `projects/SUMMARY.md` as a sorted markdown table.
+  - Update anchor conventions comment to reflect the new project model.
+  - Retain any frontmatter parsing/writing utilities that are still needed.
+- [ ] Add `memory_publish_to_outbox` tool — writes an artifact file to
+  `projects/OUT/<project-slug>/`, updates both sections of
+  `projects/OUT/SUMMARY.md` (recent table + by-project index) atomically.
+  Accepts optional `promotion_target` for artifacts destined for the global KB.
+- [ ] Add `memory_regenerate_navigator` tool — reads all project SUMMARY.md
+  frontmatter and regenerates `projects/SUMMARY.md`. Called automatically by
+  any tool that modifies a project's routing frontmatter. Also callable
+  manually for repair.
 - [ ] Update `server.py` if there are any direct references to plans path
 
 ### Phase 3: Validation and CI updates
@@ -831,13 +951,20 @@ restructuring:
     validation functions
   - Add validation for project folder structure (must contain SUMMARY.md)
   - Add validation for questions.md format (open/resolved sections, machine IDs,
-    required fields, unique IDs)
+    required fields, unique IDs, frontmatter with `next_question_id`)
   - Add validation for per-project `IN/` folders
   - Add validation for global `projects/OUT/` structure: SUMMARY.md index
     format, per-project subdirectories, promotion status tracking
   - Update `plans_summary_has_active_plans()` → `projects_summary_has_active_projects()`
-  - Update `validate_plans_summary_shape()` → `validate_projects_summary_shape()`
-  - Validate project SUMMARY.md frontmatter (type: project, valid status)
+  - Update `validate_plans_summary_shape()` → `validate_projects_summary_shape()`:
+    validate navigator table schema (required columns, sort order, row count
+    matches actual project count), frontmatter (`type: projects-navigator`,
+    `generated` timestamp, `project_count`)
+  - Validate per-project SUMMARY.md frontmatter: required routing fields
+    (`type: project`, `status`, `cognitive_mode`, `open_questions`,
+    `active_plans`, `last_activity`, `current_focus`)
+  - Validate `projects/OUT/SUMMARY.md`: recent table format, by-project index
+    format, promotion status values
 - [ ] Update `initial-commit-paths.txt` to reflect new project paths
 - [ ] Update `init-worktree.sh` to create `projects/` structure instead of
   `plans/`
