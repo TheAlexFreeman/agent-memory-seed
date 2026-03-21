@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING, Any, cast
 
 from ...path_policy import resolve_repo_path, validate_session_id, validate_slug
+from ...preview_contract import build_governed_preview, preview_target
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -66,6 +67,7 @@ def register_tools(mcp: "FastMCP", get_repo) -> dict[str, object]:
         source: str | None = None,
         trust: str | None = None,
         origin_session: str | None = None,
+        preview: bool = False,
     ) -> str:
         """Update a named section in a skill file, optionally creating the file.
 
@@ -84,8 +86,9 @@ def register_tools(mcp: "FastMCP", get_repo) -> dict[str, object]:
         file = validate_slug(file, field_name="file")
         rel_path, abs_path = resolve_repo_path(repo, f"skills/{file}.md")
         today = today_str()
+        file_exists = abs_path.exists()
 
-        if abs_path.exists():
+        if file_exists:
             repo.check_version_token(rel_path, version_token)
             fm_dict, body = read_with_frontmatter(abs_path)
         else:
@@ -129,17 +132,41 @@ def register_tools(mcp: "FastMCP", get_repo) -> dict[str, object]:
             body = body.rstrip() + f"\n\n{section_heading}\n\n{content.strip()}\n"
 
         fm_dict["last_verified"] = today
-        write_with_frontmatter(abs_path, fm_dict, body)
-
-        repo.add(rel_path)
         commit_msg = f"[skill] Update {section} in skills/{file}.md"
+        new_state = {"section": section, "mode": mode}
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="protected",
+            summary=f"Update skill section {section} in skills/{file}.md.",
+            reasoning="Skill files are protected because they can directly shape agent procedure.",
+            target_files=[preview_target(rel_path, "update" if file_exists else "create")],
+            invariant_effects=[
+                "Updates the requested skill section using upsert, append, or replace semantics.",
+                "Refreshes last_verified in the skill frontmatter.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=[rel_path],
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
+        write_with_frontmatter(abs_path, fm_dict, body)
+        repo.add(rel_path)
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
             files_changed=[rel_path],
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"section": section, "mode": mode},
+            new_state=new_state,
+            preview=preview_payload,
         )
         return result.to_json()
 

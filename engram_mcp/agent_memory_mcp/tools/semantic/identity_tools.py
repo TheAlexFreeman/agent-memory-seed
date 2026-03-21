@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING, Any, cast
 
 from ...path_policy import resolve_repo_path, validate_slug
+from ...preview_contract import build_governed_preview, preview_target
 from ._session import (
     SessionState,
     get_identity_churn_limit,
@@ -72,6 +73,7 @@ def register_tools(
         value: str,
         mode: str = "upsert",
         version_token: str | None = None,
+        preview: bool = False,
     ) -> str:
         """Update a named field in an identity file."""
         from ...errors import ValidationError
@@ -107,7 +109,6 @@ def register_tools(
             else:
                 fm_dict[key] = value
             fm_dict["last_verified"] = today_str()
-            write_with_frontmatter(abs_path, fm_dict, body)
         else:
             if section_heading in body:
                 if mode in ("replace", "upsert"):
@@ -121,23 +122,50 @@ def register_tools(
                 body = body.rstrip() + f"\n\n{section_heading}\n\n{value.strip()}\n"
 
             fm_dict["last_verified"] = today_str()
-            write_with_frontmatter(abs_path, fm_dict, body)
-
-        repo.add(rel_path)
-        identity_updates = increment_identity_updates(session_state)
 
         commit_msg = f"[identity] Update {key} in identity/{file}.md"
+        predicted_updates = get_identity_updates(session_state) + 1
+        new_state = {
+            "key": key,
+            "mode": mode,
+            "identity_updates_this_session": predicted_updates,
+        }
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="proposed",
+            summary=f"Update identity trait {key} in identity/{file}.md.",
+            reasoning="Identity updates are proposed durable-memory writes and are rate-limited by the churn alarm.",
+            target_files=[preview_target(rel_path, "update")],
+            invariant_effects=[
+                "Updates the requested identity trait using the selected merge mode.",
+                "Refreshes last_verified in the identity file.",
+                "Consumes one identity update from the current session budget on apply.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=[rel_path],
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
+        write_with_frontmatter(abs_path, fm_dict, body)
+        repo.add(rel_path)
+        identity_updates = increment_identity_updates(session_state)
+        new_state["identity_updates_this_session"] = identity_updates
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
             files_changed=[rel_path],
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={
-                "key": key,
-                "mode": mode,
-                "identity_updates_this_session": identity_updates,
-            },
+            new_state=new_state,
+            preview=preview_payload,
         )
         return result.to_json()
 

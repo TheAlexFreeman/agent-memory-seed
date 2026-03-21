@@ -17,6 +17,7 @@ from ...path_policy import (
     validate_session_id,
     validate_top_level_root,
 )
+from ...preview_contract import build_governed_preview, preview_target
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -696,6 +697,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         target_path: str | None = None,
         summary_entry: str | None = None,
         version_token: str | None = None,
+        preview: bool = False,
     ) -> str:
         """Move one file from knowledge/_unverified/ to knowledge/, updating trust.
 
@@ -744,6 +746,72 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         fm_dict, body = read_with_frontmatter(abs_source)
         fm_dict["trust"] = trust_level
         fm_dict["last_verified"] = today_str()
+
+        filename = Path(source_path).name
+        preview_files_changed = [source_path, target_path]
+        preview_warnings: list[str] = []
+        source_summary_path = "knowledge/_unverified/SUMMARY.md"
+        abs_src_summary = root / source_summary_path
+        if abs_src_summary.exists():
+            src_summary = abs_src_summary.read_text(encoding="utf-8")
+            _update_source_summary_after_promotion(
+                src_summary,
+                source_summary_path,
+                source_path,
+                filename,
+                preview_warnings,
+            )
+            preview_files_changed.append(source_summary_path)
+
+        target_summary_path = "knowledge/SUMMARY.md"
+        abs_tgt_summary = root / target_summary_path
+        if abs_tgt_summary.exists():
+            tgt_summary = abs_tgt_summary.read_text(encoding="utf-8")
+            _update_target_summary_after_promotion(
+                tgt_summary,
+                target_summary_path,
+                target_path,
+                filename,
+                fm_dict,
+                preview_warnings,
+                summary_entry=summary_entry,
+                allow_section_create=summary_entry is not None,
+            )
+            preview_files_changed.append(target_summary_path)
+
+        subject = infer_section_id_from_path(target_path)
+        commit_msg = f"[curation] Promote {filename} to knowledge/{subject}/ (trust: {trust_level})"
+        new_state = {"new_path": target_path, "trust": trust_level}
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="proposed",
+            summary=f"Promote {filename} from unverified knowledge into the verified tree.",
+            reasoning="Promotion is a proposed durable-memory write because it changes the trust boundary and retrieval surface.",
+            target_files=[
+                preview_target(source_path, "move_from"),
+                preview_target(target_path, "move_to", from_path=source_path),
+                *([preview_target(source_summary_path, "update")] if abs_src_summary.exists() else []),
+                *([preview_target(target_summary_path, "update")] if abs_tgt_summary.exists() else []),
+            ],
+            invariant_effects=[
+                "Updates trust and last_verified before moving the file into verified knowledge.",
+                "Removes the source summary entry and adds or warns about the verified summary entry.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+            warnings=preview_warnings,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=list(dict.fromkeys(preview_files_changed)),
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                warnings=preview_warnings,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
         write_with_frontmatter(abs_source, fm_dict, body)
         repo.add(source_path)
 
@@ -752,8 +820,6 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.mv(source_path, target_path)
 
         files_changed = [source_path, target_path]
-
-        filename = Path(source_path).name
 
         source_summary_path = "knowledge/_unverified/SUMMARY.md"
         abs_src_summary = root / source_summary_path
@@ -788,16 +854,15 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             repo.add(target_summary_path)
             files_changed.append(target_summary_path)
 
-        subject = infer_section_id_from_path(target_path)
-        commit_msg = f"[curation] Promote {filename} to knowledge/{subject}/ (trust: {trust_level})"
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"new_path": target_path, "trust": trust_level},
+            new_state=new_state,
             warnings=warnings,
+            preview=preview_payload,
         )
         return result.to_json()
 
@@ -809,6 +874,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         source_path: str,
         reason: str | None = None,
         version_token: str | None = None,
+        preview: bool = False,
     ) -> str:
         """Move a verified knowledge file back to _unverified/ with trust: low.
 
@@ -851,9 +917,70 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         filename = Path(source_path).name
         section_id = infer_section_id_from_path(source_path)
 
+        src_summary_path = "knowledge/SUMMARY.md"
+        abs_src_summary = root / src_summary_path
+        tgt_summary_path = "knowledge/_unverified/SUMMARY.md"
+        abs_tgt_summary = root / tgt_summary_path
+        tgt_section_id = infer_section_id_from_path(target_path)
+        preview_warnings: list[str] = []
+        if abs_src_summary.exists():
+            content = abs_src_summary.read_text(encoding="utf-8")
+            updated = remove_entry_from_section(content, section_id, filename)
+            if updated is None:
+                preview_warnings.append(f"Section '{section_id}' not found in {src_summary_path}.")
+        if abs_tgt_summary.exists():
+            title = abs_source.stem.replace("-", " ").title()
+            entry = f"- **[{filename}]({target_path})** — {title} _(demoted)_"
+            content = abs_tgt_summary.read_text(encoding="utf-8")
+            updated = insert_entry_in_section(content, tgt_section_id, entry)
+            if updated is None:
+                preview_warnings.append(
+                    f"Section '{tgt_section_id}' not found in {tgt_summary_path}."
+                )
+
         fm_dict, body = read_with_frontmatter(abs_source)
         fm_dict["trust"] = "low"
         fm_dict["last_verified"] = today_str()
+
+        reason_str = f" ({reason})" if reason else ""
+        commit_msg = f"[curation] Demote {filename} to _unverified/{reason_str}"
+        title = fm_dict.get("title", filename.replace(".md", "").replace("-", " ").title())
+        new_state = {"new_path": target_path, "trust": "low"}
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="proposed",
+            summary=f"Demote {filename} back into knowledge/_unverified.",
+            reasoning="Demotion is a proposed write because it lowers trust and returns verified content to the review queue.",
+            target_files=[
+                preview_target(source_path, "move_from"),
+                preview_target(target_path, "move_to", from_path=source_path),
+                *([preview_target(src_summary_path, "update")] if abs_src_summary.exists() else []),
+                *([preview_target(tgt_summary_path, "update")] if abs_tgt_summary.exists() else []),
+            ],
+            invariant_effects=[
+                "Sets trust to low and refreshes last_verified before moving the file.",
+                "Removes the verified summary entry and re-indexes the file under unverified knowledge when possible.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+            warnings=preview_warnings,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=[
+                    source_path,
+                    target_path,
+                    *([src_summary_path] if abs_src_summary.exists() else []),
+                    *([tgt_summary_path] if abs_tgt_summary.exists() else []),
+                ],
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                warnings=preview_warnings,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
         write_with_frontmatter(abs_source, fm_dict, body)
         repo.add(source_path)
 
@@ -863,8 +990,6 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         files_changed = [source_path, target_path]
 
-        src_summary_path = "knowledge/SUMMARY.md"
-        abs_src_summary = root / src_summary_path
         if abs_src_summary.exists():
             content = abs_src_summary.read_text(encoding="utf-8")
             updated = remove_entry_from_section(content, section_id, filename)
@@ -875,12 +1000,8 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 repo.add(src_summary_path)
                 files_changed.append(src_summary_path)
 
-        tgt_summary_path = "knowledge/_unverified/SUMMARY.md"
-        abs_tgt_summary = root / tgt_summary_path
-        tgt_section_id = infer_section_id_from_path(target_path)
         if abs_tgt_summary.exists():
             content = abs_tgt_summary.read_text(encoding="utf-8")
-            title = fm_dict.get("title", filename.replace(".md", "").replace("-", " ").title())
             entry = f"- **[{filename}]({target_path})** — {title} _(demoted)_"
             updated = insert_entry_in_section(content, tgt_section_id, entry)
             if updated is None:
@@ -890,16 +1011,15 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 repo.add(tgt_summary_path)
                 files_changed.append(tgt_summary_path)
 
-        reason_str = f" ({reason})" if reason else ""
-        commit_msg = f"[curation] Demote {filename} to _unverified/{reason_str}"
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"new_path": target_path, "trust": "low"},
+            new_state=new_state,
             warnings=warnings,
+            preview=preview_payload,
         )
         return result.to_json()
 
@@ -911,6 +1031,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         source_path: str,
         reason: str | None = None,
         version_token: str | None = None,
+        preview: bool = False,
     ) -> str:
         """Move a knowledge file to knowledge/_archive/ and mark it archived.
 
@@ -949,9 +1070,59 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             rel_to_knowledge = rel_to_knowledge[len("_unverified/") :]
         archive_path = f"knowledge/_archive/{rel_to_knowledge}"
 
+        section_id = infer_section_id_from_path(source_path)
+        if source_path.startswith("knowledge/_unverified/"):
+            summary_path = "knowledge/_unverified/SUMMARY.md"
+        else:
+            summary_path = "knowledge/SUMMARY.md"
+        abs_summary = root / summary_path
+        preview_warnings: list[str] = []
+        if abs_summary.exists():
+            content = abs_summary.read_text(encoding="utf-8")
+            updated = remove_entry_from_section(content, section_id, filename)
+            if updated is None:
+                preview_warnings.append(f"Section '{section_id}' not found in {summary_path}.")
+
         fm_dict, body = read_with_frontmatter(abs_source)
         fm_dict["status"] = "archived"
         fm_dict["last_verified"] = today_str()
+
+        reason_str = f" ({reason})" if reason else ""
+        commit_msg = f"[curation] Archive {filename}{reason_str}"
+        new_state = {"archive_path": archive_path}
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="proposed",
+            summary=f"Archive {filename} under knowledge/_archive.",
+            reasoning="Archival is a proposed write because it removes content from the active retrieval path while preserving history.",
+            target_files=[
+                preview_target(source_path, "move_from"),
+                preview_target(archive_path, "move_to", from_path=source_path),
+                *([preview_target(summary_path, "update")] if abs_summary.exists() else []),
+            ],
+            invariant_effects=[
+                "Marks the file as archived and refreshes last_verified before moving it.",
+                "Removes the source entry from the active or unverified summary when present.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+            warnings=preview_warnings,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=[
+                    source_path,
+                    archive_path,
+                    *([summary_path] if abs_summary.exists() else []),
+                ],
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                warnings=preview_warnings,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
         write_with_frontmatter(abs_source, fm_dict, body)
         repo.add(source_path)
 
@@ -961,12 +1132,6 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         files_changed = [source_path, archive_path]
 
-        section_id = infer_section_id_from_path(source_path)
-        if source_path.startswith("knowledge/_unverified/"):
-            summary_path = "knowledge/_unverified/SUMMARY.md"
-        else:
-            summary_path = "knowledge/SUMMARY.md"
-        abs_summary = root / summary_path
         if abs_summary.exists():
             content = abs_summary.read_text(encoding="utf-8")
             updated = remove_entry_from_section(content, section_id, filename)
@@ -977,16 +1142,15 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 repo.add(summary_path)
                 files_changed.append(summary_path)
 
-        reason_str = f" ({reason})" if reason else ""
-        commit_msg = f"[curation] Archive {filename}{reason_str}"
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"archive_path": archive_path},
+            new_state=new_state,
             warnings=warnings,
+            preview=preview_payload,
         )
         return result.to_json()
 

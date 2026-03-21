@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING, Any, cast
 
 from ...path_policy import validate_session_id, validate_slug
+from ...preview_contract import build_governed_preview, preview_target
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -196,6 +197,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         next_action: str,
         session_id: str,
         plan_type: str = "research-plan",
+        preview: bool = False,
     ) -> str:
         """Create a new plan file and add it to plans/SUMMARY.md."""
         from ...errors import ValidationError
@@ -231,14 +233,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         import frontmatter as fmlib  # type: ignore[import-untyped]
 
         post = fmlib.Post(content, **fm_dict)
-        abs_plan.parent.mkdir(parents=True, exist_ok=True)
-        abs_plan.write_text(fmlib.dumps(post), encoding="utf-8")
-        repo.add(plan_path)
-
         files_changed = [plan_path]
 
         summary_path = "plans/SUMMARY.md"
         abs_summary = root / summary_path
+        updated_summary: str | None = None
         if abs_summary.exists():
             summary_content = abs_summary.read_text(encoding="utf-8")
             new_block = build_plan_summary_block(
@@ -250,22 +249,58 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 plan_progress=(0, 0),
                 description=description,
             )
-            updated = append_plan_to_summary(summary_content, new_block)
-            abs_summary.write_text(updated, encoding="utf-8")
-            repo.add(summary_path)
+            updated_summary = append_plan_to_summary(summary_content, new_block)
             files_changed.append(summary_path)
         else:
             warnings.append(f"{summary_path} not found — plan entry not added to index.")
 
         commit_msg = f"[plan] Create {plan_id}"
+        new_state = {"plan_path": plan_path, "status": "active"}
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="proposed",
+            summary=f"Create plan {plan_id} and register it in the plans index.",
+            reasoning="Plan creation is a proposed durable-memory write because it adds a new active roadmap entry.",
+            target_files=[
+                preview_target(plan_path, "create"),
+                *([preview_target(summary_path, "update")] if abs_summary.exists() else []),
+            ],
+            invariant_effects=[
+                "Creates a governed plan file with standard frontmatter and active status.",
+                "Updates plans/SUMMARY.md when the plan index exists.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+            warnings=warnings,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=files_changed,
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                warnings=warnings,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
+        abs_plan.parent.mkdir(parents=True, exist_ok=True)
+        abs_plan.write_text(fmlib.dumps(post), encoding="utf-8")
+        repo.add(plan_path)
+
+        if abs_summary.exists() and updated_summary is not None:
+            abs_summary.write_text(updated_summary, encoding="utf-8")
+            repo.add(summary_path)
+
         commit_result = repo.commit(commit_msg)
 
         result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"plan_path": plan_path, "status": "active"},
+            new_state=new_state,
             warnings=warnings,
+            preview=preview_payload,
         )
         return result.to_json()
 

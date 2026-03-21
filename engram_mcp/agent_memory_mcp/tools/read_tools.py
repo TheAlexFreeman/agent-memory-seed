@@ -109,6 +109,12 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     contract_versions = manifest.get("contract_versions")
     if not isinstance(contract_versions, dict):
         contract_versions = {}
+    desktop_ops = _desktop_operations(manifest)
+    preview_capable_operations = sorted(
+        key
+        for key, value in desktop_ops.items()
+        if value.get("preview_support") is True or isinstance(value.get("preview_mode"), str)
+    )
 
     return {
         "total_tools": len(
@@ -123,6 +129,8 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "semantic_tools": len([tool for tool in semantic_tools if isinstance(tool, str)]),
         "declared_gaps": len([gap for gap in gaps if isinstance(gap, str)]),
         "contract_versions": contract_versions,
+        "preview_capable_operation_count": len(preview_capable_operations),
+        "preview_capable_operations": preview_capable_operations,
     }
 
 
@@ -328,12 +336,18 @@ def _build_policy_state_payload(
     tier = None
     notes = None
     fallback_tools: list[str] = []
+    preview_available = False
+    preview_mode = None
+    preview_argument = None
     if operation_entry is not None:
         change_class = operation_entry.get("change_class") if isinstance(operation_entry.get("change_class"), str) else None
         tool_name = operation_entry.get("tool") if isinstance(operation_entry.get("tool"), str) else None
         operation_group = operation_entry.get("operation_group") if isinstance(operation_entry.get("operation_group"), str) else operation_entry.get("group") if isinstance(operation_entry.get("group"), str) else None
         tier = operation_entry.get("tier") if isinstance(operation_entry.get("tier"), str) else None
         notes = operation_entry.get("notes") if isinstance(operation_entry.get("notes"), str) else None
+        preview_available = operation_entry.get("preview_support") is True or isinstance(operation_entry.get("preview_mode"), str)
+        preview_mode = operation_entry.get("preview_mode") if isinstance(operation_entry.get("preview_mode"), str) else None
+        preview_argument = operation_entry.get("preview_argument") if isinstance(operation_entry.get("preview_argument"), str) else None
         raw_fallback_tools = operation_entry.get("fallback_tools")
         if isinstance(raw_fallback_tools, list):
             fallback_tools = [tool for tool in raw_fallback_tools if isinstance(tool, str)]
@@ -389,6 +403,9 @@ def _build_policy_state_payload(
         "change_class_details": class_details,
         "approval_required": effective_change_class in {"proposed", "protected"},
         "preview_required": _preview_required(manifest, effective_change_class),
+        "preview_available": preview_available,
+        "preview_mode": preview_mode,
+        "preview_argument": preview_argument,
         "read_only_behavior": read_only_behavior or read_only_fallback.get("result"),
         "preview_behavior": preview_only.get("result"),
         "semantic_target_supported": semantic_target_supported,

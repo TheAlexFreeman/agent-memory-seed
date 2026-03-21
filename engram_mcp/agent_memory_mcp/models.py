@@ -34,6 +34,7 @@ class MemoryWriteResult:
     new_state: dict[str, Any]
     warnings: list[str] = field(default_factory=list)
     publication: dict[str, Any] | None = None
+    preview: dict[str, Any] | None = None
 
     @classmethod
     def from_commit(
@@ -44,6 +45,7 @@ class MemoryWriteResult:
         commit_message: str,
         new_state: dict[str, Any],
         warnings: list[str] | None = None,
+        preview: dict[str, Any] | None = None,
     ) -> "MemoryWriteResult":
         publication = commit_result.to_dict()
         combined_warnings = list(warnings or []) + list(publication.get("warnings", []))
@@ -54,10 +56,11 @@ class MemoryWriteResult:
             new_state=new_state,
             warnings=combined_warnings,
             publication=publication,
+            preview=preview,
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "files_changed": self.files_changed,
             "commit_sha": self.commit_sha,
             "commit_message": self.commit_message,
@@ -65,6 +68,9 @@ class MemoryWriteResult:
             "warnings": self.warnings,
             "publication": self.publication,
         }
+        if self.preview is not None:
+            payload["preview"] = self.preview
+        return payload
 
     def to_json(self, indent: int = 2) -> str:
         return json.dumps(self.to_dict(), indent=indent)

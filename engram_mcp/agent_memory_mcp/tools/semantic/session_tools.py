@@ -15,6 +15,7 @@ from ...path_policy import (
     validate_session_id,
     validate_slug,
 )
+from ...preview_contract import build_governed_preview, preview_target
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -1043,6 +1044,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         item_id: str,
         resolution_note: str | None = None,
         version_token: str | None = None,
+        preview: bool = False,
     ) -> str:
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import today_str
@@ -1086,19 +1088,43 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             item_id=item_id,
             resolution_note=resolution_note,
         )
+        commit_msg = f"[curation] Resolve review item: {item_id}"
+        new_state = {"item_id": item_id}
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="proposed",
+            summary=f"Resolve pending review item {item_id}.",
+            reasoning="Review-queue resolution is a proposed governance write because it removes a pending item from the active queue.",
+            target_files=[preview_target(review_queue_rel, "update")],
+            invariant_effects=[
+                "Moves the item from the pending section to the resolved section.",
+                "Appends the supplied resolution note when one is provided.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=[review_queue_rel],
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
         abs_queue.write_text(
             _render_review_queue(prefix, remaining_blocks, updated_resolved),
             encoding="utf-8",
         )
         repo.add(review_queue_rel)
-
-        commit_msg = f"[curation] Resolve review item: {item_id}"
         commit_result = repo.commit(commit_msg)
         result = MemoryWriteResult.from_commit(
             files_changed=[review_queue_rel],
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={"item_id": item_id},
+            new_state=new_state,
+            preview=preview_payload,
         )
         return result.to_json()
 
@@ -1544,6 +1570,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         belief_diff_entry: str,
         review_queue_entries: str = "",
         active_stage: str = "",
+        preview: bool = False,
     ) -> str:
         from ...errors import NotFoundError, ValidationError
         from ...models import MemoryWriteResult
@@ -1602,38 +1629,62 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             stage_to_record,
             assessment_summary,
         )
-        abs_quick_reference.write_text(updated_quick_reference, encoding="utf-8")
-        repo.add(quick_reference_rel)
-
         belief_diff_content = abs_belief_diff.read_text(encoding="utf-8")
-        abs_belief_diff.write_text(
-            _append_markdown_block(belief_diff_content, belief_diff_entry), encoding="utf-8"
-        )
-        repo.add(belief_diff_rel)
+        updated_belief_diff = _append_markdown_block(belief_diff_content, belief_diff_entry)
 
         files_changed = [quick_reference_rel, belief_diff_rel]
         review_queue_written = False
+        updated_review_queue: str | None = None
         if review_queue_entries.strip():
             review_queue_content = abs_review_queue.read_text(encoding="utf-8")
-            abs_review_queue.write_text(
-                _append_markdown_block(review_queue_content, review_queue_entries), encoding="utf-8"
-            )
-            repo.add(review_queue_rel)
+            updated_review_queue = _append_markdown_block(review_queue_content, review_queue_entries)
             files_changed.append(review_queue_rel)
             review_queue_written = True
 
         commit_msg = f"[system] Record periodic review {review_date}"
+        new_state = {
+            "review_date": review_date,
+            "active_stage": stage_to_record,
+            "belief_diff_written": True,
+            "review_queue_written": review_queue_written,
+        }
+        preview_payload = build_governed_preview(
+            mode="preview" if preview else "apply",
+            change_class="protected",
+            summary=f"Record approved periodic-review outputs for {review_date}.",
+            reasoning="Periodic-review recording is a protected governance write because it edits authoritative meta surfaces.",
+            target_files=[preview_target(path, "update") for path in files_changed],
+            invariant_effects=[
+                "Updates the last periodic review date and active-stage assessment in meta/quick-reference.md.",
+                "Appends the belief-diff entry and any queued follow-up review items in one governed commit.",
+            ],
+            commit_message=commit_msg,
+            resulting_state=new_state,
+        )
+        if preview:
+            result = MemoryWriteResult(
+                files_changed=files_changed,
+                commit_sha=None,
+                commit_message=None,
+                new_state=new_state,
+                preview=preview_payload,
+            )
+            return result.to_json()
+
+        abs_quick_reference.write_text(updated_quick_reference, encoding="utf-8")
+        repo.add(quick_reference_rel)
+        abs_belief_diff.write_text(updated_belief_diff, encoding="utf-8")
+        repo.add(belief_diff_rel)
+        if updated_review_queue is not None:
+            abs_review_queue.write_text(updated_review_queue, encoding="utf-8")
+            repo.add(review_queue_rel)
         commit_result = repo.commit(commit_msg)
         result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state={
-                "review_date": review_date,
-                "active_stage": stage_to_record,
-                "belief_diff_written": True,
-                "review_queue_written": review_queue_written,
-            },
+            new_state=new_state,
+            preview=preview_payload,
         )
         return result.to_json()
 
@@ -1662,6 +1713,23 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo = get_repo()
         preview = _build_revert_preview(repo, sha)
+        preview_payload = build_governed_preview(
+            mode="preview" if not confirm else "apply",
+            change_class="protected",
+            summary=f"Revert governed commit {preview['resolved_sha']}.",
+            reasoning="Revert uses a preview-first flow so callers can inspect eligibility, conflicts, and touched files before mutation.",
+            target_files=[
+                preview_target(path, "revert")
+                for path in cast(list[str], preview["files_changed"])
+            ],
+            invariant_effects=[
+                "Requires a fresh preview token before apply.",
+                "Rejects commits outside the governed memory surface or with unresolved conflicts.",
+            ],
+            commit_message=f"Revert {preview['resolved_sha']}",
+            resulting_state=cast(dict[str, Any], preview),
+            warnings=cast(list[str], preview["policy_reasons"]),
+        )
         if not confirm:
             result = MemoryWriteResult(
                 files_changed=cast(list[str], preview["files_changed"]),
@@ -1669,6 +1737,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 commit_message=None,
                 new_state={"mode": "preview", **preview},
                 warnings=cast(list[str], preview["policy_reasons"]),
+                preview=preview_payload,
             )
             return result.to_json()
 
@@ -1709,6 +1778,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "new_sha": commit_result.sha,
                 "preview_token": preview_token,
             },
+            preview=preview_payload,
         )
         return result.to_json()
 

@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Phase 3: define a shared preview envelope and add preview support to proposed/protected semantic writes.'
+next_action: 'Phase 4: implement session bootstrap and workflow-bundle read tools with compact response budgets.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -135,11 +135,11 @@ Update the capabilities manifest and any derived tool summaries so hosts can dis
 For representative tools, assert that preview accurately predicts target files, warnings, and commit metadata seen on the eventual apply path.
 
 Checklist:
-- [ ] 3.1 Define shared preview envelope/result schema
-- [ ] 3.2 Add preview mode to proposed/protected semantic tools
-- [ ] 3.3 Keep apply semantics backward-compatible
-- [ ] 3.4 Publish preview support in capabilities output
-- [ ] 3.5 Add preview-vs-apply equivalence tests
+- [x] 3.1 Define shared preview envelope/result schema
+- [x] 3.2 Add preview mode to proposed/protected semantic tools
+- [x] 3.3 Keep apply semantics backward-compatible
+- [x] 3.4 Publish preview support in capabilities output
+- [x] 3.5 Add preview-vs-apply equivalence tests
 
 ---
 
@@ -285,7 +285,7 @@ Checklist:
 - [ ] 7.3 Implement structured large-file extraction tool
 - [ ] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 10/31 items complete
+**Progress:** 15/31 items complete
 
 ---
 
@@ -319,3 +319,4 @@ Checklist:
 - 2026-03-20: Resources/prompts and dynamic profiles are explicitly downstream of contract unification because they should expose a stable semantic model rather than locking in current inconsistencies.
 - 2026-03-20: Completed Phase 1. Promotion paths now share summary-update helpers, batch promotion auto-creates missing target sections like the single/subtree paths, high-traffic knowledge-tool docstrings now disambiguate when to use each operation, and focused regression coverage locks in the parity behavior. No additional Phase 1 contract mismatches were left open.
 - 2026-03-20: Completed Phase 2. Added `memory_route_intent` and `memory_get_policy_state` to the Tier 0 read surface, compiled policy responses from the capability manifest plus governance-file signals, handled ambiguous and uninterpretable targets with explicit fallback state, and added focused tests for plan creation, knowledge promotion, protected meta paths, automatic ACCESS logging, and unsupported targets.
+- 2026-03-20: Completed Phase 3. Added a shared governed preview envelope to `MemoryWriteResult`, published preview support in the capability manifest and read-side summaries, wired preview mode into representative proposed/protected semantic writes including plan creation, knowledge promotion/demotion/archive, skill and identity updates, review-queue resolution, periodic review recording, and revert flows, and added preview-vs-apply equivalence coverage plus apply-regression checks.

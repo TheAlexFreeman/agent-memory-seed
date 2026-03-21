@@ -9,6 +9,7 @@ frontmatter = 1
 access = 1
 mcp = 1
 capabilities = 1
+preview = 1
 
 [tool_sets]
 read_support = [
@@ -205,6 +206,7 @@ fields = [
   "commit_message",
   "new_state",
   "warnings",
+  "preview",
 ]
 raw_commit_model = "stage_then_memory_commit"
 semantic_commit_model = "auto_commit_on_success"
@@ -332,6 +334,9 @@ tool = "memory_create_plan"
 tier = "semantic"
 operation_group = "plan"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.mark_plan_item_complete]
 status = "implemented"
@@ -360,6 +365,9 @@ tool = "memory_promote_knowledge"
 tier = "semantic"
 operation_group = "knowledge"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.promote_knowledge_batch]
 status = "implemented"
@@ -374,6 +382,9 @@ tool = "memory_demote_knowledge"
 tier = "semantic"
 operation_group = "knowledge"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.archive_knowledge]
 status = "implemented"
@@ -381,6 +392,9 @@ tool = "memory_archive_knowledge"
 tier = "semantic"
 operation_group = "knowledge"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.append_scratchpad]
 status = "implemented"
@@ -396,6 +410,9 @@ tier = "semantic"
 operation_group = "skill"
 change_class = "protected"
 notes = "Protected governed path for updates to existing or newly created skill files."
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.update_identity_trait]
 status = "implemented"
@@ -403,6 +420,9 @@ tool = "memory_update_identity_trait"
 tier = "semantic"
 operation_group = "identity"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.record_chat_summary]
 status = "implemented"
@@ -426,6 +446,9 @@ tier = "semantic"
 operation_group = "governance"
 change_class = "proposed"
 notes = "Supports dry-run preview by default; apply mode compacts ACCESS logs, refreshes usage-pattern summaries, and archives immutable monthly segments."
+preview_support = true
+preview_mode = "dry_run"
+preview_argument = "dry_run"
 
 [desktop_operations.flag_for_review]
 status = "implemented"
@@ -442,6 +465,9 @@ tier = "semantic"
 operation_group = "governance"
 change_class = "proposed"
 notes = "Governed removal from the pending review queue after a human has confirmed resolution."
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.append_access_entry]
 status = "implemented"
@@ -465,11 +491,28 @@ tier = "semantic"
 operation_group = "governance"
 change_class = "protected"
 notes = "Protected meta-surface write for approved periodic-review outputs only."
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
+
+[desktop_operations.revert_commit]
+status = "implemented"
+tool = "memory_revert_commit"
+tier = "semantic"
+operation_group = "governance"
+change_class = "protected"
+notes = "Preview-first revert flow that requires a fresh preview token before apply."
+preview_support = true
+preview_mode = "confirm_flow"
+preview_argument = "confirm"
 
 [operations.memory_create_plan]
 group = "plan"
 tier = "semantic"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
 writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
@@ -538,6 +581,9 @@ error_kinds = ["ValidationError", "StagingError"]
 group = "knowledge"
 tier = "semantic"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
@@ -589,6 +635,9 @@ error_kinds = ["NotFoundError", "ValidationError", "StagingError"]
 group = "knowledge"
 tier = "semantic"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
@@ -614,6 +663,9 @@ error_kinds = [
 group = "knowledge"
 tier = "semantic"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
@@ -653,6 +705,9 @@ error_kinds = ["ValidationError", "StagingError"]
 group = "skill"
 tier = "semantic"
 change_class = "protected"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "skill"
 writes = ["skills/{file}.md"]
@@ -673,6 +728,9 @@ error_kinds = [
 group = "identity"
 tier = "semantic"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "identity"
 writes = ["identity/{file}.md"]
@@ -771,6 +829,9 @@ error_kinds = ["ValidationError", "StagingError"]
 group = "governance"
 tier = "semantic"
 change_class = "proposed"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "curation"
 writes = ["meta/review-queue.md"]
@@ -839,6 +900,9 @@ superseded_by = "memory_record_session"
 group = "governance"
 tier = "semantic"
 change_class = "protected"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "system"
 writes = [
@@ -863,6 +927,9 @@ error_kinds = ["NotFoundError", "ValidationError", "StagingError"]
 group = "governance"
 tier = "semantic"
 change_class = "protected"
+preview_support = true
+preview_mode = "confirm_flow"
+preview_argument = "confirm"
 commit_model = "auto_commit"
 commit_category_hint = "curation"
 writes = ["<files from reverted commit>"]

@@ -163,6 +163,9 @@ tool = \"memory_create_plan\"
 tier = \"semantic\"
 operation_group = \"plan\"
 change_class = \"proposed\"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.promote_knowledge]
 status = \"implemented\"
@@ -170,6 +173,9 @@ tool = \"memory_promote_knowledge\"
 tier = \"semantic\"
 operation_group = \"knowledge\"
 change_class = \"proposed\"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 
 [desktop_operations.append_access_entry]
 status = \"implemented\"
@@ -185,6 +191,9 @@ tier = \"semantic\"
 operation_group = \"skill\"
 change_class = \"protected\"
 notes = \"Protected governed path for skill updates.\"
+preview_support = true
+preview_mode = "preview"
+preview_argument = "preview"
 """,
             "meta/update-guidelines.md": """## Proposed changes (require user awareness)
 
@@ -1601,6 +1610,8 @@ declared_gaps = []
         self.assertEqual(payload["change_class"], "proposed")
         self.assertTrue(payload["approval_required"])
         self.assertTrue(payload["preview_required"])
+        self.assertTrue(payload["preview_available"])
+        self.assertEqual(payload["preview_argument"], "preview")
 
     def test_memory_get_policy_state_flags_protected_meta_surface(self) -> None:
         seed = self._policy_contract_seed_files()
@@ -2301,6 +2312,104 @@ Detailed descriptions should preserve the first paragraph.
         self.assertIn("### Test Plan · status: active · trust: medium", summary)
         self.assertIn("Detail: plans/test-plan.md", summary)
 
+    def test_memory_create_plan_preview_does_not_write_and_matches_apply(self) -> None:
+        repo_root = self._init_repo({"plans/SUMMARY.md": "# Plans\n\n## Active plans\n"})
+        tools = self._create_tools(repo_root)
+
+        preview = json.loads(
+            asyncio.run(
+                tools["memory_create_plan"](
+                    plan_id="preview-plan",
+                    title="Preview Plan",
+                    description="Preview the plan write",
+                    content="# Preview Plan\n",
+                    next_action="Do the previewed thing",
+                    session_id="chats/2026/03/19/chat-001",
+                    preview=True,
+                )
+            )
+        )
+
+        self.assertFalse((repo_root / "plans" / "preview-plan.md").exists())
+        self.assertEqual(preview["preview"]["mode"], "preview")
+        self.assertEqual(
+            preview["preview"]["commit_suggestion"]["message"],
+            "[plan] Create preview-plan",
+        )
+
+        applied = json.loads(
+            asyncio.run(
+                tools["memory_create_plan"](
+                    plan_id="preview-plan",
+                    title="Preview Plan",
+                    description="Preview the plan write",
+                    content="# Preview Plan\n",
+                    next_action="Do the previewed thing",
+                    session_id="chats/2026/03/19/chat-001",
+                )
+            )
+        )
+
+        self.assertTrue((repo_root / "plans" / "preview-plan.md").exists())
+        self.assertEqual(applied["commit_message"], "[plan] Create preview-plan")
+        self.assertEqual(applied["preview"]["mode"], "apply")
+        self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
+
+    def test_memory_promote_knowledge_preview_does_not_move_file_and_matches_apply(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/django/note.md": """---
+created: 2026-03-20
+source: test
+trust: low
+---
+
+# Note
+""",
+                "knowledge/_unverified/SUMMARY.md": """<!-- section: django -->
+### Django
+- **[note.md](knowledge/_unverified/django/note.md)** — Note
+
+---
+""",
+                "knowledge/SUMMARY.md": "# Knowledge\n\n---\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        preview = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge"](
+                    source_path="knowledge/_unverified/django/note.md",
+                    trust_level="medium",
+                    summary_entry="- **[note.md](knowledge/django/note.md)** — Note",
+                    preview=True,
+                )
+            )
+        )
+
+        self.assertTrue((repo_root / "knowledge" / "_unverified" / "django" / "note.md").exists())
+        self.assertFalse((repo_root / "knowledge" / "django" / "note.md").exists())
+        self.assertEqual(preview["preview"]["mode"], "preview")
+
+        applied = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge"](
+                    source_path="knowledge/_unverified/django/note.md",
+                    trust_level="medium",
+                    summary_entry="- **[note.md](knowledge/django/note.md)** — Note",
+                )
+            )
+        )
+
+        self.assertFalse((repo_root / "knowledge" / "_unverified" / "django" / "note.md").exists())
+        self.assertTrue((repo_root / "knowledge" / "django" / "note.md").exists())
+        self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
+        self.assertEqual(
+            preview["preview"]["commit_suggestion"]["message"],
+            applied["commit_message"],
+        )
+
     def test_memory_update_identity_trait_rejects_non_slug_filename(self) -> None:
         repo_root = self._init_repo(
             {
@@ -2364,6 +2473,62 @@ Structured.
         self.assertNotIn("Even more direct.\n\nDirect and concise.", updated)
         self.assertNotIn("Direct and concise.", updated)
         self.assertIn("## workflow\n\nStructured.", updated)
+
+    def test_memory_update_identity_trait_preview_does_not_write_and_matches_apply(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "identity/profile.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-17
+trust: high
+---
+
+# Profile
+
+## tone
+
+Direct and concise.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        preview = json.loads(
+            asyncio.run(
+                tools["memory_update_identity_trait"](
+                    file="profile",
+                    key="tone",
+                    value="Even more direct.",
+                    preview=True,
+                )
+            )
+        )
+
+        self.assertIn(
+            "Direct and concise.",
+            (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
+        )
+
+        applied = json.loads(
+            asyncio.run(
+                tools["memory_update_identity_trait"](
+                    file="profile",
+                    key="tone",
+                    value="Even more direct.",
+                )
+            )
+        )
+
+        self.assertIn(
+            "Even more direct.",
+            (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
+        self.assertEqual(
+            preview["preview"]["commit_suggestion"]["message"],
+            applied["commit_message"],
+        )
 
     def test_memory_record_chat_summary_rejects_noncanonical_session_id(self) -> None:
         repo_root = self._init_repo({"chats/SUMMARY.md": "# Chats\n## Structure\n"})
@@ -2554,6 +2719,57 @@ Structured.
         )
         self.assertNotIn("**Status:** pending", review_queue)
 
+    def test_memory_resolve_review_item_preview_does_not_write_and_matches_apply(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/review-queue.md": """# Review Queue
+
+### [2026-03-20] Review plans/demo.md
+**Item ID:** 2026-03-20-review-plans-demo-md
+**Type:** proposed
+**File:** plans/demo.md
+**Priority:** normal
+**Reason:** Review it.
+**Status:** pending
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        preview = json.loads(
+            asyncio.run(
+                tools["memory_resolve_review_item"](
+                    item_id="2026-03-20-review-plans-demo-md",
+                    resolution_note="Handled during maintenance.",
+                    preview=True,
+                )
+            )
+        )
+
+        self.assertIn(
+            "**Status:** pending",
+            (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8"),
+        )
+
+        applied = json.loads(
+            asyncio.run(
+                tools["memory_resolve_review_item"](
+                    item_id="2026-03-20-review-plans-demo-md",
+                    resolution_note="Handled during maintenance.",
+                )
+            )
+        )
+
+        self.assertIn(
+            "2026-03-20-review-plans-demo-md: Handled during maintenance.",
+            (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
+        self.assertEqual(
+            preview["preview"]["commit_suggestion"]["message"],
+            applied["commit_message"],
+        )
+
     def test_memory_update_skill_upserts_existing_section(self) -> None:
         repo_root = self._init_repo(
             {
@@ -2694,6 +2910,60 @@ Old guidance.
         self.assertIn("origin_session: chats/2026/03/20/chat-001", skill)
         self.assertIn("trust: medium", skill)
         self.assertIn("## Steps\n\nCreate the first guidance block.", skill)
+
+    def test_memory_update_skill_preview_does_not_write_and_matches_apply(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "skills/session-start.md": """---
+source: user-stated
+origin_session: manual
+created: 2026-03-16
+last_verified: 2026-03-16
+trust: high
+---
+
+# Session Start
+
+## Steps
+
+Load compact context.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        preview = json.loads(
+            asyncio.run(
+                tools["memory_update_skill"](
+                    file="session-start",
+                    section="Steps",
+                    content="Load compact context and active plans.",
+                    preview=True,
+                )
+            )
+        )
+
+        original = (repo_root / "skills" / "session-start.md").read_text(encoding="utf-8")
+        self.assertIn("Load compact context.", original)
+        self.assertEqual(preview["preview"]["mode"], "preview")
+
+        applied = json.loads(
+            asyncio.run(
+                tools["memory_update_skill"](
+                    file="session-start",
+                    section="Steps",
+                    content="Load compact context and active plans.",
+                )
+            )
+        )
+
+        updated = (repo_root / "skills" / "session-start.md").read_text(encoding="utf-8")
+        self.assertIn("Load compact context and active plans.", updated)
+        self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
+        self.assertEqual(
+            preview["preview"]["commit_suggestion"]["message"],
+            applied["commit_message"],
+        )
 
     def test_memory_run_aggregation_dry_run_previews_without_writing_files(self) -> None:
         repo_root = self._init_repo(
@@ -4004,6 +4274,9 @@ Next: Original next action
         self.assertTrue(new_state["applies_cleanly"])
         self.assertEqual(new_state["conflict_details"], "")
         self.assertIn("plans/demo.md", new_state["files_changed"])
+        self.assertEqual(payload["preview"]["mode"], "preview")
+        self.assertEqual(payload["preview"]["target_files"], [{"path": "plans/demo.md", "change": "revert"}])
+        self.assertEqual(payload["preview"]["commit_suggestion"]["message"], f"Revert {target_sha}")
         self.assertEqual(head_after, head_before)
 
     def test_memory_revert_commit_confirm_requires_preview_token(self) -> None:
@@ -4052,6 +4325,8 @@ Next: Original next action
         self.assertIn("Original", restored)
         self.assertNotIn("Updated", restored)
         self.assertTrue(log_subject.startswith("Revert"))
+        self.assertEqual(payload["preview"]["mode"], "apply")
+        self.assertEqual(payload["preview"]["target_files"], preview["preview"]["target_files"])
         self.assertEqual(payload["publication"]["mode"], "porcelain")
         self.assertFalse(payload["publication"]["degraded"])
         self.assertEqual(payload["publication"]["operation"], "revert")
@@ -5467,6 +5742,80 @@ _Last assessed: 2026-03-01 — Exploration retained_
             quick_reference,
         )
         self.assertIn("**Method:** Task-string normalization", quick_reference)
+
+    def test_memory_record_periodic_review_preview_does_not_write_and_matches_apply(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+_Last assessed: 2026-03-01 — Exploration retained_
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+| Staleness trigger (no access) | 120 days | Exploration |
+| Aggregation trigger | 15 entries | Exploration |
+| Identity churn alarm | 5 traits/session | Exploration |
+| Knowledge flooding alarm | 5 files/day | Exploration |
+| Task similarity method | Session co-occurrence | Exploration |
+| Cluster co-retrieval threshold | 3 sessions | Exploration |
+
+## Active task similarity method
+
+**Method:** Session co-occurrence
+""",
+                "meta/belief-diff-log.md": "# Belief Diff Log\n",
+                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+        quick_reference_before = (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8")
+
+        preview = json.loads(
+            asyncio.run(
+                tools["memory_record_periodic_review"](
+                    review_date="2026-03-19",
+                    assessment_summary="Exploration retained after review.",
+                    belief_diff_entry="## [2026-03-19] Periodic review\n",
+                    review_queue_entries="### [2026-03-19] Follow-up\n**Status:** pending\n",
+                    preview=True,
+                )
+            )
+        )
+
+        self.assertEqual(
+            (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8"),
+            quick_reference_before,
+        )
+        self.assertEqual(preview["preview"]["mode"], "preview")
+
+        applied = json.loads(
+            asyncio.run(
+                tools["memory_record_periodic_review"](
+                    review_date="2026-03-19",
+                    assessment_summary="Exploration retained after review.",
+                    belief_diff_entry="## [2026-03-19] Periodic review\n",
+                    review_queue_entries="### [2026-03-19] Follow-up\n**Status:** pending\n",
+                )
+            )
+        )
+
+        self.assertIn(
+            "**Date:** 2026-03-19",
+            (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
+        self.assertEqual(
+            preview["preview"]["commit_suggestion"]["message"],
+            applied["commit_message"],
+        )
 
     # ------------------------------------------------------------------
     # P1: Identity churn alarm + memory_reset_session_state
