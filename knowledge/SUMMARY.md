@@ -209,4 +209,12 @@ _No access data yet._ After aggregation, this section will contain:
 - **[acemoglu-robinson-inclusive-institutions.md](knowledge/social-science/collective-action/acemoglu-robinson-inclusive-institutions.md)** — Inclusive vs extractive institutions; critical junctures; creative destruction; political economy of institutional persistence
 - **[collective-action-synthesis-ai-governance.md](knowledge/social-science/collective-action/collective-action-synthesis-ai-governance.md)** — Synthesis: Olson-Ostrom-North-A&R applied to AI capability race, safety coordination, and governance design
 
+#### `social-psychology/` — Conformity, obedience, group dynamics, bystander effect (promoted 2026-03-21, trust: low — awaiting review)
+- **[asch-conformity-experiments.md](knowledge/social-science/social-psychology/asch-conformity-experiments.md)** — Asch line-length experiments; normative vs informational conformity; unanimity effect; maps to conformist bias in cultural transmission
+- **[milgram-obedience-experiments.md](knowledge/social-science/social-psychology/milgram-obedience-experiments.md)** — Obedience to authority (65% max shock); agentic state; situational variations; maps to prestige/authority bias
+- **[zimbardo-stanford-prison-situation.md](knowledge/social-science/social-psychology/zimbardo-stanford-prison-situation.md)** — SPE, Lucifer Effect, role internalization, deindividuation; Le Texier critique; maps to role-based cultural transmission
+- **[group-polarization-groupthink.md](knowledge/social-science/social-psychology/group-polarization-groupthink.md)** — Group polarization (Moscovici, Sunstein), groupthink (Janis 8 symptoms); echo chambers; applied to AI communities
+- **[bystander-effect-diffusion-responsibility.md](knowledge/social-science/social-psychology/bystander-effect-diffusion-responsibility.md)** — Latané-Darley; diffusion of responsibility; pluralistic ignorance; collective inaction parallel to Olson
+- **[social-psychology-transmission-biases-synthesis.md](knowledge/social-science/social-psychology/social-psychology-transmission-biases-synthesis.md)** — Full mapping: Asch→conformist bias, Milgram→authority bias, Zimbardo→role transmission, polarization→echo chambers
+
 ---

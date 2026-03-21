@@ -59,7 +59,7 @@ The practical implication: **you cannot simply import efficient institutions fro
 
 ### History Matters
 
-Path dependence means that small differences in initial conditions can produce large differences in long-run outcomes. The branch points where institutions diverge — colonial experiences, constitutional choices, property rights reforms — matter enormously for what is subsequently possible 
+Path dependence means that small differences in initial conditions can produce large differences in long-run outcomes. The branch points where institutions diverge — colonial experiences, constitutional choices, property rights reforms — matter enormously for what is subsequently possible
 
 ## Formal and Informal Institutions
 
@@ -74,7 +74,7 @@ This connects directly to cultural evolution: norms are transmitted through the 
 
 ## Adaptive Efficiency
 
-North's normative concept: **adaptive efficiency** — the ability of an institutional framework to adjust to new conditions, new technologies, and new challenges. This is different from allocative efficiency (extracting maximum output from current inputs). 
+North's normative concept: **adaptive efficiency** — the ability of an institutional framework to adjust to new conditions, new technologies, and new challenges. This is different from allocative efficiency (extracting maximum output from current inputs).
 
 Adaptive efficiency requires:
 - Secure property rights (to create incentives for long-run investment)

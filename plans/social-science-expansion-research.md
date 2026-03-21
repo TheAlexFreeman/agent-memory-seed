@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 3 (Social Psychology): Asch, Milgram, Zimbardo, group polarization, bystander effect — empirical grounding for transmission biases.'
+next_action: 'Execute Phase 4 (Behavioral Economics): Kahneman/Tversky heuristics, prospect theory, nudge theory, bounded rationality, synthesis — bridging cognitive science and economic choice.'
 origin_session: chats/2026/03/21
 source: agent-generated
 status: active
@@ -140,14 +140,14 @@ Target subfolder: `knowledge/_unverified/social-science/social-psychology/`
 6. **`social-psychology-transmission-biases-synthesis.md`** — Synthesis: mapping Asch → conformist bias, Milgram → prestige/authority bias, group polarization → echo chambers. How social psychology predicts and explains cultural transmission dynamics.
 
 Checklist:
-- [ ] 3.1 Write `asch-conformity-experiments.md`
-- [ ] 3.2 Write `milgram-obedience-experiments.md`
-- [ ] 3.3 Write `zimbardo-stanford-prison-situation.md`
-- [ ] 3.4 Write `group-polarization-groupthink.md`
-- [ ] 3.5 Write `bystander-effect-diffusion-responsibility.md`
-- [ ] 3.6 Write `social-psychology-transmission-biases-synthesis.md`
-- [ ] 3.7 Promote subtree to `knowledge/social-science/social-psychology/`
-- [ ] 3.8 Update `knowledge/SUMMARY.md`
+- [x] 3.1 Write `asch-conformity-experiments.md`
+- [x] 3.2 Write `milgram-obedience-experiments.md`
+- [x] 3.3 Write `zimbardo-stanford-prison-situation.md`
+- [x] 3.4 Write `group-polarization-groupthink.md`
+- [x] 3.5 Write `bystander-effect-diffusion-responsibility.md`
+- [x] 3.6 Write `social-psychology-transmission-biases-synthesis.md`
+- [x] 3.7 Promote subtree to `knowledge/social-science/social-psychology/`
+- [x] 3.8 Update `knowledge/SUMMARY.md`
 
 ---
 
@@ -264,8 +264,8 @@ Each file should:
 |-------|-------|--------|
 | Phase 1 — Sociology of Knowledge & STS | 5 | 5/5 ✓ |
 | Phase 2 — Collective Action | 5 | 5/5 ✓ |
-| Phase 3 — Social Psychology | 6 | 0/6 |
+| Phase 3 — Social Psychology | 6 | 6/6 ✓ |
 | Phase 4 — Behavioral Economics | 5 | 0/5 |
 | Phase 5 — Network Diffusion | 5 | 0/5 |
 | Phase 6 — Social Epistemology | 4 | 0/4 |
-| **Total** | **30** | **0/30** |
+| **Total** | **30** | **16/30** |
