@@ -1,8 +1,8 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Execute Phase 4 (Causal Inference & Structural Causal Models): Pearl''s
-  framework for AI interpretability, fairness, and decision theory.'
+next_action: 'Execute Phase 5 (Computational Complexity): Extension of existing
+  logic-foundations work to the fine structure of tractability.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -185,13 +185,13 @@ Target subfolder: `knowledge/mathematics/causal-inference/`
 5. **`causal-discovery-algorithms.md`** — PC algorithm, FCI algorithm, Greedy Equivalence Search, LiNGAM. What can be learned about causal structure from purely observational data. The Markov equivalence class problem. Connections to constraint-based and score-based methods.
 
 Checklist:
-- ☐ Write `pearls-causal-hierarchy.md`
-- ☐ Write `structural-causal-models-dags.md`
-- ☐ Write `do-calculus-identification.md`
-- ☐ Write `counterfactuals-rubin-potential-outcomes.md`
-- ☐ Write `causal-discovery-algorithms.md`
-- ☐ Promote all 5 files to `knowledge/mathematics/causal-inference/`
-- ☐ Update `knowledge/SUMMARY.md` entry
+- ☑ Write `pearls-causal-hierarchy.md` (2026-03-21)
+- ☑ Write `structural-causal-models-dags.md` (2026-03-21)
+- ☑ Write `do-calculus-identification.md` (2026-03-21)
+- ☑ Write `counterfactuals-rubin-potential-outcomes.md` (2026-03-21)
+- ☑ Write `causal-discovery-algorithms.md` (2026-03-21)
+- ☑ Promote all 5 files to `knowledge/mathematics/causal-inference/` (2026-03-21)
+- ☑ Update `knowledge/SUMMARY.md` entry (2026-03-21)
 
 ---
 
