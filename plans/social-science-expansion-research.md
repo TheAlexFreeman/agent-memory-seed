@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 5 (Network Diffusion): Granovetter weak ties, Rogers diffusion, Watts cascades, Surowiecki wisdom of crowds, synthesis — network structure of social transmission.'
+next_action: 'Execute Phase 6 (Social Epistemology): Goldman reliabilist epistemology, extended mind/distributed cognition, epistemic virtues/vices in communities, synthesis — completing the social-science expansion.'
 origin_session: chats/2026/03/21
 source: agent-generated
 status: active
@@ -199,13 +199,13 @@ Target subfolder: `knowledge/_unverified/social-science/network-diffusion/`
 5. **`network-diffusion-synthesis.md`** — Synthesis: network structure + transmission biases = diffusion dynamics. Small-world and scale-free properties (from mathematics) applied to social and informational contagion. How LLMs change the topology of cultural transmission.
 
 Checklist:
-- [ ] 5.1 Write `granovetter-weak-ties-strength.md`
-- [ ] 5.2 Write `rogers-diffusion-of-innovations.md`
-- [ ] 5.3 Write `watts-information-cascades.md`
-- [ ] 5.4 Write `surowiecki-wisdom-of-crowds.md`
-- [ ] 5.5 Write `network-diffusion-synthesis.md`
-- [ ] 5.6 Promote subtree to `knowledge/social-science/network-diffusion/`
-- [ ] 5.7 Update `knowledge/SUMMARY.md`
+- [x] 5.1 Write `granovetter-weak-ties-strength.md`
+- [x] 5.2 Write `rogers-diffusion-of-innovations.md`
+- [x] 5.3 Write `watts-information-cascades.md`
+- [x] 5.4 Write `surowiecki-wisdom-of-crowds.md`
+- [x] 5.5 Write `network-diffusion-synthesis.md`
+- [x] 5.6 Promote subtree to `knowledge/social-science/network-diffusion/`
+- [x] 5.7 Update `knowledge/SUMMARY.md`
 
 ---
 
@@ -266,6 +266,6 @@ Each file should:
 | Phase 2 — Collective Action | 5 | 5/5 ✓ |
 | Phase 3 — Social Psychology | 6 | 6/6 ✓ |
 | Phase 4 — Behavioral Economics | 5 | 5/5 ✓ |
-| Phase 5 — Network Diffusion | 5 | 0/5 |
+| Phase 5 — Network Diffusion | 5 | 5/5 ✓ |
 | Phase 6 — Social Epistemology | 4 | 0/4 |
-| **Total** | **30** | **21/30** |
+| **Total** | **30** | **26/30** |

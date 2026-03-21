@@ -224,4 +224,11 @@ _No access data yet._ After aggregation, this section will contain:
 - **[bounded-rationality-simon.md](knowledge/social-science/behavioral-economics/bounded-rationality-simon.md)** — Herbert Simon's satisficing; aspiration levels; procedural vs substantive rationality; attention as scarce resource; AI design implications
 - **[behavioral-economics-rationality-synthesis.md](knowledge/social-science/behavioral-economics/behavioral-economics-rationality-synthesis.md)** — Rationality landscape (EUT, K&T, Gigerenzen, Simon); domain specificity of biases; what debiasing works; connections to rationalist community and cultural evolution
 
+#### `network-diffusion/` — Weak ties, diffusion of innovations, cascades, wisdom of crowds (promoted 2026-03-21, trust: low — awaiting review)
+- **[granovetter-weak-ties-strength.md](knowledge/social-science/network-diffusion/granovetter-weak-ties-strength.md)** — Weak ties as bridges between clusters; structural holes (Burt); homophily and polarization; intellectual weak ties for cross-domain insight
+- **[rogers-diffusion-of-innovations.md](knowledge/social-science/network-diffusion/rogers-diffusion-of-innovations.md)** — Innovation attributes (relative advantage, trialability, observability); adopter S-curve; opinion leaders; critical mass; the chasm
+- **[watts-information-cascades.md](knowledge/social-science/network-diffusion/watts-information-cascades.md)** — Threshold models; cascade window; why influencers matter less than network structure; viral misinformation dynamics
+- **[surowiecki-wisdom-of-crowds.md](knowledge/social-science/network-diffusion/surowiecki-wisdom-of-crowds.md)** — Four conditions for crowd wisdom (diversity, independence, decentralization, aggregation); prediction markets; when crowds are stupid (herding)
+- **[network-diffusion-synthesis.md](knowledge/social-science/network-diffusion/network-diffusion-synthesis.md)** — Unified framework: diffusion-wisdom tension; echo chambers/groupthink/filter bubbles; LLMs as high-degree diffusion nodes; AI governance implications
+
 ---
