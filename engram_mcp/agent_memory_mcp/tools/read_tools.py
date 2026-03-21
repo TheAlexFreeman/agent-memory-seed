@@ -5,6 +5,8 @@ These extend the existing read-only tool set with:
   - memory_read_file   : returns version_token + parsed frontmatter
   - memory_list_folder : unchanged from existing (re-implemented here)
   - memory_search      : unchanged from existing (re-implemented here)
+    - memory_route_intent: recommend the best governed operation for an intent
+    - memory_get_policy_state: compile the live policy contract for an operation/path
   - memory_git_log     : recent commit history
     - memory_session_health_check : session-start maintenance status
     - memory_check_knowledge_freshness : host-repo freshness for knowledge files
@@ -122,6 +124,364 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "declared_gaps": len([gap for gap in gaps if isinstance(gap, str)]),
         "contract_versions": contract_versions,
     }
+
+
+def _capability_manifest_error_payload(root: Path, message: str, raw: str | None) -> dict[str, Any]:
+    return {
+        "error": message,
+        "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
+        "raw": raw,
+        "repo_root": root.as_posix(),
+    }
+
+
+def _load_capabilities_manifest(root: Path) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    manifest_path = root / _CAPABILITIES_MANIFEST_PATH
+    try:
+        raw_manifest = manifest_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return None, _capability_manifest_error_payload(
+            root,
+            f"Could not read capability manifest: {exc}",
+            None,
+        )
+
+    try:
+        parsed = tomllib.loads(raw_manifest)
+    except Exception as exc:
+        return None, _capability_manifest_error_payload(
+            root,
+            f"Could not parse capability manifest: {exc}",
+            raw_manifest,
+        )
+
+    if not isinstance(parsed, dict):
+        return None, _capability_manifest_error_payload(
+            root,
+            "Capability manifest did not parse to a TOML table",
+            raw_manifest,
+        )
+    return dict(parsed), None
+
+
+def _normalize_repo_relative_path(path: str) -> str:
+    normalized = path.strip().replace("\\", "/")
+    if not normalized:
+        return normalized
+    if normalized.startswith("/") or normalized.startswith("../") or "/../" in normalized:
+        raise ValueError("path must be a repo-relative path")
+    if re.match(r"^[A-Za-z]:[/\\]", normalized):
+        raise ValueError("path must be a repo-relative path")
+    return normalized.rstrip("/") if normalized != "." else normalized
+
+
+def _desktop_operations(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    raw_ops = manifest.get("desktop_operations")
+    if not isinstance(raw_ops, dict):
+        return {}
+    return {key: value for key, value in raw_ops.items() if isinstance(value, dict)}
+
+
+def _manifest_operations(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    raw_ops = manifest.get("operations")
+    if not isinstance(raw_ops, dict):
+        return {}
+    return {key: value for key, value in raw_ops.items() if isinstance(value, dict)}
+
+
+def _resolve_operation_entry(
+    manifest: dict[str, Any], operation: str
+) -> tuple[str | None, dict[str, Any] | None]:
+    desktop_ops = _desktop_operations(manifest)
+    operations = _manifest_operations(manifest)
+    candidate = operation.strip()
+    if not candidate:
+        return None, None
+
+    if candidate in desktop_ops:
+        return candidate, desktop_ops[candidate]
+
+    for key, value in desktop_ops.items():
+        if value.get("tool") == candidate:
+            return key, value
+
+    if candidate in operations:
+        return candidate, operations[candidate]
+
+    return None, None
+
+
+def _path_policy_state(root: Path, rel_path: str | None) -> dict[str, Any]:
+    update_guidelines_text = ""
+    curation_policy_text = ""
+    update_guidelines_path = root / "meta" / "update-guidelines.md"
+    curation_policy_path = root / "meta" / "curation-policy.md"
+    if update_guidelines_path.exists():
+        update_guidelines_text = update_guidelines_path.read_text(encoding="utf-8")
+    if curation_policy_path.exists():
+        curation_policy_text = curation_policy_path.read_text(encoding="utf-8")
+
+    if not rel_path:
+        return {
+            "path": None,
+            "exists": None,
+            "top_level_root": None,
+            "protected_surface": False,
+            "path_change_class": None,
+            "reasons": [],
+            "trust_constraints": [],
+            "governance_sources_loaded": {
+                "update_guidelines": bool(update_guidelines_text),
+                "curation_policy": bool(curation_policy_text),
+            },
+        }
+
+    normalized = _normalize_repo_relative_path(rel_path)
+    abs_path = root / normalized
+    top_level_root = normalized.split("/", 1)[0] if "/" in normalized else normalized
+    reasons: list[str] = []
+    trust_constraints: list[str] = []
+    protected_surface = False
+    path_change_class: str | None = None
+
+    meta_protected = "Any modification to files in `meta/`" in update_guidelines_text
+    skills_protected = "Creating, modifying, or removing files in `skills/`." in update_guidelines_text
+    identity_proposed = "Adding, modifying, or removing files in `identity/`." in update_guidelines_text
+    unverified_inform_only = (
+        "Inform only" in curation_policy_text and "never instruct" in curation_policy_text.lower()
+    )
+
+    if normalized in {"README.md", "CHANGELOG.md"} or (normalized.startswith("meta/") and meta_protected):
+        protected_surface = True
+        path_change_class = "protected"
+        reasons.append("Governance and top-level architecture files require explicit approval.")
+    elif normalized.startswith("skills/") and skills_protected:
+        protected_surface = True
+        path_change_class = "protected"
+        reasons.append("Skill files are protected because they can directly shape agent procedure.")
+    elif normalized.startswith("identity/") and identity_proposed:
+        path_change_class = "proposed"
+        reasons.append("Identity changes require explicit user awareness before durable writes.")
+    elif normalized.startswith("knowledge/_unverified/"):
+        if unverified_inform_only:
+            trust_constraints.append(
+                "Unverified knowledge is low-trust by default and should inform, not instruct."
+            )
+    elif normalized.startswith("knowledge/"):
+        trust_constraints.append(
+            "Verified knowledge is usable context, but promotion or archival changes remain governed operations."
+        )
+
+    if normalized.startswith("skills/"):
+        trust_constraints.append(
+            "Protected skill surfaces require explicit approval before mutation."
+        )
+    if normalized.startswith("meta/"):
+        trust_constraints.append(
+            "Meta surfaces are protected governance files; machine-generated exceptions are narrow."
+        )
+
+    return {
+        "path": normalized,
+        "exists": abs_path.exists(),
+        "top_level_root": top_level_root,
+        "protected_surface": protected_surface,
+        "path_change_class": path_change_class,
+        "reasons": reasons,
+        "trust_constraints": trust_constraints,
+        "governance_sources_loaded": {
+            "update_guidelines": bool(update_guidelines_text),
+            "curation_policy": bool(curation_policy_text),
+        },
+    }
+
+
+def _class_details(manifest: dict[str, Any], change_class: str | None) -> dict[str, Any] | None:
+    if not change_class:
+        return None
+    change_classes = manifest.get("change_classes")
+    if not isinstance(change_classes, dict):
+        return None
+    details = change_classes.get(change_class)
+    return dict(details) if isinstance(details, dict) else None
+
+
+def _preview_required(manifest: dict[str, Any], change_class: str | None) -> bool:
+    raw_fallback_policy = manifest.get("raw_fallback_policy")
+    if not isinstance(raw_fallback_policy, dict) or change_class is None:
+        return False
+    required_for = raw_fallback_policy.get("preview_required_for")
+    return isinstance(required_for, list) and change_class in required_for
+
+
+def _build_policy_state_payload(
+    root: Path,
+    manifest: dict[str, Any],
+    operation: str | None,
+    rel_path: str | None,
+) -> dict[str, Any]:
+    operation_key, operation_entry = _resolve_operation_entry(manifest, operation or "")
+    path_state = _path_policy_state(root, rel_path)
+    change_class = None
+    tool_name = None
+    operation_group = None
+    tier = None
+    notes = None
+    fallback_tools: list[str] = []
+    if operation_entry is not None:
+        change_class = operation_entry.get("change_class") if isinstance(operation_entry.get("change_class"), str) else None
+        tool_name = operation_entry.get("tool") if isinstance(operation_entry.get("tool"), str) else None
+        operation_group = operation_entry.get("operation_group") if isinstance(operation_entry.get("operation_group"), str) else operation_entry.get("group") if isinstance(operation_entry.get("group"), str) else None
+        tier = operation_entry.get("tier") if isinstance(operation_entry.get("tier"), str) else None
+        notes = operation_entry.get("notes") if isinstance(operation_entry.get("notes"), str) else None
+        raw_fallback_tools = operation_entry.get("fallback_tools")
+        if isinstance(raw_fallback_tools, list):
+            fallback_tools = [tool for tool in raw_fallback_tools if isinstance(tool, str)]
+
+    effective_change_class = change_class or path_state["path_change_class"]
+    class_details = _class_details(manifest, effective_change_class)
+    read_only_behavior = None
+    if class_details and isinstance(class_details.get("read_only_behavior"), str):
+        read_only_behavior = class_details["read_only_behavior"]
+
+    fallback_behavior = manifest.get("fallback_behavior")
+    if not isinstance(fallback_behavior, dict):
+        fallback_behavior = {}
+    preview_only: dict[str, Any] = cast(
+        dict[str, Any],
+        fallback_behavior.get("preview_only")
+        if isinstance(fallback_behavior.get("preview_only"), dict)
+        else {},
+    )
+    read_only_fallback: dict[str, Any] = cast(
+        dict[str, Any],
+        fallback_behavior.get("read_only")
+        if isinstance(fallback_behavior.get("read_only"), dict)
+        else {},
+    )
+    uninterpretable_target: dict[str, Any] = cast(
+        dict[str, Any],
+        fallback_behavior.get("uninterpretable_target")
+        if isinstance(fallback_behavior.get("uninterpretable_target"), dict)
+        else {},
+    )
+
+    semantic_target_supported = operation_entry is not None or not bool(rel_path)
+    if rel_path and operation_entry is None:
+        semantic_target_supported = not (
+            path_state["path"]
+            and not path_state["protected_surface"]
+            and path_state["top_level_root"] not in {"knowledge", "identity", "plans", "skills", "meta", "chats", "scratchpad"}
+        )
+
+    warnings: list[str] = []
+    if operation and operation_entry is None:
+        warnings.append(f"Unknown governed operation: {operation}")
+    if rel_path and not semantic_target_supported:
+        warnings.append("Target path is outside the current semantic memory model.")
+
+    return {
+        "operation": operation_key or operation or None,
+        "tool": tool_name,
+        "operation_group": operation_group,
+        "tier": tier,
+        "change_class": effective_change_class,
+        "change_class_details": class_details,
+        "approval_required": effective_change_class in {"proposed", "protected"},
+        "preview_required": _preview_required(manifest, effective_change_class),
+        "read_only_behavior": read_only_behavior or read_only_fallback.get("result"),
+        "preview_behavior": preview_only.get("result"),
+        "semantic_target_supported": semantic_target_supported,
+        "uninterpretable_target_behavior": uninterpretable_target.get("result"),
+        "fallback_tools": fallback_tools,
+        "notes": notes,
+        "path_policy": path_state,
+        "policy_sources": [
+            _CAPABILITIES_MANIFEST_PATH.as_posix(),
+            "meta/update-guidelines.md",
+            "meta/curation-policy.md",
+        ],
+        "warnings": warnings,
+    }
+
+
+def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> list[dict[str, Any]]:
+    intent_lower = intent.lower()
+    normalized_path = _normalize_repo_relative_path(rel_path) if rel_path else None
+    abs_path = (root / normalized_path) if normalized_path else None
+    path_is_dir = bool(abs_path and abs_path.exists() and abs_path.is_dir())
+    plural_signal = any(word in intent_lower for word in ("batch", "multiple", "many", "several"))
+    nested_signal = any(word in intent_lower for word in ("subtree", "tree", "recursive", "nested"))
+
+    candidates: list[dict[str, Any]] = []
+
+    def add(operation: str, score: float, reason: str) -> None:
+        candidates.append({"operation": operation, "score": score, "reason": reason})
+
+    if "create" in intent_lower and "plan" in intent_lower:
+        add("create_plan", 0.98, "Intent explicitly requests creating a plan.")
+    if "next action" in intent_lower and any(word in intent_lower for word in ("update", "set", "change")):
+        add("update_plan_next_action", 0.94, "Intent focuses on updating a plan next_action field.")
+    if "plan" in intent_lower and any(word in intent_lower for word in ("complete", "check off", "mark done")):
+        add("mark_plan_item_complete", 0.94, "Intent sounds like checking off a plan item.")
+
+    if "promote" in intent_lower and (
+        "knowledge" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+    ):
+        if path_is_dir and nested_signal:
+            add("promote_knowledge_subtree", 0.98, "Directory target plus nested/subtree wording suggests preserving subpaths.")
+        elif path_is_dir or plural_signal:
+            add("promote_knowledge_batch", 0.96, "Directory or multi-file wording suggests batched promotion.")
+        else:
+            add("promote_knowledge", 0.97, "Single-file promotion intent matches the one-file semantic tool.")
+
+    if any(word in intent_lower for word in ("demote", "move back to unverified")) and (
+        "knowledge" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/"))
+    ):
+        add("demote_knowledge", 0.95, "Intent asks to move verified knowledge back into review.")
+
+    if "archive" in intent_lower and (
+        "knowledge" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/"))
+    ):
+        add("archive_knowledge", 0.95, "Intent explicitly asks to archive knowledge content.")
+
+    if any(word in intent_lower for word in ("add", "create", "write")) and "knowledge" in intent_lower and (
+        "unverified" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+    ):
+        add("add_knowledge_file", 0.93, "Intent matches writing a new unverified knowledge file.")
+
+    if any(word in intent_lower for word in ("access", "retrieval")) and any(
+        word in intent_lower for word in ("log", "record", "append")
+    ):
+        add(
+            "append_access_entry" if not plural_signal else "memory_log_access_batch",
+            0.91,
+            "Intent matches ACCESS logging rather than content mutation.",
+        )
+
+    if "periodic review" in intent_lower and any(word in intent_lower for word in ("record", "apply", "save")):
+        add("record_periodic_review", 0.92, "Intent targets persisting approved periodic-review outputs.")
+
+    if "review queue" in intent_lower and any(word in intent_lower for word in ("resolve", "close", "clear")):
+        add("resolve_review_item", 0.92, "Intent sounds like resolving a queued review item.")
+    if "review queue" in intent_lower and any(word in intent_lower for word in ("flag", "add", "queue")):
+        add("flag_for_review", 0.9, "Intent sounds like adding a new review-queue entry.")
+
+    if "skill" in intent_lower and any(word in intent_lower for word in ("update", "edit", "change", "create")):
+        add("update_skill", 0.93, "Intent targets a protected skill mutation.")
+
+    if "identity" in intent_lower and any(word in intent_lower for word in ("update", "edit", "change")):
+        add("update_identity_trait", 0.92, "Intent targets an identity trait update.")
+
+    if "session" in intent_lower and any(word in intent_lower for word in ("record", "wrap up", "summarize")):
+        add("record_session", 0.9, "Intent sounds like session wrap-up or persistence.")
+
+    deduped: dict[str, dict[str, Any]] = {}
+    for candidate in candidates:
+        existing = deduped.get(candidate["operation"])
+        if existing is None or candidate["score"] > existing["score"]:
+            deduped[candidate["operation"]] = candidate
+    return sorted(deduped.values(), key=lambda item: (-cast(float, item["score"]), cast(str, item["operation"])))
 
 
 def _preview_file_entry(entry: Path, root: Path, preview_chars: int) -> dict[str, Any]:
@@ -1534,45 +1894,133 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         fall back to manual inspection.
         """
         root = get_root()
-        manifest_path = root / _CAPABILITIES_MANIFEST_PATH
+        manifest, error_payload = _load_capabilities_manifest(root)
+        if error_payload is not None:
+            return json.dumps(error_payload, indent=2)
 
-        try:
-            raw_manifest = manifest_path.read_text(encoding="utf-8")
-        except OSError as exc:
-            return json.dumps(
-                {
-                    "error": f"Could not read capability manifest: {exc}",
-                    "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
-                    "raw": None,
-                },
-                indent=2,
-            )
-
-        try:
-            parsed = tomllib.loads(raw_manifest)
-        except Exception as exc:
-            return json.dumps(
-                {
-                    "error": f"Could not parse capability manifest: {exc}",
-                    "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
-                    "raw": raw_manifest,
-                },
-                indent=2,
-            )
-
-        if not isinstance(parsed, dict):
-            return json.dumps(
-                {
-                    "error": "Capability manifest did not parse to a TOML table",
-                    "path": _CAPABILITIES_MANIFEST_PATH.as_posix(),
-                    "raw": raw_manifest,
-                },
-                indent=2,
-            )
-
-        payload = dict(parsed)
+        payload = dict(cast(dict[str, Any], manifest))
         payload["summary"] = _build_capabilities_summary(payload)
         return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_get_policy_state
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_get_policy_state",
+        annotations=_tool_annotations(
+            title="Get Governed Policy State",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_get_policy_state(operation: str = "", path: str = "") -> str:
+        """Compile the current governed contract for an operation and optional path.
+
+        Use this when a caller needs the live change class, approval level,
+        preview expectation, fallback behavior, and path-level governance status
+        without reconstructing the rules from the capability manifest and
+        governance docs manually.
+
+        operation: Desktop operation key (for example `create_plan`) or tool
+                   name (for example `memory_create_plan`).
+        path:      Optional repo-relative target path whose governance surface
+                   should be evaluated alongside the operation.
+        """
+        from ..errors import ValidationError
+
+        root = get_root()
+        manifest, error_payload = _load_capabilities_manifest(root)
+        if error_payload is not None:
+            return json.dumps(error_payload, indent=2)
+
+        try:
+            normalized_path = _normalize_repo_relative_path(path) if path.strip() else None
+        except ValueError as exc:
+            raise ValidationError(str(exc))
+
+        payload = _build_policy_state_payload(
+            root,
+            cast(dict[str, Any], manifest),
+            operation.strip() or None,
+            normalized_path,
+        )
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_route_intent
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_route_intent",
+        annotations=_tool_annotations(
+            title="Route Governed Intent",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_route_intent(intent: str, path: str = "") -> str:
+        """Recommend the best governed operation for a natural-language intent.
+
+        Use this when a caller knows the task goal but does not know which
+        semantic tool or governed operation is the right fit. Returns the best
+        match, likely alternatives, and the compiled policy state for the
+        recommended path.
+        """
+        from ..errors import ValidationError
+
+        if not intent.strip():
+            raise ValidationError("intent must be a non-empty string")
+
+        root = get_root()
+        manifest, error_payload = _load_capabilities_manifest(root)
+        if error_payload is not None:
+            return json.dumps(error_payload, indent=2)
+
+        try:
+            normalized_path = _normalize_repo_relative_path(path) if path.strip() else None
+        except ValueError as exc:
+            raise ValidationError(str(exc))
+
+        manifest_dict = cast(dict[str, Any], manifest)
+        candidates = _route_intent_candidates(intent, normalized_path, root)
+        ambiguous = False
+        recommended: dict[str, Any] | None = None
+        alternatives: list[dict[str, Any]] = []
+        if candidates:
+            recommended = candidates[0]
+            alternatives = candidates[1:4]
+            ambiguous = bool(
+                alternatives
+                and abs(cast(float, recommended["score"]) - cast(float, alternatives[0]["score"])) < 0.03
+            )
+        else:
+            ambiguous = True
+
+        policy_state = _build_policy_state_payload(
+            root,
+            manifest_dict,
+            cast(str | None, recommended["operation"]) if recommended is not None else None,
+            normalized_path,
+        )
+        if recommended is None:
+            policy_state["warnings"] = list(policy_state.get("warnings", [])) + [
+                "No confident governed operation match was found for this intent."
+            ]
+
+        return json.dumps(
+            {
+                "intent": intent,
+                "path": normalized_path,
+                "recommended_operation": recommended,
+                "alternatives": alternatives,
+                "ambiguous": ambiguous,
+                "policy_state": policy_state,
+            },
+            indent=2,
+        )
 
     # ------------------------------------------------------------------
     # memory_read_file
@@ -3701,6 +4149,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     return {
         "memory_get_capabilities": memory_get_capabilities,
+        "memory_get_policy_state": memory_get_policy_state,
+        "memory_route_intent": memory_route_intent,
         "memory_read_file": memory_read_file,
         "memory_list_folder": memory_list_folder,
         "memory_review_unverified": memory_review_unverified,

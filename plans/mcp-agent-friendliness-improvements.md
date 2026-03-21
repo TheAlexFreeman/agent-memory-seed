@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Phase 2: implement memory_route_intent and memory_get_policy_state using the manifest and authoritative governance surfaces.'
+next_action: 'Phase 3: define a shared preview envelope and add preview support to proposed/protected semantic writes.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -107,11 +107,11 @@ When the route is ambiguous, return ranked candidates plus uncertainty reasons i
 Cover plan creation, proposed knowledge promotion, protected meta edits, automatic ACCESS logging, and uninterpretable targets.
 
 Checklist:
-- [ ] 2.1 Implement `memory_route_intent`
-- [ ] 2.2 Implement `memory_get_policy_state`
-- [ ] 2.3 Compile results from manifest + governance, not duplicated constants
-- [ ] 2.4 Add ambiguity and fallback result handling
-- [ ] 2.5 Add focused routing/policy tests for representative operations
+- [x] 2.1 Implement `memory_route_intent`
+- [x] 2.2 Implement `memory_get_policy_state`
+- [x] 2.3 Compile results from manifest + governance, not duplicated constants
+- [x] 2.4 Add ambiguity and fallback result handling
+- [x] 2.5 Add focused routing/policy tests for representative operations
 
 ---
 
@@ -285,7 +285,7 @@ Checklist:
 - [ ] 7.3 Implement structured large-file extraction tool
 - [ ] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 5/31 items complete
+**Progress:** 10/31 items complete
 
 ---
 
@@ -318,3 +318,4 @@ Checklist:
 - 2026-03-20: Phase 1 intentionally starts with a small parity fix because the current promotion inconsistency is both real and easy to regress if higher-level routing or preview work lands first.
 - 2026-03-20: Resources/prompts and dynamic profiles are explicitly downstream of contract unification because they should expose a stable semantic model rather than locking in current inconsistencies.
 - 2026-03-20: Completed Phase 1. Promotion paths now share summary-update helpers, batch promotion auto-creates missing target sections like the single/subtree paths, high-traffic knowledge-tool docstrings now disambiguate when to use each operation, and focused regression coverage locks in the parity behavior. No additional Phase 1 contract mismatches were left open.
+- 2026-03-20: Completed Phase 2. Added `memory_route_intent` and `memory_get_policy_state` to the Tier 0 read surface, compiled policy responses from the capability manifest plus governance-file signals, handled ambiguous and uninterpretable targets with explicit fallback state, and added focused tests for plan creation, knowledge promotion, protected meta paths, automatic ACCESS logging, and unsupported targets.

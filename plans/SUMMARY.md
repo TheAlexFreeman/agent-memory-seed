@@ -62,8 +62,8 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 ### MCP Agent-Friendliness Improvements · status: active · trust: medium
 Detail: plans/mcp-agent-friendliness-improvements.md
 Scope: Improve the repo-local MCP surface so agents can route intents correctly, preview governed writes consistently, follow common workflows in fewer calls, and reason about policy and provenance with less reconstruction overhead. Top-priority build plan as of 2026-03-20.
-Progress: 5/31 checklist items complete; Phase 1 finished (promotion-path parity, shared metadata/helpers, docstring disambiguation, regression coverage).
-Next: Phase 2: implement memory_route_intent and memory_get_policy_state using the manifest and authoritative governance surfaces.
+Progress: 10/31 checklist items complete; Phases 1-2 finished (promotion-path parity plus intent-routing/policy-state helpers and focused contract tests).
+Next: Phase 3: define a shared preview envelope and add preview support to proposed/protected semantic writes.
 <!-- END: mcp-agent-friendliness-improvements -->
 
 ---

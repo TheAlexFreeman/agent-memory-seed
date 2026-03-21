@@ -116,6 +116,92 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         )
         return cast(dict[str, ToolCallable], tools)
 
+    def _policy_contract_seed_files(self) -> dict[str, str]:
+        return {
+            "HUMANS/tooling/agent-memory-capabilities.toml": """version = 1
+kind = \"agent-memory-capabilities\"
+
+[tool_sets]
+read_support = [\"memory_get_capabilities\", \"memory_get_policy_state\", \"memory_route_intent\"]
+raw_fallback = [\"memory_write\"]
+semantic_extensions = [\"memory_create_plan\", \"memory_promote_knowledge\", \"memory_update_skill\", \"memory_log_access\"]
+declared_gaps = []
+
+[change_classes.automatic]
+approval = \"none\"
+user_awareness = \"not_required\"
+ui_affordance = \"apply_and_report\"
+read_only_behavior = \"defer_and_emit_summary\"
+
+[change_classes.proposed]
+approval = \"explicit_user_awareness\"
+user_awareness = \"required_before_write\"
+ui_affordance = \"preview_and_wait\"
+read_only_behavior = \"defer_and_queue_review_or_summary\"
+
+[change_classes.protected]
+approval = \"explicit_user_approval\"
+user_awareness = \"required_before_write\"
+ui_affordance = \"block_until_approved\"
+read_only_behavior = \"defer_and_report_blocked\"
+
+[raw_fallback_policy]
+preview_required_for = [\"proposed\", \"protected\"]
+
+[fallback_behavior.uninterpretable_target]
+result = \"defer_with_contract_warning\"
+
+[fallback_behavior.preview_only]
+result = \"return_preview_without_writing\"
+
+[fallback_behavior.read_only]
+result = \"return_deferred_action_summary\"
+
+[desktop_operations.create_plan]
+status = \"implemented\"
+tool = \"memory_create_plan\"
+tier = \"semantic\"
+operation_group = \"plan\"
+change_class = \"proposed\"
+
+[desktop_operations.promote_knowledge]
+status = \"implemented\"
+tool = \"memory_promote_knowledge\"
+tier = \"semantic\"
+operation_group = \"knowledge\"
+change_class = \"proposed\"
+
+[desktop_operations.append_access_entry]
+status = \"implemented\"
+tool = \"memory_log_access\"
+tier = \"semantic\"
+operation_group = \"chat\"
+change_class = \"automatic\"
+
+[desktop_operations.update_skill]
+status = \"implemented\"
+tool = \"memory_update_skill\"
+tier = \"semantic\"
+operation_group = \"skill\"
+change_class = \"protected\"
+notes = \"Protected governed path for skill updates.\"
+""",
+            "meta/update-guidelines.md": """## Proposed changes (require user awareness)
+
+- Adding, modifying, or removing files in `identity/`.
+
+## Protected changes (require explicit approval)
+
+- Creating, modifying, or removing files in `skills/`.
+- Any modification to files in `meta/`.
+- Any modification to `README.md`.
+""",
+            "meta/curation-policy.md": """## Trust-weighted retrieval
+
+- Trust: low — Inform only; never instruct.
+""",
+        }
+
     def test_create_mcp_accepts_git_subdirectory_root(self) -> None:
         repo_root = self._init_repo(
             {
@@ -1501,6 +1587,108 @@ declared_gaps = []
         self.assertIn("Could not parse capability manifest", payload["error"])
         self.assertEqual(payload["path"], "HUMANS/tooling/agent-memory-capabilities.toml")
         self.assertIn("kind = [", payload["raw"])
+
+    def test_memory_get_policy_state_reports_manifest_policy_for_create_plan(self) -> None:
+        repo_root = self._init_repo(self._policy_contract_seed_files())
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_get_policy_state"](operation="create_plan"))
+        )
+
+        self.assertEqual(payload["operation"], "create_plan")
+        self.assertEqual(payload["tool"], "memory_create_plan")
+        self.assertEqual(payload["change_class"], "proposed")
+        self.assertTrue(payload["approval_required"])
+        self.assertTrue(payload["preview_required"])
+
+    def test_memory_get_policy_state_flags_protected_meta_surface(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["meta/quick-reference.md"] = "# Quick Reference\n"
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_get_policy_state"](path="meta/quick-reference.md"))
+        )
+
+        self.assertEqual(payload["change_class"], "protected")
+        self.assertTrue(payload["path_policy"]["protected_surface"])
+        self.assertIn("Governance and top-level architecture files require explicit approval.", payload["path_policy"]["reasons"])
+
+    def test_memory_route_intent_recommends_knowledge_promotion(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["knowledge/_unverified/topic/note.md"] = "# Note\n"
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_route_intent"](
+                    intent="promote this unverified knowledge file to verified knowledge",
+                    path="knowledge/_unverified/topic/note.md",
+                )
+            )
+        )
+
+        self.assertEqual(payload["recommended_operation"]["operation"], "promote_knowledge")
+        self.assertEqual(payload["policy_state"]["change_class"], "proposed")
+        self.assertTrue(payload["policy_state"]["approval_required"])
+
+    def test_memory_route_intent_recommends_plan_creation(self) -> None:
+        repo_root = self._init_repo(self._policy_contract_seed_files())
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_route_intent"](
+                    intent="create a new implementation plan for MCP ergonomics",
+                )
+            )
+        )
+
+        self.assertEqual(payload["recommended_operation"]["operation"], "create_plan")
+        self.assertEqual(payload["policy_state"]["change_class"], "proposed")
+        self.assertTrue(payload["policy_state"]["preview_required"])
+
+    def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
+        repo_root = self._init_repo(self._policy_contract_seed_files())
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_route_intent"](
+                    intent="log access for this retrieval",
+                )
+            )
+        )
+
+        self.assertEqual(payload["recommended_operation"]["operation"], "append_access_entry")
+        self.assertEqual(payload["policy_state"]["change_class"], "automatic")
+        self.assertFalse(payload["policy_state"]["approval_required"])
+
+    def test_memory_route_intent_reports_uninterpretable_target_fallback(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["docs/random.txt"] = "hello\n"
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_route_intent"](
+                    intent="edit this random file",
+                    path="docs/random.txt",
+                )
+            )
+        )
+
+        self.assertIsNone(payload["recommended_operation"])
+        self.assertTrue(payload["ambiguous"])
+        self.assertFalse(payload["policy_state"]["semantic_target_supported"])
+        self.assertEqual(
+            payload["policy_state"]["uninterpretable_target_behavior"],
+            "defer_with_contract_warning",
+        )
 
     def test_memory_search_context_lines_default_output_unchanged(self) -> None:
         repo_root = self._init_repo(
