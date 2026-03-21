@@ -56,3 +56,12 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 - Routine progress updates are automatic. New plans, retirements, and major scope changes should still be surfaced to the user.
 - Keep active blocks compact. Extended rationale belongs in the plan file itself, not here.
 
+---
+
+<!-- BEGIN: mcp-unverified-review-workflow-improvements -->
+### MCP Unverified Review Workflow Improvements · status: active · trust: medium
+Detail: plans/mcp-unverified-review-workflow-improvements.md
+Scope: Address 7 friction points identified during the 2026-03-20 unverified mathematics promotion session (35 files). Ranked by estimated time-savings per session. Top priority as of 2026-03-20.
+Progress: 0/0 complete
+Next: Implement Phase 1: memory_read_file inline content return (highest leverage, required by all subsequent review workflows).
+<!-- END: mcp-unverified-review-workflow-improvements -->
