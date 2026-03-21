@@ -143,6 +143,13 @@ Aggregate when entries accumulated since the last aggregation reach **15**.
 
 Entry counting rule: count entries in the current `ACCESS.jsonl`, not the archive. For the full aggregation procedure, load `meta/curation-algorithms.md`.
 
+## Curation operations
+
+| Tool | Use | Example |
+|---|---|---|
+| `memory_promote_knowledge_batch` | Promote multiple unverified files in one governed commit. | `memory_promote_knowledge_batch(source_paths='["knowledge/_unverified/literature/foo.md", "knowledge/_unverified/literature/bar.md"]', trust_level="high")` |
+| `memory_promote_knowledge_subtree` | Promote an entire unverified topic tree while preserving nested paths. | `memory_promote_knowledge_subtree(source_folder="knowledge/_unverified/rationalist-community", dest_folder="knowledge/rationalist-community", trust_level="medium", dry_run=True)` |
+
 ## Helpfulness scoring guide
 
 - `0.0–0.1` wrong context

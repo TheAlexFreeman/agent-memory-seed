@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Implement Phase 6: promote_knowledge_batch discoverability.'
+next_action: 'Implement Phase 7: memory_mark_reviewed tracking tool.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -264,10 +264,10 @@ Under the "Curation operations" section, add a row for `memory_promote_knowledge
 **6.3 Update `plans/SUMMARY.md`** entry for this plan once Phase 5 is complete to note that both batch tools are now documented.
 
 Checklist:
-- ☐ Edit `memory_promote_knowledge` docstring to add "see also" block
-- ☐ Edit `meta/quick-reference.md` curation section
-- ☐ Commit as `[docs] Improve discoverability of batch promotion tools`
-- ☐ Verify the "see also" text appears in the MCP tool description surface (test via tool introspection)
+- ☑ Edit `memory_promote_knowledge` docstring to add "see also" block
+- ☑ Edit `meta/quick-reference.md` curation section
+- ☑ Commit as `[docs] Improve discoverability of batch promotion tools`
+- ☑ Verify the "see also" text appears in the MCP tool description surface (test via tool introspection)
 
 ---
 

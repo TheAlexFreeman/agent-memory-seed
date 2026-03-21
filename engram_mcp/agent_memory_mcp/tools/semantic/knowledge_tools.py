@@ -417,7 +417,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             rel_subpath = abs_source.relative_to(abs_source_folder).as_posix()
             target_path = f"{dest_folder.rstrip('/')}/{rel_subpath}"
             try:
-                target_path, abs_target = resolve_repo_path(repo, target_path, field_name="target_path")
+                target_path, abs_target = resolve_repo_path(
+                    repo, target_path, field_name="target_path"
+                )
                 validate_top_level_root(
                     target_path,
                     allowed_roots=("knowledge",),
@@ -601,6 +603,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if the target section is missing: a stub section is appended and the entry
         is inserted there. Without summary_entry, missing target sections still
         produce a warning so callers can repair SUMMARY.md manually.
+
+        See also: memory_promote_knowledge_batch to promote multiple files in one
+        call, and memory_promote_knowledge_subtree to promote an entire folder tree.
         """
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import (
