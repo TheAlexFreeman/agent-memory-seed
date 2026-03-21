@@ -87,6 +87,23 @@ Key entry points:
 - `mcp/mcp-2026-roadmap-update.md` — 2026 roadmap: transport scalability, Tasks, enterprise, governance
 - `codex-mcp-timeouts-git-stdin.md` — Debugging stdio transport stdin inheritance in this repo's MCP server
 
+<!-- section: mathematics -->
+### `mathematics/` — Logic, game theory, and information theory (promoted 2026-03-20, trust: high)
+
+Thirty-five files across three subfolders, reviewed and promoted from `_unverified/` on 2026-03-20. All files are rated trust: high following explicit user-validated review.
+
+Subfolders:
+- `logic-foundations/` — 11 files: Gödel incompleteness (1st and 2nd), ZFC set theory, propositional and FOL, Turing undecidability, Kolmogorov complexity, category theory, Curry-Howard isomorphism, dependent types and proof assistants, simple type theory and lambda calculus, compactness and Löwenheim-Skolem
+- `game-theory/` — 12 files: Normal-form games and Nash equilibrium, extensive-form and backward induction, Prisoner's dilemma and coordination games, evolutionary game theory, evolution of cooperation, Arrow's impossibility theorem, Gibbard-Satterthwaite theorem, mechanism design and revelation principle, VCG mechanisms, Gale-Shapley matching markets, Spence costly signaling, Crawford-Sobel cheap talk
+- `information-theory/` — 12 files: Shannon entropy and source coding theorem, KL divergence and cross-entropy, mutual information and channel capacity, rate-distortion theory, MDL principle, PAC learning and sample complexity, VC dimension and fundamental theorem, compression-generalization connection, information bottleneck and deep learning, inductive bias and no-free-lunch, double descent and benign overfitting, limits and open questions
+
+Key entry points:
+- `logic-foundations/godels-first-incompleteness.md` — Hilbert program, Gödel numbering, diagonal lemma, proof sketch
+- `game-theory/normal-form-games-nash-equilibrium.md` — Strategic form games, Nash's existence theorem, mixed strategies
+- `game-theory/mechanism-design-revelation-principle.md` — Reverse game theory, incentive compatibility, revelation principle
+- `information-theory/entropy-source-coding-theorem.md` — Shannon entropy, source coding theorem, Huffman codes
+- `information-theory/vc-dimension-fundamental-theorem.md` — Shattering, VC dimension, Sauer-Shelah, fundamental theorem of PAC learning
+
 ## What belongs here
 
 - **Research notes and syntheses.** When the user asks the agent to research a topic deeply enough that the findings should persist, the results go here.
