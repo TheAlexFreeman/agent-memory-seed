@@ -65,3 +65,13 @@ Scope: Address 7 friction points identified during the 2026-03-20 unverified mat
 Progress: 0/0 complete
 Next: Implement Phase 1: memory_read_file inline content return (highest leverage, required by all subsequent review workflows).
 <!-- END: mcp-unverified-review-workflow-improvements -->
+
+---
+
+<!-- BEGIN: mathematics-research-expansion -->
+### Mathematics Knowledge Base Expansion · status: active · trust: medium
+Detail: plans/mathematics-research-expansion.md
+Scope: Expand the mathematics knowledge base from 35 files (logic-foundations, game-theory, information-theory) into 6 additional domains identified as high-relevance to Alex's core intellectual interests: dynamical systems, probability theory, statistical mechanics, causal inference, computational complexity, and optimization. Prioritized by connection to existing research programs and foundational leverage.
+Progress: 0/0 complete
+Next: Execute Phase 1 (Dynamical Systems & Chaos): highest priority — Alex's stated primary framework for intelligence has no files in the knowledge base.
+<!-- END: mathematics-research-expansion -->
