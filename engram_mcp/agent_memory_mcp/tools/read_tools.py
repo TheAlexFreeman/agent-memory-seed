@@ -9,6 +9,10 @@ These extend the existing read-only tool set with:
     - memory_get_policy_state: compile the live policy contract for an operation/path
   - memory_git_log     : recent commit history
     - memory_session_health_check : session-start maintenance status
+    - memory_session_bootstrap : compact returning-session bundle
+    - memory_prepare_unverified_review : compact unverified-review bundle
+    - memory_prepare_promotion_batch : compact promotion-prep bundle
+    - memory_prepare_periodic_review : compact periodic-review prep bundle
     - memory_check_knowledge_freshness : host-repo freshness for knowledge files
   - memory_diff        : working tree status
   - memory_audit_trust : trust decay audit
@@ -1398,6 +1402,68 @@ def _scan_unverified_content(root: Path, low_threshold: int) -> dict[str, Any]:
     files.sort(key=lambda item: (-(item["age_days"] or -1), str(item["path"])))
     overdue.sort(key=lambda item: (-(item["age_days"] or -1), str(item["path"])))
     return {"files": files, "overdue": overdue}
+
+
+def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[str, Any]]:
+    from ..frontmatter_utils import parse_plan_items, read_with_frontmatter
+
+    plans_dir = root / "plans"
+    if not plans_dir.is_dir():
+        return []
+
+    entries: list[dict[str, Any]] = []
+    for plan_file in sorted(plans_dir.glob("*.md")):
+        if plan_file.name == "SUMMARY.md":
+            continue
+        try:
+            fm_dict, body = read_with_frontmatter(plan_file)
+        except Exception:
+            continue
+        plan_status = str(fm_dict.get("status", "unknown"))
+        if status is not None and plan_status != status:
+            continue
+        try:
+            phases = parse_plan_items(plan_file.read_text(encoding="utf-8"))
+            plan_done = sum(1 for phase in phases for item in phase["items"] if item["done"])
+            plan_total = sum(int(phase["total"]) for phase in phases)
+        except Exception:
+            plan_done = 0
+            plan_total = 0
+        title_match = re.search(r"(?m)^#\s+(.+?)\s*$", body)
+        title = str(fm_dict.get("title") or (title_match.group(1) if title_match else plan_file.stem))
+        entries.append(
+            {
+                "plan_id": plan_file.stem,
+                "title": title,
+                "status": plan_status,
+                "trust": fm_dict.get("trust", "unknown"),
+                "next_action": fm_dict.get("next_action", ""),
+                "progress": {
+                    "done": plan_done,
+                    "total": plan_total,
+                },
+            }
+        )
+
+    entries.sort(
+        key=lambda item: (
+            0 if item["status"] == "active" else 1,
+            cast(str, item["plan_id"]),
+        )
+    )
+    return entries
+
+
+def _truncate_items(items: list[dict[str, Any]], limit: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    normalized_limit = max(limit, 0)
+    if len(items) <= normalized_limit:
+        return items, {"returned": len(items), "total": len(items), "truncated": False}
+    return items[:normalized_limit], {
+        "returned": normalized_limit,
+        "total": len(items),
+        "truncated": True,
+        "omitted": len(items) - normalized_limit,
+    }
 
 
 def _summarize_access_by_folder(file_summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -3750,6 +3816,272 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_session_bootstrap
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_session_bootstrap",
+        annotations=_tool_annotations(
+            title="Session Bootstrap Bundle",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_session_bootstrap(
+        max_active_plans: int = 5,
+        max_review_items: int = 5,
+    ) -> str:
+        """Return a compact session-start bundle for the returning-agent path."""
+        from ..errors import ValidationError
+
+        if max_active_plans < 1 or max_review_items < 1:
+            raise ValidationError("max_active_plans and max_review_items must be >= 1")
+
+        root = get_root()
+        manifest, manifest_error = _load_capabilities_manifest(root)
+        capabilities_summary = manifest_error or {
+            "summary": _build_capabilities_summary(cast(dict[str, Any], manifest))
+        }
+        session_health = json.loads(await memory_session_health_check())
+        active_plans, active_plan_budget = _truncate_items(
+            _collect_plan_entries(root, status="active"),
+            max_active_plans,
+        )
+        review_queue_entries = _parse_review_queue_entries(root)
+        pending_review_items = [
+            {
+                "item_id": entry.get("item_id"),
+                "title": entry.get("title"),
+                "type": entry.get("type", "unknown"),
+                "priority": entry.get("priority", "normal"),
+                "file": entry.get("file"),
+                "status": entry.get("status", "pending"),
+            }
+            for entry in review_queue_entries
+            if entry.get("status", "pending") == "pending"
+        ]
+        pending_review_items, review_budget = _truncate_items(
+            pending_review_items,
+            max_review_items,
+        )
+
+        recommended_checks: list[str] = []
+        if cast(list[dict[str, Any]], session_health["aggregation_due"]):
+            recommended_checks.append("Inspect aggregation pressure with memory_check_aggregation_triggers.")
+        if bool(session_health["periodic_review_due"]):
+            recommended_checks.append("Prepare the protected periodic review workflow with memory_prepare_periodic_review.")
+        if pending_review_items:
+            recommended_checks.append("Review pending queue items before any protected cleanup writes.")
+        if active_plans:
+            recommended_checks.append(
+                f"Resume the leading active plan: {active_plans[0]['plan_id']}"
+            )
+        if not recommended_checks:
+            recommended_checks.append("No urgent maintenance signals detected; continue the current plan or inspect capabilities.")
+
+        payload = {
+            "capabilities": capabilities_summary,
+            "session_health": session_health,
+            "active_plans": active_plans,
+            "pending_review_items": pending_review_items,
+            "recommended_checks": recommended_checks,
+            "response_budget": {
+                "active_plans": active_plan_budget,
+                "review_items": review_budget,
+            },
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_prepare_unverified_review
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_prepare_unverified_review",
+        annotations=_tool_annotations(
+            title="Prepare Unverified Review",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_prepare_unverified_review(
+        folder_path: str = "knowledge/_unverified",
+        max_files: int = 12,
+        max_extract_words: int = 60,
+    ) -> str:
+        """Return a compact unverified-review bundle with bounded file extracts."""
+        from ..errors import ValidationError
+
+        if max_files < 1:
+            raise ValidationError("max_files must be >= 1")
+
+        review_payload = json.loads(
+            await memory_review_unverified(
+                folder_path=folder_path,
+                max_extract_words=max_extract_words,
+                include_expired=True,
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for group_name, entries in cast(dict[str, list[dict[str, Any]]], review_payload["groups"]).items():
+            for entry in entries:
+                candidates.append(
+                    {
+                        "group": group_name,
+                        "path": entry.get("path"),
+                        "trust": entry.get("trust"),
+                        "days_old": entry.get("days_old"),
+                        "expired": entry.get("expired"),
+                        "source": entry.get("source"),
+                        "extract": entry.get("extract"),
+                    }
+                )
+        candidates.sort(
+            key=lambda item: (
+                0 if item.get("expired") else 1,
+                -(cast(int | None, item.get("days_old")) or -1),
+                cast(str, item.get("path") or ""),
+            )
+        )
+        selected_files, file_budget = _truncate_items(candidates, max_files)
+        payload = {
+            "folder_path": folder_path,
+            "trust_counts": review_payload["trust_counts"],
+            "expired_count": review_payload["expired_count"],
+            "selected_files": selected_files,
+            "recommended_operations": {
+                "single_file": "memory_promote_knowledge",
+                "batch": "memory_promote_knowledge_batch",
+                "subtree": "memory_promote_knowledge_subtree",
+            },
+            "response_budget": {
+                "files": file_budget,
+            },
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_prepare_promotion_batch
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_prepare_promotion_batch",
+        annotations=_tool_annotations(
+            title="Prepare Knowledge Promotion Batch",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_prepare_promotion_batch(
+        folder_path: str = "knowledge/_unverified",
+        max_files: int = 12,
+    ) -> str:
+        """Return compact promotion candidates with default target paths and operation hints."""
+        from ..errors import ValidationError
+
+        if max_files < 1:
+            raise ValidationError("max_files must be >= 1")
+
+        root = get_root()
+        low_threshold, _ = _parse_trust_thresholds(root)
+        unverified = _scan_unverified_content(root, low_threshold)
+        normalized_folder = _normalize_repo_relative_path(folder_path)
+        candidates = [
+            {
+                "source_path": item["path"],
+                "target_path": cast(str, item["path"]).replace("knowledge/_unverified/", "knowledge/", 1),
+                "trust": item.get("trust"),
+                "days_old": item.get("age_days"),
+                "source": item.get("source"),
+            }
+            for item in cast(list[dict[str, Any]], unverified["files"])
+            if cast(str, item["path"]).startswith(normalized_folder.rstrip("/") + "/")
+            or cast(str, item["path"]) == normalized_folder
+        ]
+        candidates.sort(
+            key=lambda item: (
+                -(cast(int | None, item.get("days_old")) or -1),
+                cast(str, item["source_path"]),
+            )
+        )
+        selected_candidates, candidate_budget = _truncate_items(candidates, max_files)
+        suggested_operation = (
+            "memory_promote_knowledge"
+            if len(candidates) <= 1
+            else "memory_promote_knowledge_batch"
+        )
+        payload = {
+            "folder_path": folder_path,
+            "candidate_count": len(candidates),
+            "suggested_operation": suggested_operation,
+            "selected_candidates": selected_candidates,
+            "response_budget": {
+                "candidates": candidate_budget,
+            },
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_prepare_periodic_review
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_prepare_periodic_review",
+        annotations=_tool_annotations(
+            title="Prepare Periodic Review",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_prepare_periodic_review(
+        max_queue_items: int = 8,
+        max_deferred_targets: int = 8,
+    ) -> str:
+        """Return a compact periodic-review preparation bundle with bounded high-signal outputs."""
+        from ..errors import ValidationError
+
+        if max_queue_items < 1 or max_deferred_targets < 1:
+            raise ValidationError("max_queue_items and max_deferred_targets must be >= 1")
+
+        session_health = json.loads(await memory_session_health_check())
+        review_payload = json.loads(await memory_run_periodic_review())
+        security_candidates, security_budget = _truncate_items(
+            cast(list[dict[str, Any]], review_payload["ordered_checks"]["security_flags"]["generated_candidates"]),
+            max_queue_items,
+        )
+        deferred_targets = [
+            {"path": path}
+            for path in cast(list[str], review_payload["proposed_outputs"]["deferred_write_targets"])
+        ]
+        deferred_targets, target_budget = _truncate_items(deferred_targets, max_deferred_targets)
+        overdue_files = cast(list[dict[str, Any]], review_payload["ordered_checks"]["unverified_content"]["overdue_files"])
+        payload = {
+            "review_due": review_payload["review_due"],
+            "session_health": session_health,
+            "high_signal": {
+                "pending_security_count": review_payload["ordered_checks"]["security_flags"]["pending_count"],
+                "generated_security_candidates": security_candidates,
+                "overdue_unverified_count": review_payload["ordered_checks"]["unverified_content"]["overdue_count"],
+                "overdue_unverified_files": overdue_files[:max_queue_items],
+                "conflict_count": review_payload["ordered_checks"]["conflict_resolution"]["count"],
+            },
+            "deferred_write_targets": deferred_targets,
+            "recommended_operations": {
+                "write": "memory_record_periodic_review",
+                "queue_resolution": "memory_resolve_review_item",
+            },
+            "response_budget": {
+                "security_candidates": security_budget,
+                "deferred_targets": target_budget,
+            },
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_get_file_provenance
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -4178,6 +4510,10 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_diff_branch": memory_diff_branch,
         "memory_git_log": memory_git_log,
         "memory_session_health_check": memory_session_health_check,
+        "memory_session_bootstrap": memory_session_bootstrap,
+        "memory_prepare_unverified_review": memory_prepare_unverified_review,
+        "memory_prepare_promotion_batch": memory_prepare_promotion_batch,
+        "memory_prepare_periodic_review": memory_prepare_periodic_review,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,
         "memory_check_aggregation_triggers": memory_check_aggregation_triggers,
         "memory_aggregate_access": memory_aggregate_access,

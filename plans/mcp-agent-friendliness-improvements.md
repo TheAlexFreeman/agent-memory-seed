@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Phase 4: implement session bootstrap and workflow-bundle read tools with compact response budgets.'
+next_action: 'Phase 5: define tool profiles and expose profile metadata without breaking non-profile-aware hosts.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -160,10 +160,10 @@ These tools should not replace the semantic write surface. They should orchestra
 Bundle tools must stay compact enough to help rather than overwhelm. Add explicit truncation/summarization rules plus tests for large repos.
 
 Checklist:
-- [ ] 4.1 Implement `memory_session_bootstrap`
-- [ ] 4.2 Implement unverified-review, promotion-prep, and periodic-review bundle tools
-- [ ] 4.3 Keep bundle tools read-only and layered over existing semantics
-- [ ] 4.4 Add compactness/truncation rules and tests
+- [x] 4.1 Implement `memory_session_bootstrap`
+- [x] 4.2 Implement unverified-review, promotion-prep, and periodic-review bundle tools
+- [x] 4.3 Keep bundle tools read-only and layered over existing semantics
+- [x] 4.4 Add compactness/truncation rules and tests
 
 ---
 
@@ -285,7 +285,7 @@ Checklist:
 - [ ] 7.3 Implement structured large-file extraction tool
 - [ ] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 15/31 items complete
+**Progress:** 19/31 items complete
 
 ---
 
@@ -320,3 +320,4 @@ Checklist:
 - 2026-03-20: Completed Phase 1. Promotion paths now share summary-update helpers, batch promotion auto-creates missing target sections like the single/subtree paths, high-traffic knowledge-tool docstrings now disambiguate when to use each operation, and focused regression coverage locks in the parity behavior. No additional Phase 1 contract mismatches were left open.
 - 2026-03-20: Completed Phase 2. Added `memory_route_intent` and `memory_get_policy_state` to the Tier 0 read surface, compiled policy responses from the capability manifest plus governance-file signals, handled ambiguous and uninterpretable targets with explicit fallback state, and added focused tests for plan creation, knowledge promotion, protected meta paths, automatic ACCESS logging, and unsupported targets.
 - 2026-03-20: Completed Phase 3. Added a shared governed preview envelope to `MemoryWriteResult`, published preview support in the capability manifest and read-side summaries, wired preview mode into representative proposed/protected semantic writes including plan creation, knowledge promotion/demotion/archive, skill and identity updates, review-queue resolution, periodic review recording, and revert flows, and added preview-vs-apply equivalence coverage plus apply-regression checks.
+- 2026-03-20: Completed Phase 4. Added compact workflow-bundle read tools for session bootstrap, unverified review prep, promotion prep, and periodic review prep; kept them read-only and layered over existing health/review/reporting primitives; published the new bundle tools in the read-support surface; and added truncation-focused tests to keep the payloads bounded.

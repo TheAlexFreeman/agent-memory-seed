@@ -29,6 +29,10 @@ read_support = [
   # clips matches before the date window is exhausted.
   "memory_git_log",
   "memory_session_health_check",
+  "memory_session_bootstrap",
+  "memory_prepare_unverified_review",
+  "memory_prepare_promotion_batch",
+  "memory_prepare_periodic_review",
   "memory_check_aggregation_triggers",
   "memory_aggregate_access",
   "memory_run_periodic_review",

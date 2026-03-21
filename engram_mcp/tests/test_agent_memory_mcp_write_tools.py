@@ -1701,6 +1701,235 @@ declared_gaps = []
             "defer_with_contract_warning",
         )
 
+    def test_memory_session_bootstrap_compacts_active_plans_and_review_items(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["meta/quick-reference.md"] = """# Quick Reference
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Aggregation trigger | 15 entries | Exploration |
+"""
+        seed["meta/review-queue.md"] = """# Review Queue
+
+### [2026-03-20] Review plans/a.md
+**Item ID:** review-a
+**Type:** proposed
+**File:** plans/a.md
+**Priority:** high
+**Status:** pending
+
+### [2026-03-20] Review plans/b.md
+**Item ID:** review-b
+**Type:** proposed
+**File:** plans/b.md
+**Priority:** normal
+**Status:** pending
+"""
+        seed["plans/a.md"] = """---
+title: Plan A
+status: active
+trust: medium
+next_action: Finish A
+---
+
+# Plan A
+
+## Phase 1
+
+Checklist:
+- [ ] Do A
+"""
+        seed["plans/b.md"] = """---
+title: Plan B
+status: active
+trust: medium
+next_action: Finish B
+---
+
+# Plan B
+
+## Phase 1
+
+Checklist:
+- [ ] Do B
+"""
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_session_bootstrap"](max_active_plans=1, max_review_items=1)
+            )
+        )
+
+        self.assertEqual(len(payload["active_plans"]), 1)
+        self.assertTrue(payload["response_budget"]["active_plans"]["truncated"])
+        self.assertEqual(len(payload["pending_review_items"]), 1)
+        self.assertTrue(payload["response_budget"]["review_items"]["truncated"])
+        self.assertTrue(payload["recommended_checks"])
+
+    def test_memory_prepare_unverified_review_truncates_selected_files(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["meta/quick-reference.md"] = """# Quick Reference
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+"""
+        seed["knowledge/_unverified/topic/a.md"] = """---
+created: 2026-01-01
+source: test
+trust: low
+---
+
+# A
+
+alpha beta gamma
+"""
+        seed["knowledge/_unverified/topic/b.md"] = """---
+created: 2026-01-02
+source: test
+trust: low
+---
+
+# B
+
+delta epsilon zeta
+"""
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_prepare_unverified_review"](
+                    folder_path="knowledge/_unverified",
+                    max_files=1,
+                    max_extract_words=10,
+                )
+            )
+        )
+
+        self.assertEqual(len(payload["selected_files"]), 1)
+        self.assertTrue(payload["response_budget"]["files"]["truncated"])
+        self.assertIn("single_file", payload["recommended_operations"])
+
+    def test_memory_prepare_promotion_batch_returns_candidates_and_operation_hint(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["meta/quick-reference.md"] = """# Quick Reference
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+"""
+        seed["knowledge/_unverified/topic/a.md"] = """---
+created: 2026-01-01
+source: test
+trust: low
+---
+
+# A
+"""
+        seed["knowledge/_unverified/topic/b.md"] = """---
+created: 2026-01-02
+source: test
+trust: low
+---
+
+# B
+"""
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_prepare_promotion_batch"](
+                    folder_path="knowledge/_unverified/topic",
+                    max_files=1,
+                )
+            )
+        )
+
+        self.assertEqual(payload["suggested_operation"], "memory_promote_knowledge_batch")
+        self.assertEqual(len(payload["selected_candidates"]), 1)
+        self.assertTrue(payload["response_budget"]["candidates"]["truncated"])
+
+    def test_memory_prepare_periodic_review_compacts_deferred_targets(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": """# Quick Reference
+
+## Current active stage: Exploration
+
+_Last assessed: 2026-03-01 — Exploration retained_
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+| Staleness trigger (no access) | 120 days | Exploration |
+| Aggregation trigger | 15 entries | Exploration |
+| Identity churn alarm | 5 traits/session | Exploration |
+| Knowledge flooding alarm | 5 files/day | Exploration |
+| Task similarity method | Session co-occurrence | Exploration |
+| Cluster co-retrieval threshold | 3 sessions | Exploration |
+
+## Active task similarity method
+
+**Method:** Session co-occurrence
+""",
+                "meta/belief-diff-log.md": "# Belief Diff Log\n",
+                "meta/review-queue.md": """# Review Queue
+
+### [2026-03-20] Review plans/demo.md
+**Item ID:** review-demo
+**Type:** governance
+**File:** plans/demo.md
+**Priority:** normal
+**Status:** pending
+""",
+                "knowledge/_unverified/topic/note.md": """---
+created: 2025-12-01
+source: test
+trust: low
+---
+
+# Note
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_prepare_periodic_review"](
+                    max_queue_items=1,
+                    max_deferred_targets=1,
+                )
+            )
+        )
+
+        self.assertIn("write", payload["recommended_operations"])
+        self.assertEqual(len(payload["deferred_write_targets"]), 1)
+        self.assertTrue(payload["response_budget"]["deferred_targets"]["truncated"])
+
     def test_memory_search_context_lines_default_output_unchanged(self) -> None:
         repo_root = self._init_repo(
             {
