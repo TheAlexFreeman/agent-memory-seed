@@ -14,6 +14,8 @@ Generated 2026-03-20. Trust level: **medium**. Covers memory systems, attention,
 
 **For system-relevant implications:** [cognitive-science-synthesis.md](cognitive-science-synthesis.md) — distillation of the memory science corpus filtered for direct bearing on system design. Start here for memory.
 
+**For human–LLM complementarity and collaboration design:** [human-llm-cognitive-complementarity.md](human-llm-cognitive-complementarity.md) — functional overlaps, divergences, failure mode complementarity, and what the comparison implies for frameworks like this one.
+
 **For attention and executive function:** [attention/attention-synthesis-agent-implications.md](attention/attention-synthesis-agent-implications.md).
 
 **For metacognition and calibration:** [metacognition/metacognition-synthesis-agent-implications.md](metacognition/metacognition-synthesis-agent-implications.md).
