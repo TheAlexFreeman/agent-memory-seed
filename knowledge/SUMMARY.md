@@ -88,9 +88,9 @@ Key entry points:
 - `codex-mcp-timeouts-git-stdin.md` — Debugging stdio transport stdin inheritance in this repo's MCP server
 
 <!-- section: mathematics -->
-### `mathematics/` — Logic, game theory, information theory, and dynamical systems (promoted 2026-03-20/21, trust: high/medium)
+### `mathematics/` — Logic, game theory, information theory, dynamical systems, probability, and statistical mechanics (promoted 2026-03-20/21, trust: high/medium)
 
-Forty-nine files across five subfolders. The original 35 files (logic-foundations, game-theory, information-theory) were reviewed and promoted from `_unverified/` on 2026-03-20 with trust: high. Seven dynamical-systems files were added on 2026-03-21 with trust: medium. Seven probability files were added on 2026-03-21 with trust: medium.
+Fifty-five files across six subfolders. The original 35 files (logic-foundations, game-theory, information-theory) were reviewed and promoted from `_unverified/` on 2026-03-20 with trust: high. Seven dynamical-systems files were added on 2026-03-21 with trust: medium. Seven probability files were added on 2026-03-21 with trust: medium. Six statistical-mechanics files were added on 2026-03-21 with trust: medium.
 
 Subfolders:
 - `logic-foundations/` — 11 files: Gödel incompleteness (1st and 2nd), ZFC set theory, propositional and FOL, Turing undecidability, Kolmogorov complexity, category theory, Curry-Howard isomorphism, dependent types and proof assistants, simple type theory and lambda calculus, compactness and Löwenheim-Skolem
@@ -98,6 +98,7 @@ Subfolders:
 - `information-theory/` — 12 files: Shannon entropy and source coding theorem, KL divergence and cross-entropy, mutual information and channel capacity, rate-distortion theory, MDL principle, PAC learning and sample complexity, VC dimension and fundamental theorem, compression-generalization connection, information bottleneck and deep learning, inductive bias and no-free-lunch, double descent and benign overfitting, limits and open questions
 - `dynamical-systems/` — 7 files: Phase space, flows, fixed points and stability (dynamical-systems-fundamentals); bifurcation theory and catastrophe theory; chaos, Lorenz system, strange attractors, Lyapunov exponents; self-organized criticality, Bak sandpile, Langton edge-of-chaos, Kauffman NK models, neural criticality; ergodic theory, Birkhoff theorem, mixing hierarchy, ergodicity breaking; complex networks, small-world, scale-free, preferential attachment; fractals, dimension, multiscale structure, multifractal analysis
 - `probability/` — 7 files: Measure-theoretic foundations (Kolmogorov axioms, σ-algebras, convergence theorems, CLT, Borel-Cantelli); Bayesian inference, priors, posteriors, and Bernstein-von Mises; concentration inequalities (Hoeffding, McDiarmid, Azuma-Hoeffding, matrix Bernstein, Rademacher complexity); Markov chains, mixing times, MCMC, spectral gap; Gaussian processes, RKHS, Bayesian nonparametrics (Dirichlet process, CRP, IBP); martingales, optional stopping theorem, Kelly criterion, sequential analysis; stochastic processes, Brownian motion, Itô calculus, SDEs, Fokker-Planck
+- `statistical-mechanics/` — 6 files: Thermodynamic entropy, Boltzmann-Gibbs-Shannon unification, Jaynes MaxEnt, Landauer's principle; partition function, Helmholtz free energy, variational free energy, Legendre transforms; Ising model, phase transitions, mean-field, Landau theory, universality, renormalisation group; Hopfield networks, Boltzmann machines, RBMs, contrastive divergence, modern Hopfield-transformer connection; spin glasses, SK model, replica method, RSB, ultrametricity, applications to random CSPs; statistical mechanics of learning, Gardner capacity, teacher-student framework, double descent, neural scaling laws
 
 Key entry points:
 - `logic-foundations/godels-first-incompleteness.md` — Hilbert program, Gödel numbering, diagonal lemma, proof sketch
@@ -109,6 +110,9 @@ Key entry points:
 - `dynamical-systems/dynamical-systems-fundamentals.md` — Phase space, flows, fixed points, attractors, Lyapunov stability
 - `probability/measure-theoretic-foundations.md` — **Start here for probability.** Kolmogorov axioms, measure-theoretic conditional expectation, convergence theorems, CLT
 - `probability/stochastic-processes-brownian-sde.md` — Brownian motion, Itô calculus, SDEs, Fokker-Planck — bridge to FEP and diffusion models
+- `statistical-mechanics/thermodynamics-entropy-unification.md` — **Start here for stat mech.** Boltzmann-Gibbs-Shannon unification, Jaynes MaxEnt, Landauer's principle
+- `statistical-mechanics/partition-function-free-energy.md` — Partition function, Helmholtz free energy, variational principles — template for variational inference and FEP
+- `statistical-mechanics/statistical-mechanics-of-learning.md` — Gardner capacity, phase transitions in generalisation, double descent, neural scaling laws
 
 ## What belongs here
 

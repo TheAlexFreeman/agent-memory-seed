@@ -1,8 +1,8 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Execute Phase 3 (Statistical Mechanics & Energy-Based Systems): bridges
-  FEP, information theory, and ML at a deep mathematical level.'
+next_action: 'Execute Phase 4 (Causal Inference & Structural Causal Models): Pearl''s
+  framework for AI interpretability, fairness, and decision theory.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -155,14 +155,14 @@ Target subfolder: `knowledge/mathematics/statistical-mechanics/`
 6. **`statistical-mechanics-of-learning.md`** — Gardner's capacity analysis (1988), the Vapnik-Chervonenkis connection to statistical mechanics, the thermodynamic limit in learning theory, phase transitions in generalization (from memorization to generalization). Connects Phase 2 (concentration) and information-theory (already present).
 
 Checklist:
-- ☐ Write `thermodynamics-entropy-unification.md`
-- ☐ Write `partition-function-free-energy.md`
-- ☐ Write `ising-model-phase-transitions.md`
-- ☐ Write `hopfield-boltzmann-machines.md`
-- ☐ Write `spin-glasses-replica-method.md`
-- ☐ Write `statistical-mechanics-of-learning.md`
-- ☐ Promote all 6 files to `knowledge/mathematics/statistical-mechanics/`
-- ☐ Update `knowledge/SUMMARY.md` entry
+- ☑ Write `thermodynamics-entropy-unification.md` (2026-03-21)
+- ☑ Write `partition-function-free-energy.md` (2026-03-21)
+- ☑ Write `ising-model-phase-transitions.md` (2026-03-21)
+- ☑ Write `hopfield-boltzmann-machines.md` (2026-03-21)
+- ☑ Write `spin-glasses-replica-method.md` (2026-03-21)
+- ☑ Write `statistical-mechanics-of-learning.md` (2026-03-21)
+- ☑ Promote all 6 files to `knowledge/mathematics/statistical-mechanics/` (2026-03-21, written directly with trust: medium)
+- ☑ Update `knowledge/SUMMARY.md` entry (2026-03-21)
 
 ---
 
