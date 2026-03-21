@@ -15,7 +15,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Research plans
 
-- *(No active research plans. See recent completions below.)*
+- [social-science-expansion-research.md](social-science-expansion-research.md) — Expand social science KB beyond cultural evolution into 6 domains: sociology of knowledge/STS, collective action/institutions, social psychology, behavioral economics, network diffusion, social epistemology; 30 files across 6 phases; Phase 1 next.
 
 ## Recent completions
 
@@ -89,6 +89,16 @@ Scope: Expand the mathematics knowledge base from 35 files (logic-foundations, g
 Progress: 0/0 complete
 Next: Execute Phase 1 (Dynamical Systems & Chaos): highest priority — Alex's stated primary framework for intelligence has no files in the knowledge base.
 <!-- END: mathematics-research-expansion -->
+
+---
+
+<!-- BEGIN: social-science-expansion-research -->
+### Social Science Knowledge Base Expansion · status: active · trust: medium
+Detail: plans/social-science-expansion-research.md
+Scope: Expand social science beyond cultural evolution (12 files) into 6 domains: sociology of knowledge/STS (Mannheim, Merton, Kuhn, Latour), collective action/institutions (Olson, Ostrom, North, Acemoglu-Robinson), social psychology (Asch, Milgram, group dynamics), behavioral economics (Kahneman/Tversky, prospect theory, nudges), network diffusion (Granovetter, Rogers, wisdom of crowds), social epistemology (Goldman, extended mind).
+Progress: 0/30 files across 6 phases.
+Next: Execute Phase 1 (Sociology of Knowledge & STS) — Mannheim, Merton, Kuhn, Latour; how scientific knowledge is socially produced and contested.
+<!-- END: social-science-expansion-research -->
 
 ---
 
