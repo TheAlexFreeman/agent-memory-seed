@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -25,6 +26,7 @@ def _tool_annotations(**kwargs: object) -> Any:
 
 
 _MAX_BATCH_PROMOTIONS = 50
+_REVIEW_VERDICTS = frozenset({"approve", "reject", "defer"})
 
 
 def _normalize_batch_source_paths(raw_source_paths: str, repo, root: Path) -> list[str]:
@@ -119,6 +121,26 @@ def _update_summary_with_entry(
 def _default_summary_entry(filename: str, target_path: str, frontmatter: dict[str, Any]) -> str:
     title = frontmatter.get("title", filename.replace(".md", "").replace("-", " ").title())
     return f"- **[{filename}]({target_path})** — {title}"
+
+
+def _review_log_path(folder_path: str = "knowledge/_unverified") -> str:
+    return f"{folder_path.rstrip('/')}/REVIEW_LOG.jsonl"
+
+
+def _read_review_log_entries(abs_path: Path) -> list[dict[str, Any]]:
+    entries: list[dict[str, Any]] = []
+    if not abs_path.exists():
+        return entries
+    for raw_line in abs_path.read_text(encoding="utf-8").splitlines():
+        if not raw_line.strip():
+            continue
+        try:
+            parsed = json.loads(raw_line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            entries.append(parsed)
+    return entries
 
 
 def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
@@ -995,6 +1017,141 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         )
         return result.to_json()
 
+    @mcp.tool(
+        name="memory_mark_reviewed",
+        annotations=_tool_annotations(
+            title="Mark Unverified File Reviewed",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_mark_reviewed(
+        path: str,
+        verdict: str,
+        reviewer_notes: str = "",
+        session_id: str = "",
+    ) -> str:
+        """Record a review verdict for an unverified knowledge file."""
+        from ...errors import NotFoundError, ValidationError
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+
+        path, abs_path = resolve_repo_path(repo, path, field_name="path")
+        require_under_prefix(path, "knowledge/_unverified", field_name="path")
+        if not abs_path.exists():
+            raise NotFoundError(f"File not found: {path}")
+        if verdict not in _REVIEW_VERDICTS:
+            raise ValidationError(
+                f"verdict must be one of {sorted(_REVIEW_VERDICTS)}, got: {verdict}"
+            )
+        if session_id:
+            validate_session_id(session_id)
+
+        log_path = _review_log_path()
+        abs_log = root / log_path
+        abs_log.parent.mkdir(parents=True, exist_ok=True)
+
+        entry = {
+            "path": path,
+            "verdict": verdict,
+            "reviewer_notes": reviewer_notes,
+            "session_id": session_id,
+            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "reviewed_by": "agent",
+        }
+        with abs_log.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        repo.add(log_path)
+
+        commit_msg = f"[curation] Mark {Path(path).name} reviewed ({verdict})"
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=[log_path],
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={
+                "path": path,
+                "verdict": verdict,
+                "log_path": log_path,
+                "session_id": session_id or None,
+            },
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_list_pending_reviews",
+        annotations=_tool_annotations(
+            title="List Pending Review Verdicts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_list_pending_reviews(folder_path: str = "knowledge/_unverified") -> str:
+        """List the latest pending review verdicts for unverified knowledge files."""
+        from ...errors import ValidationError
+
+        repo = get_repo()
+        root = get_root()
+
+        folder_path, abs_folder = resolve_repo_path(repo, folder_path, field_name="folder_path")
+        if folder_path != "knowledge/_unverified":
+            require_under_prefix(folder_path, "knowledge/_unverified", field_name="folder_path")
+        if not abs_folder.exists() or not abs_folder.is_dir():
+            raise ValidationError(f"folder_path must be an existing directory: {folder_path}")
+
+        log_path = _review_log_path(folder_path)
+        abs_log = root / log_path
+        latest_by_path: dict[str, dict[str, Any]] = {}
+        for entry in _read_review_log_entries(abs_log):
+            entry_path = entry.get("path")
+            if isinstance(entry_path, str):
+                latest_by_path[entry_path] = entry
+
+        grouped: dict[str, list[dict[str, Any]]] = {"approve": [], "defer": [], "reject": []}
+        for entry_path, entry in latest_by_path.items():
+            if not entry_path.startswith(folder_path.rstrip("/") + "/"):
+                continue
+            if not (root / entry_path).exists():
+                continue
+            verdict = entry.get("verdict")
+            if verdict not in grouped:
+                continue
+            grouped[cast(str, verdict)].append(
+                {
+                    "path": entry_path,
+                    "reviewer_notes": entry.get("reviewer_notes", ""),
+                    "session_id": entry.get("session_id") or None,
+                    "timestamp": entry.get("timestamp"),
+                    "reviewed_by": entry.get("reviewed_by"),
+                }
+            )
+
+        for verdict_entries in grouped.values():
+            verdict_entries.sort(key=lambda item: str(item["path"]))
+
+        return json.dumps(
+            {
+                "folder_path": folder_path,
+                "log_path": log_path,
+                "approve": grouped["approve"],
+                "defer": grouped["defer"],
+                "reject": grouped["reject"],
+                "counts": {
+                    "approve": len(grouped["approve"]),
+                    "defer": len(grouped["defer"]),
+                    "reject": len(grouped["reject"]),
+                },
+            },
+            indent=2,
+            default=str,
+        )
+
     return {
         "memory_promote_knowledge_batch": memory_promote_knowledge_batch,
         "memory_promote_knowledge_subtree": memory_promote_knowledge_subtree,
@@ -1002,6 +1159,8 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_demote_knowledge": memory_demote_knowledge,
         "memory_archive_knowledge": memory_archive_knowledge,
         "memory_add_knowledge_file": memory_add_knowledge_file,
+        "memory_mark_reviewed": memory_mark_reviewed,
+        "memory_list_pending_reviews": memory_list_pending_reviews,
     }
 
 

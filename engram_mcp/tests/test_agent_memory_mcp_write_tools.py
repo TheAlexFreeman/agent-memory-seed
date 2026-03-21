@@ -881,6 +881,156 @@ origin_session: manual
         self.assertIn("knowledge/tooling/a-note.md", verified_summary)
         self.assertIn("knowledge/tooling/nested/b-note.md", verified_summary)
 
+    def test_memory_mark_reviewed_appends_jsonl_entry(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/topic/note.md": """---
+title: Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Note
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_mark_reviewed"](
+                    path="knowledge/_unverified/topic/note.md",
+                    verdict="approve",
+                    reviewer_notes="Looks good.",
+                    session_id="chats/2026/03/20/chat-003",
+                )
+            )
+        )
+        log_path = repo_root / "knowledge" / "_unverified" / "REVIEW_LOG.jsonl"
+        log_lines = [line for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        entry = json.loads(log_lines[-1])
+
+        self.assertEqual(payload["new_state"]["verdict"], "approve")
+        self.assertEqual(entry["path"], "knowledge/_unverified/topic/note.md")
+        self.assertEqual(entry["verdict"], "approve")
+        self.assertEqual(entry["reviewer_notes"], "Looks good.")
+        self.assertEqual(entry["session_id"], "chats/2026/03/20/chat-003")
+        self.assertEqual(entry["reviewed_by"], "agent")
+        self.assertTrue(entry["timestamp"].endswith("Z"))
+
+    def test_memory_list_pending_reviews_uses_latest_verdict_per_file(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/topic/alpha.md": """---
+title: Alpha
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Alpha
+""",
+                "knowledge/_unverified/topic/beta.md": """---
+title: Beta
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Beta
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_mark_reviewed"](
+                path="knowledge/_unverified/topic/alpha.md",
+                verdict="approve",
+            )
+        )
+        asyncio.run(
+            tools["memory_mark_reviewed"](
+                path="knowledge/_unverified/topic/alpha.md",
+                verdict="defer",
+                reviewer_notes="Need another pass.",
+            )
+        )
+        asyncio.run(
+            tools["memory_mark_reviewed"](
+                path="knowledge/_unverified/topic/beta.md",
+                verdict="reject",
+            )
+        )
+
+        payload = json.loads(asyncio.run(tools["memory_list_pending_reviews"]()))
+
+        self.assertEqual(payload["counts"]["approve"], 0)
+        self.assertEqual(payload["counts"]["defer"], 1)
+        self.assertEqual(payload["counts"]["reject"], 1)
+        self.assertEqual(payload["defer"][0]["path"], "knowledge/_unverified/topic/alpha.md")
+        self.assertEqual(payload["defer"][0]["reviewer_notes"], "Need another pass.")
+        self.assertEqual(payload["reject"][0]["path"], "knowledge/_unverified/topic/beta.md")
+
+    def test_memory_list_pending_reviews_skips_files_no_longer_in_unverified(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/topic/keep.md": """---
+title: Keep
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Keep
+""",
+                "knowledge/_unverified/topic/promote.md": """---
+title: Promote
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Promote
+""",
+                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "knowledge/SUMMARY.md": "# Knowledge\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        asyncio.run(
+            tools["memory_mark_reviewed"](
+                path="knowledge/_unverified/topic/keep.md",
+                verdict="defer",
+            )
+        )
+        asyncio.run(
+            tools["memory_mark_reviewed"](
+                path="knowledge/_unverified/topic/promote.md",
+                verdict="approve",
+            )
+        )
+        asyncio.run(
+            tools["memory_promote_knowledge"](
+                source_path="knowledge/_unverified/topic/promote.md",
+                trust_level="high",
+                target_path="knowledge/topic/promote.md",
+            )
+        )
+
+        payload = json.loads(asyncio.run(tools["memory_list_pending_reviews"]()))
+
+        self.assertEqual(payload["counts"]["approve"], 0)
+        self.assertEqual(payload["counts"]["defer"], 1)
+        self.assertEqual(payload["defer"][0]["path"], "knowledge/_unverified/topic/keep.md")
+
     def test_memory_delete_blocks_protected_identity_paths(self) -> None:
         repo_root = self._init_repo(
             {

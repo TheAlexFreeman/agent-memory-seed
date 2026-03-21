@@ -59,11 +59,11 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 ---
 
 <!-- BEGIN: mcp-unverified-review-workflow-improvements -->
-### MCP Unverified Review Workflow Improvements · status: active · trust: medium
+### MCP Unverified Review Workflow Improvements · status: complete · trust: medium
 Detail: plans/mcp-unverified-review-workflow-improvements.md
 Scope: Address 7 friction points identified during the 2026-03-20 unverified mathematics promotion session (35 files). Ranked by estimated time-savings per session. Top priority as of 2026-03-20.
-Progress: Phases 1-6 complete (35/35 checklist items); batch and subtree promotion tools now documented in the quick-reference and single-file promotion docs.
-Next: Implement Phase 7: memory_mark_reviewed tracking tool.
+Progress: Phases 1-7 complete (42/42 checklist items); inline reads, summary-aware promotion, previews, review digests, subtree promotion, discoverability docs, and review-log tracking all landed.
+Next: All planned phases complete.
 <!-- END: mcp-unverified-review-workflow-improvements -->
 
 ---

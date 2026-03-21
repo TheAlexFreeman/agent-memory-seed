@@ -18,6 +18,8 @@ New information enters the system during a chat session. The agent identifies wh
 
 New memories are written with low confidence. Identity traits are tagged `[tentative]`. Unverified content starts with `created` but omits `last_verified` until a human confirms it. Skill files are marked as drafts until confirmed by successful use.
 
+Unverified review state is tracked in `knowledge/_unverified/REVIEW_LOG.jsonl`. This file is committed, not gitignored, so review verdicts remain durable across sessions and auditable in git history. When the same file is reviewed multiple times, the most recent log entry is authoritative for pending-review views.
+
 ### 3. Confirmation
 
 Through repeated access, user validation, or explicit approval, provisional memories are promoted to confirmed status. Confidence tags are upgraded. Skills are marked as tested.

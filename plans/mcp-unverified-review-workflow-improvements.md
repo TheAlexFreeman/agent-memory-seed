@@ -1,10 +1,10 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Implement Phase 7: memory_mark_reviewed tracking tool.'
+next_action: 'All planned phases complete.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
-status: active
+status: complete
 title: MCP Unverified Review Workflow Improvements
 trust: medium
 type: implementation-plan
@@ -321,13 +321,13 @@ Reads `REVIEW_LOG.jsonl`, groups by verdict, and returns:
 **7.4 Add tests** for append behavior, idempotent re-marking (last verdict wins), and list-pending grouping.
 
 Checklist:
-- ☐ Register `memory_mark_reviewed` tool
-- ☐ Implement JSONL append with timestamp injection
-- ☐ Register `memory_list_pending_reviews` companion tool
-- ☐ Implement JSONL read + grouping logic + existence check
-- ☐ Decide and document REVIEW_LOG.jsonl commit policy
-- ☐ Write tests
-- ☐ Smoke-test: mark 3 files with different verdicts, call list_pending, verify groupings
+- ☑ Register `memory_mark_reviewed` tool
+- ☑ Implement JSONL append with timestamp injection
+- ☑ Register `memory_list_pending_reviews` companion tool
+- ☑ Implement JSONL read + grouping logic + existence check
+- ☑ Decide and document REVIEW_LOG.jsonl commit policy
+- ☑ Write tests
+- ☑ Smoke-test: mark 3 files with different verdicts, call list_pending, verify groupings
 
 ---
 
