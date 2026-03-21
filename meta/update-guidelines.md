@@ -166,7 +166,19 @@ When the agent has write access to the repository, commits should follow this fo
 Longer explanation if needed. Include reasoning for non-obvious changes.
 ```
 
-Categories: `[chat]`, `[knowledge]`, `[skill]`, `[identity]`, `[curation]`, `[system]`.
+Categories and their change-control tiers:
+
+| Prefix | Typical paths | Change tier |
+|---|---|---|
+| `[access]` | `ACCESS.jsonl` files | Automatic |
+| `[chat]` | `chats/` | Automatic |
+| `[curation]` | `knowledge/_unverified/` promotions, SUMMARY refreshes | Automatic or Proposed |
+| `[identity]` | `identity/` | Proposed |
+| `[knowledge]` | `knowledge/` | Automatic (`_unverified/`) or Proposed (verified) |
+| `[plan]` | `plans/` | Automatic (progress) or Proposed (create/archive/scope) |
+| `[scratchpad]` | `scratchpad/` | Automatic |
+| `[skill]` | `skills/` | Protected |
+| `[system]` | `meta/`, `README.md`, `CHANGELOG.md` | Protected |
 
 ### Publication semantics
 

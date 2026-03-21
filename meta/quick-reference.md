@@ -13,7 +13,8 @@ Use this file as the live operational router once you reach it:
 1. If you started in `README.md`, continue here for live routing and active parameters.
 2. If this is a fresh instantiation on a blank or template-backed repo, continue to `meta/first-run.md`.
 3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, follow the **Full bootstrap** manifest below.
-4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
+4. If this is a scheduled or recurring automation run (no interactive user), use the **Automation** manifest below.
+5. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 
 **MCP discovery:** If the host exposes Engram under a project-prefixed name instead of `agent-memory`, use the identifier shown in the available-server list.
 
@@ -29,6 +30,7 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 | **Compact returning** | this file → `projects/SUMMARY.md` _(skip if empty or still placeholder)_ → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `plans/SUMMARY.md` plus task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the active project, recent history, or current task makes them relevant |
 | **Full bootstrap** | this file → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
 | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
+| **Automation** | this file → `scratchpad/USER.md` _(skip if empty)_ → `scratchpad/CURRENT.md` _(skip if empty)_ → `projects/SUMMARY.md` _(skip if empty)_ → task-relevant `plans/SUMMARY.md`, `knowledge/SUMMARY.md`, `skills/SUMMARY.md` on-demand only |
 | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
 
@@ -149,13 +151,7 @@ Entry counting rule: count entries in the current `ACCESS.jsonl`, not the archiv
 
 ## Helpfulness scoring guide
 
-- `0.0–0.1` wrong context
-- `0.2–0.4` near-miss
-- `0.5–0.6` useful context
-- `0.7–0.8` highly relevant
-- `0.9–1.0` critical
-
-Score what actually happened, not what should have happened.
+See README.md § "Memory curation" for the full helpfulness scale and scoring guidance. Quick anchor: 0.0–0.1 wrong context, 0.5–0.6 useful, 0.9–1.0 critical. Score what actually happened.
 
 ---
 
@@ -177,4 +173,5 @@ After periodic review:
 |---|---|
 | First-run onboarding bootstrap | ~15,000–20,000 |
 | Returning compact session | ~3,000–7,000 |
+| Automation (no interactive user) | ~2,000–5,000 |
 | Full bootstrap / periodic review | ~18,000–25,000 |

@@ -16,6 +16,32 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-07-23] Consistency, deduplication, and user-friendliness sweep
+
+**Changed:**
+
+- **Commit conventions: full 9-prefix table with tier mapping.** `meta/update-guidelines.md` § "Commit conventions" now documents all 9 commit prefixes (`[access]`, `[chat]`, `[curation]`, `[identity]`, `[knowledge]`, `[plan]`, `[scratchpad]`, `[skill]`, `[system]`) with their typical paths and change-control tier. Previously listed only 6, missing `[plan]`, `[scratchpad]`, and `[access]`.
+
+- **Automation mode added to quick-reference.md.** Session routing, context loading manifest, and context budget table now include the `automation` session type, aligning `meta/quick-reference.md` with `agent-bootstrap.toml`'s 5-mode definition.
+
+- **Deduplicated helpfulness scoring guide.** `meta/quick-reference.md` now carries a compact pointer to the authoritative table in `README.md` instead of a full duplicate.
+
+- **Deduplicated context budget table.** `README.md` § "Context budget" now points to `meta/quick-reference.md` as the single authoritative source instead of maintaining a separate copy.
+
+- **Bootstrap sequence skip-note.** Added a callout above `README.md` § "Bootstrap sequence" directing returning sessions to the compact manifest, reducing the chance of re-reading the full 13-step sequence unnecessarily.
+
+- **Plans/projects relationship annotated.** The directory structure diagram in `README.md` now explains the containment model: projects are durable contexts; plans are actionable roadmaps; a project may reference multiple plans.
+
+- **ACCESS exemption list expanded.** `meta/session-checklists.md` step 4 now explicitly lists `SUMMARY.md` files and `scratchpad/` alongside `meta/` as ACCESS-exempt, matching the exemptions documented in `README.md`.
+
+- **Stale scratchpad item removed.** `scratchpad/CURRENT.md` no longer lists "Implement `memory_log_access_batch`" — this tool is already implemented in `session_tools.py`.
+
+**Reasoning:** A comprehensive review found 13 findings across consistency, user-friendliness, and context efficiency. The most impactful were: 3 undocumented commit prefixes creating a split-brain between code (`path_policy.py`) and docs; the automation session mode defined in TOML but absent from the live router; and two duplicated reference tables that could drift independently. This sweep resolves the high and medium severity findings.
+
+**Approved by:** user
+
+---
+
 ## [2026-03-20] Curation and analytics surface completed and docs synchronized
 
 **Changed:**

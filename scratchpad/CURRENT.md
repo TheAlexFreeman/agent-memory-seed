@@ -20,7 +20,6 @@ See `meta/scratchpad-guidelines.md` for the full write protocol, promotion crite
 ## Immediate next actions
 
 - Aggregate `plans/ACCESS.jsonl` (100 entries, 6× over trigger — review-queue item from 2026-03-19).
-- Implement `memory_log_access_batch` in `write_tools.py` to reduce ACCESS write noise.
 - Treat batch ACCESS logging and governed review-queue resolution as next MCP priorities.
 
 ## Open questions

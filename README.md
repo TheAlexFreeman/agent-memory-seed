@@ -103,6 +103,9 @@ For the complete mapping of which files to load per session type, see `meta/quic
 │   ├── ACCESS.jsonl       ← Access-tracking log for project content retrievals.
 │   └── project-id/        ← Project-specific summaries, notes, plans, and artifacts.
 │
+│   Projects are durable work contexts; plans are actionable roadmaps.
+│   A project may reference multiple plans; a plan belongs to at most one project.
+│
 ├── meta/                  ← Governance. How this system updates itself.
 │   ├── quick-reference.md    ← Active operational parameters and context loading manifest.
 │   ├── curation-policy.md    ← Rules for memory hygiene, decay, and promotion.
@@ -286,6 +289,8 @@ These abstractions then become available as top-down context that enriches futur
 
 ## Bootstrap sequence
 
+> **Returning sessions:** If you have already completed the full bootstrap at least once, skip this section and use the compact returning manifest in `meta/quick-reference.md` instead.
+
 If `meta/quick-reference.md` routes you to a fresh instantiation on a returning system, or you intentionally need the full governance stack, follow this sequence:
 
 1. Read this README.md fully. ✓
@@ -309,13 +314,7 @@ If `meta/quick-reference.md` routes you to a fresh instantiation on a returning 
 
 ### Context budget
 
-Context cost depends on whether the model is onboarding, resuming normally, or reopening the full governance stack. Use these rough planning numbers:
-
-| Session mode                     | Typical token cost | When to expect it                                                                                         |
-| -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
-| First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
-| Returning compact session        | ~3,000–7,000       | Normal day-to-day use via the compact returning manifest in `meta/quick-reference.md`                     |
-| Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
+For token-cost planning numbers per session mode, see `meta/quick-reference.md` § "Context budget guideline". That table is the single authoritative source.
 
 For models with smaller context windows, prefer the compact returning manifest in `meta/quick-reference.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
 
