@@ -1,12 +1,13 @@
+---
 created: 2026-03-19
 last_verified: 2026-03-19
 next_action: "Complete — all 11 items done. Human review of knowledge/_unverified/mathematics/logic-foundations/ files recommended."
-origin_session: chats/2026/03/19
 origin_session: chats/2026/03/19/chat-001
 source: agent-generated
 status: complete
 trust: medium
 type: research-plan
+---
 
 # Research Plan: Formal Logic and Foundations of Mathematics
 

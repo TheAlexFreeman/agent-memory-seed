@@ -1,3 +1,4 @@
+---
 created: 2026-03-20
 last_verified: 2026-03-20
 next_action: "Human review of knowledge/cognitive-science/concepts/ files recommended"
@@ -6,6 +7,7 @@ source: agent-generated
 status: complete
 trust: medium
 type: research-plan
+---
 
 # Research Plan: Concepts, Categorization, and Conceptual Change
 

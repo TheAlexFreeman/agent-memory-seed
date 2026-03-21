@@ -1,11 +1,13 @@
+---
 created: 2026-03-20
 last_verified: 2026-03-20
 next_action: "Complete — all 13 items done. Human review of knowledge/cognitive-science/relevance-realization/ files recommended."
-origin_session: chats/2026/03/20
+origin_session: manual
 source: agent-generated
 status: complete
 trust: medium
 type: research-plan
+---
 
 # Research Plan: Relevance Realization, Insight, and the Cognitive Roots of Intelligence, Rationality, and Wisdom
 

@@ -1,5 +1,8 @@
 ---
-type: build
+source: agent-generated
+origin_session: manual
+created: 2026-03-21
+type: build-plan
 category: build
 status: complete
 next_action: All planned phases complete.

@@ -196,16 +196,25 @@ load_initial_commit_paths() {
         printf '       %s\n' "${missing_paths[@]}"
     fi
 
-    printf -v INITIAL_COMMIT_PATH_ARGS '%q ' "${INITIAL_COMMIT_PATHS[@]}"
-    INITIAL_COMMIT_PATH_ARGS="${INITIAL_COMMIT_PATH_ARGS% }"
 }
 
 stage_initial_commit_paths() {
+    local resolved_manifest
+
+    resolved_manifest="$(mktemp)"
+    printf '%s\n' "${INITIAL_COMMIT_PATHS[@]}" > "$resolved_manifest"
+
     # Rebuild the unborn-branch index so the first commit contains only the allowlist.
     if ! git read-tree --empty >/dev/null 2>&1; then
         rm -f .git/index
     fi
-    git add -- "${INITIAL_COMMIT_PATHS[@]}"
+
+    if ! git add --pathspec-from-file="$resolved_manifest" --; then
+        rm -f "$resolved_manifest"
+        return 1
+    fi
+
+    rm -f "$resolved_manifest"
 }
 
 echo "=== Agent Memory System Setup ==="
@@ -482,7 +491,7 @@ if ! git rev-parse HEAD >/dev/null 2>&1; then
         echo "         git config user.email \"you@example.com\""
         echo "         git commit -m '[system] Initialize agent memory system' -m 'Created from agent-memory-seed template on $TODAY.'"
         echo "       If you need to rebuild the same staged allowlist first, run:"
-        echo "         git add -- ${INITIAL_COMMIT_PATH_ARGS}"
+        echo "         git add --pathspec-from-file=setup/initial-commit-paths.txt --"
         echo "         git commit -m '[system] Initialize agent memory system' -m 'Created from agent-memory-seed template on $TODAY.'"
     else
         git commit -m "[system] Initialize agent memory system" \

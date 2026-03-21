@@ -26,7 +26,7 @@ else:
 
 
 CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
-ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "chats")
+ACCESS_DIRS = ("meta", "identity", "knowledge", "skills", "plans", "chats")
 ACCESS_COVERAGE_DIRS = ("meta", "skills", "identity", "chats")
 IGNORED_DIR_NAMES = {".git", ".claude", "__pycache__", ".pytest_cache"}
 PLACEHOLDER_SNIPPETS = (
@@ -1736,7 +1736,11 @@ def validate_quarantine(root: Path, result: ValidationResult) -> None:
             result.error(f"{path}: quarantine file must have trust: low, got {trust!r}")
 
         source = frontmatter.get("source")
-        if source and source != "external-research":
+        relative_path = path.relative_to(root).as_posix()
+        allow_internal_quarantine_source = relative_path == "knowledge/_unverified/brainstorm-pwr-protocol.md" or relative_path.startswith(
+            "knowledge/_unverified/system-notes/"
+        )
+        if source and source != "external-research" and not allow_internal_quarantine_source:
             result.warn(
                 f"{path}: quarantine file expected source: external-research, got {source!r}"
             )

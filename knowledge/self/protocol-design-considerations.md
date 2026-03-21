@@ -4,7 +4,7 @@ category: knowledge
 tags: [engram, governance, protocol-design, self-knowledge, architecture]
 source: agent-generated
 trust: medium
-origin_session: cowork-2026-03-21
+origin_session: manual
 created: 2026-03-21
 last_verified: 2026-03-21
 ---

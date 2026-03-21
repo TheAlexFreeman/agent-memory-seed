@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21
+origin_session: manual
 source: agent-generated
 trust: low
 ---
@@ -60,7 +60,7 @@ For resources that are part of larger systems, governance should be organized in
 
 ## Polycentric Governance
 
-Ostrom's broader theoretical contribution (developed with Vincent Ostrom) is the concept of **polycentric governance**: a system of governance in which multiple centers of decision-making authority operate independently but interact through a larger framework of rules. 
+Ostrom's broader theoretical contribution (developed with Vincent Ostrom) is the concept of **polycentric governance**: a system of governance in which multiple centers of decision-making authority operate independently but interact through a larger framework of rules.
 
 Polycentric governance differs from:
 - **Monocentric governance:** A single center of authority makes all decisions. May be efficient under simple conditions; breaks down when diversity and complexity exceed the information-processing capacity of the center.

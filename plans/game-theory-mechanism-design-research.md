@@ -1,3 +1,4 @@
+---
 created: 2026-03-19
 last_verified: 2026-03-20
 next_action: "Complete — human review of knowledge/_unverified/mathematics/game-theory/ files recommended"
@@ -6,6 +7,7 @@ source: agent-generated
 status: complete
 trust: medium
 type: research-plan
+---
 
 # Research Plan: Game Theory and Mechanism Design
 

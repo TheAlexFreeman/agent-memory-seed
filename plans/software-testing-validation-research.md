@@ -1,3 +1,4 @@
+---
 created: 2026-03-20
 last_verified: 2026-03-20
 next_action: "All 14 knowledge files produced in knowledge/software-engineering/testing/ — plan complete"
@@ -6,6 +7,7 @@ source: agent-generated
 status: complete
 trust: medium
 type: research-plan
+---
 
 # Research Plan: Software Testing, Validation, and Verification
 

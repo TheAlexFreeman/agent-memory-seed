@@ -284,7 +284,9 @@ class SetupFlowTests(unittest.TestCase):
             self.assertEqual("agent-memory", branch_name)
 
             profile_text = (worktree_root / "identity" / "profile.md").read_text(encoding="utf-8")
-            projects_summary = (worktree_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+            projects_summary = (worktree_root / "projects" / "SUMMARY.md").read_text(
+                encoding="utf-8"
+            )
             bootstrap_text = (worktree_root / "agent-bootstrap.toml").read_text(encoding="utf-8")
             self.assertIn("**codebase_root:**", profile_text)
             self.assertIn("**project_name:**", profile_text)
@@ -294,10 +296,16 @@ class SetupFlowTests(unittest.TestCase):
             self.assertIn("codebase-survey", projects_summary)
             self.assertTrue((worktree_root / ".ignore").is_file())
             self.assertTrue((worktree_root / ".editorconfig").is_file())
-            self.assertTrue((worktree_root / "projects" / "codebase-survey" / "SUMMARY.md").is_file())
-            self.assertTrue((worktree_root / "projects" / "codebase-survey" / "questions.md").is_file())
             self.assertTrue(
-                (worktree_root / "projects" / "codebase-survey" / "plans" / "survey-plan.md").is_file()
+                (worktree_root / "projects" / "codebase-survey" / "SUMMARY.md").is_file()
+            )
+            self.assertTrue(
+                (worktree_root / "projects" / "codebase-survey" / "questions.md").is_file()
+            )
+            self.assertTrue(
+                (
+                    worktree_root / "projects" / "codebase-survey" / "plans" / "survey-plan.md"
+                ).is_file()
             )
             self.assertTrue(
                 (worktree_root / "knowledge" / "codebase" / "architecture.md").is_file()
@@ -614,7 +622,7 @@ class SetupFlowTests(unittest.TestCase):
             )
 
             self.assertIn(
-                "git add -- ",
+                "git add --pathspec-from-file=setup/initial-commit-paths.txt --",
                 result.stdout,
             )
             self.assertIn(

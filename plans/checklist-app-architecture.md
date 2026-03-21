@@ -1,7 +1,10 @@
 ---
-type: build
+source: agent-generated
+origin_session: manual
+created: 2026-03-21
+type: build-plan
 category: build
-status: draft
+status: active
 next_action: Implement Phase 1 — Django project scaffold + Checklist/Item models
 last_verified: 2026-03-21
 trust: medium

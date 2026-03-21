@@ -1810,6 +1810,60 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                 )
             )
 
+    def test_system_note_quarantine_file_allows_agent_generated_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "knowledge" / "_unverified" / "system-notes" / "incident.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: agent-generated
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    trust: low
+                    ---
+
+                    # Incident
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertFalse(
+                any("quarantine file expected source: external-research" in w for w in result.warnings)
+            )
+
+    def test_brainstorm_quarantine_file_allows_agent_generated_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tempdir:
+            root = Path(tempdir)
+            build_minimal_repo(root)
+            write(
+                root / "knowledge" / "_unverified" / "brainstorm-pwr-protocol.md",
+                textwrap.dedent(
+                    """\
+                    ---
+                    source: agent-generated
+                    origin_session: chats/2026/03/16/chat-001
+                    created: 2026-03-16
+                    trust: low
+                    ---
+
+                    # Brainstorm
+                    """
+                ),
+            )
+
+            result = validator.validate_repo(root)
+
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertFalse(
+                any("quarantine file expected source: external-research" in w for w in result.warnings)
+            )
+
     def test_single_quoted_frontmatter_dates_pass(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)

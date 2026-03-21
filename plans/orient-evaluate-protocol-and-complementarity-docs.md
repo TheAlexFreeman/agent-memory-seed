@@ -5,7 +5,7 @@ created: 2026-03-21
 trust: medium
 type: build-plan
 category: build
-status: completed
+status: complete
 next_action: "Merged into plans/plans-to-projects-overhaul.md (2026-03-21)"
 ---
 

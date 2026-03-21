@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21
+origin_session: manual
 source: agent-generated
 trust: low
 ---

@@ -2,11 +2,7 @@
 
 **Read this file at the start of every session before applying any thresholds or curation rules.**
 
-This is the single authoritative source for the system's currently active operational parameters. All other threshold values in `README.md` and `meta/curation-policy.md` are reference values. `meta/system-maturity.md` is a stage-selection reference, not the live runtime config.
-
-## Architectural guardrails for system changes
-
-When you are reviewing or modifying the system itself, treat **consistency**, **user-friendliness**, and **context efficiency** as architectural guardrails. Keep authority files aligned, preserve the compact returning path, and make tradeoffs explicit when a change helps one dimension at the expense of another.
+This is the single authoritative source for live operational parameters. Threshold values in `README.md`, `meta/curation-policy.md`, and `meta/system-maturity.md` are reference-only.
 
 ---
 
@@ -19,13 +15,13 @@ Use this file as the operational router for every session:
 3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
 4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 
-**MCP discovery:** Some hosts expose the Engram server under a project-prefixed name instead of `agent-memory`. If a call fails because the server name does not exist, use the identifier shown in the host's available-server list.
+**MCP discovery:** If the host exposes Engram under a project-prefixed name instead of `agent-memory`, use the identifier shown in the available-server list.
 
 ---
 
 ## Context loading manifest
 
-Use this table to determine which files to read for each session type. Load files in the listed order. Files marked _(skip if empty)_ should be skipped when they contain only placeholder text.
+Load files in the listed order. Skip files marked _(skip if empty)_ when they contain only placeholder text.
 
 | Session type | Files to load |
 |---|---|
@@ -83,8 +79,6 @@ _Last assessed: 2026-03-19 — Exploration retained (all 6 signals within bounds
 ## Last periodic review
 
 **Date:** 2026-03-19
-
-Update this date when completing the full periodic-review checklist in `meta/update-guidelines.md`.
 
 ## Active thresholds
 
