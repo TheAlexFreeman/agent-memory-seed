@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import os
 import re
@@ -27,6 +28,52 @@ def _tool_annotations(**kwargs: object) -> Any:
 
 _MAX_BATCH_PROMOTIONS = 50
 _REVIEW_VERDICTS = frozenset({"approve", "reject", "defer"})
+
+
+@dataclass(frozen=True)
+class _GovernedKnowledgeOperationMeta:
+    name: str
+    title: str
+    change_class: str = "proposed"
+    commit_category: str = "curation"
+
+
+_PROMOTE_BATCH_META = _GovernedKnowledgeOperationMeta(
+    name="memory_promote_knowledge_batch",
+    title="Promote Knowledge Files In Batch",
+)
+_PROMOTE_SUBTREE_META = _GovernedKnowledgeOperationMeta(
+    name="memory_promote_knowledge_subtree",
+    title="Promote Knowledge Subtree",
+)
+_PROMOTE_SINGLE_META = _GovernedKnowledgeOperationMeta(
+    name="memory_promote_knowledge",
+    title="Promote Knowledge File to Verified",
+)
+_DEMOTE_META = _GovernedKnowledgeOperationMeta(
+    name="memory_demote_knowledge",
+    title="Demote Knowledge File to Unverified",
+)
+_ARCHIVE_META = _GovernedKnowledgeOperationMeta(
+    name="memory_archive_knowledge",
+    title="Archive Knowledge File",
+)
+_ADD_META = _GovernedKnowledgeOperationMeta(
+    name="memory_add_knowledge_file",
+    title="Add Knowledge File to Unverified",
+    change_class="automatic",
+    commit_category="knowledge",
+)
+
+
+def _governed_knowledge_annotations(meta: _GovernedKnowledgeOperationMeta) -> Any:
+    return _tool_annotations(
+        title=meta.title,
+        readOnlyHint=False,
+        destructiveHint=False,
+        idempotentHint=False,
+        openWorldHint=False,
+    )
 
 
 def _normalize_batch_source_paths(raw_source_paths: str, repo, root: Path) -> list[str]:
@@ -123,6 +170,55 @@ def _default_summary_entry(filename: str, target_path: str, frontmatter: dict[st
     return f"- **[{filename}]({target_path})** — {title}"
 
 
+def _update_source_summary_after_promotion(
+    summary_content: str,
+    source_summary_path: str,
+    source_path: str,
+    filename: str,
+    warnings: list[str],
+) -> str:
+    from ...frontmatter_utils import infer_section_id_from_path, remove_entry_from_section
+
+    source_section_id = infer_section_id_from_path(source_path)
+    updated_source = remove_entry_from_section(summary_content, source_section_id, filename)
+    if updated_source is None:
+        warnings.append(
+            f"Section '<!-- section: {source_section_id} -->' not found in {source_summary_path}."
+        )
+        return summary_content
+    return _prune_empty_summary_section(updated_source, source_section_id)
+
+
+def _update_target_summary_after_promotion(
+    summary_content: str,
+    target_summary_path: str,
+    target_path: str,
+    filename: str,
+    frontmatter: dict[str, Any],
+    warnings: list[str],
+    *,
+    summary_entry: str | None = None,
+    allow_section_create: bool,
+) -> str:
+    from ...frontmatter_utils import infer_section_id_from_path
+
+    target_section_id = infer_section_id_from_path(target_path)
+    entry = summary_entry or _default_summary_entry(filename, target_path, frontmatter)
+    updated_target, _ = _update_summary_with_entry(
+        summary_content,
+        target_section_id,
+        entry,
+        allow_section_create=allow_section_create,
+    )
+    if updated_target is None:
+        warnings.append(
+            f"Section '<!-- section: {target_section_id} -->' not found in {target_summary_path}. "
+            "Entry not added — add manually."
+        )
+        return summary_content
+    return updated_target
+
+
 def _review_log_path(folder_path: str = "knowledge/_unverified") -> str:
     return f"{folder_path.rstrip('/')}/REVIEW_LOG.jsonl"
 
@@ -148,26 +244,27 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     @mcp.tool(
         name="memory_promote_knowledge_batch",
-        annotations=_tool_annotations(
-            title="Promote Knowledge Files In Batch",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
+        annotations=_governed_knowledge_annotations(_PROMOTE_BATCH_META),
     )
     async def memory_promote_knowledge_batch(
         source_paths: str,
         trust_level: str = "medium",
         target_folder: str | None = None,
     ) -> str:
-        """Promote multiple unverified knowledge files in one governed commit."""
+        """Promote multiple unverified knowledge files in one governed commit.
+
+        Use this when several reviewed files should move together. Accepts either
+        a JSON array of repo-relative paths or a folder path to expand into a
+        flat batch. Missing target sections in knowledge/SUMMARY.md are
+        auto-created with default entries so routine promotion work stays
+        atomic.
+
+        Prefer memory_promote_knowledge_subtree when the source is a nested topic
+        tree whose internal subfolders should be preserved.
+        """
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import (
-            infer_section_id_from_path,
-            insert_entry_in_section,
             read_with_frontmatter,
-            remove_entry_from_section,
             today_str,
             write_with_frontmatter,
         )
@@ -305,33 +402,25 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             files_changed.extend([source_path, target_path])
             promoted_files.append(filename)
 
-            source_section_id = infer_section_id_from_path(source_path)
             if source_summary_content is not None:
-                updated_source = remove_entry_from_section(
-                    source_summary_content, source_section_id, filename
+                source_summary_content = _update_source_summary_after_promotion(
+                    source_summary_content,
+                    source_summary_path,
+                    source_path,
+                    filename,
+                    warnings,
                 )
-                if updated_source is None:
-                    warnings.append(
-                        f"Section '<!-- section: {source_section_id} -->' not found in {source_summary_path}."
-                    )
-                else:
-                    source_summary_content = _prune_empty_summary_section(
-                        updated_source, source_section_id
-                    )
 
             if target_summary_content is not None:
-                target_section_id = infer_section_id_from_path(target_path)
-                title = fm_dict.get("title", filename.replace(".md", "").replace("-", " ").title())
-                entry = f"- **[{filename}]({target_path})** — {title}"
-                updated_target = insert_entry_in_section(
-                    target_summary_content, target_section_id, entry
+                target_summary_content = _update_target_summary_after_promotion(
+                    target_summary_content,
+                    target_summary_path,
+                    target_path,
+                    filename,
+                    fm_dict,
+                    warnings,
+                    allow_section_create=True,
                 )
-                if updated_target is None:
-                    warnings.append(
-                        f"Section '<!-- section: {target_section_id} -->' not found in {target_summary_path}. Entry not added — add manually."
-                    )
-                else:
-                    target_summary_content = updated_target
 
         summary_updates: list[str] = []
         if source_summary_content is not None and abs_source_summary.exists():
@@ -372,13 +461,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     @mcp.tool(
         name="memory_promote_knowledge_subtree",
-        annotations=_tool_annotations(
-            title="Promote Knowledge Subtree",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
+        annotations=_governed_knowledge_annotations(_PROMOTE_SUBTREE_META),
     )
     async def memory_promote_knowledge_subtree(
         source_folder: str,
@@ -387,12 +470,19 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         reason: str = "",
         dry_run: bool = False,
     ) -> str:
-        """Promote an entire unverified knowledge subtree in one governed commit."""
+        """Promote an entire unverified knowledge subtree in one governed commit.
+
+        Use this when a full topic tree should move together and nested paths
+        must be preserved. The tool validates the whole subtree before moving
+        anything, supports dry-run previews, and auto-creates missing target
+        sections in knowledge/SUMMARY.md with default entries.
+
+        Prefer this over memory_promote_knowledge_batch when the source is a
+        nested folder hierarchy rather than a flat batch.
+        """
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import (
-            infer_section_id_from_path,
             read_with_frontmatter,
-            remove_entry_from_section,
             today_str,
             write_with_frontmatter,
         )
@@ -535,31 +625,25 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             files_changed.extend([source_path, target_path])
             promoted_files.append(filename)
 
-            source_section_id = infer_section_id_from_path(source_path)
             if source_summary_content is not None:
-                updated_source = remove_entry_from_section(
-                    source_summary_content, source_section_id, filename
+                source_summary_content = _update_source_summary_after_promotion(
+                    source_summary_content,
+                    source_summary_path,
+                    source_path,
+                    filename,
+                    warnings,
                 )
-                if updated_source is None:
-                    warnings.append(
-                        f"Section '<!-- section: {source_section_id} -->' not found in {source_summary_path}."
-                    )
-                else:
-                    source_summary_content = _prune_empty_summary_section(
-                        updated_source, source_section_id
-                    )
 
             if target_summary_content is not None:
-                target_section_id = infer_section_id_from_path(target_path)
-                entry = _default_summary_entry(filename, target_path, fm_dict)
-                updated_target, _ = _update_summary_with_entry(
+                target_summary_content = _update_target_summary_after_promotion(
                     target_summary_content,
-                    target_section_id,
-                    entry,
+                    target_summary_path,
+                    target_path,
+                    filename,
+                    fm_dict,
+                    warnings,
                     allow_section_create=True,
                 )
-                if updated_target is not None:
-                    target_summary_content = updated_target
 
         summary_updates: list[str] = []
         if source_summary_content is not None and abs_source_summary.exists():
@@ -604,13 +688,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     @mcp.tool(
         name="memory_promote_knowledge",
-        annotations=_tool_annotations(
-            title="Promote Knowledge File to Verified",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
+        annotations=_governed_knowledge_annotations(_PROMOTE_SINGLE_META),
     )
     async def memory_promote_knowledge(
         source_path: str,
@@ -619,10 +697,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         summary_entry: str | None = None,
         version_token: str | None = None,
     ) -> str:
-        """Move a file from knowledge/_unverified/ to knowledge/, updating trust.
+        """Move one file from knowledge/_unverified/ to knowledge/, updating trust.
 
-        When summary_entry is provided, knowledge/SUMMARY.md is auto-updated even
-        if the target section is missing: a stub section is appended and the entry
+        Use this for one-off promotions after a review decision. When
+        summary_entry is provided, knowledge/SUMMARY.md is auto-updated even if
+        the target section is missing: a stub section is appended and the entry
         is inserted there. Without summary_entry, missing target sections still
         produce a warning so callers can repair SUMMARY.md manually.
 
@@ -632,9 +711,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import (
             infer_section_id_from_path,
-            insert_entry_in_section,
             read_with_frontmatter,
-            remove_entry_from_section,
             today_str,
             write_with_frontmatter,
         )
@@ -677,45 +754,39 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         files_changed = [source_path, target_path]
 
         filename = Path(source_path).name
-        section_id = infer_section_id_from_path(source_path)
 
         source_summary_path = "knowledge/_unverified/SUMMARY.md"
         abs_src_summary = root / source_summary_path
         if abs_src_summary.exists():
             src_summary = abs_src_summary.read_text(encoding="utf-8")
-            updated = remove_entry_from_section(src_summary, section_id, filename)
-            if updated is None:
-                warnings.append(
-                    f"Section '<!-- section: {section_id} -->' not found in "
-                    f"{source_summary_path}. Entry not removed."
-                )
-            else:
-                abs_src_summary.write_text(updated, encoding="utf-8")
-                repo.add(source_summary_path)
-                files_changed.append(source_summary_path)
+            updated = _update_source_summary_after_promotion(
+                src_summary,
+                source_summary_path,
+                source_path,
+                filename,
+                warnings,
+            )
+            abs_src_summary.write_text(updated, encoding="utf-8")
+            repo.add(source_summary_path)
+            files_changed.append(source_summary_path)
 
-        target_section_id = infer_section_id_from_path(target_path)
         target_summary_path = "knowledge/SUMMARY.md"
         abs_tgt_summary = root / target_summary_path
         if abs_tgt_summary.exists():
             tgt_summary = abs_tgt_summary.read_text(encoding="utf-8")
-            title = fm_dict.get("title", filename.replace(".md", "").replace("-", " ").title())
-            entry = summary_entry or f"- **[{filename}]({target_path})** — {title}"
-            updated, created_section = _update_summary_with_entry(
+            updated = _update_target_summary_after_promotion(
                 tgt_summary,
-                target_section_id,
-                entry,
+                target_summary_path,
+                target_path,
+                filename,
+                fm_dict,
+                warnings,
+                summary_entry=summary_entry,
                 allow_section_create=summary_entry is not None,
             )
-            if updated is None:
-                warnings.append(
-                    f"Section '<!-- section: {target_section_id} -->' not found in "
-                    f"{target_summary_path}. Entry not added — add manually."
-                )
-            else:
-                abs_tgt_summary.write_text(updated, encoding="utf-8")
-                repo.add(target_summary_path)
-                files_changed.append(target_summary_path)
+            abs_tgt_summary.write_text(updated, encoding="utf-8")
+            repo.add(target_summary_path)
+            files_changed.append(target_summary_path)
 
         subject = infer_section_id_from_path(target_path)
         commit_msg = f"[curation] Promote {filename} to knowledge/{subject}/ (trust: {trust_level})"
@@ -732,20 +803,19 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     @mcp.tool(
         name="memory_demote_knowledge",
-        annotations=_tool_annotations(
-            title="Demote Knowledge File to Unverified",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
+        annotations=_governed_knowledge_annotations(_DEMOTE_META),
     )
     async def memory_demote_knowledge(
         source_path: str,
         reason: str | None = None,
         version_token: str | None = None,
     ) -> str:
-        """Move a verified knowledge file back to _unverified/ with trust: low."""
+        """Move a verified knowledge file back to _unverified/ with trust: low.
+
+        Use this when a promoted file should re-enter the review queue. Prefer
+        memory_archive_knowledge when the file should leave active review rather
+        than be reconsidered.
+        """
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import (
             infer_section_id_from_path,
@@ -835,20 +905,19 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     @mcp.tool(
         name="memory_archive_knowledge",
-        annotations=_tool_annotations(
-            title="Archive Knowledge File",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
+        annotations=_governed_knowledge_annotations(_ARCHIVE_META),
     )
     async def memory_archive_knowledge(
         source_path: str,
         reason: str | None = None,
         version_token: str | None = None,
     ) -> str:
-        """Move a knowledge file to knowledge/_archive/ and mark it archived."""
+        """Move a knowledge file to knowledge/_archive/ and mark it archived.
+
+        Use this when content should leave the active retrieval path without
+        being deleted from git history. Prefer demotion if the file still needs
+        active review.
+        """
         from ...errors import NotFoundError
         from ...frontmatter_utils import (
             infer_section_id_from_path,
@@ -923,13 +992,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     @mcp.tool(
         name="memory_add_knowledge_file",
-        annotations=_tool_annotations(
-            title="Add Knowledge File to Unverified",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
+        annotations=_governed_knowledge_annotations(_ADD_META),
     )
     async def memory_add_knowledge_file(
         path: str,
@@ -939,7 +1002,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         trust: str = "low",
         summary_entry: str | None = None,
     ) -> str:
-        """Create a new knowledge file with correct frontmatter and SUMMARY entry."""
+        """Create a new unverified knowledge file with frontmatter and SUMMARY entry.
+
+        Use this for new material that has not yet been explicitly reviewed.
+        The file is always written under knowledge/_unverified and indexed in
+        the unverified summary when possible. Use a promotion tool only after
+        review.
+        """
         from ...errors import ValidationError
         from ...frontmatter_utils import (
             infer_section_id_from_path,

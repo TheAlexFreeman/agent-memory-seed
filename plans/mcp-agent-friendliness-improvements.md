@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Phase 1: unify promotion-path summary behavior and extract shared governed-operation metadata.'
+next_action: 'Phase 2: implement memory_route_intent and memory_get_policy_state using the manifest and authoritative governance surfaces.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -79,11 +79,11 @@ Write focused tests for missing-section creation, consistent warnings, and ident
 If any contract mismatches cannot be closed in this phase, add them to the plan notes with file-level follow-up targets rather than leaving them implicit.
 
 Checklist:
-- [ ] 1.1 Refactor shared summary-update helper for all promotion variants
-- [ ] 1.2 Introduce shared governed-operation metadata model
-- [ ] 1.3 Improve docstring disambiguation on high-traffic semantic tools
-- [ ] 1.4 Add regression tests for promotion-path parity
-- [ ] 1.5 Document any deferred contract mismatches
+- [x] 1.1 Refactor shared summary-update helper for all promotion variants
+- [x] 1.2 Introduce shared governed-operation metadata model
+- [x] 1.3 Improve docstring disambiguation on high-traffic semantic tools
+- [x] 1.4 Add regression tests for promotion-path parity
+- [x] 1.5 Document any deferred contract mismatches
 
 ---
 
@@ -285,7 +285,7 @@ Checklist:
 - [ ] 7.3 Implement structured large-file extraction tool
 - [ ] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 0/31 items complete
+**Progress:** 5/31 items complete
 
 ---
 
@@ -317,3 +317,4 @@ Checklist:
 - 2026-03-20: Plan created after the architecture/governance review identified four immediate findings and seven concrete improvement tracks. Priority is weighted toward reducing agent reasoning overhead, not maximizing the number of new primitives.
 - 2026-03-20: Phase 1 intentionally starts with a small parity fix because the current promotion inconsistency is both real and easy to regress if higher-level routing or preview work lands first.
 - 2026-03-20: Resources/prompts and dynamic profiles are explicitly downstream of contract unification because they should expose a stable semantic model rather than locking in current inconsistencies.
+- 2026-03-20: Completed Phase 1. Promotion paths now share summary-update helpers, batch promotion auto-creates missing target sections like the single/subtree paths, high-traffic knowledge-tool docstrings now disambiguate when to use each operation, and focused regression coverage locks in the parity behavior. No additional Phase 1 contract mismatches were left open.

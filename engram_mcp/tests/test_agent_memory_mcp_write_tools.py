@@ -601,6 +601,54 @@ origin_session: manual
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
         self.assertIn("knowledge/literature/test-note.md", verified_summary)
 
+    def test_promote_knowledge_batch_creates_missing_target_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mathematics/test-note.md": """---
+title: Test Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Test Note
+""",
+                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+
+<!-- section: mathematics -->
+### Mathematics
+- **[test-note.md](knowledge/_unverified/mathematics/test-note.md)** — Test Note
+
+---
+""",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: literature -->
+### Literature
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_batch"](
+                    source_paths='["knowledge/_unverified/mathematics/test-note.md"]',
+                    trust_level="high",
+                )
+            )
+        )
+
+        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["warnings"], [])
+        self.assertIn("<!-- section: mathematics -->", verified_summary)
+        self.assertIn("### Mathematics", verified_summary)
+        self.assertIn("knowledge/mathematics/test-note.md", verified_summary)
+
     def test_promote_knowledge_batch_folder_expansion_promotes_multiple_files(self) -> None:
         repo_root = self._init_repo(
             {
@@ -880,6 +928,55 @@ origin_session: manual
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
         self.assertIn("knowledge/tooling/a-note.md", verified_summary)
         self.assertIn("knowledge/tooling/nested/b-note.md", verified_summary)
+
+    def test_promote_knowledge_subtree_creates_missing_target_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mcp/a-note.md": """---
+title: A Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# A Note
+""",
+                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+
+<!-- section: mcp -->
+### MCP
+- **[a-note.md](knowledge/_unverified/mcp/a-note.md)** — A Note
+
+---
+""",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: literature -->
+### Literature
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_subtree"](
+                    source_folder="knowledge/_unverified/mcp",
+                    dest_folder="knowledge/tooling",
+                    trust_level="high",
+                )
+            )
+        )
+
+        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["warnings"], [])
+        self.assertIn("<!-- section: tooling -->", verified_summary)
+        self.assertIn("### Tooling", verified_summary)
+        self.assertIn("knowledge/tooling/a-note.md", verified_summary)
 
     def test_memory_mark_reviewed_appends_jsonl_entry(self) -> None:
         repo_root = self._init_repo(
