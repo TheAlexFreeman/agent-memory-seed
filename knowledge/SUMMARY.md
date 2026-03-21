@@ -237,4 +237,35 @@ _No access data yet._ After aggregation, this section will contain:
 - **[epistemic-virtues-vices-communities.md](knowledge/social-science/social-epistemology/epistemic-virtues-vices-communities.md)** — Collective epistemic virtues (humility, courage, open-mindedness) and vices (arrogance, cowardice, closed-mindedness); institutional design for virtue
 - **[social-epistemology-synthesis.md](knowledge/social-science/social-epistemology/social-epistemology-synthesis.md)** — Synthesis: reliable knowledge communities; decoupling social diffusion from epistemic reliability; Engram as community of inquiry
 
+<!-- section: rationalist-community -->
+### Rationalist Community
+- **[corrigibility-shutdown-problem-value-loading.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/corrigibility-shutdown-problem-value-loading.md)** — Corrigibility Shutdown Problem Value Loading
+- **[deceptive-alignment-mesa-optimization.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/deceptive-alignment-mesa-optimization.md)** — Deceptive Alignment Mesa Optimization
+- **[goodharts-law-reward-hacking-alignment-tax.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/goodharts-law-reward-hacking-alignment-tax.md)** — Goodharts Law Reward Hacking Alignment Tax
+- **[inner-alignment-as-behavioral-reliability.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/inner-alignment-as-behavioral-reliability.md)** — Inner Alignment As Behavioral Reliability
+- **[intelligence-explosion-foom-recursive-self-improvement.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/intelligence-explosion-foom-recursive-self-improvement.md)** — Intelligence Explosion Foom Recursive Self Improvement
+- **[orthogonality-thesis-instrumental-convergence.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/orthogonality-thesis-instrumental-convergence.md)** — Orthogonality Thesis Instrumental Convergence
+- **[value-alignment-as-ongoing-process.md](knowledge/rationalist-community/ai-discourse/canonical-ideas/value-alignment-as-ongoing-process.md)** — Value Alignment As Ongoing Process
+- **[concept-migration-rlhf-constitutional-ai-evals.md](knowledge/rationalist-community/ai-discourse/industry-influence/concept-migration-rlhf-constitutional-ai-evals.md)** — Concept Migration Rlhf Constitutional Ai Evals
+- **[personnel-and-intellectual-migration.md](knowledge/rationalist-community/ai-discourse/industry-influence/personnel-and-intellectual-migration.md)** — Personnel And Intellectual Migration
+- **[policy-and-overton-shift.md](knowledge/rationalist-community/ai-discourse/industry-influence/policy-and-overton-shift.md)** — Policy And Overton Shift
+- **[doom-discourse-and-p-doom.md](knowledge/rationalist-community/ai-discourse/post-llm-adaptation/doom-discourse-and-p-doom.md)** — Doom Discourse And P Doom
+- **[from-agent-foundations-to-empirical-alignment.md](knowledge/rationalist-community/ai-discourse/post-llm-adaptation/from-agent-foundations-to-empirical-alignment.md)** — From Agent Foundations To Empirical Alignment
+- **[rationalist-adjacent-labs-and-organizations.md](knowledge/rationalist-community/ai-discourse/post-llm-adaptation/rationalist-adjacent-labs-and-organizations.md)** — Rationalist Adjacent Labs And Organizations
+- **[commercial-deployment-dynamics.md](knowledge/rationalist-community/ai-discourse/prediction-failures/commercial-deployment-dynamics.md)** — Commercial Deployment Dynamics
+- **[language-not-search.md](knowledge/rationalist-community/ai-discourse/prediction-failures/language-not-search.md)** — Language Not Search
+- **[timeline-calibration-and-paradigm-surprise.md](knowledge/rationalist-community/ai-discourse/prediction-failures/timeline-calibration-and-paradigm-surprise.md)** — Timeline Calibration And Paradigm Surprise
+- **[rationalist-ai-discourse-assessment.md](knowledge/rationalist-community/ai-discourse/synthesis/rationalist-ai-discourse-assessment.md)** — Rationalist Ai Discourse Assessment
+- **[lesswrong-community-formation-and-core-norms.md](knowledge/rationalist-community/community/lesswrong-community-formation-and-core-norms.md)** — Lesswrong Community Formation And Core Norms
+- **[meetups-workshops-hpmor-and-lived-rationality.md](knowledge/rationalist-community/community/meetups-workshops-hpmor-and-lived-rationality.md)** — Meetups Workshops Hpmor And Lived Rationality
+- **[gwern-and-the-rationalist-research-ethos.md](knowledge/rationalist-community/figures/gwern-and-the-rationalist-research-ethos.md)** — Gwern And The Rationalist Research Ethos
+- **[scott-alexander-and-the-broadening-of-rationalism.md](knowledge/rationalist-community/figures/scott-alexander-and-the-broadening-of-rationalism.md)** — Scott Alexander And The Broadening Of Rationalism
+- **[miri-cfar-and-institutional-rationality.md](knowledge/rationalist-community/institutions/miri-cfar-and-institutional-rationality.md)** — Miri Cfar And Institutional Rationality
+- **[academic-and-online-prehistory.md](knowledge/rationalist-community/origins/academic-and-online-prehistory.md)** — Academic And Online Prehistory
+- **[eliezer-yudkowsky-intellectual-biography.md](knowledge/rationalist-community/origins/eliezer-yudkowsky-intellectual-biography.md)** — Eliezer Yudkowsky Intellectual Biography
+- **[heuristics-biases-bayes-and-bounded-rationality.md](knowledge/rationalist-community/origins/heuristics-biases-bayes-and-bounded-rationality.md)** — Heuristics Biases Bayes And Bounded Rationality
+- **[robin-hanson-overcoming-bias-and-the-founding-split.md](knowledge/rationalist-community/origins/robin-hanson-overcoming-bias-and-the-founding-split.md)** — Robin Hanson Overcoming Bias And The Founding Split
+- **[the-sequences-core-arguments.md](knowledge/rationalist-community/origins/the-sequences-core-arguments.md)** — The Sequences Core Arguments
+- **[rationalist-community-story-aims-and-tensions.md](knowledge/rationalist-community/synthesis/rationalist-community-story-aims-and-tensions.md)** — Rationalist Community Story Aims And Tensions
+
 ---
