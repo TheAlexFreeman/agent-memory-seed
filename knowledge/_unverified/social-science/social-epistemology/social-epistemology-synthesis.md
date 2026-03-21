@@ -94,7 +94,7 @@ The Engram system is an applied social-epistemic project at the personal-AI leve
 
 **Hutchins' challenge:** Is Engram well-designed as a distributed cognitive system? The system has: a SUMMARY (navigation hub), cross-references (redundant retrieval paths), trust levels (reliability indicators), and access logs (reliability-of-use tracking). Design improvements: richer interlinking across distant domains, better representation of uncertainty and contested status.
 
-**Virtue challenge:** Does Engram exhibit collective epistemic virtue? 
+**Virtue challenge:** Does Engram exhibit collective epistemic virtue?
 - *Intellectual humility:* Yes — trust: low for all generated content; explicit uncertainty flagging.
 - *Open-mindedness:* Partially — the social science expansion deliberately includes critical perspectives, but the selection process reflects the generating agent's training distribution.
 - *Epistemic courage:* To be tested — does the system include heterodox, uncomfortable, or contested positions even when they're epistemically important?
