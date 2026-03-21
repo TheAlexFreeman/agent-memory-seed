@@ -12,76 +12,12 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Research plans
 
-### `software-testing-validation-research.md` · status: active · trust: medium · **TOP PRIORITY**
-
-Detail: plans/software-testing-validation-research.md
-Scope: Testing epistemology (oracle problem, Dijkstra impossibility), unit testing (FIRST, test doubles, TDD/BDD), black-box and white-box design techniques, mutation testing, property-based testing, integration/system/acceptance testing, performance and load testing, software QA process and metrics, formal verification (Hoare logic, model checking, abstract interpretation), ML evaluation methodology, and behavioral testing/red-teaming for AI systems.
-Progress: 0/14 — not yet started.
-Next: Begin Phase 1 — Testing foundations and unit testing. Output goes to `knowledge/software-engineering/testing/`.
-
-
-### `relevance-realization-research.md` · status: **complete** · trust: medium
-
-13/13 ✓ COMPLETE. Gestalt/frame-problem antecedents, opponent-processing theory, four kinds of knowing, aptitudes of intelligence, insight (behavioral/neural/mechanism), rationality (theoretical/practical/ecological), wisdom (philosophical traditions + empirical research), meaning crisis/psychotechnologies, synthesis + AI implications. 13 knowledge files in `knowledge/cognitive-science/relevance-realization/`.
-
-
-### `cognitive-attention-executive-function-research.md` · status: **complete** · trust: medium
-
-11/11 ✓ COMPLETE. Attention selection models, attentional bottleneck/blink, FIT, dual-process, executive functions (Miyake), CLT, vigilance, mind-wandering, transformer comparison, synthesis. 11 knowledge files in `knowledge/cognitive-science/attention/`.
-
-
-### `cognitive-metacognition-calibration-research.md` · status: **complete** · trust: medium
-
-10/10 ✓ COMPLETE. Nelson-Narens monitoring/control, FOK/JOL/TOT, calibration/overconfidence/hard-easy, Dunning-Kruger, illusion of knowing, source monitoring, metacognitive control of learning, conflict monitoring, calibrated uncertainty communication, synthesis. 10 knowledge files in `knowledge/cognitive-science/metacognition/`.
-
-
-### `cognitive-concepts-categorization-research.md` · status: **complete** · trust: medium
-
-12/12 ✓ COMPLETE. Classical theory failures, prototype theory, exemplar theory/GCM, theory-theory, Gärdenfors conceptual spaces, embodied/grounded cognition, structural alignment/analogy, conceptual change, ACT* knowledge compilation, basic level categories, conceptual hygiene, synthesis. 12 knowledge files in `knowledge/cognitive-science/concepts/`.
-
-
-### `information-theory-stat-learning-research.md` · status: complete · trust: medium · **COMPLETE**
-
-Detail: plans/information-theory-stat-learning-research.md
-Scope: Shannon information theory, rate-distortion, MDL, PAC learning, VC dimension, modern generalization theory — mathematical substrate for the compression-intelligence thesis.
-Progress: 12/12 ✓ COMPLETE
-Next: Human review of knowledge/_unverified/mathematics/information-theory/ files recommended.
-
-
-### `cultural-evolution-epistemics-research.md` · status: complete · trust: medium · **COMPLETE**
-
-Detail: plans/cultural-evolution-epistemics-research.md
-Scope: Memetic propagation, cultural evolution, epistemic norms — natural companion to memetic-security and cognitive-neuroscience research.
-Progress: 12/12 ✓ COMPLETE
-Next: Human review of knowledge/_unverified/social-science/cultural-evolution/ files recommended.
-
-
-### `ai-frontier-research.md` · status: active · trust: medium
-
-Detail: plans/ai-frontier-research.md
-Scope: Frontier AI survey — reasoning, alignment, interpretability, multi-agent, retrieval/memory, architectures.
-Progress: All 7 phases + Phase 2 infrastructure extension + Phase 3 retrieval extension complete (25/25 base + 9 extension items). Phase 3 extension: ColPali, late chunking, agentic RAG patterns, HyDE, reranking (5 files added to `retrieval-memory/`).
-Next: No active items. Archive when reviewed, or add further extension phases.
-
-
-### Research queue
-
-Ordered by priority. Rationale: Tier 1 plans directly inform Engram's design (cognitive-neuroscience grounds curation/retrieval, cultural-evolution extends memetic-security insights). Tier 2 builds core intellectual infrastructure. Tier 3 is important but less immediately actionable.
-
-**Tier 1 — System-Relevant**
-- *(All original Tier 1 plans complete.)*
-
-**Tier 2 — Core Intellectual Infrastructure** ← **CURRENT PRIORITY**
-- `formal-logic-foundations-research.md` — 11/11 ✓ COMPLETE. Underpins reasoning capability analysis; connects to interpretability, incompleteness results, and AI limits.
-- `phenomenology-embodied-cognition-research.md` — 12/12 ✓ COMPLETE. Husserl → Heidegger → Merleau-Ponty → 4E cognition → grounding/synthesis; grounds the embodiment critique and LLM limitations analysis.
-
-**Tier 3 — Rich but Lower Urgency** ← **CURRENT PRIORITY**
-- `personal-identity-memory-research.md` — 12/12 ✓ COMPLETE. Locke → Hume → four-dimensionalism → Parfit → Ricoeur → MacIntyre → Schechtman → AI identity synthesis/failure modes/design recommendations.
-- `ethics-metaethics-research.md` — 13/13 ✓ COMPLETE. Classical frameworks (utilitarianism, Kantian deontology, virtue ethics, contractualism), Parfit's *Reasons and Persons* (self-defeating theories, consequentialism, population ethics, collective action), metaethics (moral realism, anti-realism/expressivism, moral epistemology), applied AI ethics (moral status/welfare, responsibility attribution, algorithmic fairness).
-- `game-theory-mechanism-design-research.md` — 12/12 ✓ COMPLETE. Normal-form games/Nash, Prisoner's Dilemma/coordination, extensive-form/backward induction, evolutionary game theory, evolution of cooperation (Axelrod), mechanism design/revelation principle, VCG mechanisms, matching markets (Gale-Shapley/Roth), Arrow's impossibility theorem, voting rules/Gibbard-Satterthwaite, costly signaling (Spence), cheap talk (Crawford-Sobel).
+- *(No active research plans. See recent completions below.)*
 
 ## Recent completions
 
+- [software-testing-validation-research.md](software-testing-validation-research.md) — completed 2026-03-20; 14/14 items across 5 phases (testing foundations/epistemology, unit testing/TDD/BDD, black-box and white-box design/mutation/property-based testing, integration/system/acceptance/performance testing, formal verification/AI-ML evaluation/behavioral testing/red-teaming); 14 knowledge files in `knowledge/software-engineering/testing/`; pending human review.
+- [ai-frontier-research.md](ai-frontier-research.md) — completed (date unrecorded); 25/25 base + 9 extension items across 7 phases + Phase 2 infrastructure extension + Phase 3 retrieval extension (ColPali, late chunking, agentic RAG patterns, HyDE, reranking); knowledge files in `knowledge/ai/`; pending human review.
 - [relevance-realization-research.md](relevance-realization-research.md) — completed 2026-03-20; 13/13 items across 4 phases (Gestalt/frame-problem antecedents, opponent-processing/four-kinds-of-knowing/aptitudes-of-intelligence, insight behavioral/neural/mechanism, rationality/wisdom/meaning-crisis/synthesis); 13 knowledge files in `knowledge/cognitive-science/relevance-realization/`; pending human review.
 - [cognitive-concepts-categorization-research.md](cognitive-concepts-categorization-research.md) — completed 2026-03-20; 12/12 items across 3 phases (classical/prototype/exemplar/theory-theory, conceptual spaces/embodied cognition/analogy, conceptual change/compilation/hygiene/synthesis); 12 knowledge files in `knowledge/cognitive-science/concepts/`; pending human review.
 - [cognitive-metacognition-calibration-research.md](cognitive-metacognition-calibration-research.md) — completed 2026-03-20; 10/10 items across 3 phases (monitoring/control framework, calibration failure modes, learning control/communication/synthesis); 10 knowledge files in `knowledge/cognitive-science/metacognition/`; pending human review.
