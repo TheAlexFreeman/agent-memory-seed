@@ -2,7 +2,7 @@
 type: build
 category: build
 status: active
-next_action: Execute Phase 3 — define reorganization preview output and implement memory_reorganize_preview
+next_action: Execute Phase 4 — define governance and implement memory_reorganize_path
 last_verified: 2026-03-21
 trust: medium
 ---
@@ -165,10 +165,10 @@ memory_reorganize_preview(source: str, dest: str) -> str
 - Warnings when dest already has conflicting content
 
 **Checklist:**
-- [ ] 3.1 Define preview output schema
-- [ ] 3.2 Implement preview logic (reuse reference extractor)
-- [ ] 3.3 Implement and register `memory_reorganize_preview`
-- [ ] 3.4 Add tests
+- [x] 3.1 Define preview output schema
+- [x] 3.2 Implement preview logic (reuse reference extractor)
+- [x] 3.3 Implement and register `memory_reorganize_preview`
+- [x] 3.4 Add tests
 
 ---
 

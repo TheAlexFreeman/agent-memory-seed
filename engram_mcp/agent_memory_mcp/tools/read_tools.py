@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
-from .reference_extractor import find_references, validate_links
+from .reference_extractor import find_references, preview_reorganization, validate_links
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -3101,6 +3101,50 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_reorganize_preview
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_reorganize_preview",
+        annotations=_tool_annotations(
+            title="Preview Path Reorganization",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_reorganize_preview(source: str, dest: str) -> str:
+        """Preview the impact of moving a file or subtree to a new repository path."""
+        from ..errors import ValidationError
+
+        if not isinstance(source, str) or not source.strip():
+            raise ValidationError("source must be a non-empty string")
+        if not isinstance(dest, str) or not dest.strip():
+            raise ValidationError("dest must be a non-empty string")
+
+        root = get_root()
+        normalized_source = source.strip().replace("\\", "/").strip("/")
+        normalized_dest = dest.strip().replace("\\", "/").strip("/")
+        source_path = (root / normalized_source).resolve()
+        dest_path = (root / normalized_dest).resolve()
+
+        try:
+            source_path.relative_to(root)
+            dest_path.relative_to(root)
+        except ValueError as exc:
+            raise ValidationError("source and dest must stay within the repository root") from exc
+
+        if not source_path.exists():
+            return f"Error: Path not found: {source}"
+
+        dest_parent = dest_path.parent
+        if not dest_parent.exists():
+            raise ValidationError(f"destination parent does not exist: {dest_parent.relative_to(root).as_posix()}")
+
+        payload = preview_reorganization(root, normalized_source, normalized_dest)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_check_cross_references
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -5312,6 +5356,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_search": memory_search,
         "memory_find_references": memory_find_references,
         "memory_validate_links": memory_validate_links,
+        "memory_reorganize_preview": memory_reorganize_preview,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
         "memory_access_analytics": memory_access_analytics,

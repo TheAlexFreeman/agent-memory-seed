@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from posixpath import relpath as posix_relpath
 from typing import Any
 
 from ..frontmatter_utils import read_with_frontmatter
@@ -392,3 +393,134 @@ def validate_links(root: Path, scope: str = "") -> dict[str, Any]:
         result["truncated"] = True
         result["total_broken"] = len(broken)
     return result
+
+
+def _normalize_repo_path(path: str) -> str:
+    return path.strip().replace("\\", "/").strip("/")
+
+
+def _replace_path_prefix(path: str, source: str, dest: str) -> str:
+    if path == source:
+        return dest
+    return f"{dest}/{path[len(source) + 1:]}"
+
+
+def _source_descendants(root: Path, source: str) -> list[str]:
+    source_path = root / source
+    if source_path.is_file():
+        return [source]
+
+    descendants: list[str] = []
+    for child in sorted(source_path.rglob("*")):
+        if not child.is_file():
+            continue
+        try:
+            descendants.append(child.relative_to(root).as_posix())
+        except ValueError:
+            continue
+    return descendants
+
+
+def _is_repo_absolute_target(target: str) -> bool:
+    cleaned, _ = _split_target_and_anchor(target)
+    cleaned = cleaned.lstrip("/")
+    return any(cleaned.startswith(f"{prefix}/") for prefix in _GOVERNED_REFERENCE_ROOTS)
+
+
+def _rewrite_reference_target(from_path: str, target: str, new_resolved_path: str) -> str:
+    raw_path, anchor = _split_target_and_anchor(target)
+    if not raw_path:
+        return target
+
+    if target.strip().startswith("/"):
+        rewritten = f"/{new_resolved_path}"
+    elif _is_repo_absolute_target(target):
+        rewritten = new_resolved_path
+    else:
+        from_parent = Path(from_path).parent.as_posix()
+        rewritten = posix_relpath(new_resolved_path, start=from_parent or ".")
+    if anchor:
+        rewritten = f"{rewritten}#{anchor}"
+    return rewritten
+
+
+def _summary_targets_for_reorganization(source: str, dest: str) -> list[str]:
+    targets: set[str] = set()
+    for candidate in (source, dest):
+        parts = Path(candidate).parts
+        if not parts or parts[0] != "knowledge":
+            continue
+        targets.add("knowledge/SUMMARY.md")
+        parent = Path(candidate).parent.as_posix()
+        if parent and parent != "." and parent != "knowledge":
+            targets.add(f"{parent}/SUMMARY.md")
+    return sorted(targets)
+
+
+def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
+    normalized_source = _normalize_repo_path(source)
+    normalized_dest = _normalize_repo_path(dest)
+    files_to_move = _source_descendants(root, normalized_source)
+    file_moves = [
+        {
+            "source": path,
+            "dest": _replace_path_prefix(path, normalized_source, normalized_dest),
+        }
+        for path in files_to_move
+    ]
+
+    source_refs = find_references(root, normalized_source, include_body=True)
+    refs_by_file: dict[str, list[dict[str, Any]]] = {}
+    for match in source_refs:
+        resolved_path = match.get("resolved_path")
+        if not isinstance(resolved_path, str) or not (
+            resolved_path == normalized_source
+            or resolved_path.startswith(f"{normalized_source}/")
+        ):
+            continue
+        new_resolved_path = _replace_path_prefix(resolved_path, normalized_source, normalized_dest)
+        refs_by_file.setdefault(str(match["from_path"]), []).append(
+            {
+                "type": match["ref_type"],
+                "old": match["ref_value"],
+                "new": _rewrite_reference_target(
+                    str(match["from_path"]),
+                    str(match["ref_value"]),
+                    new_resolved_path,
+                ),
+                "resolved_old": resolved_path,
+                "resolved_new": new_resolved_path,
+                "line": match.get("line"),
+            }
+        )
+
+    files_with_references = [
+        {
+            "path": from_path,
+            "refs": refs,
+        }
+        for from_path, refs in sorted(refs_by_file.items())
+    ]
+
+    warnings: list[str] = []
+    dest_path = root / normalized_dest
+    if dest_path.exists() and normalized_dest != normalized_source:
+        warnings.append(f"Destination already exists: {normalized_dest}")
+    for move in file_moves:
+        if move["source"] == move["dest"]:
+            continue
+        if (root / move["dest"]).exists():
+            warnings.append(f"Destination conflict: {move['dest']}")
+
+    return {
+        "source": normalized_source,
+        "dest": normalized_dest,
+        "files_to_move": files_to_move,
+        "file_moves": file_moves,
+        "files_with_references": files_with_references,
+        "summary_updates": _summary_targets_for_reorganization(
+            normalized_source,
+            normalized_dest,
+        ),
+        "warnings": sorted(set(warnings)),
+    }

@@ -1862,6 +1862,81 @@ See [topic](../knowledge/topic/target.md).
         self.assertEqual(payload["ok_count"], 2)
         self.assertEqual(payload["broken"], [])
 
+    def test_memory_reorganize_preview_includes_moves_reference_updates_and_summary_targets(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai-frontier/alignment/beta.md": "# Beta\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+                "plans/reorg.md": """---
+related:
+  - knowledge/ai-frontier/alpha.md
+---
+
+# Reorg
+
+See [alpha](../knowledge/ai-frontier/alpha.md).
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_reorganize_preview"](
+                    "knowledge/ai-frontier",
+                    "knowledge/ai/frontier",
+                )
+            )
+        )
+
+        self.assertEqual(payload["source"], "knowledge/ai-frontier")
+        self.assertEqual(payload["dest"], "knowledge/ai/frontier")
+        self.assertEqual(
+            payload["files_to_move"],
+            [
+                "knowledge/ai-frontier/alignment/beta.md",
+                "knowledge/ai-frontier/alpha.md",
+            ],
+        )
+        self.assertEqual(
+            payload["summary_updates"],
+            ["knowledge/SUMMARY.md", "knowledge/ai/SUMMARY.md"],
+        )
+        self.assertEqual(payload["warnings"], [])
+        self.assertEqual(len(payload["files_with_references"]), 1)
+        refs = payload["files_with_references"][0]["refs"]
+        self.assertEqual(payload["files_with_references"][0]["path"], "plans/reorg.md")
+        self.assertEqual(
+            {(ref["old"], ref["new"]) for ref in refs},
+            {
+                ("knowledge/ai-frontier/alpha.md", "knowledge/ai/frontier/alpha.md"),
+                ("../knowledge/ai-frontier/alpha.md", "../knowledge/ai/frontier/alpha.md"),
+            },
+        )
+
+    def test_memory_reorganize_preview_warns_on_destination_conflicts(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai/frontier/alpha.md": "# Existing Alpha\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_reorganize_preview"](
+                    "knowledge/ai-frontier",
+                    "knowledge/ai/frontier",
+                )
+            )
+        )
+
+        self.assertIn("Destination already exists: knowledge/ai/frontier", payload["warnings"])
+        self.assertIn("Destination conflict: knowledge/ai/frontier/alpha.md", payload["warnings"])
+
     def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())
         tools = self._create_tools(repo_root)
