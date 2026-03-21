@@ -7,7 +7,7 @@ When local agent-memory MCP tools are available, prefer them for memory reads, s
 ## Current skills
 
 - **[onboarding.md](onboarding.md)** — First-session user onboarding. Guides the agent through an interactive discovery of the user's role, preferences, and working style. **One-time use:** self-archives after successful completion.
-- **[codebase-survey.md](codebase-survey.md)** — Systematic host-repo exploration for a new worktree-backed memory store. Use when `plans/codebase-survey.md` is active or when a codebase knowledge skeleton still contains template stubs.
+- **[codebase-survey.md](codebase-survey.md)** — Systematic host-repo exploration for a new worktree-backed memory store. Use when `projects/codebase-survey/SUMMARY.md` is active or when a codebase knowledge skeleton still contains template stubs.
 - **[session-start.md](session-start.md)** — Session opener. Loads recent context, checks pending review items and maintenance triggers, greets the user with continuity.
 - **[session-sync.md](session-sync.md)** — Mid-session checkpoint. Captures decisions, open threads, and key artifacts without ending the session. Trigger: user says "sync" or "checkpoint".
 - **[session-wrapup.md](session-wrapup.md)** — Session closer. Writes chat summary, reflection note, ACCESS entries, and flags pending system maintenance. Produces deferred actions on read-only platforms.

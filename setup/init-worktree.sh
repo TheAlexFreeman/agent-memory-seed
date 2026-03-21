@@ -343,14 +343,14 @@ write_memory_stubs() {
         "$worktree_root/chats" \
         "$worktree_root/identity" \
         "$worktree_root/knowledge/_unverified" \
-        "$worktree_root/plans" \
+        "$worktree_root/projects/OUT" \
         "$worktree_root/scratchpad"
 
     write_empty_file "$worktree_root/chats/ACCESS.jsonl"
     write_empty_file "$worktree_root/identity/ACCESS.jsonl"
     write_empty_file "$worktree_root/knowledge/ACCESS.jsonl"
     write_empty_file "$worktree_root/knowledge/_unverified/ACCESS.jsonl"
-    write_empty_file "$worktree_root/plans/ACCESS.jsonl"
+    write_empty_file "$worktree_root/projects/ACCESS.jsonl"
 
     write_text_file "$worktree_root/chats/SUMMARY.md" "# Chats Summary
 
@@ -363,11 +363,18 @@ Add compact architecture notes here as the memory worktree learns the host proje
     write_text_file "$worktree_root/knowledge/_unverified/SUMMARY.md" "# Unverified Knowledge Summary
 
 Use this area for external research and unverified notes until they are reviewed."
-    write_text_file "$worktree_root/plans/SUMMARY.md" "# Plans — Summary
+    write_text_file "$worktree_root/projects/SUMMARY.md" "---
+type: projects-navigator
+generated: $TODAY 12:00
+project_count: 0
+---
 
-No active plans yet.
+# Projects
 
-Create a build or research plan when the host project needs multi-session tracking."
+_No active or ongoing projects._"
+    write_text_file "$worktree_root/projects/OUT/SUMMARY.md" "# Project Outbox
+
+_No shipped artifacts yet._"
     write_text_file "$worktree_root/scratchpad/CURRENT.md" "# Agent working notes
 
 _No current notes._"
@@ -386,7 +393,7 @@ chats/
 identity/
 knowledge/
 meta/
-plans/
+projects/
 scratchpad/
 skills/"
 
@@ -418,11 +425,61 @@ write_codebase_starters() {
 
     render_template_file \
         "$template_root/codebase-survey-plan.md" \
-        "$worktree_root/plans/codebase-survey.md" \
+        "$worktree_root/projects/codebase-survey/plans/survey-plan.md" \
         "$project_name" \
         "$host_root_native" \
         "$worktree_native" \
         "$branch_name"
+
+    mkdir -p \
+        "$worktree_root/projects/codebase-survey/IN" \
+        "$worktree_root/projects/codebase-survey/plans"
+
+    write_text_file "$worktree_root/projects/codebase-survey/SUMMARY.md" "---
+source: template
+origin_session: setup
+created: $TODAY
+trust: medium
+type: project
+status: active
+cognitive_mode: exploration
+open_questions: 0
+active_plans: 1
+last_activity: $TODAY
+current_focus: \"Capture the architecture, interfaces, operations, and design rationale for $project_name.\"
+---
+
+# Project: Codebase Survey
+
+## Description
+Build a durable, codebase-specific map of $project_name so future sessions can orient quickly without re-reading the whole host repository.
+
+## Cognitive mode
+Exploration mode fits the initial survey: the goal is to discover stable structure, capture it compactly, and turn low-trust stubs into verified knowledge.
+
+## Artifact flow
+- IN/: temporary exploration notes, rough subsystem maps, and open questions that are not ready for durable promotion
+- OUT contributions: verified knowledge/codebase notes and any reusable operational guidance derived from the host repo
+
+## Notes
+Start from \
+\`plans/survey-plan.md\` and replace the template stubs under \
+\`knowledge/codebase/\` one by one."
+
+    write_text_file "$worktree_root/projects/codebase-survey/questions.md" "---
+type: questions
+next_question_id: 1
+---
+
+# Open Questions
+
+_None yet._
+
+---
+
+# Resolved Questions
+
+_None yet._"
 
     for template_path in "$template_root"/knowledge/codebase/*.md; do
         render_template_file \
@@ -441,32 +498,17 @@ Starter codebase notes for $project_name live under [codebase/SUMMARY.md](codeba
 Begin with [codebase/architecture.md](codebase/architecture.md), then fill the
 data model, operations, and design-rationale stubs as the survey plan advances."
 
-    write_text_file "$worktree_root/plans/SUMMARY.md" "# Plans — Summary
+    write_text_file "$worktree_root/projects/SUMMARY.md" "---
+type: projects-navigator
+generated: $TODAY 12:00
+project_count: 1
+---
 
-Compact returning-session view of multi-session work for this deployed memory worktree.
+# Projects
 
-## Active plans
-
-### Build plans
-
-<!-- BEGIN: codebase-survey -->
-### \`codebase-survey.md\` · status: active · trust: medium · **TOP PRIORITY**
-
-Detail: plans/codebase-survey.md
-Scope: Capture the architecture, interfaces, operations, and design rationale for $project_name.
-Progress: 0/12 complete
-Next: Phase 0, item 1 — identify the application entry points and boot sequence
-Blocks: none; survey templates are installed in knowledge/codebase/ and ready to fill.
-<!-- END: codebase-survey -->
-
-## Recent completions
-
-_None yet._
-
-## Usage notes
-
-- Keep this file compact: active plans, next actions, and drill-down links only.
-- Update the survey plan as knowledge/codebase/ stubs are replaced with verified notes."
+| Project | Status | Mode | Open Qs | Focus | Last activity |
+|---|---|---|---|---|---|
+| codebase-survey | active | exploration | 0 | Capture the architecture, interfaces, operations, and design rationale for $project_name. | $TODAY |"
 }
 
 update_bootstrap_file() {

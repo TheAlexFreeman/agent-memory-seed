@@ -10,7 +10,7 @@ trust: medium
 
 ## When to use this skill
 
-Use this skill when a worktree-backed memory store has just been initialized for a host repository, when `plans/codebase-survey.md` is active, or when the files under `knowledge/codebase/` still contain template placeholders.
+Use this skill when a worktree-backed memory store has just been initialized for a host repository, when `projects/codebase-survey/SUMMARY.md` is active, or when the files under `knowledge/codebase/` still contain template placeholders.
 
 When local agent-memory MCP tools are available, prefer them for reading plans, searching the worktree, checking freshness, and updating plan state. Fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 
@@ -18,7 +18,7 @@ When local agent-memory MCP tools are available, prefer them for reading plans, 
 
 ### 1. Start from the survey plan
 
-- Read `plans/codebase-survey.md` and identify the first unchecked item.
+- Read `projects/codebase-survey/plans/survey-plan.md` and identify the first unchecked item.
 - Confirm which knowledge file that item should update.
 - Keep the current pass narrow: finish one survey item before broadening scope.
 

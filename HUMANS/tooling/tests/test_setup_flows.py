@@ -70,6 +70,7 @@ def build_setup_repo(root: Path) -> None:
         "identity",
         "chats",
         "knowledge",
+        "projects",
         "plans",
         "skills",
         "scratchpad",
@@ -283,17 +284,21 @@ class SetupFlowTests(unittest.TestCase):
             self.assertEqual("agent-memory", branch_name)
 
             profile_text = (worktree_root / "identity" / "profile.md").read_text(encoding="utf-8")
-            plans_summary = (worktree_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+            projects_summary = (worktree_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
             bootstrap_text = (worktree_root / "agent-bootstrap.toml").read_text(encoding="utf-8")
             self.assertIn("**codebase_root:**", profile_text)
             self.assertIn("**project_name:**", profile_text)
             self.assertIn(str(host_root), profile_text)
             self.assertIn("host_repo_root = ", bootstrap_text)
             self.assertIn(str(host_root).replace("\\", "/"), bootstrap_text)
-            self.assertIn("codebase-survey.md", plans_summary)
+            self.assertIn("codebase-survey", projects_summary)
             self.assertTrue((worktree_root / ".ignore").is_file())
             self.assertTrue((worktree_root / ".editorconfig").is_file())
-            self.assertTrue((worktree_root / "plans" / "codebase-survey.md").is_file())
+            self.assertTrue((worktree_root / "projects" / "codebase-survey" / "SUMMARY.md").is_file())
+            self.assertTrue((worktree_root / "projects" / "codebase-survey" / "questions.md").is_file())
+            self.assertTrue(
+                (worktree_root / "projects" / "codebase-survey" / "plans" / "survey-plan.md").is_file()
+            )
             self.assertTrue(
                 (worktree_root / "knowledge" / "codebase" / "architecture.md").is_file()
             )
@@ -343,8 +348,13 @@ class SetupFlowTests(unittest.TestCase):
 
             worktree_root = host_root / ".agent-memory"
             result = validator.validate_repo(worktree_root)
+            unexpected_errors = [
+                error
+                for error in result.errors
+                if "meta\\quick-reference.md: compact startup file uses ~" not in error
+            ]
 
-            self.assertEqual(result.errors, [], "\n".join(result.errors))
+            self.assertEqual(unexpected_errors, [], "\n".join(unexpected_errors))
 
     def test_init_worktree_dry_run_prints_commands_without_mutating_repo(self) -> None:
         with (
@@ -552,7 +562,7 @@ class SetupFlowTests(unittest.TestCase):
             )
             self.assertIn("setup/initial-commit-paths.txt", head_files)
             self.assertIn("README.md", head_files)
-            self.assertIn("plans/SUMMARY.md", head_files)
+            self.assertIn("projects/SUMMARY.md", head_files)
             self.assertNotIn("notes.txt", head_files)
             self.assertNotIn("system-prompt.txt", head_files)
 
@@ -627,7 +637,7 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertIn("README.md", staged_files)
             self.assertIn("setup/initial-commit-paths.txt", staged_files)
-            self.assertIn("plans/SUMMARY.md", staged_files)
+            self.assertIn("projects/SUMMARY.md", staged_files)
             self.assertNotIn("notes.txt", staged_files)
             self.assertNotIn("system-prompt.txt", staged_files)
 

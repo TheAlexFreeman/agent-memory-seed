@@ -20,4 +20,4 @@ This directory holds durable notes about the host repository at `{{HOST_REPO_ROO
 
 - These files start as low-trust templates and should be replaced with verified notes as the survey plan advances.
 - Add `related` frontmatter as soon as a note is grounded in specific host-repo paths.
-- Use `plans/codebase-survey.md` to decide which stub to replace next.
+- Use `projects/codebase-survey/plans/survey-plan.md` to decide which stub to replace next.
