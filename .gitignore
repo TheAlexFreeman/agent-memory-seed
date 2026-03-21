@@ -14,9 +14,18 @@ Thumbs.db
 chatgpt-instructions.txt
 system-prompt.txt
 
+# Virtual environment
+.venv/
+
 # Python cache
 __pycache__/
 *.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Windows reserved name (accidental creation)
+nul
 
 # Do not ignore ACCESS.jsonl files — they are part of the system
 # Do not ignore any .md files — they are the system
