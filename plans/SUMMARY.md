@@ -8,6 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
+- [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, warning clarity, paths-only enum; Phase 1 next.
 - [checklist-app-architecture.md](checklist-app-architecture.md) — Django/React checklist tool for task management and progress tracking; Phase 1 next (Django scaffold + models).
 
 ### Research plans
@@ -86,3 +87,13 @@ Scope: Expand the mathematics knowledge base from 35 files (logic-foundations, g
 Progress: 0/0 complete
 Next: Execute Phase 1 (Dynamical Systems & Chaos): highest priority — Alex's stated primary framework for intelligence has no files in the knowledge base.
 <!-- END: mathematics-research-expansion -->
+
+---
+
+<!-- BEGIN: mcp-agent-discoverability-guidance -->
+### MCP Agent Discoverability and Guidance · status: draft · trust: medium
+Detail: plans/mcp-agent-discoverability-guidance.md
+Scope: Server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, workflow hints, warning clarity, paths-only enum. Friction identified during 2026-03-21 AI frontier promotion.
+Progress: 0/8 checklist items
+Next: Execute Phase 1 — Server name discovery note in quick-reference, tool description updates.
+<!-- END: mcp-agent-discoverability-guidance -->
