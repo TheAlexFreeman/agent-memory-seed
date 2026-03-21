@@ -1,10 +1,10 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 3 — add cheap full-path enumeration for unverified review, then polish non-actionable subtree warnings.'
+next_action: 'All planned phases complete.'
 origin_session: manual
 source: agent-generated
-status: active
+status: complete
 title: MCP Agent Discoverability and Guidance Improvements
 trust: medium
 type: implementation-plan
@@ -27,9 +27,8 @@ Already landed in the live MCP surface:
 - `memory_route_intent` already prefers subtree when the target is a directory and the intent contains nested-subtree wording.
 - The unverified-review prompt already tells callers when to use single-file, batch, or subtree promotion.
 
-Still missing or still broken:
-- `memory_prepare_unverified_review` still truncates by design and there is no cheap full-path enumeration mode.
-- subtree promotion warnings can still be clearer when the source summary lacks a matching section but the move succeeds.
+Remaining follow-up after implementation:
+- compact-startup budget pressure in `plans/SUMMARY.md` still exists but is outside this plan's scoped deliverables.
 
 Related knowledge-base review findings to keep in view but not expand scope around here:
 - Validator warnings show 51 unverified low-trust files and multiple legacy plan-frontmatter issues.
@@ -88,8 +87,8 @@ If subtree promotion succeeds and only the source summary section is absent, mak
 Repair the current type error and add regression coverage so periodic-review preparation remains a usable discoverability surface.
 
 Checklist:
-- [ ] 3.1 Add a full-path enumeration mode for unverified review
-- [ ] 3.2 Make subtree-promotion warnings clearly actionable or clearly ignorable
+- [x] 3.1 Add a full-path enumeration mode for unverified review
+- [x] 3.2 Make subtree-promotion warnings clearly actionable or clearly ignorable
 - [x] 3.3 Fix `memory_run_periodic_review` and add a regression test
 
 ---
@@ -101,6 +100,8 @@ Checklist:
 - Promotion-prep outputs distinguish flat batches from nested subtree moves.
 - Agents can cheaply enumerate all unverified candidate paths when manual selection is needed.
 - Periodic-review guidance tools return usable reports instead of runtime errors.
+
+Status: complete.
 
 ---
 

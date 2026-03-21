@@ -1073,6 +1073,44 @@ origin_session: manual
         self.assertIn("### Tooling", verified_summary)
         self.assertIn("knowledge/tooling/a-note.md", verified_summary)
 
+    def test_promote_knowledge_subtree_warns_missing_source_section_as_non_actionable(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mcp/a-note.md": """---
+title: A Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# A Note
+""",
+                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: tooling -->
+### Tooling
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_subtree"](
+                    source_folder="knowledge/_unverified/mcp",
+                    dest_folder="knowledge/tooling",
+                    trust_level="high",
+                )
+            )
+        )
+
+        self.assertEqual(payload["new_state"]["promoted_count"], 1)
+        self.assertIn("No action required", payload["warnings"][0])
+
     def test_memory_mark_reviewed_appends_jsonl_entry(self) -> None:
         repo_root = self._init_repo(
             {
@@ -1839,6 +1877,59 @@ delta epsilon zeta
         self.assertEqual(len(payload["selected_files"]), 1)
         self.assertTrue(payload["response_budget"]["files"]["truncated"])
         self.assertIn("single_file", payload["recommended_operations"])
+
+    def test_memory_prepare_unverified_review_paths_only_returns_full_path_list(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["meta/quick-reference.md"] = """# Quick Reference
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+"""
+        seed["knowledge/_unverified/topic/a.md"] = """---
+created: 2026-01-01
+source: test
+trust: low
+---
+
+# A
+"""
+        seed["knowledge/_unverified/topic/b.md"] = """---
+created: 2026-01-02
+source: test
+trust: low
+---
+
+# B
+"""
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_prepare_unverified_review"](
+                    folder_path="knowledge/_unverified/topic",
+                    max_files=1,
+                    max_extract_words=10,
+                    paths_only=True,
+                )
+            )
+        )
+
+        self.assertTrue(payload["paths_only"])
+        self.assertEqual(
+            payload["all_paths"],
+            [
+                "knowledge/_unverified/topic/a.md",
+                "knowledge/_unverified/topic/b.md",
+            ],
+        )
+        self.assertFalse(payload["response_budget"]["paths"]["truncated"])
 
     def test_memory_prepare_promotion_batch_returns_candidates_and_operation_hint(self) -> None:
         seed = self._policy_contract_seed_files()
