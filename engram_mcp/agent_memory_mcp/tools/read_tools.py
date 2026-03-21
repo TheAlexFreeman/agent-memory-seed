@@ -39,7 +39,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
-from .reference_extractor import find_references, preview_reorganization, validate_links
+from .reference_extractor import (
+    find_references,
+    preview_reorganization,
+    suggest_structure,
+    validate_links,
+)
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -3139,9 +3144,54 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         dest_parent = dest_path.parent
         if not dest_parent.exists():
-            raise ValidationError(f"destination parent does not exist: {dest_parent.relative_to(root).as_posix()}")
+            raise ValidationError(
+                f"destination parent does not exist: {dest_parent.relative_to(root).as_posix()}"
+            )
 
         payload = preview_reorganization(root, normalized_source, normalized_dest)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_suggest_structure
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_suggest_structure",
+        annotations=_tool_annotations(
+            title="Suggest Structure Improvements",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_suggest_structure(
+        folder_path: str = "",
+        heuristics: list[str] | None = None,
+    ) -> str:
+        """Suggest advisory structure improvements for the governed markdown tree."""
+        from ..errors import ValidationError
+
+        root = get_root()
+        requested_path = folder_path.strip().replace("\\", "/")
+        if requested_path:
+            scope_path = (root / requested_path).resolve()
+            try:
+                scope_path.relative_to(root)
+            except ValueError as exc:
+                raise ValidationError("folder_path must stay within the repository root") from exc
+            if not scope_path.exists():
+                return f"Error: Path not found: {folder_path}"
+
+        if heuristics is not None:
+            if not isinstance(heuristics, list) or not all(
+                isinstance(item, str) for item in heuristics
+            ):
+                raise ValidationError("heuristics must be a list of strings")
+
+        try:
+            payload = suggest_structure(root, requested_path, heuristics)
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
@@ -5357,6 +5407,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_find_references": memory_find_references,
         "memory_validate_links": memory_validate_links,
         "memory_reorganize_preview": memory_reorganize_preview,
+        "memory_suggest_structure": memory_suggest_structure,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
         "memory_access_analytics": memory_access_analytics,

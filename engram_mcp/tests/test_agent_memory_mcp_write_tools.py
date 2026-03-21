@@ -2032,6 +2032,74 @@ See [alpha](../alpha.md).
         self.assertTrue((repo_root / "knowledge/ai-frontier/alpha.md").exists())
         self.assertTrue((repo_root / "knowledge/ai/frontier/alpha.md").exists())
 
+    def test_memory_suggest_structure_detects_orphan_topics(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai/SUMMARY.md": "# AI\n\n- [overview](overview.md)\n",
+                "knowledge/ai/overview.md": "# Overview\n",
+                "knowledge/ai/lone-topic/note.md": "# Note\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_suggest_structure"]("knowledge/ai")))
+
+        self.assertEqual(payload["scope"], "knowledge/ai")
+        self.assertTrue(
+            any(
+                item["heuristic"] == "orphan_topics"
+                and "knowledge/ai/lone-topic" in item["affected_paths"]
+                for item in payload["suggestions"]
+            )
+        )
+
+    def test_memory_suggest_structure_detects_naming_inconsistency(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/topic.md": "# Topic\n",
+                "knowledge/ai/frontier/other.md": "# Other\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_suggest_structure"](
+                    "knowledge",
+                    heuristics=["naming_inconsistency"],
+                )
+            )
+        )
+
+        self.assertEqual(payload["heuristics"], ["naming_inconsistency"])
+        self.assertEqual(payload["total"], 1)
+        self.assertEqual(payload["suggestions"][0]["heuristic"], "naming_inconsistency")
+        self.assertEqual(
+            set(payload["suggestions"][0]["affected_paths"]),
+            {"knowledge/ai-frontier", "knowledge/ai/frontier"},
+        )
+
+    def test_memory_suggest_structure_returns_no_suggestions_for_consistent_layout(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai/SUMMARY.md": "# AI\n\n- [topic](topic.md)\n",
+                "knowledge/ai/topic.md": "# Topic\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_suggest_structure"](
+                    "knowledge/ai",
+                    heuristics=["orphan_topics", "naming_inconsistency", "summary_drift"],
+                )
+            )
+        )
+
+        self.assertEqual(payload["total"], 0)
+        self.assertEqual(payload["suggestions"], [])
+
     def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())
         tools = self._create_tools(repo_root)

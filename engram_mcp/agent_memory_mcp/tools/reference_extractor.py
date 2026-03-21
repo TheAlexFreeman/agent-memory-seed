@@ -14,6 +14,9 @@ _BODY_PATH_RE = re.compile(
     r"(?P<path>(?:\.\.?/|identity/|knowledge/|plans/|skills/|meta/)[^\s)\]>'\"]+)"
 )
 _HEADING_RE = re.compile(r"^#{1,6}\s+(?P<text>.+?)\s*$", re.MULTILINE)
+_STRUCTURE_HEURISTICS = frozenset(
+    {"orphan_topics", "deep_nesting", "naming_inconsistency", "summary_drift"}
+)
 
 
 def _normalize_for_match(value: str) -> str:
@@ -611,3 +614,213 @@ def plan_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
 
 def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
     return plan_reorganization(root, source, dest)
+
+
+def _folder_content_files(folder: Path) -> list[Path]:
+    return [
+        path
+        for path in sorted(folder.rglob("*.md"))
+        if path.is_file() and path.name != "SUMMARY.md"
+    ]
+
+
+def _summary_mentions_path(summary_text: str, rel_path: str) -> bool:
+    normalized = rel_path.replace("\\", "/")
+    name = Path(normalized).name
+    stem = Path(normalized).stem
+    folder_name = Path(normalized).parts[-2] if len(Path(normalized).parts) >= 2 else stem
+    candidates = {
+        normalized,
+        name,
+        stem,
+        folder_name,
+        f"({name})",
+        f"({normalized})",
+        f"({folder_name}/SUMMARY.md)",
+        f"({folder_name}/",
+    }
+    return any(candidate in summary_text for candidate in candidates)
+
+
+def _iter_governed_directories_in_scope(root: Path, scope: str = "") -> list[str]:
+    normalized_scope = _normalize_repo_path(scope)
+    if normalized_scope:
+        scope_path = root / normalized_scope
+        if not scope_path.exists() or not scope_path.is_dir():
+            return []
+        return [
+            path.relative_to(root).as_posix()
+            for path in sorted(scope_path.rglob("*"))
+            if path.is_dir()
+        ]
+
+    directories: list[str] = []
+    for folder in _GOVERNED_REFERENCE_ROOTS:
+        folder_path = root / folder
+        if not folder_path.is_dir():
+            continue
+        directories.append(folder)
+        directories.extend(
+            path.relative_to(root).as_posix()
+            for path in sorted(folder_path.rglob("*"))
+            if path.is_dir()
+        )
+    return directories
+
+
+def _orphan_topic_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    for rel_dir in _iter_governed_directories_in_scope(root, scope):
+        if not rel_dir.startswith("knowledge/"):
+            continue
+        abs_dir = root / rel_dir
+        content_files = _folder_content_files(abs_dir)
+        if not content_files or len(content_files) > 2:
+            continue
+        parent_summary = abs_dir.parent / "SUMMARY.md"
+        if not parent_summary.exists():
+            continue
+        parent_summary_rel = parent_summary.relative_to(root).as_posix()
+        summary_text = parent_summary.read_text(encoding="utf-8")
+        if _summary_mentions_path(summary_text, rel_dir):
+            continue
+        suggestions.append(
+            {
+                "heuristic": "orphan_topics",
+                "suggestion": f"Consider merging or summarizing {rel_dir}.",
+                "rationale": f"{rel_dir} has {len(content_files)} content file(s) and is not referenced from {parent_summary_rel}.",
+                "confidence": "medium",
+                "affected_paths": [rel_dir, parent_summary_rel],
+            }
+        )
+    return suggestions
+
+
+def _deep_nesting_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
+    for rel_path in _iter_governed_markdown_files_in_scope(root, scope):
+        if rel_path.endswith("SUMMARY.md"):
+            continue
+        parts = Path(rel_path).parts
+        if len(parts) < 6:
+            continue
+        parent = Path(rel_path).parent.as_posix()
+        if parent in seen_paths:
+            continue
+        seen_paths.add(parent)
+        suggestions.append(
+            {
+                "heuristic": "deep_nesting",
+                "suggestion": f"Consider an intermediate summary or flattening under {parent}.",
+                "rationale": f"{rel_path} sits {len(parts) - 2} levels below its top-level root, which may make retrieval and maintenance harder.",
+                "confidence": "low",
+                "affected_paths": [parent],
+            }
+        )
+    return suggestions
+
+
+def _naming_inconsistency_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    seen_pairs: set[tuple[str, str]] = set()
+    directories = set(_iter_governed_directories_in_scope(root, scope))
+    for rel_dir in sorted(directories):
+        dir_path = Path(rel_dir)
+        folder_name = dir_path.name
+        if "-" not in folder_name:
+            continue
+        parent = dir_path.parent.as_posix()
+        left, right = folder_name.split("-", 1)
+        alternate = Path(parent) / left / right if parent != "." else Path(left) / right
+        alternate_rel = alternate.as_posix()
+        if alternate_rel not in directories:
+            continue
+        ordered_pair = sorted((rel_dir, alternate_rel))
+        pair = (ordered_pair[0], ordered_pair[1])
+        if pair in seen_pairs:
+            continue
+        seen_pairs.add(pair)
+        suggestions.append(
+            {
+                "heuristic": "naming_inconsistency",
+                "suggestion": f"Align {rel_dir} and {alternate_rel} to one naming pattern.",
+                "rationale": f"Both the hyphenated folder {rel_dir} and the nested folder {alternate_rel} exist, which splits related material across two path conventions.",
+                "confidence": "high",
+                "affected_paths": [rel_dir, alternate_rel],
+            }
+        )
+    return suggestions
+
+
+def _summary_drift_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    scope_dirs = _iter_governed_directories_in_scope(root, scope)
+    summary_dirs = [rel_dir for rel_dir in scope_dirs if (root / rel_dir / "SUMMARY.md").exists()]
+    for rel_dir in sorted(summary_dirs):
+        abs_dir = root / rel_dir
+        summary_path = abs_dir / "SUMMARY.md"
+        summary_rel = summary_path.relative_to(root).as_posix()
+        summary_text = summary_path.read_text(encoding="utf-8")
+        missing_entries: list[str] = []
+        for child in sorted(abs_dir.iterdir()):
+            if child.name == "SUMMARY.md":
+                continue
+            if child.is_file() and child.suffix.lower() == ".md":
+                child_rel = child.relative_to(root).as_posix()
+                if not _summary_mentions_path(summary_text, child_rel):
+                    missing_entries.append(child_rel)
+            elif child.is_dir():
+                child_summary = child / "SUMMARY.md"
+                if child_summary.exists() or _folder_content_files(child):
+                    child_rel = child.relative_to(root).as_posix()
+                    if not _summary_mentions_path(summary_text, child_rel):
+                        missing_entries.append(child_rel)
+        if not missing_entries:
+            continue
+        suggestions.append(
+            {
+                "heuristic": "summary_drift",
+                "suggestion": f"Update {summary_rel} to cover {len(missing_entries)} missing path(s).",
+                "rationale": f"{summary_rel} does not mention: {', '.join(missing_entries[:4])}{' ...' if len(missing_entries) > 4 else ''}.",
+                "confidence": "high",
+                "affected_paths": [summary_rel, *missing_entries[:8]],
+            }
+        )
+    return suggestions
+
+
+def suggest_structure(
+    root: Path,
+    scope: str = "",
+    heuristics: list[str] | None = None,
+) -> dict[str, Any]:
+    requested = list(heuristics or sorted(_STRUCTURE_HEURISTICS))
+    invalid = [item for item in requested if item not in _STRUCTURE_HEURISTICS]
+    if invalid:
+        raise ValueError(f"Unsupported heuristics: {', '.join(sorted(invalid))}")
+
+    suggestions: list[dict[str, Any]] = []
+    for heuristic in requested:
+        if heuristic == "orphan_topics":
+            suggestions.extend(_orphan_topic_suggestions(root, scope))
+        elif heuristic == "deep_nesting":
+            suggestions.extend(_deep_nesting_suggestions(root, scope))
+        elif heuristic == "naming_inconsistency":
+            suggestions.extend(_naming_inconsistency_suggestions(root, scope))
+        elif heuristic == "summary_drift":
+            suggestions.extend(_summary_drift_suggestions(root, scope))
+
+    suggestions.sort(
+        key=lambda item: (
+            str(item["heuristic"]),
+            str(cast(list[str], item["affected_paths"])[0]),
+            str(item["suggestion"]),
+        )
+    )
+    return {
+        "scope": _normalize_repo_path(scope) or ".",
+        "heuristics": requested,
+        "suggestions": suggestions,
+        "total": len(suggestions),
+    }

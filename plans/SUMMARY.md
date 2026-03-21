@@ -8,7 +8,6 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-- [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: Phases 1-4 landed with reference discovery, validation, preview, and governed execution; optional Phase 5 remains.
 - [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, warning clarity, paths-only enum; Phase 1 next.
 - [checklist-app-architecture.md](checklist-app-architecture.md) — Django/React checklist tool for task management and progress tracking; Phase 1 next (Django scaffold + models).
 
@@ -18,6 +17,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ## Recent completions
 
+- [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — completed 2026-03-21; 21/21 items across 5 phases (reference discovery, link validation, read-only preview, governed path reorganization, advisory structure suggestions); the MCP surface now covers end-to-end knowledge-base reorganization from impact analysis through execution and post-hoc structure advice.
 - [mcp-agent-friendliness-improvements.md](mcp-agent-friendliness-improvements.md) — completed 2026-03-21; 31/31 items across 7 phases (promotion parity, routing/policy-state helpers, preview contract support, workflow bundles, advisory tool profiles, MCP-native resources/prompts, provenance enrichment, structured extraction); the governed MCP surface now covers routing, previews, workflow bootstraps, host-side narrowing metadata, MCP-native navigation primitives, lineage-aware provenance reads, and section-based large-file inspection.
 - [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — completed 2026-03-21; 11/11 checklist items complete across re-baselining, discovery guidance, workflow hints, subtree-aware promotion prep, paths-only unverified enumeration, warning clarity, and periodic-review runtime reliability.
 - [software-testing-validation-research.md](software-testing-validation-research.md) — completed 2026-03-20; 14/14 items across 5 phases (testing foundations/epistemology, unit testing/TDD/BDD, black-box and white-box design/mutation/property-based testing, integration/system/acceptance/performance testing, formal verification/AI-ML evaluation/behavioral testing/red-teaming); 14 knowledge files in `knowledge/software-engineering/testing/`; pending human review.
@@ -113,9 +113,9 @@ Next: All planned phases complete.
 ---
 
 <!-- BEGIN: mcp-knowledge-reorganization-tools -->
-### MCP Knowledge Base Reorganization Tools · status: active · trust: medium
+### MCP Knowledge Base Reorganization Tools · status: complete · trust: medium
 Detail: plans/mcp-knowledge-reorganization-tools.md
 Scope: Reference discovery (memory_find_references), link validation (memory_validate_links), reorganization preview and execution (memory_reorganize_preview, memory_reorganize_path), optional structure suggestions (memory_suggest_structure). Friction from 2026-03-21 ai-frontier → ai/frontier move.
-Progress: 17/21 checklist items complete; Phases 1-4 reference discovery, link validation, read-only preview, and governed execution are now in.
-Next: Optional Phase 5 — evaluate advisory `memory_suggest_structure` heuristics.
+Progress: 21/21 checklist items complete; Phases 1-5 reference discovery, link validation, read-only preview, governed execution, and advisory structure suggestions all landed.
+Next: All planned phases complete.
 <!-- END: mcp-knowledge-reorganization-tools -->

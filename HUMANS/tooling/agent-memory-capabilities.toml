@@ -28,6 +28,7 @@ read_support = [
   "memory_find_references",
   "memory_validate_links",
   "memory_reorganize_preview",
+  "memory_suggest_structure",
   "memory_check_cross_references",
   "memory_generate_summary",
   "memory_access_analytics",
