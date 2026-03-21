@@ -1644,8 +1644,27 @@ declared_gaps = []
         )
 
         self.assertEqual(payload["recommended_operation"]["operation"], "promote_knowledge")
+        self.assertIn("memory_promote_knowledge", payload["workflow_hint"])
         self.assertEqual(payload["policy_state"]["change_class"], "proposed")
         self.assertTrue(payload["policy_state"]["approval_required"])
+
+    def test_memory_route_intent_adds_subtree_workflow_hint_for_nested_folder(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["knowledge/_unverified/topic/sub/a.md"] = "# A\n"
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_route_intent"](
+                    intent="promote this unverified knowledge subtree",
+                    path="knowledge/_unverified/topic",
+                )
+            )
+        )
+
+        self.assertEqual(payload["recommended_operation"]["operation"], "promote_knowledge_subtree")
+        self.assertIn("dry_run=True", payload["workflow_hint"])
 
     def test_memory_route_intent_recommends_plan_creation(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())
@@ -1863,8 +1882,55 @@ trust: low
         )
 
         self.assertEqual(payload["suggested_operation"], "memory_promote_knowledge_batch")
+        self.assertIn("memory_promote_knowledge_batch", payload["workflow_hint"])
         self.assertEqual(len(payload["selected_candidates"]), 1)
         self.assertTrue(payload["response_budget"]["candidates"]["truncated"])
+
+    def test_memory_prepare_promotion_batch_prefers_subtree_for_nested_folder(self) -> None:
+        seed = self._policy_contract_seed_files()
+        seed["meta/quick-reference.md"] = """# Quick Reference
+
+## Last periodic review
+
+**Date:** 2026-03-01
+
+| Parameter | Active value | Stage |
+|---|---|---|
+| Low-trust retirement threshold | 120 days | Exploration |
+| Medium-trust flagging threshold | 180 days | Exploration |
+"""
+        seed["knowledge/_unverified/topic/sub/a.md"] = """---
+created: 2026-01-01
+source: test
+trust: low
+---
+
+# A
+"""
+        seed["knowledge/_unverified/topic/sub/b.md"] = """---
+created: 2026-01-02
+source: test
+trust: low
+---
+
+# B
+"""
+        repo_root = self._init_repo(seed)
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_prepare_promotion_batch"](
+                    folder_path="knowledge/_unverified/topic",
+                    max_files=2,
+                )
+            )
+        )
+
+        self.assertEqual(payload["suggested_operation"], "memory_promote_knowledge_subtree")
+        self.assertTrue(payload["folder_shape"]["has_nested_subdirectories"])
+        self.assertEqual(payload["suggested_target_folder"], "knowledge/topic")
+        self.assertIn("dry_run=True", payload["workflow_hint"])
 
     def test_memory_prepare_periodic_review_compacts_deferred_targets(self) -> None:
         repo_root = self._init_repo(

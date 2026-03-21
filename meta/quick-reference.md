@@ -19,6 +19,8 @@ Use this file as the operational router for every session:
 3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
 4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 
+**MCP discovery:** Some hosts expose the Engram server under a project-prefixed name instead of `agent-memory`. If a call fails because the server name does not exist, use the identifier shown in the host's available-server list.
+
 ---
 
 ## Context loading manifest

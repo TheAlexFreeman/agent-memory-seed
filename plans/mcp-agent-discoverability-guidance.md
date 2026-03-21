@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 2 — add the missing quick-reference discovery note, then add workflow hints and subtree-aware promotion prep outputs.'
+next_action: 'Execute Phase 3 — add cheap full-path enumeration for unverified review, then polish non-actionable subtree warnings.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -28,11 +28,8 @@ Already landed in the live MCP surface:
 - The unverified-review prompt already tells callers when to use single-file, batch, or subtree promotion.
 
 Still missing or still broken:
-- `meta/quick-reference.md` has no compact MCP discovery note for project-prefixed server names.
-- `memory_route_intent` recommends an operation but does not yet emit a compact workflow hint for the next governed calls.
-- `memory_prepare_promotion_batch` still defaults to single-file vs batch and does not surface subtree as the preferred path for nested folders.
 - `memory_prepare_unverified_review` still truncates by design and there is no cheap full-path enumeration mode.
-- `memory_run_periodic_review` currently fails at runtime in this repo instead of producing the intended report, which blocks one of the key review-oriented guidance surfaces.
+- subtree promotion warnings can still be clearer when the source summary lacks a matching section but the move succeeds.
 
 Related knowledge-base review findings to keep in view but not expand scope around here:
 - Validator warnings show 51 unverified low-trust files and multiple legacy plan-frontmatter issues.
@@ -52,7 +49,7 @@ Checklist:
 - [x] Confirm subtree-vs-batch guidance already exists in the semantic promotion tools
 - [x] Confirm route heuristics and prompts already cover basic subtree selection
 
-### Phase 2 — Discovery note and workflow guidance (high leverage)
+### Phase 2 — Discovery note and workflow guidance (complete)
 
 **2.1 Add MCP discovery note to quick-reference**
 
@@ -71,10 +68,10 @@ Update `memory_prepare_promotion_batch` so directory inputs with nested content 
 Add tests that cover nested-folder promotion routing and subtree-aware promotion-prep output.
 
 Checklist:
-- [ ] 2.1 Add the quick-reference MCP discovery note
-- [ ] 2.2 Add `workflow_hint` to promotion route results
-- [ ] 2.3 Make `memory_prepare_promotion_batch` surface subtree when appropriate
-- [ ] 2.4 Add regression tests for route-result and promotion-prep guidance
+- [x] 2.1 Add the quick-reference MCP discovery note
+- [x] 2.2 Add `workflow_hint` to promotion route results
+- [x] 2.3 Make `memory_prepare_promotion_batch` surface subtree when appropriate
+- [x] 2.4 Add regression tests for route-result and promotion-prep guidance
 
 ### Phase 3 — Enumeration and reliability fixes (high leverage)
 
@@ -93,7 +90,7 @@ Repair the current type error and add regression coverage so periodic-review pre
 Checklist:
 - [ ] 3.1 Add a full-path enumeration mode for unverified review
 - [ ] 3.2 Make subtree-promotion warnings clearly actionable or clearly ignorable
-- [ ] 3.3 Fix `memory_run_periodic_review` and add a regression test
+- [x] 3.3 Fix `memory_run_periodic_review` and add a regression test
 
 ---
 

@@ -752,6 +752,44 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
     )
 
 
+def _route_workflow_hint(operation: str | None, rel_path: str | None, root: Path) -> str | None:
+    """Return a compact next-step hint for governed workflows."""
+    if operation is None:
+        return None
+
+    normalized_operation = operation.removeprefix("memory_")
+
+    normalized_path = _normalize_repo_relative_path(rel_path) if rel_path else None
+    abs_path = (root / normalized_path) if normalized_path else None
+    path_is_dir = bool(abs_path and abs_path.exists() and abs_path.is_dir())
+    default_folder = normalized_path or "knowledge/_unverified"
+
+    if normalized_operation == "promote_knowledge":
+        return (
+            f"Inspect context with memory_prepare_unverified_review(folder_path='{default_folder}') if needed, "
+            "then preview with memory_promote_knowledge(..., preview=True) before applying."
+        )
+    if normalized_operation == "promote_knowledge_batch":
+        if path_is_dir:
+            return (
+                f"List candidates with memory_prepare_promotion_batch(folder_path='{default_folder}'), "
+                "then promote the selected flat file list with memory_promote_knowledge_batch(...)."
+            )
+        return "Promote the selected flat file list with memory_promote_knowledge_batch(...)."
+    if normalized_operation == "promote_knowledge_subtree":
+        target_folder = (
+            default_folder.replace("knowledge/_unverified/", "knowledge/", 1)
+            if default_folder.startswith("knowledge/_unverified/")
+            else "knowledge/<target-folder>"
+        )
+        return (
+            f"Review the folder with memory_prepare_unverified_review(folder_path='{default_folder}'), "
+            f"dry-run memory_promote_knowledge_subtree(source_folder='{default_folder}', dest_folder='{target_folder}', dry_run=True), "
+            "then rerun with dry_run=False to apply."
+        )
+    return None
+
+
 def _preview_file_entry(entry: Path, root: Path, preview_chars: int) -> dict[str, Any]:
     from ..frontmatter_utils import read_with_frontmatter
 
@@ -2473,6 +2511,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             cast(str | None, recommended["operation"]) if recommended is not None else None,
             normalized_path,
         )
+        workflow_hint = _route_workflow_hint(
+            cast(str | None, recommended["operation"]) if recommended is not None else None,
+            normalized_path,
+            root,
+        )
         if recommended is None:
             policy_state["warnings"] = list(policy_state.get("warnings", [])) + [
                 "No confident governed operation match was found for this intent."
@@ -2485,6 +2528,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "recommended_operation": recommended,
                 "alternatives": alternatives,
                 "ambiguous": ambiguous,
+                "workflow_hint": workflow_hint,
                 "policy_state": policy_state,
             },
             indent=2,
@@ -4383,6 +4427,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         low_threshold, _ = _parse_trust_thresholds(root)
         unverified = _scan_unverified_content(root, low_threshold)
         normalized_folder = _normalize_repo_relative_path(folder_path)
+        abs_folder = root / normalized_folder
+        path_is_dir = abs_folder.exists() and abs_folder.is_dir()
+        has_nested_subdirectories = path_is_dir and any(
+            child.is_dir() for child in abs_folder.iterdir() if child.name != "SUMMARY.md"
+        )
         candidates = [
             {
                 "source_path": item["path"],
@@ -4404,13 +4453,27 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
         )
         selected_candidates, candidate_budget = _truncate_items(candidates, max_files)
-        suggested_operation = (
-            "memory_promote_knowledge" if len(candidates) <= 1 else "memory_promote_knowledge_batch"
+        if path_is_dir and has_nested_subdirectories:
+            suggested_operation = "memory_promote_knowledge_subtree"
+        elif len(candidates) <= 1:
+            suggested_operation = "memory_promote_knowledge"
+        else:
+            suggested_operation = "memory_promote_knowledge_batch"
+        suggested_target_folder = (
+            normalized_folder.replace("knowledge/_unverified/", "knowledge/", 1)
+            if normalized_folder.startswith("knowledge/_unverified/")
+            else None
         )
         payload = {
             "folder_path": folder_path,
             "candidate_count": len(candidates),
             "suggested_operation": suggested_operation,
+            "suggested_target_folder": suggested_target_folder,
+            "folder_shape": {
+                "is_directory": path_is_dir,
+                "has_nested_subdirectories": has_nested_subdirectories,
+            },
+            "workflow_hint": _route_workflow_hint(suggested_operation, normalized_folder, root),
             "selected_candidates": selected_candidates,
             "response_budget": {
                 "candidates": candidate_budget,
