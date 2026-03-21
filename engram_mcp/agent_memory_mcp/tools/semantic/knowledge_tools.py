@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from pathlib import Path
@@ -78,6 +79,46 @@ def _prune_empty_summary_section(summary_content: str, section_id: str) -> str:
     while remove_end < len(lines) and not lines[remove_end].strip():
         remove_end += 1
     return "".join(lines[:anchor_idx] + lines[remove_end:])
+
+
+def _summary_section_heading(section_id: str) -> str:
+    words = [part for part in re.split(r"[-_]", section_id) if part]
+    if not words:
+        return "Misc"
+    return " ".join(word.capitalize() for word in words)
+
+
+def _append_summary_section(content: str, section_id: str, entry: str) -> str:
+    stripped = content.rstrip()
+    if stripped.endswith("---"):
+        stripped = stripped[:-3].rstrip()
+
+    block = f"<!-- section: {section_id} -->\n### {_summary_section_heading(section_id)}\n{entry}\n"
+    if stripped:
+        return f"{stripped}\n\n{block}\n---\n"
+    return f"{block}\n---\n"
+
+
+def _update_summary_with_entry(
+    content: str,
+    section_id: str,
+    entry: str,
+    *,
+    allow_section_create: bool,
+) -> tuple[str | None, bool]:
+    from ...frontmatter_utils import insert_entry_in_section
+
+    updated = insert_entry_in_section(content, section_id, entry)
+    if updated is not None:
+        return updated, False
+    if not allow_section_create:
+        return None, False
+    return _append_summary_section(content, section_id, entry), True
+
+
+def _default_summary_entry(filename: str, target_path: str, frontmatter: dict[str, Any]) -> str:
+    title = frontmatter.get("title", filename.replace(".md", "").replace("-", " ").title())
+    return f"- **[{filename}]({target_path})** — {title}"
 
 
 def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
@@ -308,6 +349,236 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return result.to_json()
 
     @mcp.tool(
+        name="memory_promote_knowledge_subtree",
+        annotations=_tool_annotations(
+            title="Promote Knowledge Subtree",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_promote_knowledge_subtree(
+        source_folder: str,
+        dest_folder: str,
+        trust_level: str = "medium",
+        reason: str = "",
+        dry_run: bool = False,
+    ) -> str:
+        """Promote an entire unverified knowledge subtree in one governed commit."""
+        from ...errors import NotFoundError, ValidationError
+        from ...frontmatter_utils import (
+            infer_section_id_from_path,
+            read_with_frontmatter,
+            remove_entry_from_section,
+            today_str,
+            write_with_frontmatter,
+        )
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+        warnings: list[str] = []
+
+        if trust_level not in ("medium", "high"):
+            raise ValidationError(f"trust_level must be 'medium' or 'high', got: {trust_level}")
+
+        source_folder, abs_source_folder = resolve_repo_path(
+            repo, source_folder, field_name="source_folder"
+        )
+        require_under_prefix(source_folder, "knowledge/_unverified", field_name="source_folder")
+        if not abs_source_folder.exists():
+            raise NotFoundError(f"Source folder not found: {source_folder}")
+        if not abs_source_folder.is_dir():
+            raise ValidationError(f"source_folder must be a directory: {source_folder}")
+
+        dest_folder, _ = resolve_repo_path(repo, dest_folder, field_name="dest_folder")
+        validate_top_level_root(dest_folder, allowed_roots=("knowledge",), field_name="dest_folder")
+        forbid_prefix(dest_folder, "knowledge/_unverified", field_name="dest_folder")
+
+        markdown_files = [
+            child
+            for child in sorted(abs_source_folder.rglob("*.md"))
+            if child.is_file() and child.name != "SUMMARY.md"
+        ]
+        if not markdown_files:
+            raise ValidationError(f"No promotable markdown files found in folder: {source_folder}")
+        if len(markdown_files) > _MAX_BATCH_PROMOTIONS:
+            raise ValidationError(
+                f"source_folder may contain at most {_MAX_BATCH_PROMOTIONS} files per subtree promotion"
+            )
+
+        validation_errors: list[str] = []
+        seen_targets: set[str] = set()
+        prepared_files: list[dict[str, Any]] = []
+
+        for abs_source in markdown_files:
+            source_path = abs_source.relative_to(root).as_posix()
+            rel_subpath = abs_source.relative_to(abs_source_folder).as_posix()
+            target_path = f"{dest_folder.rstrip('/')}/{rel_subpath}"
+            try:
+                target_path, abs_target = resolve_repo_path(repo, target_path, field_name="target_path")
+                validate_top_level_root(
+                    target_path,
+                    allowed_roots=("knowledge",),
+                    field_name="target_path",
+                )
+                forbid_prefix(target_path, "knowledge/_unverified", field_name="target_path")
+                if target_path in seen_targets:
+                    raise ValidationError(f"target path collision in subtree: {target_path}")
+                seen_targets.add(target_path)
+                if abs_target.exists():
+                    raise ValidationError(f"Target already exists: {target_path}")
+
+                fm_dict, body = read_with_frontmatter(abs_source)
+                missing = [key for key in ("created", "source", "trust") if not fm_dict.get(key)]
+                if missing:
+                    raise ValidationError(
+                        f"missing required frontmatter fields: {', '.join(missing)}"
+                    )
+                prepared_files.append(
+                    {
+                        "source_path": source_path,
+                        "abs_source": abs_source,
+                        "target_path": target_path,
+                        "filename": abs_source.name,
+                        "frontmatter": fm_dict,
+                        "body": body,
+                        "relative_subpath": rel_subpath,
+                    }
+                )
+            except Exception as exc:
+                validation_errors.append(f"{source_path}: {exc}")
+
+        if validation_errors:
+            raise ValidationError(
+                "Subtree promotion validation failed:\n"
+                + "\n".join(f"- {msg}" for msg in validation_errors)
+            )
+
+        planned_moves = [
+            {
+                "source_path": cast(str, prepared["source_path"]),
+                "target_path": cast(str, prepared["target_path"]),
+            }
+            for prepared in prepared_files
+        ]
+        if dry_run:
+            return json.dumps(
+                {
+                    "source_folder": source_folder,
+                    "dest_folder": dest_folder,
+                    "dry_run": True,
+                    "promoted_count": len(prepared_files),
+                    "planned_moves": planned_moves,
+                    "trust": trust_level,
+                },
+                indent=2,
+            )
+
+        today = today_str()
+        files_changed: list[str] = []
+        promoted_files: list[str] = []
+
+        source_summary_path = "knowledge/_unverified/SUMMARY.md"
+        abs_source_summary = root / source_summary_path
+        source_summary_content = (
+            abs_source_summary.read_text(encoding="utf-8") if abs_source_summary.exists() else None
+        )
+
+        target_summary_path = "knowledge/SUMMARY.md"
+        abs_target_summary = root / target_summary_path
+        target_summary_content = (
+            abs_target_summary.read_text(encoding="utf-8") if abs_target_summary.exists() else None
+        )
+
+        for prepared in prepared_files:
+            source_path = cast(str, prepared["source_path"])
+            abs_source = cast(Path, prepared["abs_source"])
+            target_path = cast(str, prepared["target_path"])
+            filename = cast(str, prepared["filename"])
+            fm_dict = cast(dict[str, Any], prepared["frontmatter"])
+            body = cast(str, prepared["body"])
+
+            fm_dict["trust"] = trust_level
+            fm_dict["last_verified"] = today
+            write_with_frontmatter(abs_source, fm_dict, body)
+            repo.add(source_path)
+
+            abs_target = repo.abs_path(target_path)
+            abs_target.parent.mkdir(parents=True, exist_ok=True)
+            repo.mv(source_path, target_path)
+            files_changed.extend([source_path, target_path])
+            promoted_files.append(filename)
+
+            source_section_id = infer_section_id_from_path(source_path)
+            if source_summary_content is not None:
+                updated_source = remove_entry_from_section(
+                    source_summary_content, source_section_id, filename
+                )
+                if updated_source is None:
+                    warnings.append(
+                        f"Section '<!-- section: {source_section_id} -->' not found in {source_summary_path}."
+                    )
+                else:
+                    source_summary_content = _prune_empty_summary_section(
+                        updated_source, source_section_id
+                    )
+
+            if target_summary_content is not None:
+                target_section_id = infer_section_id_from_path(target_path)
+                entry = _default_summary_entry(filename, target_path, fm_dict)
+                updated_target, _ = _update_summary_with_entry(
+                    target_summary_content,
+                    target_section_id,
+                    entry,
+                    allow_section_create=True,
+                )
+                if updated_target is not None:
+                    target_summary_content = updated_target
+
+        summary_updates: list[str] = []
+        if source_summary_content is not None and abs_source_summary.exists():
+            abs_source_summary.write_text(source_summary_content, encoding="utf-8")
+            repo.add(source_summary_path)
+            files_changed.append(source_summary_path)
+            summary_updates.append(source_summary_path)
+
+        if target_summary_content is not None and abs_target_summary.exists():
+            abs_target_summary.write_text(target_summary_content, encoding="utf-8")
+            repo.add(target_summary_path)
+            files_changed.append(target_summary_path)
+            summary_updates.append(target_summary_path)
+
+        files_changed = list(dict.fromkeys(files_changed))
+        summary_updates = list(dict.fromkeys(summary_updates))
+        promoted_files = sorted(promoted_files)
+
+        reason_str = f"; reason: {reason}" if reason else ""
+        commit_msg = (
+            f"[curation] Promote subtree {source_folder} -> {dest_folder} "
+            f"({len(prepared_files)} files, trust: {trust_level}{reason_str})"
+        )
+        commit_result = repo.commit(commit_msg)
+        result = MemoryWriteResult.from_commit(
+            files_changed=files_changed,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={
+                "source_folder": source_folder,
+                "target_folder": dest_folder,
+                "promoted_count": len(prepared_files),
+                "trust": trust_level,
+                "promoted_files": promoted_files,
+                "planned_moves": planned_moves,
+                "summary_updates": summary_updates,
+                "dry_run": False,
+            },
+            warnings=warnings,
+        )
+        return result.to_json()
+
+    @mcp.tool(
         name="memory_promote_knowledge",
         annotations=_tool_annotations(
             title="Promote Knowledge File to Verified",
@@ -321,9 +592,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         source_path: str,
         trust_level: str = "high",
         target_path: str | None = None,
+        summary_entry: str | None = None,
         version_token: str | None = None,
     ) -> str:
-        """Move a file from knowledge/_unverified/ to knowledge/, updating trust."""
+        """Move a file from knowledge/_unverified/ to knowledge/, updating trust.
+
+        When summary_entry is provided, knowledge/SUMMARY.md is auto-updated even
+        if the target section is missing: a stub section is appended and the entry
+        is inserted there. Without summary_entry, missing target sections still
+        produce a warning so callers can repair SUMMARY.md manually.
+        """
         from ...errors import NotFoundError, ValidationError
         from ...frontmatter_utils import (
             infer_section_id_from_path,
@@ -395,8 +673,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if abs_tgt_summary.exists():
             tgt_summary = abs_tgt_summary.read_text(encoding="utf-8")
             title = fm_dict.get("title", filename.replace(".md", "").replace("-", " ").title())
-            entry = f"- **[{filename}]({target_path})** — {title}"
-            updated = insert_entry_in_section(tgt_summary, target_section_id, entry)
+            entry = summary_entry or f"- **[{filename}]({target_path})** — {title}"
+            updated, created_section = _update_summary_with_entry(
+                tgt_summary,
+                target_section_id,
+                entry,
+                allow_section_create=summary_entry is not None,
+            )
             if updated is None:
                 warnings.append(
                     f"Section '<!-- section: {target_section_id} -->' not found in "
@@ -709,6 +992,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
     return {
         "memory_promote_knowledge_batch": memory_promote_knowledge_batch,
+        "memory_promote_knowledge_subtree": memory_promote_knowledge_subtree,
         "memory_promote_knowledge": memory_promote_knowledge,
         "memory_demote_knowledge": memory_demote_knowledge,
         "memory_archive_knowledge": memory_archive_knowledge,

@@ -76,6 +76,7 @@ class MemoryMCPTests(unittest.TestCase):
         raw = asyncio.run(self.module.memory_read_file(path="HUMANS/README.md"))
         output = json.loads(raw)
 
+        self.assertTrue(output["inline"])
         self.assertIn("Human-Focused Documentation", output["content"])
         self.assertIn("version_token", output)
 
@@ -83,9 +84,13 @@ class MemoryMCPTests(unittest.TestCase):
         raw = asyncio.run(self.module.memory_read_file(path="meta/quick-reference.md"))
         payload = json.loads(raw)
 
+        self.assertEqual(payload["path"], "meta/quick-reference.md")
+        self.assertTrue(payload["inline"])
+        self.assertGreater(payload["size_bytes"], 0)
         self.assertIn("version_token", payload)
         self.assertIsNone(payload["frontmatter"])
         self.assertIn("Quick Reference", payload["content"])
+        self.assertNotIn("temp_file", payload)
 
     def test_get_capabilities_returns_structured_payload(self) -> None:
         raw = asyncio.run(self.module.memory_get_capabilities())
@@ -121,6 +126,7 @@ class MemoryMCPTests(unittest.TestCase):
 
         payload = anyio.run(run_call)
 
+        self.assertTrue(cast(bool, payload["inline"]))
         self.assertIn("Agent Memory System", cast(str, payload["content"]))
         self.assertIn("version_token", payload)
 

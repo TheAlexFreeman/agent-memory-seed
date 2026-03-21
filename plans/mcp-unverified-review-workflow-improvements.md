@@ -1,8 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Implement Phase 1: memory_read_file inline content return (highest leverage,
-  required by all subsequent review workflows).'
+next_action: 'Implement Phase 6: promote_knowledge_batch discoverability.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -54,7 +53,7 @@ Multi-session review workflows (read on day 1, promote on day 2) have no lightwe
 
 *Addresses Gap 1. Highest leverage: required by all downstream review workflows.*
 
-**1.1 Modify `memory_read_file` in `memory_mcp.py`**
+**1.1 Modify `memory_read_file` in `engram_mcp/agent_memory_mcp/tools/read_tools.py`**
 
 When the file content is ≤ 20 000 bytes after reading, return it directly in the JSON response body under a `content` key rather than writing to a temp file. For files above the threshold, keep the current temp-file behavior and document the threshold in the response metadata.
 
@@ -83,12 +82,12 @@ Large-file response (unchanged behavior, add `inline: false`):
 **1.3 Add unit test** in `engram_mcp/tests/` asserting that a small fixture file returns `inline: true` with `content` populated and no `temp_file` key.
 
 Checklist:
-- ☐ Identify the read-file handler in `engram_mcp/memory_mcp.py`
-- ☐ Add size check and conditional inline-vs-tempfile branch
-- ☐ Update response serialization to include `inline` bool
-- ☐ Update docstring / tool description
-- ☐ Write unit test
-- ☐ Manual smoke-test: call `memory_read_file` on a small file and confirm content is returned inline
+- ☑ Identify the read-file handler in `engram_mcp/agent_memory_mcp/tools/read_tools.py`
+- ☑ Add size check and conditional inline-vs-tempfile branch
+- ☑ Update response serialization to include `inline` bool
+- ☑ Update docstring / tool description
+- ☑ Write unit test
+- ☑ Manual smoke-test: call `memory_read_file` on a small file and confirm content is returned inline
 
 ---
 
@@ -120,11 +119,11 @@ The current warning `Section '<!-- section: X -->' not found in knowledge/SUMMAR
 **2.4 Add test** asserting that promoting a file with `summary_entry="- [foo.md](foo.md) — Test entry"` results in the entry appearing in the target SUMMARY.md under the correct section marker.
 
 Checklist:
-- ☐ Add `summary_entry: str | None = None` param to `memory_promote_knowledge`
-- ☐ Implement marker-search + insert / stub-create logic
-- ☐ Adjust warning condition to only fire when auto-update is inactive and section absent
-- ☐ Write test
-- ☐ Smoke-test: promote a single file with a `summary_entry` and verify SUMMARY.md diff
+- ☑ Add `summary_entry: str | None = None` param to `memory_promote_knowledge`
+- ☑ Implement marker-search + insert / stub-create logic
+- ☑ Adjust warning condition to only fire when auto-update is inactive and section absent
+- ☑ Write test
+- ☑ Smoke-test: promote a single file with a `summary_entry` and verify SUMMARY.md diff
 
 ---
 
@@ -164,12 +163,12 @@ Response entry shape with preview:
 **3.4 Add test** asserting that `list_folder` with `preview_chars=100` returns entries with non-empty `preview` for markdown files and no `preview` key when `preview_chars=0`.
 
 Checklist:
-- ☐ Add `preview_chars: int = 0` param
-- ☐ Implement frontmatter parse (reuse existing YAML parser if available)
-- ☐ Implement body-preview truncation
-- ☐ Update docstring
-- ☐ Write test
-- ☐ Smoke-test: `list_folder("knowledge/_unverified", preview_chars=200)` and confirm previews appear
+- ☑ Add `preview_chars: int = 0` param
+- ☑ Implement frontmatter parse (reuse existing YAML parser if available)
+- ☑ Implement body-preview truncation
+- ☑ Update docstring
+- ☑ Write test
+- ☑ Smoke-test: `list_folder("knowledge/_unverified", preview_chars=200)` and confirm previews appear
 
 ---
 
@@ -203,12 +202,12 @@ The response groups files by subfolder and includes a header summary: total file
 **4.3 Add test** asserting correct grouping, expiry calculation, and word-count truncation of extract.
 
 Checklist:
-- ☐ Register new tool in tool manifest / `__init__.py`
-- ☐ Implement folder walk + frontmatter parse + extract generation
-- ☐ Implement expiry calculation using policy constants
-- ☐ Implement grouped response with summary header
-- ☐ Write test
-- ☐ Smoke-test on `knowledge/_unverified` (should now be empty for mathematics; test with another unverified folder)
+- ☑ Register new tool in tool manifest / `__init__.py`
+- ☑ Implement folder walk + frontmatter parse + extract generation
+- ☑ Implement expiry calculation using policy constants
+- ☑ Implement grouped response with summary header
+- ☑ Write test
+- ☑ Smoke-test on `knowledge/_unverified` (should now be empty for mathematics; test with another unverified folder)
 
 ---
 
@@ -238,14 +237,14 @@ Behavior:
 **5.2 Add test** asserting dry-run returns file list without committing, and that a real run produces a single commit containing all file moves.
 
 Checklist:
-- ☐ Register new tool
-- ☐ Implement recursive walk + pre-flight check
-- ☐ Implement atomic move + frontmatter patch
-- ☐ Implement single-commit for all moves
-- ☐ Wire in Phase 2 SUMMARY.md auto-update logic
-- ☐ Implement `dry_run` mode
-- ☐ Write test
-- ☐ Smoke-test: dry-run on a folder with 3+ files and verify no git changes
+- ☑ Register new tool
+- ☑ Implement recursive walk + pre-flight check
+- ☑ Implement atomic move + frontmatter patch
+- ☑ Implement single-commit for all moves
+- ☑ Wire in Phase 2 SUMMARY.md auto-update logic
+- ☑ Implement `dry_run` mode
+- ☑ Write test
+- ☑ Smoke-test: dry-run on a folder with 3+ files and verify no git changes
 
 ---
 

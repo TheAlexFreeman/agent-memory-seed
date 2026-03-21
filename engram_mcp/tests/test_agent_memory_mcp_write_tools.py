@@ -131,7 +131,117 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
         self.assertEqual(resolved_root, repo_root)
         self.assertEqual(repo.root, repo_root)
         payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/topic/note.md")))
+        self.assertTrue(payload["inline"])
         self.assertIn("# Note", payload["content"])
+
+    def test_memory_read_file_uses_temp_file_for_large_payloads(self) -> None:
+        large_body = "A" * 20_100
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/large.md": f"---\ncreated: 2026-03-20\nsource: test\ntrust: medium\n---\n\n{large_body}",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="knowledge/topic/large.md"))
+        )
+
+        self.assertEqual(payload["path"], "knowledge/topic/large.md")
+        self.assertFalse(payload["inline"])
+        self.assertGreater(payload["size_bytes"], 20_000)
+        self.assertNotIn("content", payload)
+        self.assertIn("temp_file", payload)
+        self.assertTrue(Path(payload["temp_file"]).exists())
+
+    def test_memory_list_folder_preview_returns_frontmatter_and_preview_for_markdown(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/note.md": """---
+title: Preview Note
+source: agent-generated
+created: 2026-03-20
+trust: low
+---
+
+This is the preview body for the markdown note.
+""",
+                "knowledge/topic/plain.txt": "plain text file\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_list_folder"](path="knowledge/topic", preview_chars=20))
+        )
+
+        note_entry = next(entry for entry in payload["entries"] if entry["name"] == "note.md")
+        text_entry = next(entry for entry in payload["entries"] if entry["name"] == "plain.txt")
+
+        self.assertEqual(payload["path"], "knowledge/topic")
+        self.assertEqual(payload["preview_chars"], 20)
+        self.assertEqual(note_entry["frontmatter"]["title"], "Preview Note")
+        self.assertEqual(note_entry["preview"], "This is the preview")
+        self.assertNotIn("preview", text_entry)
+
+    def test_memory_list_folder_default_output_omits_preview_fields(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/note.md": "# Note\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        output = asyncio.run(tools["memory_list_folder"](path="knowledge/topic"))
+
+        self.assertIn("📄 note.md", output)
+        self.assertNotIn('"preview"', output)
+
+    def test_memory_review_unverified_groups_files_and_flags_expired_entries(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/math/chaos.md": """---
+source: external-research
+created: 2025-01-01
+trust: low
+---
+
+Chaos theory studies sensitive dependence on initial conditions in nonlinear systems.
+""",
+                "knowledge/_unverified/philosophy/mind.md": """---
+source: agent-generated
+created: 2026-03-10
+trust: medium
+---
+
+Philosophy of mind studies consciousness intentionality and representation.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_review_unverified"](
+                    folder_path="knowledge/_unverified",
+                    max_extract_words=5,
+                )
+            )
+        )
+
+        math_entry = payload["groups"]["math"][0]
+        philosophy_entry = payload["groups"]["philosophy"][0]
+
+        self.assertEqual(payload["total_files"], 2)
+        self.assertEqual(payload["expired_count"], 1)
+        self.assertEqual(payload["trust_counts"]["low"], 1)
+        self.assertEqual(payload["trust_counts"]["medium"], 1)
+        self.assertTrue(math_entry["expired"])
+        self.assertFalse(philosophy_entry["expired"])
+        self.assertEqual(
+            math_entry["extract"],
+            "Chaos theory studies sensitive dependence",
+        )
 
     def _write_and_commit(
         self,
@@ -383,6 +493,59 @@ origin_session: manual
         self.assertNotIn("knowledge/_unverified/literature/test-note.md", unverified_summary)
         self.assertIn("knowledge/literature/test-note.md", verified_summary)
 
+    def test_promote_knowledge_with_summary_entry_creates_missing_target_section(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mathematics/test-note.md": """---
+title: Test Note
+source: agent-generated
+created: 2026-03-17
+last_verified: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# Test Note
+""",
+                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+
+<!-- section: mathematics -->
+### Mathematics
+- **[test-note.md](knowledge/_unverified/mathematics/test-note.md)** — Test Note
+
+---
+""",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: literature -->
+### Literature
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root, enable_raw_write_tools=True)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge"](
+                    source_path="knowledge/_unverified/mathematics/test-note.md",
+                    trust_level="high",
+                    summary_entry="- [test-note.md](knowledge/mathematics/test-note.md) — Custom summary entry",
+                )
+            )
+        )
+
+        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+
+        self.assertEqual(payload["warnings"], [])
+        self.assertIn("<!-- section: mathematics -->", verified_summary)
+        self.assertIn("### Mathematics", verified_summary)
+        self.assertIn(
+            "- [test-note.md](knowledge/mathematics/test-note.md) — Custom summary entry",
+            verified_summary,
+        )
+
     def test_promote_knowledge_batch_single_file_matches_single_promotion_behavior(self) -> None:
         repo_root = self._init_repo(
             {
@@ -549,6 +712,174 @@ origin_session: manual
                     trust_level="medium",
                 )
             )
+
+    def test_promote_knowledge_subtree_dry_run_reports_moves_without_changes(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mcp/a-note.md": """---
+title: A Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# A Note
+""",
+                "knowledge/_unverified/mcp/nested/b-note.md": """---
+title: B Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# B Note
+""",
+                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "knowledge/SUMMARY.md": "# Knowledge\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        before_count = int(
+            subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_subtree"](
+                    source_folder="knowledge/_unverified/mcp",
+                    dest_folder="knowledge/tooling",
+                    trust_level="medium",
+                    dry_run=True,
+                )
+            )
+        )
+
+        after_count = int(
+            subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+        status = subprocess.run(
+            ["git", "status", "--short"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        self.assertTrue(payload["dry_run"])
+        self.assertEqual(payload["promoted_count"], 2)
+        self.assertEqual(before_count, after_count)
+        self.assertEqual(status, "")
+        self.assertTrue((repo_root / "knowledge" / "_unverified" / "mcp" / "a-note.md").exists())
+        self.assertFalse((repo_root / "knowledge" / "tooling" / "a-note.md").exists())
+        self.assertIn(
+            {
+                "source_path": "knowledge/_unverified/mcp/nested/b-note.md",
+                "target_path": "knowledge/tooling/nested/b-note.md",
+            },
+            payload["planned_moves"],
+        )
+
+    def test_promote_knowledge_subtree_moves_nested_files_in_single_commit(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/_unverified/mcp/a-note.md": """---
+title: A Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# A Note
+""",
+                "knowledge/_unverified/mcp/nested/b-note.md": """---
+title: B Note
+source: agent-generated
+created: 2026-03-17
+trust: low
+origin_session: manual
+---
+
+# B Note
+""",
+                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+
+<!-- section: mcp -->
+### MCP
+- **[a-note.md](knowledge/_unverified/mcp/a-note.md)** — A Note
+- **[b-note.md](knowledge/_unverified/mcp/nested/b-note.md)** — B Note
+
+---
+""",
+                "knowledge/SUMMARY.md": """# Knowledge
+
+<!-- section: tooling -->
+### Tooling
+
+---
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        before_count = int(
+            subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_promote_knowledge_subtree"](
+                    source_folder="knowledge/_unverified/mcp",
+                    dest_folder="knowledge/tooling",
+                    trust_level="high",
+                )
+            )
+        )
+
+        after_count = int(
+            subprocess.run(
+                ["git", "rev-list", "--count", "HEAD"],
+                cwd=repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+        )
+        verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
+        target_path = repo_root / "knowledge" / "tooling" / "nested" / "b-note.md"
+        frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(target_path)
+
+        self.assertEqual(after_count, before_count + 1)
+        self.assertEqual(payload["new_state"]["promoted_count"], 2)
+        self.assertEqual(payload["new_state"]["target_folder"], "knowledge/tooling")
+        self.assertTrue((repo_root / "knowledge" / "tooling" / "a-note.md").exists())
+        self.assertTrue(target_path.exists())
+        self.assertFalse((repo_root / "knowledge" / "_unverified" / "mcp" / "a-note.md").exists())
+        self.assertEqual(frontmatter["trust"], "high")
+        self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
+        self.assertIn("knowledge/tooling/a-note.md", verified_summary)
+        self.assertIn("knowledge/tooling/nested/b-note.md", verified_summary)
 
     def test_memory_delete_blocks_protected_identity_paths(self) -> None:
         repo_root = self._init_repo(

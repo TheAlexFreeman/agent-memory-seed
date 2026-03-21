@@ -21,6 +21,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from datetime import date, datetime, timedelta
 from importlib import import_module
 from pathlib import Path
@@ -64,6 +65,7 @@ _CURATION_NEAR_MISS_MIN = 0.2
 _CURATION_NEAR_MISS_MAX = 0.4
 _CURATION_FALSE_POSITIVE_MAX = 0.1
 _CURATION_RETIREMENT_MAX = 0.3
+_READ_FILE_INLINE_THRESHOLD_BYTES = 20_000
 
 try:
     tomllib = cast(Any, import_module("tomllib"))
@@ -120,6 +122,46 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "declared_gaps": len([gap for gap in gaps if isinstance(gap, str)]),
         "contract_versions": contract_versions,
     }
+
+
+def _preview_file_entry(entry: Path, root: Path, preview_chars: int) -> dict[str, Any]:
+    from ..frontmatter_utils import read_with_frontmatter
+
+    rel_path = entry.relative_to(root).as_posix()
+    item: dict[str, Any] = {
+        "name": entry.name,
+        "path": rel_path,
+        "kind": "file",
+        "size_bytes": entry.stat().st_size,
+    }
+    if preview_chars <= 0 or entry.suffix.lower() != ".md":
+        return item
+
+    frontmatter, body = read_with_frontmatter(entry)
+    item["frontmatter"] = frontmatter or None
+    body_preview = body.strip()[:preview_chars].rstrip()
+    if body_preview:
+        item["preview"] = body_preview
+    return item
+
+
+def _extract_preview_words(body: str, max_words: int) -> str:
+    if max_words <= 0:
+        return ""
+    words = body.split()
+    return " ".join(words[:max_words])
+
+
+def _review_expiry_threshold_days(
+    trust: str | None, low_threshold: int, medium_threshold: int
+) -> int | None:
+    if trust == "low":
+        return low_threshold
+    if trust == "medium":
+        return medium_threshold
+    if trust == "high":
+        return 365
+    return None
 
 
 def _parse_aggregation_trigger(repo_root: Path) -> int:
@@ -1548,8 +1590,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_read_file(path: str) -> str:
         """Read a file from the memory repository.
 
-        Returns the file content along with a version_token (git object hash)
-        for optimistic locking, and parsed frontmatter if present.
+        Returns file metadata, parsed frontmatter, and either inline content for
+        files up to 20,000 bytes or a temporary file path for larger payloads.
+        Always includes a version_token (git object hash) for optimistic locking.
 
         Args:
             path: Repo-relative path (e.g. 'identity/profile.md',
@@ -1557,7 +1600,13 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         Returns:
             JSON with keys:
-              content      (str)       Full file text
+              path         (str)       Repo-relative path requested
+              size_bytes   (int)       UTF-8 byte size of the file content
+              inline       (bool)      True when content is returned inline;
+                                       false when content is written to temp_file
+              content      (str)       Full file text when inline is true
+              temp_file    (str)       Temporary file containing full text when
+                                       inline is false
               version_token (str)      Git SHA-1 of the file; pass back to write
                                        tools to detect concurrent modifications
               frontmatter  (dict|null) Parsed YAML frontmatter, or null
@@ -1572,12 +1621,30 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         fm_dict, body = read_with_frontmatter(abs_path)
         version_token = repo.hash_object(path)
+        content = abs_path.read_text(encoding="utf-8")
+        size_bytes = len(content.encode("utf-8"))
 
         result = {
-            "content": abs_path.read_text(encoding="utf-8"),
+            "path": path,
+            "size_bytes": size_bytes,
+            "inline": size_bytes <= _READ_FILE_INLINE_THRESHOLD_BYTES,
             "version_token": version_token,
             "frontmatter": fm_dict or None,
         }
+        if result["inline"]:
+            result["content"] = content
+        else:
+            suffix = abs_path.suffix or ".txt"
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=suffix,
+                prefix="agent-memory-read-",
+                delete=False,
+            ) as handle:
+                handle.write(content)
+                temp_path = handle.name
+            result["temp_file"] = temp_path
         return json.dumps(result, indent=2, default=str)
 
     # ------------------------------------------------------------------
@@ -1597,6 +1664,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         path: str = ".",
         include_hidden: bool = False,
         include_humans: bool = False,
+        preview_chars: int = 0,
     ) -> str:
         """List the contents of a folder in the memory repository.
 
@@ -1605,9 +1673,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             include_hidden: Include dot-files/folders (default: False).
             include_humans: Include the human-facing HUMANS/ tree when browsing
                             broad scopes like '.' (default: False).
+            preview_chars:  When > 0, return structured JSON including markdown
+                            frontmatter and a truncated body preview.
 
         Returns:
-            Markdown-formatted directory listing with file sizes.
+            Markdown-formatted directory listing with file sizes when
+            preview_chars == 0; otherwise structured JSON entry metadata.
         """
         root = get_root()
         folder = (root / path).resolve()
@@ -1637,6 +1708,31 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             key=lambda p: (p.is_file(), p.name),
         )
 
+        if preview_chars > 0:
+            payload_entries: list[dict[str, Any]] = []
+            for entry in entries:
+                rel = entry.relative_to(root).as_posix()
+                if entry.is_dir():
+                    payload_entries.append(
+                        {
+                            "name": entry.name,
+                            "path": rel,
+                            "kind": "directory",
+                        }
+                    )
+                else:
+                    payload_entries.append(_preview_file_entry(entry, root, preview_chars))
+
+            return json.dumps(
+                {
+                    "path": path,
+                    "preview_chars": preview_chars,
+                    "entries": payload_entries,
+                },
+                indent=2,
+                default=str,
+            )
+
         for entry in entries:
             rel = str(entry.relative_to(root))
             if entry.is_dir():
@@ -1648,6 +1744,103 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if len(lines) == 1:
             lines.append("_(empty)_")
         return "\n".join(lines)
+
+    @mcp.tool(
+        name="memory_review_unverified",
+        annotations=_tool_annotations(
+            title="Review Unverified Knowledge",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_review_unverified(
+        folder_path: str = "knowledge/_unverified",
+        max_extract_words: int = 150,
+        include_expired: bool = True,
+    ) -> str:
+        """Return a grouped digest of unverified knowledge files.
+
+        Each file entry includes provenance metadata, age, expiry status, and a
+        truncated body extract to support review workflows without per-file reads.
+        """
+        from ..errors import ValidationError
+        from ..frontmatter_utils import read_with_frontmatter
+
+        if max_extract_words < 0:
+            raise ValidationError("max_extract_words must be >= 0")
+
+        repo = get_repo()
+        root = get_root()
+        folder = (root / folder_path).resolve()
+        if not folder.exists():
+            raise ValidationError(f"Folder not found: {folder_path}")
+        if not folder.is_dir():
+            raise ValidationError(f"Not a directory: {folder_path}")
+
+        low_threshold, medium_threshold = _parse_trust_thresholds(root)
+        today = date.today()
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        trust_counts = {"low": 0, "medium": 0, "high": 0, "unknown": 0}
+        total_files = 0
+        expired_count = 0
+
+        for md_file in sorted(folder.rglob("*.md")):
+            if not md_file.is_file() or md_file.name == "SUMMARY.md":
+                continue
+
+            rel_path = md_file.relative_to(root).as_posix()
+            group_key = md_file.parent.relative_to(folder).as_posix()
+            if group_key == ".":
+                group_key = ""
+
+            frontmatter, body = read_with_frontmatter(md_file)
+            effective_date = _effective_date(frontmatter)
+            days_old = (today - effective_date).days if effective_date is not None else None
+            trust_value = frontmatter.get("trust")
+            trust = str(trust_value) if trust_value is not None else None
+            threshold = _review_expiry_threshold_days(trust, low_threshold, medium_threshold)
+            expired = days_old is not None and threshold is not None and days_old > threshold
+
+            if not include_expired and expired:
+                continue
+
+            total_files += 1
+            if trust in trust_counts:
+                trust_counts[cast(str, trust)] += 1
+            else:
+                trust_counts["unknown"] += 1
+            if expired:
+                expired_count += 1
+
+            grouped.setdefault(group_key, []).append(
+                {
+                    "path": rel_path,
+                    "created": str(frontmatter.get("created"))
+                    if frontmatter.get("created") is not None
+                    else None,
+                    "source": frontmatter.get("source"),
+                    "trust": trust,
+                    "days_old": days_old,
+                    "expired": expired,
+                    "extract": _extract_preview_words(body, max_extract_words),
+                }
+            )
+
+        return json.dumps(
+            {
+                "folder_path": folder_path,
+                "max_extract_words": max_extract_words,
+                "include_expired": include_expired,
+                "total_files": total_files,
+                "expired_count": expired_count,
+                "trust_counts": trust_counts,
+                "groups": grouped,
+            },
+            indent=2,
+            default=str,
+        )
 
     # ------------------------------------------------------------------
     # memory_search
@@ -3510,6 +3703,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_get_capabilities": memory_get_capabilities,
         "memory_read_file": memory_read_file,
         "memory_list_folder": memory_list_folder,
+        "memory_review_unverified": memory_review_unverified,
         "memory_search": memory_search,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
