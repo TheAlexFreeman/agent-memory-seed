@@ -8,7 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-- *(No active build plans. See recent completions below for the latest shipped build work.)*
+- [mcp-agent-friendliness-improvements.md](mcp-agent-friendliness-improvements.md) — active; top-priority build plan for improving routing, previews, workflow bundles, tool-surface shaping, MCP-native resources/prompts, and provenance-aware reads.
 
 ### Research plans
 
@@ -55,6 +55,16 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 - Log reads of `plans/*.md` in `plans/ACCESS.jsonl` when they materially inform a session. Do not log reads of this `SUMMARY.md`.
 - Routine progress updates are automatic. New plans, retirements, and major scope changes should still be surfaced to the user.
 - Keep active blocks compact. Extended rationale belongs in the plan file itself, not here.
+
+---
+
+<!-- BEGIN: mcp-agent-friendliness-improvements -->
+### MCP Agent-Friendliness Improvements · status: active · trust: medium
+Detail: plans/mcp-agent-friendliness-improvements.md
+Scope: Improve the repo-local MCP surface so agents can route intents correctly, preview governed writes consistently, follow common workflows in fewer calls, and reason about policy and provenance with less reconstruction overhead. Top-priority build plan as of 2026-03-20.
+Progress: 0/31 checklist items complete.
+Next: Phase 1: unify promotion-path summary behavior and extract shared governed-operation metadata.
+<!-- END: mcp-agent-friendliness-improvements -->
 
 ---
 

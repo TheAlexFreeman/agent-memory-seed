@@ -909,7 +909,9 @@ origin_session: manual
             )
         )
         log_path = repo_root / "knowledge" / "_unverified" / "REVIEW_LOG.jsonl"
-        log_lines = [line for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        log_lines = [
+            line for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()
+        ]
         entry = json.loads(log_lines[-1])
 
         self.assertEqual(payload["new_state"]["verdict"], "approve")
