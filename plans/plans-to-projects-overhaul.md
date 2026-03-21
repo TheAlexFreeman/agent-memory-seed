@@ -6,7 +6,7 @@ trust: medium
 type: build-plan
 category: build
 status: active
-next_action: "Phase 0 — decide demo-app-build timing and whether question-review thresholds should be fixed or maturity-guided"
+next_action: "Phase 1 — create projects/ directory structure and migrate existing plans"
 ---
 
 # Build Plan: Plans → Projects Architectural Overhaul
@@ -66,6 +66,12 @@ exhaust their open questions.
   projects ("Get to know your user", "Learn this memory system") replace the
   interview-style flow with collaborative work within a project context. The
   onboarding redesign should wait for the project model to land.
+- **Orient–evaluate protocol** (formerly `plans/orient-evaluate-protocol-and-complementarity-docs.md`):
+  Merged into this plan as of 2026-03-21. The orient → work → evaluate pattern
+  ("cognitive sandwich") at single-task, multi-session-arc, and system-level
+  scales is now part of this overhaul, along with the complementarity
+  documentation updates for DESIGN.md, CORE.md, GLOSSARY.md, and the knowledge
+  base extension. The session-project scale (Frame/Flag/Check) was already here.
 - **Developmental governance** (scratchpad thread, 2026-03-20): Alex's top-down
   governance / bottom-up knowledge accumulation frame maps naturally onto
   projects — the human sets project scope and resolves high-level questions while
@@ -383,15 +389,13 @@ These ship with every new Engram instance and serve as the onboarding pathway:
    - This is the open-ended research home. Topic-specific research that doesn't
      belong to a finite project lives here.
 
-4. **demo-app-build** (active, optional)
-   - Purpose: A concrete demonstration of the full project lifecycle.
-   - The system walks through: outlining requirements → evaluating
-     constraints/tradeoffs → creating a build plan → soliciting user input on
-     key design decisions → building in hierarchical passes.
-   - This is optional — offered during onboarding for users who want to see the
-     system work end-to-end on a tangible deliverable.
-   - Completion criterion: the app is built and deployed (or the user is
-     satisfied with the output). All design questions resolved.
+4. **demo-app-build** — **deferred** (Phase 0 decision, 2026-03-21). Not
+   included in the initial starter set. Will be added as a future enhancement
+   once the core project model is proven. Purpose when added: a concrete
+   demonstration of the full project lifecycle (requirements → evaluation →
+   build plan → user input on design decisions → hierarchical build passes).
+   Optional — offered during onboarding for users who want to see the system
+   work end-to-end on a tangible deliverable.
 
 ### Session-project interaction protocol
 
@@ -456,6 +460,138 @@ genuinely novel risk. The system already tracks system maturity
 (`meta/system-maturity.md`); extending it to track *relationship maturity*
 would allow protocol behavior to evolve with the partnership.
 
+### The orient–evaluate pattern at multiple scales
+
+The session-project interaction protocol (Frame/Flag/Check) is the session-scale
+instance of a more general orient → work → evaluate pattern. This plan extends
+that pattern to three additional scales. The pattern is a behavioral convention,
+not new infrastructure — it lives in protocol descriptions and governance docs,
+not in folder structures or MCP tools.
+
+**The human leads the "before" beats; the agent leads tracking; the "after"
+beats are joint.** This mapping — goal-setting is human, sustained attention
+is agent, calibration is joint — flows directly from the complementarity
+analysis and is consistent across all scales.
+
+#### Scale 1: Single task (minutes)
+
+**When it fires:** Knowledge file creation, knowledge promotion, identity
+updates, and any task where the agent produces a durable artifact that will be
+read in future sessions. Does *not* fire for ephemeral outputs (chat responses,
+quick lookups, routine ACCESS logging).
+
+**Orient (before writing):**
+The agent states in 1–2 sentences what gap this artifact fills and what its known
+limitations are. This pre-registers what "good" looks like so the evaluate step
+has criteria to check against.
+
+> "Writing a knowledge file on Django middleware ordering. This fills a gap in
+> the django stack coverage. I'm drawing on training data and your earlier
+> conversation about request lifecycle; the production-specific ordering
+> considerations are where I'm least confident."
+
+**Evaluate (after writing):**
+The agent checks the artifact against the stated orient criteria. For
+agent-research artifacts, this can be brief. For joint-evaluation artifacts,
+the evaluate beat explicitly invites human grounding:
+
+> "The middleware file is written. The section on async middleware interaction
+> is where I'm most likely to have causal gaps — does this match your
+> production experience?"
+
+**Complementarity mapping:** Orient: agent states the gap (breadth); human
+refines (priorities). Work: agent writes (consistency). Evaluate: joint —
+agent checks structural completeness; human checks grounding.
+
+#### Scale 2: Session-project (already specified above)
+
+Frame/Flag/Check beats, cognitive mode, `resolves_by` routing. See
+"Session-project interaction protocol" above.
+
+#### Scale 3: Multi-session arc (days to weeks)
+
+**When it fires:** At the start of any session that continues an active project,
+when the project has been worked on for 3+ sessions. Does *not* fire in the
+first few sessions (not enough trajectory to assess).
+
+**Orient (trajectory review):**
+The agent briefly surfaces the project's epistemic trajectory — not just
+"here's where we are" (the Frame beat already does that) but "here's how our
+understanding has shifted since we started." This is the divergent/convergent
+opponent-processing check: are we asking the right questions, or have we
+converged prematurely?
+
+> "We've been working on the multi-agent architecture for four sessions. We
+> started with a focus on write coordination, but the last two sessions revealed
+> that the real constraint is identity isolation. Two of our original five
+> questions are now resolved; three remain but two have shifted significantly."
+
+**Evaluate (trajectory assessment):**
+Periodically (every 3–5 sessions on an active project, or when the human
+triggers it), the agent and human jointly assess whether the project's direction
+is still right. Meta-level questions: are we asking the right questions? Has the
+original goal shifted? Should we reopen exploration?
+
+**Where this lives:** As a convention in the project SUMMARY.md update protocol.
+When updating a project's current focus and cognitive mode at session end, the
+agent should also assess whether a trajectory review is due. Heuristic: if the
+cognitive mode has changed since last session, or if 3+ sessions have elapsed
+since the last trajectory note, include a trajectory observation in the Check
+beat.
+
+#### Scale 4: System level (months)
+
+**When it fires:** During periodic review (currently every 30 days per
+`meta/update-guidelines.md`).
+
+**Orient (system value framing):**
+Before running the periodic review checklist, the agent articulates what "the
+system is working well" would mean for this specific user — personalized and
+concrete.
+
+**Evaluate (system value assessment):**
+After the standard periodic review (freshness, anomalies, maturity signals), a
+joint assessment of whether the system is earning its maintenance cost. Four
+dimensions:
+
+- **Retrieval hit rate:** Are the files that get loaded actually helping?
+  (Quantitative — ACCESS.jsonl tracks this.)
+- **Context rebuild savings:** Has session-start context improved?
+  (Qualitative — human assessment.)
+- **Knowledge base ROI:** Is time spent on curation paying off?
+  (Qualitative — human assessment.)
+- **Governance overhead:** Are protocols helping or hindering?
+  (Mixed — agent estimates context budget; human assesses experience.)
+
+**Where this lives:** As a new section in the periodic review checklist
+(`meta/update-guidelines.md`), inserted after step 7 (governance evaluation).
+
+### Project context loading
+
+Loading a project into context is one of the most frequent memory reads in this
+system, especially for automated sessions and returning-session routing. The
+design must optimize for this path:
+
+- **SUMMARY.md is the single-read routing surface.** A returning agent should
+  be able to read one file (the project's SUMMARY.md) and know: what the project
+  is, what cognitive mode it's in, what the current focus is, and whether to load
+  more. This is why cognitive mode and current focus live in SUMMARY.md rather
+  than being derived from questions.md.
+- **questions.md is the second read.** If SUMMARY.md indicates the project needs
+  active work this session, questions.md is loaded next to understand the
+  specific open questions and their routing (`resolves_by`).
+- **IN/ and OUT/ are loaded on demand.** Individual files from these folders are
+  loaded only when the session's work requires them, not as part of routine
+  project context loading.
+- **A `memory_load_project` read tool** should be added to the MCP surface. It
+  returns the project's SUMMARY.md and questions.md in a single call, optimized
+  for the returning-session path. For deeper loads, an optional `depth` parameter
+  can include IN/ and OUT/ file listings.
+- **The top-level `projects/SUMMARY.md` navigator** is the cross-project routing
+  surface. It provides enough information to decide *which* project to load,
+  without loading any individual project. This file is part of the compact
+  returning orientation path.
+
 ### Cross-project knowledge flow
 
 Projects don't exist in isolation. Key mechanisms for cross-pollination:
@@ -500,9 +636,13 @@ restructuring:
      `projects/rationalist-ai-discourse/plans/research-plan.md` (plus
      questions.md seeded from the plan's central questions)
 
-3. **plans/SUMMARY.md** → `projects/SUMMARY.md` with updated format.
+3. **Merged plans** (orient-evaluate-protocol-and-complementarity-docs):
+   Content merged into this plan (plans-to-projects-overhaul). The original
+   file is archived to `projects/_archive/` for provenance.
 
-4. **plans/ACCESS.jsonl** → `projects/ACCESS.jsonl` (file paths in entries will
+4. **plans/SUMMARY.md** → `projects/SUMMARY.md` with updated format.
+
+5. **plans/ACCESS.jsonl** → `projects/ACCESS.jsonl` (file paths in entries will
   need updating to reflect new locations). Project-local `IN/` and `OUT/`
   retrieval logging rules will also need to be defined.
 
@@ -519,21 +659,32 @@ restructuring:
 - `resolves_by` routing field in questions.md (agent-research, human-decision,
   joint-evaluation, human-only)
 - Stable machine IDs and validator-enforced formatting for project questions
-- Collaborative question review protocol (joint calibration, not agent-only)
+- Collaborative question review protocol with fixed thresholds (3+ sessions
+  dormant, 10+ open questions)
 - Session-project interaction protocol (Frame / Flag / Check beats)
+- Orient–evaluate pattern at single-task, multi-session-arc, and system-level
+  scales (merged from orient-evaluate-protocol plan)
+- `memory_load_project` read tool optimized for the frequent project-context-
+  loading path
 - Migration of existing plans to project containers or archive
 - Hard-coded starter project templates (getting-to-know-you, system-literacy,
-  general-knowledge-base, demo-app-build)
+  general-knowledge-base); demo-app-build deferred
 - MCP tool updates: plan tools become project-aware, new project/question tools
 - Path policy updates: `projects` replaces `plans` in mutation roots
 - Bootstrap updates: projects become a root-level orientation surface
 - Validator updates: new validation rules for project structure
 - Bootstrap/governance updates: references to plans/ become projects/
 - Setup script updates: init-worktree.sh creates projects/ structure
-- Human-facing documentation updates
+- Governance protocol updates: knowledge-creation orient–evaluate convention in
+  session-checklists, system-value assessment in periodic review
+- Human-facing documentation updates: new cognitive complementarity section in
+  DESIGN.md, CORE.md brief addition, GLOSSARY.md new terms
+- Knowledge base extension: new §6 in human-llm-cognitive-complementarity.md
+  on temporal metacognition externalization
 
 **Out of scope (future work):**
 - Onboarding skill rewrite (depends on this landing first, tracked separately)
+- Demo-app-build starter project (deferred from initial set, Phase 0 decision)
 - Semantic search across project knowledge (requires retrieval infrastructure)
 - Project templates beyond the hard-coded starters (user-defined templates)
 - Multi-user project sharing (requires multi-agent architecture)
@@ -543,39 +694,41 @@ restructuring:
 - Formal protocol reference file (the session-project interaction protocol is
   described here; a standalone reference file at `meta/collaboration-protocol.md`
   could be loaded on-demand for complex tasks)
+- Purpose-driven context loading (loading decisions driven by session goals
+  rather than following the manifest mechanically — architecturally significant,
+  deserves its own design review)
+- Quantitative context-budget monitoring (DESIGN.md item 6; the system-level
+  evaluate step would benefit from actual token-cost data)
+- Maturity-guided question review thresholds (fixed thresholds for now; may
+  revisit if the system needs tuning as it develops)
 
 ---
 
 ## Implementation phases
 
-### Phase 0: Design review
-- [ ] Review this plan with the user; confirm or adjust:
-  - The project folder structure (SUMMARY.md, questions.md, `IN/`, `OUT/`, plans/)
-  - The status model (active, ongoing, completed, archived)
-  - The cognitive mode model (exploration, evaluation, crystallization,
-    execution, verification) and whether it belongs in SUMMARY.md or a
-    separate metadata surface
-  - The `resolves_by` question routing taxonomy (agent-research,
-    human-decision, joint-evaluation, human-only)
-  - The machine-ID question format and whether validator enforcement should be
-    strict enough to keep the file semantically editable by MCP tools
-  - The session-project interaction protocol (Frame/Flag/Check) — is the
-    activation threshold right? Should it be documented inline in the project
-    structure or as a separate reference file?
-  - The completion criterion (no open questions + all plans done)
-  - The starter project set and their purposes
-  - The migration strategy for existing completed plans
-- [ ] Decide: should the demo-app-build starter project be included in the
-  initial set, or added later as an enhancement?
+### Phase 0: Design review ✓
+- [x] Review this plan with the user (2026-03-21). Confirmed: folder structure,
+  status model, cognitive mode in SUMMARY.md, `resolves_by` taxonomy, machine-ID
+  format with validator enforcement, Frame/Flag/Check activation threshold,
+  completion criterion, starter project set, flat archive migration strategy.
+- [x] Decide: demo-app-build deferred from initial starter set. Will be added as
+  a future enhancement once the core project model is proven.
 - [x] Decide: projects are a root-level orientation feature and should replace
   top-level `plans/` in the compact startup path.
 - [x] Decide: project artifacts live in `projects/<slug>/IN/` and
   `projects/<slug>/OUT/`, not a single `knowledge/` subfolder.
 - [x] Decide: every question must have a machine ID and a validator-enforced
   format so question tools can edit safely.
-- [ ] Decide: should the collaborative question review protocol specify a fixed
-  threshold (3+ sessions dormant, 10+ open questions) or leave thresholds to
-  the agent's judgment guided by the system maturity stage?
+- [x] Decide: fixed thresholds for collaborative question review (3+ sessions
+  dormant, 10+ open questions). May revisit with maturity-guided thresholds
+  if tuning proves necessary.
+- [x] Decide: orient-evaluate-protocol plan merged into this plan. The orient–
+  evaluate pattern at single-task, multi-session-arc, and system-level scales,
+  plus complementarity documentation and knowledge base extension, are now
+  in-scope here.
+- [x] Decide: project context loading is a first-class optimization target.
+  `memory_load_project` read tool added to Phase 2 scope. SUMMARY.md designed
+  as a single-read routing surface.
 
 ### Phase 1: Core folder structure and migration
 - [ ] Create `projects/` directory with top-level SUMMARY.md and ACCESS.jsonl
@@ -584,12 +737,16 @@ restructuring:
   `projects/onboarding-redesign/`
 - [ ] Migrate `plans/rationalist-ai-discourse-research.md` → full project
   structure at `projects/rationalist-ai-discourse/`
+- [ ] Archive `plans/orient-evaluate-protocol-and-complementarity-docs.md` →
+  `projects/_archive/` (content merged into this plan; the original plan file
+  is preserved for provenance)
 - [ ] Seed questions.md for each migrated active project from their plan files'
   central questions and open design decisions
 - [ ] Create `IN/` and `OUT/` folders for each migrated and starter project,
   with initial README or placeholder conventions if needed
 - [ ] Create starter project skeletons (getting-to-know-you, system-literacy,
-  general-knowledge-base) with SUMMARY.md and questions.md
+  general-knowledge-base) with SUMMARY.md and questions.md (demo-app-build
+  deferred)
 - [ ] Write `projects/SUMMARY.md` with the new cross-project navigator format
 - [ ] Remove the old `plans/` folder entirely
 
@@ -617,6 +774,12 @@ restructuring:
     superseded | refactored | no-longer-applicable)
   - `memory_update_question` — updates question text or routing metadata by
     machine ID without changing the question's identity
+  - `memory_load_project` — read tool optimized for the frequent project-
+    context-loading path. Returns SUMMARY.md + questions.md in a single call.
+    Optional `depth` parameter: `summary` (default, SUMMARY.md only),
+    `questions` (SUMMARY.md + questions.md), `full` (includes IN/ and OUT/
+    file listings). This is one of the most frequent reads in the system —
+    especially for automations and returning-session routing.
 - [ ] Update `session_tools.py`: replace `"plans"` with `"projects"` in
   `_ACCESS_ROOTS` and `_REVERT_ALLOWED_TOP_LEVELS`
 - [ ] Update `read_tools.py`: update directory enumeration and startup resources
@@ -651,34 +814,85 @@ restructuring:
   - Folder behavioral contracts table: `plans/` row → `projects/`
   - Instruction containment rules updated for project scope
   - Add note on `IN/` and `OUT/` lifecycle and promotion rules
-- [ ] Update `meta/update-guidelines.md`: frontmatter requirements for
-  project files, question-format requirements, plans-special-case note updated
+- [ ] Update `meta/update-guidelines.md`:
+  - Frontmatter requirements for project files, question-format requirements,
+    plans-special-case note updated
+  - Add system-value assessment step to periodic review (after step 7,
+    governance evaluation). Four dimensions: retrieval hit rate, context rebuild
+    savings, knowledge base ROI, governance overhead. Joint assessment — agent
+    presents data, human provides calibration judgment.
+- [ ] Update `meta/session-checklists.md`:
+  - Add knowledge-creation orient–evaluate convention: behavioral expectation
+    that durable artifacts (knowledge files, promotions, identity updates) get a
+    brief orient (what gap does this fill?) and evaluate (did it fill it?) bracket.
+    Activation threshold: fires on durable artifacts only, not ephemeral outputs.
+  - Add multi-session trajectory review note: for returning sessions on active
+    projects with 3+ sessions of history, include a brief trajectory observation
+    in the greeting or Frame beat.
 - [ ] Update `README.md`: folder structure, retrieval logging, workflow
   descriptions
-- [ ] Update `HUMANS/docs/` files:
-  - CORE.md, GLOSSARY.md, INTEGRATIONS.md, QUICKSTART.md, MCP.md
-  - agent-memory-capabilities.toml
 - [ ] CHANGELOG entry
 
-### Phase 5: Starter project content
+### Phase 5: Human-facing documentation updates
+- [ ] Write new "Cognitive complementarity principle" section for
+  `HUMANS/docs/DESIGN.md`, placed after "The dual-audience problem" in Part I:
+  - The core thesis (prosthetic cognitive architecture)
+  - Condensed failure-mode complementarity tables
+  - Architectural-features-as-complementarity-implementations mapping table
+  - The orient–evaluate pattern as temporal metacognition externalization
+  - Design implications for future development
+  - Cross-reference to knowledge base analysis
+  - Target length: 800–1200 words
+- [ ] Add brief paragraph to `HUMANS/docs/CORE.md` § "Fundamental design
+  decisions" introducing the complementarity principle (3–4 sentences)
+- [ ] Add glossary entries to `HUMANS/docs/GLOSSARY.md`: cognitive
+  complementarity, orient–evaluate pattern, cognitive mode, `resolves_by`
+  routing, Frame/Flag/Check protocol, prospective/retrospective metacognition
+- [ ] Update remaining `HUMANS/docs/` files:
+  - INTEGRATIONS.md, QUICKSTART.md, MCP.md
+  - agent-memory-capabilities.toml
+- [ ] Review all additions for tone consistency with existing DESIGN.md prose
+
+### Phase 6: Knowledge base extension
+- [ ] Update `knowledge/cognitive-science/human-llm-cognitive-complementarity.md`:
+  - Add new §6: "The orient–evaluate pattern: temporal externalization of
+    metacognition" — extends the analysis from spatial (trust tiers, SUMMARY
+    files) to temporal (before/after brackets around cognitive work)
+  - Connect to Nelson-Narens prospective vs. retrospective monitoring
+  - Connect to attention synthesis's executive-function-as-context-curation
+  - Revise open question #2 to note orient–evaluate provides a mechanism
+  - Add open question #6: at which scales does the pattern have highest
+    marginal value?
+- [ ] Update `knowledge/cognitive-science/SUMMARY.md` to mention new §6
+- [ ] Ensure cross-references are bidirectional: DESIGN.md → knowledge file →
+  governance docs → knowledge file
+
+### Phase 7: Starter project content
 - [ ] Write getting-to-know-you questions.md with thoughtful starter questions
   that replace the interview-style onboarding checklist
 - [ ] Write system-literacy questions.md with progressive discovery questions
 - [ ] Write general-knowledge-base questions.md seeded from user's known domains
-- [ ] Optionally: sketch demo-app-build project structure and questions.md
 - [ ] Update `meta/first-run.md` to route through starter projects instead of
   the onboarding skill
 - [ ] Update or archive `skills/onboarding.md` (may be replaced entirely by the
   getting-to-know-you project flow — decision from Phase 0)
 
-### Phase 6: Integration testing and verification
+### Phase 8: Integration testing and verification
 - [ ] Run the full repo validator on the restructured repo
 - [ ] Run the full MCP test suite
 - [ ] Verify bootstrap loads correctly with `projects/SUMMARY.md`
-- [ ] Manually test project creation, question addition/resolution, and plan
-  lifecycle through MCP tools
+- [ ] Manually test project creation, question addition/resolution, plan
+  lifecycle, and `memory_load_project` through MCP tools
+- [ ] Verify orient–evaluate conventions are present in session-checklists
+  and update-guidelines without exceeding context budget (session-checklists
+  addition ≤ 100 words; update-guidelines addition ≤ 200 words)
+- [ ] Verify cross-references between DESIGN.md, governance docs, and
+  knowledge base are bidirectional and accurate
 - [ ] Verify init-worktree.sh produces a valid repo structure
 - [ ] Verify CI passes on both ubuntu and windows matrices
+- [ ] Dry-run the orient–evaluate convention: walk through a knowledge-file
+  creation scenario, a 5-session research project, and a periodic review to
+  confirm the brackets add value, not noise
 
 ---
 
@@ -688,8 +902,14 @@ restructuring:
 - The onboarding redesign plan (`plans/onboarding-redesign.md`) will be migrated
   into a project as part of Phase 1, then updated to align with the project model.
 - The rationalist AI discourse research plan will likewise be migrated.
+- The orient-evaluate-protocol plan (`plans/orient-evaluate-protocol-and-complementarity-docs.md`)
+  is now merged into this plan. The original file will be archived for provenance.
 - The existing MCP test suite covers plan tool behavior extensively — tests will
   need updating but the coverage patterns transfer directly.
+- Knowledge base files required for Phase 6: the complementarity analysis
+  (`knowledge/cognitive-science/human-llm-cognitive-complementarity.md`) and
+  metacognition synthesis must exist in their current form. Both are already
+  written and at `trust: medium`.
 
 ## Risk assessment
 
@@ -734,6 +954,30 @@ the human has already decomposed. The cognitive mode field in SUMMARY.md
 pre-computes much of the Frame beat, so the agent can route correctly from a
 single-line read rather than running the full protocol each time.
 
+**Risk: Orient–evaluate convention at single-task scale adds noise.** Every
+knowledge file gets a brief orient/evaluate bracket. For routine files in
+well-understood domains this may feel rote. Mitigation: the convention fires
+only on durable artifacts, not ephemeral outputs. For routine files the orient
+step can be a single sentence. The convention is guidance, not enforcement.
+
+**Risk: System-level value assessment feels like a survey.** If the periodic
+review asks "is this working?" every 30 days, it could feel repetitive.
+Mitigation: the assessment should be personalized and specific — not "is this
+working?" but "last month we built 12 knowledge files in the Django area; have
+you noticed better session starts on Django tasks?" Concrete, falsifiable
+questions invite genuine calibration.
+
+**Risk: Multi-session trajectory review is hard to trigger reliably.** Unlike
+periodic review (clear 30-day trigger), "3+ sessions on an active project" is
+fuzzy. Mitigation: tie the trigger to the project SUMMARY.md's `Last activity`
+field and cognitive mode field. If mode has changed or 3+ sessions have elapsed
+without a trajectory note, the convention fires.
+
+**Risk: DESIGN.md complementarity section is too theoretical.** Human readers
+may not care about cognitive science — they want to understand how to use the
+system. Mitigation: lead with practical implications (failure-mode tables,
+architectural mapping); put theoretical grounding at the end.
+
 **Risk: Question routing (`resolves_by`) becomes stale.** A question tagged
 `agent-research` might turn out to need human grounding once the research
 reveals unexpected complexity. Mitigation: `resolves_by` is a routing hint, not
@@ -768,3 +1012,18 @@ natural moment for this recalibration.
 - The session-project protocol (Frame/Flag/Check) feels like natural
   collaboration, not bureaucratic overhead — verified through manual dry-run
   with diverse task types
+- `memory_load_project` returns a project's routing context (SUMMARY.md +
+  questions.md) in a single call, optimized for the most frequent read path
+- The orient–evaluate convention is described in session-checklists and
+  update-guidelines in a way that a new agent can follow without loading
+  additional reference material
+- The periodic review includes a system-value assessment step that solicits
+  the human's calibration judgment, not just system-health metrics
+- DESIGN.md includes a coherent explanation of cognitive complementarity that
+  a non-technical reader can follow
+- The knowledge base analysis is extended to cover temporal metacognition
+  externalization
+- All cross-references between DESIGN.md, governance docs, and knowledge base
+  are bidirectional and accurate
+- No new always-load context budget is consumed — governance additions fit
+  within existing session-checklists and update-guidelines token budgets

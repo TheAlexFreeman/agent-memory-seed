@@ -5,8 +5,8 @@ created: 2026-03-21
 trust: medium
 type: build-plan
 category: build
-status: active
-next_action: "Phase 0 — review design decisions with user before implementation"
+status: completed
+next_action: "Merged into plans/plans-to-projects-overhaul.md (2026-03-21)"
 ---
 
 # Build Plan: Orient–Evaluate Protocol and Cognitive Complementarity Documentation
