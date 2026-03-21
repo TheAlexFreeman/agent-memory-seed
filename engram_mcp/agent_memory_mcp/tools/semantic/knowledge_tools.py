@@ -184,7 +184,8 @@ def _update_source_summary_after_promotion(
     updated_source = remove_entry_from_section(summary_content, source_section_id, filename)
     if updated_source is None:
         warnings.append(
-            f"Section '<!-- section: {source_section_id} -->' not found in {source_summary_path}."
+            f"No matching section '<!-- section: {source_section_id} -->' in {source_summary_path}; "
+            "the source entry may already be absent. No action required if the target summary was updated."
         )
         return summary_content
     return _prune_empty_summary_section(updated_source, source_section_id)

@@ -10,7 +10,6 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 - [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: memory_find_references, memory_validate_links, memory_reorganize_preview, memory_reorganize_path, memory_suggest_structure; Phase 1 next (reference extractor + find_references).
 - [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, warning clarity, paths-only enum; Phase 1 next.
-- [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: discovery note, route workflow hints, subtree-aware promotion prep, and periodic-review reliability are now in; remaining work is paths-only enumeration and subtree-warning polish; Phase 3 next.
 - [checklist-app-architecture.md](checklist-app-architecture.md) — Django/React checklist tool for task management and progress tracking; Phase 1 next (Django scaffold + models).
 
 ### Research plans
@@ -20,6 +19,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 ## Recent completions
 
 - [mcp-agent-friendliness-improvements.md](mcp-agent-friendliness-improvements.md) — completed 2026-03-21; 31/31 items across 7 phases (promotion parity, routing/policy-state helpers, preview contract support, workflow bundles, advisory tool profiles, MCP-native resources/prompts, provenance enrichment, structured extraction); the governed MCP surface now covers routing, previews, workflow bootstraps, host-side narrowing metadata, MCP-native navigation primitives, lineage-aware provenance reads, and section-based large-file inspection.
+- [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — completed 2026-03-21; 11/11 checklist items complete across re-baselining, discovery guidance, workflow hints, subtree-aware promotion prep, paths-only unverified enumeration, warning clarity, and periodic-review runtime reliability.
 - [software-testing-validation-research.md](software-testing-validation-research.md) — completed 2026-03-20; 14/14 items across 5 phases (testing foundations/epistemology, unit testing/TDD/BDD, black-box and white-box design/mutation/property-based testing, integration/system/acceptance/performance testing, formal verification/AI-ML evaluation/behavioral testing/red-teaming); 14 knowledge files in `knowledge/software-engineering/testing/`; pending human review.
 - [ai-frontier-research.md](ai-frontier-research.md) — completed (date unrecorded); 25/25 base + 9 extension items across 7 phases + Phase 2 infrastructure extension + Phase 3 retrieval extension (ColPali, late chunking, agentic RAG patterns, HyDE, reranking); knowledge files in `knowledge/ai/`; pending human review.
 - [relevance-realization-research.md](relevance-realization-research.md) — completed 2026-03-20; 13/13 items across 4 phases (Gestalt/frame-problem antecedents, opponent-processing/four-kinds-of-knowing/aptitudes-of-intelligence, insight behavioral/neural/mechanism, rationality/wisdom/meaning-crisis/synthesis); 13 knowledge files in `knowledge/cognitive-science/relevance-realization/`; pending human review.
@@ -103,11 +103,11 @@ Next: Execute Phase 1 (Sociology of Knowledge & STS) — Mannheim, Merton, Kuhn,
 ---
 
 <!-- BEGIN: mcp-agent-discoverability-guidance -->
-### MCP Agent Discoverability and Guidance · status: active · trust: medium
+### MCP Agent Discoverability and Guidance · status: complete · trust: medium
 Detail: plans/mcp-agent-discoverability-guidance.md
-Scope: Re-baselined after reviewing the live Engram MCP surface, knowledge-base health, and validator output. Discovery note, route workflow hints, subtree-aware promotion prep, and periodic-review reliability are landed; the remaining scope is full-path unverified enumeration and warning polish.
-Progress: 9/11 checklist items complete; discovery note, route workflow hints, subtree-aware promotion prep, and periodic-review reliability are now landed.
-Next: Execute Phase 3 — add cheap full-path enumeration for unverified review, then polish non-actionable subtree warnings.
+Scope: Re-baseline plus finish-pass on MCP discoverability and promotion guidance. The plan delivered discovery notes, route workflow hints, subtree-aware promotion prep, full-path unverified enumeration, clearer subtree warnings, and the periodic-review reliability fix.
+Progress: 11/11 checklist items complete.
+Next: All planned phases complete.
 <!-- END: mcp-agent-discoverability-guidance -->
 
 ---

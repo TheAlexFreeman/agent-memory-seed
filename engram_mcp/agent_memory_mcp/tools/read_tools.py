@@ -4346,11 +4346,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         folder_path: str = "knowledge/_unverified",
         max_files: int = 12,
         max_extract_words: int = 60,
+        paths_only: bool = False,
     ) -> str:
         """Return a compact unverified-review bundle with bounded file extracts."""
         from ..errors import ValidationError
 
-        if max_files < 1:
+        if max_files < 1 and not paths_only:
             raise ValidationError("max_files must be >= 1")
 
         review_payload = json.loads(
@@ -4383,11 +4384,34 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 cast(str, item.get("path") or ""),
             )
         )
+        if paths_only:
+            all_paths = [cast(str, item["path"]) for item in candidates if item.get("path")]
+            payload = {
+                "folder_path": folder_path,
+                "trust_counts": review_payload["trust_counts"],
+                "expired_count": review_payload["expired_count"],
+                "paths_only": True,
+                "all_paths": all_paths,
+                "recommended_operations": {
+                    "single_file": "memory_promote_knowledge",
+                    "batch": "memory_promote_knowledge_batch",
+                    "subtree": "memory_promote_knowledge_subtree",
+                },
+                "response_budget": {
+                    "paths": {
+                        "returned": len(all_paths),
+                        "total": len(all_paths),
+                        "truncated": False,
+                    },
+                },
+            }
+            return json.dumps(payload, indent=2)
         selected_files, file_budget = _truncate_items(candidates, max_files)
         payload = {
             "folder_path": folder_path,
             "trust_counts": review_payload["trust_counts"],
             "expired_count": review_payload["expired_count"],
+            "paths_only": False,
             "selected_files": selected_files,
             "recommended_operations": {
                 "single_file": "memory_promote_knowledge",
