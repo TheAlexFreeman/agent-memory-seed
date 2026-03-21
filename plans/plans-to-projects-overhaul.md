@@ -6,7 +6,7 @@ trust: medium
 type: build-plan
 category: build
 status: active
-next_action: "Phase 0 — review design decisions with user before implementation"
+next_action: "Phase 0 — decide demo-app-build timing and whether question-review thresholds should be fixed or maturity-guided"
 ---
 
 # Build Plan: Plans → Projects Architectural Overhaul
@@ -14,8 +14,9 @@ next_action: "Phase 0 — review design decisions with user before implementatio
 ## Goals
 
 Replace the top-level `plans/` folder with a `projects/` folder that elevates
-projects to a first-class organizational unit. A project bundles **open
-questions**, **accumulated knowledge**, and **action plans** into a single scoped
+projects to a first-class organizational unit and a root-level part of the
+system's orientation context. A project bundles **open questions**,
+**accumulated project knowledge**, and **action plans** into a single scoped
 workspace. This is the system's next major abstraction: plans become artifacts
 within projects rather than top-level entities.
 
@@ -31,7 +32,10 @@ exhaust their open questions.
 
 - **Projects are the unit of sustained cognitive work.** A project is not just a
   task list — it's a scoped workspace where understanding accumulates, questions
-  get resolved, and plans crystallize when readiness is sufficient.
+  get resolved, and plans crystallize when readiness is sufficient. Because open
+  projects will be one of the most important returning-session signals,
+  `projects/` belongs in the root orientation surface rather than being treated
+  as a secondary container.
 - **Open questions drive the lifecycle.** Questions are the heartbeat of a
   project. They provide re-entry context ("here's what we don't know yet"),
   completion criteria (all resolved), and a record of epistemic trajectory
@@ -87,10 +91,10 @@ gaps:
    that aren't actionable yet, they have nowhere to live. They end up in the
    scratchpad, disconnected from the work that generated them.
 
-2. **No project-scoped knowledge.** Findings from a research plan get written
-   directly to `knowledge/` or `_unverified/`, losing their connection to the
-   project that produced them. There's no way to see "everything we learned
-   while working on X."
+2. **No project-scoped artifact flow.** Findings from a research plan get
+  written directly to `knowledge/` or `_unverified/`, and outputs from build
+  plans have no canonical project home. There's no way to see "everything we
+  learned while working on X" versus "everything X produced."
 
 3. **No natural completion criterion.** A plan is "done" when all checkboxes are
    checked, but that doesn't capture whether the *understanding* is complete.
@@ -119,25 +123,29 @@ projects/
   getting-to-know-you/          # hard-coded starter project
     SUMMARY.md                  # project status, description, completion state
     questions.md                # open and resolved questions
-    knowledge/                  # project-scoped findings
+    IN/                         # research inputs and accumulated project knowledge
+    OUT/                        # vetted/promotable knowledge and build outputs
     plans/                      # action plans (optional, may be empty)
 
   system-literacy/              # hard-coded starter project
     SUMMARY.md
     questions.md
-    knowledge/
+    IN/
+    OUT/
     plans/
 
   general-knowledge-base/       # perpetual project
     SUMMARY.md
     questions.md
-    knowledge/
+    IN/
+    OUT/
     plans/
 
   rationalist-ai-discourse/     # migrated from plans/rationalist-ai-discourse-research.md
     SUMMARY.md
     questions.md
-    knowledge/                  # will receive output files instead of _unverified/
+    IN/                         # research-plan findings live here first
+    OUT/                        # vetted synthesis promoted from this project
     plans/
       research-plan.md          # the current plan, relocated
 
@@ -169,6 +177,10 @@ status: active | ongoing | completed | archived
 - Active plans: N
 - Status: <active|ongoing|completed|archived>
 - Last activity: YYYY-MM-DD
+
+## Artifact flow
+- IN/: <what kind of accumulated research material lives here>
+- OUT/: <what kind of vetted/promotable artifacts live here>
 
 ## Current focus
 <The most important open question or active plan item right now>
@@ -210,12 +222,14 @@ work that occurred.
 
 ### questions.md — the epistemic heartbeat
 
-Each project's `questions.md` tracks open and resolved questions:
+Each project's `questions.md` tracks open and resolved questions. Questions are
+human-readable, but every question also carries a stable machine ID so MCP
+tools can reference it reliably even if the wording changes:
 
 ```markdown
 # Open Questions
 
-## <question-slug>
+## q-001: <question text>
 **Asked:** YYYY-MM-DD | **Context:** <why this question matters>
 **Resolves by:** <agent-research | human-decision | joint-evaluation | human-only>
 **Agent contribution:** <what the agent can do to help — even for human-only questions>
@@ -226,8 +240,9 @@ Each project's `questions.md` tracks open and resolved questions:
 
 # Resolved Questions
 
-## <question-slug>
+## q-001: <question text>
 **Asked:** YYYY-MM-DD | **Resolved:** YYYY-MM-DD
+**Disposition:** <answered | superseded | refactored | no-longer-applicable>
 **Answer:** <the resolution — concise, linking to knowledge files if detailed>
 
 <optional: how we got here, what changed our understanding>
@@ -236,6 +251,8 @@ Each project's `questions.md` tracks open and resolved questions:
 Design notes on questions:
 - Questions use natural language. They can be precise ("which ORM should we
   use?") or exploratory ("what are the failure modes of this approach?").
+- Every question gets a stable machine ID (`q-001`, `q-002`, ...). Tools refer
+  to the ID; humans read and edit the text.
 - Resolved questions stay visible with their answers. The resolution history is
   itself valuable knowledge — it records the project's epistemic trajectory.
 - A question can be resolved by answering it, by deciding it's no longer
@@ -244,6 +261,8 @@ Design notes on questions:
   finding might resolve one question and open two more.
 - Questions can be tagged with priority or category if the project warrants it,
   but this is optional — most projects won't need it.
+- Format consistency should be validator-enforced so `questions.md` remains a
+  governed surface rather than drifting into ad hoc note-taking.
 
 The `resolves_by` field turns `questions.md` into a **collaboration router**.
 When the agent picks up a project at session start, it can immediately see which
@@ -284,30 +303,43 @@ agent-only housekeeping task. The protocol:
    refactoring (split, merge, or rephrase).
 
 3. **Agent records the resolution.** Resolved questions move to the Resolved
-   section with their disposition, preserving the epistemic trajectory. Questions
-   that the human confirms as still relevant get their `Asked` date refreshed to
-   prevent repeated flagging.
+  section with their machine ID and disposition preserved. Questions that the
+  human confirms as still relevant keep the same machine ID and get their
+  `Asked` date refreshed to prevent repeated flagging.
 
 This is the metacognitive monitoring pattern from the trust system (externalized
 calibration compensating for the agent's inability to self-assess relevance)
 applied at the question level.
 
-### Project-scoped knowledge
+### Project artifact flow: `IN/` and `OUT/`
 
-Each project has an optional `knowledge/` subfolder for findings that are
-specific to the project's context. This is the "messy, in-progress
-understanding" space. The relationship to the global knowledge base:
+Each project has two artifact folders with distinct semantics:
 
-- **Project knowledge is provisional.** It captures what we've learned *in the
-  context of this project*. It may contain partial understanding, working
+- **`IN/`** — accumulated project research and other inward-facing context.
+  This is where findings from research plans live first. `IN/` is the
+  project-scoped understanding surface: notes, partial syntheses, comparisons,
+  and other materials that matter primarily in the context of the project.
+- **`OUT/`** — vetted and outward-facing artifacts. This includes knowledge that
+  is ready to be promoted to the root knowledge base, plus non-knowledge
+  deliverables generated by build plans such as design documents, specs,
+  implementation notes, migration guides, or other outputs worth preserving as
+  products of the project.
+
+The relationship to the global knowledge base:
+
+- **`IN/` is project-local accumulation.** It captures what we've learned *in
+  the context of this project*. It may contain partial understanding, working
   hypotheses, or notes that only make sense within the project's scope.
-- **Promotion to global KB.** When a project-scoped finding is durable and
-  generally applicable, it gets promoted to the top-level `knowledge/` folder
-  (or `knowledge/_unverified/` if it hasn't been human-reviewed). The promotion
-  follows the same trust pipeline as any other knowledge file.
-- **Cross-project references.** Project knowledge files can reference files in
-  other projects or in the global KB using relative paths. The agent should
-  surface cross-project relevance when it notices it.
+- **`OUT/` is the staging surface for durable artifacts.** If a project result
+  should become durable root knowledge, it is vetted in `OUT/` first and then
+  promoted to the top-level `knowledge/` folder (or `knowledge/_unverified/` if
+  it still requires human review).
+- **Build outputs also belong in `OUT/`.** Not every project result is knowledge.
+  Some outputs are project-specific artifacts that should remain in the project
+  even after completion.
+- **Cross-project references remain valid.** Files in `IN/` or `OUT/` can
+  reference files in other projects or in the global KB using relative paths.
+  The agent should surface cross-project relevance when it notices it.
 
 ### Plans within projects
 
@@ -375,7 +407,7 @@ The proposal names the cognitive task-types involved and who leads each:
 
 > "This project is in evaluation mode. The highest-priority open question is X —
 > that's a human-decision question. I've accumulated three candidate approaches
-> in the project knowledge folder. I'll summarize the trade-offs; you make the
+> in this project's `IN/` folder. I'll summarize the trade-offs; you make the
 > call. If we resolve X, the project shifts to crystallization and we can start
 > planning."
 
@@ -433,13 +465,15 @@ Projects don't exist in isolation. Key mechanisms for cross-pollination:
   your state management preferences came up during the app build, but it really
   belongs in the getting-to-know-you project."
 - **Knowledge promotion.** Project-scoped findings that prove durable get
-  promoted to the global KB. This is the main pipeline from project work to
-  permanent knowledge.
+  promoted from `OUT/` to the global KB. This is the main pipeline from project
+  work to permanent knowledge.
 - **Cross-references.** Project files can reference other projects' files.
   The agent should surface these connections when they're relevant.
 - **The projects/SUMMARY.md navigator.** The top-level summary provides a
   cross-project view: which projects are active, what their current focus is,
-  and where the highest-priority open questions live.
+  and where the highest-priority open questions live. Because projects are a
+  root-level feature, this navigator becomes part of the compact returning
+  orientation path, not an optional add-on.
 
 ---
 
@@ -469,19 +503,22 @@ restructuring:
 3. **plans/SUMMARY.md** → `projects/SUMMARY.md` with updated format.
 
 4. **plans/ACCESS.jsonl** → `projects/ACCESS.jsonl` (file paths in entries will
-   need updating to reflect new locations).
+  need updating to reflect new locations). Project-local `IN/` and `OUT/`
+  retrieval logging rules will also need to be defined.
 
 ---
 
 ## Scope decisions
 
 **In scope:**
-- New `projects/` folder structure with SUMMARY.md, questions.md convention
+- New `projects/` folder structure with SUMMARY.md, questions.md, `IN/`, `OUT/`,
+  and plans/ convention
 - Project status model (active, ongoing, completed, archived)
 - Cognitive mode field in project SUMMARY.md (exploration, evaluation,
   crystallization, execution, verification)
 - `resolves_by` routing field in questions.md (agent-research, human-decision,
   joint-evaluation, human-only)
+- Stable machine IDs and validator-enforced formatting for project questions
 - Collaborative question review protocol (joint calibration, not agent-only)
 - Session-project interaction protocol (Frame / Flag / Check beats)
 - Migration of existing plans to project containers or archive
@@ -489,6 +526,7 @@ restructuring:
   general-knowledge-base, demo-app-build)
 - MCP tool updates: plan tools become project-aware, new project/question tools
 - Path policy updates: `projects` replaces `plans` in mutation roots
+- Bootstrap updates: projects become a root-level orientation surface
 - Validator updates: new validation rules for project structure
 - Bootstrap/governance updates: references to plans/ become projects/
 - Setup script updates: init-worktree.sh creates projects/ structure
@@ -512,14 +550,15 @@ restructuring:
 
 ### Phase 0: Design review
 - [ ] Review this plan with the user; confirm or adjust:
-  - The project folder structure (SUMMARY.md, questions.md, knowledge/, plans/)
+  - The project folder structure (SUMMARY.md, questions.md, `IN/`, `OUT/`, plans/)
   - The status model (active, ongoing, completed, archived)
   - The cognitive mode model (exploration, evaluation, crystallization,
     execution, verification) and whether it belongs in SUMMARY.md or a
     separate metadata surface
   - The `resolves_by` question routing taxonomy (agent-research,
-    human-decision, joint-evaluation, human-only) — are these the right
-    categories? Too many? Too few?
+    human-decision, joint-evaluation, human-only)
+  - The machine-ID question format and whether validator enforcement should be
+    strict enough to keep the file semantically editable by MCP tools
   - The session-project interaction protocol (Frame/Flag/Check) — is the
     activation threshold right? Should it be documented inline in the project
     structure or as a separate reference file?
@@ -528,9 +567,12 @@ restructuring:
   - The migration strategy for existing completed plans
 - [ ] Decide: should the demo-app-build starter project be included in the
   initial set, or added later as an enhancement?
-- [ ] Decide: should project-scoped knowledge live in `projects/<slug>/knowledge/`
-  or should projects just reference files in the global KB? (Plan recommends
-  project-scoped knowledge with promotion pipeline, but this adds complexity.)
+- [x] Decide: projects are a root-level orientation feature and should replace
+  top-level `plans/` in the compact startup path.
+- [x] Decide: project artifacts live in `projects/<slug>/IN/` and
+  `projects/<slug>/OUT/`, not a single `knowledge/` subfolder.
+- [x] Decide: every question must have a machine ID and a validator-enforced
+  format so question tools can edit safely.
 - [ ] Decide: should the collaborative question review protocol specify a fixed
   threshold (3+ sessions dormant, 10+ open questions) or leave thresholds to
   the agent's judgment guided by the system maturity stage?
@@ -544,6 +586,8 @@ restructuring:
   structure at `projects/rationalist-ai-discourse/`
 - [ ] Seed questions.md for each migrated active project from their plan files'
   central questions and open design decisions
+- [ ] Create `IN/` and `OUT/` folders for each migrated and starter project,
+  with initial README or placeholder conventions if needed
 - [ ] Create starter project skeletons (getting-to-know-you, system-literacy,
   general-knowledge-base) with SUMMARY.md and questions.md
 - [ ] Write `projects/SUMMARY.md` with the new cross-project navigator format
@@ -562,17 +606,21 @@ restructuring:
   - `memory_list_plans` → `memory_list_project_plans`, scoped to a project
 - [ ] Add new project-level tools:
   - `memory_create_project` — creates a new project folder with SUMMARY.md and
-    questions.md skeleton
+    questions.md skeleton plus `IN/` and `OUT/`
   - `memory_list_projects` — lists all projects with status summary
   - `memory_add_question` — adds an open question to a project's questions.md;
-    accepts optional `resolves_by` (agent-research | human-decision |
-    joint-evaluation | human-only) and `agent_contribution` fields
-  - `memory_resolve_question` — moves a question from open to resolved with
-    answer text and optional disposition (answered | superseded | refactored |
-    no-longer-applicable)
+    allocates a stable question ID and accepts optional `resolves_by`
+    (agent-research | human-decision | joint-evaluation | human-only) and
+    `agent_contribution` fields
+  - `memory_resolve_question` — moves a question from open to resolved by
+    machine ID with answer text and optional disposition (answered |
+    superseded | refactored | no-longer-applicable)
+  - `memory_update_question` — updates question text or routing metadata by
+    machine ID without changing the question's identity
 - [ ] Update `session_tools.py`: replace `"plans"` with `"projects"` in
   `_ACCESS_ROOTS` and `_REVERT_ALLOWED_TOP_LEVELS`
-- [ ] Update `read_tools.py`: update directory enumeration to use `projects/`
+- [ ] Update `read_tools.py`: update directory enumeration and startup resources
+  to use `projects/` as a root-level orientation feature
 - [ ] Update `frontmatter_utils.py`: update anchor conventions comment and any
   hardcoded `plans/` references
 - [ ] Update `server.py` if there are any direct references to plans path
@@ -582,7 +630,10 @@ restructuring:
   - Replace `"plans"` with `"projects"` in CONTENT_DIRS, ACCESS_DIRS, and all
     validation functions
   - Add validation for project folder structure (must contain SUMMARY.md)
-  - Add validation for questions.md format (open/resolved sections)
+  - Add validation for questions.md format (open/resolved sections, machine IDs,
+    required fields, unique IDs)
+  - Add validation for `IN/` and `OUT/` folder semantics and access logging
+    expectations
   - Update `plans_summary_has_active_plans()` → `projects_summary_has_active_projects()`
   - Update `validate_plans_summary_shape()` → `validate_projects_summary_shape()`
   - Validate project SUMMARY.md frontmatter (type: project, valid status)
@@ -594,14 +645,14 @@ restructuring:
 
 ### Phase 4: Bootstrap, governance, and documentation updates
 - [ ] Update `agent-bootstrap.toml`: all `plans/SUMMARY.md` references →
-  `projects/SUMMARY.md`; update role descriptions
+  `projects/SUMMARY.md`; update role descriptions and root orientation order
 - [ ] Update `meta/quick-reference.md`: plans/ references → projects/
 - [ ] Update `meta/curation-policy.md`:
   - Folder behavioral contracts table: `plans/` row → `projects/`
   - Instruction containment rules updated for project scope
-  - Add note on project-scoped knowledge lifecycle
+  - Add note on `IN/` and `OUT/` lifecycle and promotion rules
 - [ ] Update `meta/update-guidelines.md`: frontmatter requirements for
-  project files, plans-special-case note updated
+  project files, question-format requirements, plans-special-case note updated
 - [ ] Update `README.md`: folder structure, retrieval logging, workflow
   descriptions
 - [ ] Update `HUMANS/docs/` files:
@@ -645,9 +696,9 @@ restructuring:
 **Risk: Project overhead for simple tasks.** If creating a project requires
 multiple files and folders, users might resist using the system for quick tasks.
 Mitigation: the MCP `memory_create_project` tool handles all scaffolding in a
-single call. A minimal project is just SUMMARY.md + questions.md — two small
-files. The plan subfolder and knowledge subfolder are created on demand, not
-upfront.
+single call. A minimal project is still lightweight, but it now has a clear
+artifact model: SUMMARY.md + questions.md plus empty `IN/` and `OUT/` folders.
+The plan subfolder can still be created on demand.
 
 **Risk: Starter projects feel prescriptive.** Users who arrive with their own
 agenda might find pre-seeded projects unwelcome. Mitigation: starter projects
@@ -656,16 +707,18 @@ starter projects ready, but we can also jump straight into whatever you're
 working on." The demo-app-build project is explicitly optional.
 
 **Risk: Question sprawl.** Open-ended projects could accumulate dozens of
-unresolved questions, making questions.md unwieldy. Mitigation: the agent
-should periodically review questions for relevance (similar to the existing
-knowledge freshness check). Questions that have been open for N sessions without
-activity can be proposed for resolution ("still relevant?") or archival.
+unresolved questions, making questions.md unwieldy. Mitigation: machine IDs and
+format enforcement make the file governable by tools, and the agent should
+periodically review questions for relevance (similar to the existing knowledge
+freshness check). Questions that have been open for N sessions without activity
+can be proposed for resolution ("still relevant?") or archival.
 
-**Risk: Project-scoped knowledge creates duplication.** If findings live in both
-project knowledge and the global KB, there's a maintenance burden. Mitigation:
-the promotion pipeline is one-way — project knowledge gets promoted *to* the
-global KB, not mirrored. Once promoted, the project file can be replaced with
-a cross-reference. The agent should prefer promotion over duplication.
+**Risk: `IN/` / `OUT/` drift creates duplication or confusion.** If findings live
+in both `IN/` and `OUT/`, or if `OUT/` mixes promotable knowledge with random
+build artifacts, the distinction loses value. Mitigation: `IN/` is for project
+accumulation, `OUT/` is for vetted or outward-facing artifacts, and promotion to
+the global KB is one-way. Once promoted, the project file can be replaced with a
+cross-reference. The validator and documentation should make the boundary crisp.
 
 **Risk: MCP tool surface grows too large.** Adding project tools on top of
 existing plan tools could overwhelm the tool surface. Mitigation: project tools
@@ -693,8 +746,8 @@ natural moment for this recalibration.
 - All existing plan content is accessible in the new structure (migrated or
   archived)
 - The MCP tool surface supports the full project lifecycle: create project →
-  add questions → accumulate knowledge → create plan → execute plan → resolve
-  questions → complete project
+  add questions → accumulate material in `IN/` → create plan → execute plan →
+  produce vetted artifacts in `OUT/` → resolve questions → complete project
 - Starter projects provide a natural entry point for new users that replaces
   the interview-style onboarding
 - The repo validator enforces project structure invariants
@@ -706,8 +759,12 @@ natural moment for this recalibration.
 - The cognitive mode field provides enough routing information that a returning
   agent can propose a well-targeted session plan from SUMMARY.md alone, without
   loading the full project contents
+- Projects appear as a root-level orientation surface in the compact returning
+  path, replacing the old active-plans role in startup context
 - Questions tagged with `resolves_by` enable the agent to distinguish between
   questions it can advance autonomously and questions blocked on human input
+- Questions can be updated, resolved, and referenced semantically by stable
+  machine ID rather than fragile text matching
 - The session-project protocol (Frame/Flag/Check) feels like natural
   collaboration, not bureaucratic overhead — verified through manual dry-run
   with diverse task types
