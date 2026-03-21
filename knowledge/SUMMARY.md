@@ -88,9 +88,9 @@ Key entry points:
 - `codex-mcp-timeouts-git-stdin.md` — Debugging stdio transport stdin inheritance in this repo's MCP server
 
 <!-- section: mathematics -->
-### `mathematics/` — Logic, game theory, information theory, dynamical systems, probability, statistical mechanics, and causal inference (promoted 2026-03-20/21, trust: high/medium)
+### `mathematics/` — Logic, game theory, information theory, dynamical systems, probability, statistical mechanics, causal inference, and complexity theory (promoted 2026-03-20/21, trust: high/medium)
 
-Sixty files across seven subfolders. The original 35 files (logic-foundations, game-theory, information-theory) were reviewed and promoted from `_unverified/` on 2026-03-20 with trust: high. Seven dynamical-systems files were added on 2026-03-21 with trust: medium. Seven probability files were added on 2026-03-21 with trust: medium. Six statistical-mechanics files were added on 2026-03-21 with trust: medium. Five causal-inference files were added on 2026-03-21 with trust: medium.
+Sixty-five files across eight subfolders. The original 35 files (logic-foundations, game-theory, information-theory) were reviewed and promoted from `_unverified/` on 2026-03-20 with trust: high. Seven dynamical-systems files were added on 2026-03-21 with trust: medium. Seven probability files were added on 2026-03-21 with trust: medium. Six statistical-mechanics files were added on 2026-03-21 with trust: medium. Five causal-inference files were added on 2026-03-21 with trust: medium. Five complexity-theory files were added on 2026-03-21 with trust: medium.
 
 Subfolders:
 - `logic-foundations/` — 11 files: Gödel incompleteness (1st and 2nd), ZFC set theory, propositional and FOL, Turing undecidability, Kolmogorov complexity, category theory, Curry-Howard isomorphism, dependent types and proof assistants, simple type theory and lambda calculus, compactness and Löwenheim-Skolem

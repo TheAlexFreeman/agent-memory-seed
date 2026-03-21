@@ -1,8 +1,8 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Execute Phase 5 (Computational Complexity): Extension of existing
-  logic-foundations work to the fine structure of tractability.'
+next_action: 'Execute Phase 6 (Optimization Theory): Underpins ML and game-theory;
+  convex analysis, duality, gradient descent, non-convex landscapes, online learning.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -214,13 +214,13 @@ Target subfolder: `knowledge/mathematics/complexity-theory/`
 5. **`descriptive-complexity-logic.md`** — Fagin's theorem (NP = Existential Second Order Logic), descriptive characterizations of complexity classes, finite model theory. The machine-independent characterization of complexity connects back to the logic-foundations cluster.
 
 Checklist:
-- ☐ Write `p-np-and-complexity-classes.md`
-- ☐ Write `np-completeness-cook-karp.md`
-- ☐ Write `circuit-complexity-lower-bounds.md`
-- ☐ Write `interactive-proofs-randomness.md`
-- ☐ Write `descriptive-complexity-logic.md`
-- ☐ Promote all 5 files to `knowledge/mathematics/complexity-theory/`
-- ☐ Update `knowledge/SUMMARY.md` entry
+- ☑ Write `p-np-and-complexity-classes.md` (2026-03-21)
+- ☑ Write `np-completeness-cook-karp.md` (2026-03-21)
+- ☑ Write `circuit-complexity-lower-bounds.md` (2026-03-21)
+- ☑ Write `interactive-proofs-randomness.md` (2026-03-21)
+- ☑ Write `descriptive-complexity-logic.md` (2026-03-21)
+- ☑ Promote all 5 files to `knowledge/mathematics/complexity-theory/` (2026-03-21)
+- ☑ Update `knowledge/SUMMARY.md` entry (2026-03-21)
 
 ---
 
