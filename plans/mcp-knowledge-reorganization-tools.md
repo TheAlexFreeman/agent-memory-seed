@@ -1,8 +1,8 @@
 ---
 type: build
 category: build
-status: draft
-next_action: Execute Phase 1 — Design reference extraction and implement memory_find_references
+status: active
+next_action: Execute Phase 2 — define link validation scope and implement memory_validate_links
 last_verified: 2026-03-21
 trust: medium
 ---
@@ -70,10 +70,10 @@ memory_find_references(path: str, include_body: bool = False) -> str
 - Scope limited to governed paths; `HUMANS/docs/` excluded if desired
 
 **Checklist:**
-- [ ] 1.1 Document reference extraction contract (types, paths, edge cases)
-- [ ] 1.2 Implement reference extractor module
-- [ ] 1.3 Implement and register `memory_find_references`
-- [ ] 1.4 Add unit and integration tests
+- [x] 1.1 Document reference extraction contract (types, paths, edge cases)
+- [x] 1.2 Implement reference extractor module
+- [x] 1.3 Implement and register `memory_find_references`
+- [x] 1.4 Add unit and integration tests
 
 ---
 

@@ -1720,6 +1720,76 @@ declared_gaps = []
         self.assertEqual(payload["policy_state"]["change_class"], "proposed")
         self.assertTrue(payload["policy_state"]["preview_required"])
 
+    def test_memory_find_references_finds_markdown_and_frontmatter_paths(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Target\n",
+                "plans/reference-plan.md": """---
+related:
+  - knowledge/topic/target.md
+domain: knowledge/topic/target.md
+---
+
+# Reference Plan
+
+See [target](../knowledge/topic/target.md).
+""",
+                "HUMANS/README.md": "See [target](knowledge/topic/target.md).\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_find_references"]("knowledge/topic/target.md")
+            )
+        )
+
+        self.assertEqual(payload["query"], "knowledge/topic/target.md")
+        self.assertEqual(payload["total"], 3)
+        self.assertEqual(
+            [match["ref_type"] for match in payload["matches"]],
+            ["frontmatter_path", "frontmatter_path", "markdown_link"],
+        )
+        self.assertTrue(
+            all(match["from_path"] == "plans/reference-plan.md" for match in payload["matches"])
+        )
+        self.assertEqual(
+            payload["matches"][-1]["resolved_path"],
+            "knowledge/topic/target.md",
+        )
+
+    def test_memory_find_references_include_body_scans_path_like_strings(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Target\n",
+                "knowledge/topic/note.md": "# Note\n\nSee knowledge/topic/target.md for context.\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        without_body = json.loads(
+            asyncio.run(
+                tools["memory_find_references"](
+                    "knowledge/topic/target.md",
+                    include_body=False,
+                )
+            )
+        )
+        with_body = json.loads(
+            asyncio.run(
+                tools["memory_find_references"](
+                    "knowledge/topic/target.md",
+                    include_body=True,
+                )
+            )
+        )
+
+        self.assertEqual(without_body["total"], 0)
+        self.assertEqual(with_body["total"], 1)
+        self.assertEqual(with_body["matches"][0]["ref_type"], "body_path")
+        self.assertEqual(with_body["matches"][0]["from_path"], "knowledge/topic/note.md")
+
     def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())
         tools = self._create_tools(repo_root)

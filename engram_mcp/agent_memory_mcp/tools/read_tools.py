@@ -5,6 +5,7 @@ These extend the existing read-only tool set with:
   - memory_read_file   : returns version_token + parsed frontmatter
   - memory_list_folder : unchanged from existing (re-implemented here)
     - memory_search      : unchanged from existing (re-implemented here)
+        - memory_find_references: structured path/reference discovery across governed markdown
     - memory_route_intent: recommend the best governed operation for an intent
     - memory_get_policy_state: compile the live policy contract for an operation/path
     - memory_get_tool_profiles: report tool-profile metadata for host-side narrowing
@@ -38,6 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
+from .reference_extractor import find_references
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -3038,6 +3040,36 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return "\n".join(results)
 
     # ------------------------------------------------------------------
+    # memory_find_references
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_find_references",
+        annotations=_tool_annotations(
+            title="Find Path References",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_find_references(path: str, include_body: bool = False) -> str:
+        """Return structured references to a path or path fragment across governed markdown."""
+        from ..errors import ValidationError
+
+        if not isinstance(path, str) or not path.strip():
+            raise ValidationError("path must be a non-empty string")
+
+        root = get_root()
+        matches = find_references(root, path.strip(), include_body=include_body)
+        payload = {
+            "query": path.strip(),
+            "include_body": include_body,
+            "matches": matches,
+            "total": len(matches),
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_check_cross_references
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -5247,6 +5279,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_list_folder": memory_list_folder,
         "memory_review_unverified": memory_review_unverified,
         "memory_search": memory_search,
+        "memory_find_references": memory_find_references,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
         "memory_access_analytics": memory_access_analytics,

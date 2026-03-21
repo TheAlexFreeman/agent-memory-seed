@@ -8,7 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-- [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: memory_find_references, memory_validate_links, memory_reorganize_preview, memory_reorganize_path, memory_suggest_structure; Phase 1 next (reference extractor + find_references).
+- [mcp-knowledge-reorganization-tools.md](mcp-knowledge-reorganization-tools.md) — MCP tools for compositional KB reorganization: Phase 1 landed with `memory_find_references`; next is link validation via `memory_validate_links`.
 - [mcp-agent-discoverability-guidance.md](mcp-agent-discoverability-guidance.md) — MCP agent discoverability and guidance: server name discovery doc, tool disambiguation (list_pending_reviews vs prepare_unverified_review, subtree vs batch), routing accuracy for promotion intents, warning clarity, paths-only enum; Phase 1 next.
 - [checklist-app-architecture.md](checklist-app-architecture.md) — Django/React checklist tool for task management and progress tracking; Phase 1 next (Django scaffold + models).
 
@@ -113,9 +113,9 @@ Next: All planned phases complete.
 ---
 
 <!-- BEGIN: mcp-knowledge-reorganization-tools -->
-### MCP Knowledge Base Reorganization Tools · status: draft · trust: medium
+### MCP Knowledge Base Reorganization Tools · status: active · trust: medium
 Detail: plans/mcp-knowledge-reorganization-tools.md
 Scope: Reference discovery (memory_find_references), link validation (memory_validate_links), reorganization preview and execution (memory_reorganize_preview, memory_reorganize_path), optional structure suggestions (memory_suggest_structure). Friction from 2026-03-21 ai-frontier → ai/frontier move.
-Progress: 0/17 checklist items
-Next: Phase 1 — Design reference extraction contract, implement extractor and memory_find_references.
+Progress: 4/17 checklist items complete; Phase 1 reference extraction and `memory_find_references` are now in.
+Next: Phase 2 — define validation scope and implement `memory_validate_links`.
 <!-- END: mcp-knowledge-reorganization-tools -->
