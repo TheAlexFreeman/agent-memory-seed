@@ -1,8 +1,8 @@
 ---
 type: build
 category: build
-status: draft
-next_action: Execute Phase 1 — Design reference extraction and implement memory_find_references
+status: active
+next_action: Execute Phase 4 — define governance and implement memory_reorganize_path
 last_verified: 2026-03-21
 trust: medium
 ---
@@ -70,10 +70,10 @@ memory_find_references(path: str, include_body: bool = False) -> str
 - Scope limited to governed paths; `HUMANS/docs/` excluded if desired
 
 **Checklist:**
-- [ ] 1.1 Document reference extraction contract (types, paths, edge cases)
-- [ ] 1.2 Implement reference extractor module
-- [ ] 1.3 Implement and register `memory_find_references`
-- [ ] 1.4 Add unit and integration tests
+- [x] 1.1 Document reference extraction contract (types, paths, edge cases)
+- [x] 1.2 Implement reference extractor module
+- [x] 1.3 Implement and register `memory_find_references`
+- [x] 1.4 Add unit and integration tests
 
 ---
 
@@ -113,10 +113,10 @@ memory_validate_links(path: str = "") -> str
 - Cross-folder relative path correctness
 
 **Checklist:**
-- [ ] 2.1 Document validation scope and resolution rules
-- [ ] 2.2 Implement link validator module
-- [ ] 2.3 Implement and register `memory_validate_links`
-- [ ] 2.4 Add tests
+- [x] 2.1 Document validation scope and resolution rules
+- [x] 2.2 Implement link validator module
+- [x] 2.3 Implement and register `memory_validate_links`
+- [x] 2.4 Add tests
 
 ---
 
@@ -165,10 +165,10 @@ memory_reorganize_preview(source: str, dest: str) -> str
 - Warnings when dest already has conflicting content
 
 **Checklist:**
-- [ ] 3.1 Define preview output schema
-- [ ] 3.2 Implement preview logic (reuse reference extractor)
-- [ ] 3.3 Implement and register `memory_reorganize_preview`
-- [ ] 3.4 Add tests
+- [x] 3.1 Define preview output schema
+- [x] 3.2 Implement preview logic (reuse reference extractor)
+- [x] 3.3 Implement and register `memory_reorganize_preview`
+- [x] 3.4 Add tests
 
 ---
 

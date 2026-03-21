@@ -1720,6 +1720,223 @@ declared_gaps = []
         self.assertEqual(payload["policy_state"]["change_class"], "proposed")
         self.assertTrue(payload["policy_state"]["preview_required"])
 
+    def test_memory_find_references_finds_markdown_and_frontmatter_paths(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Target\n",
+                "plans/reference-plan.md": """---
+related:
+  - knowledge/topic/target.md
+domain: knowledge/topic/target.md
+---
+
+# Reference Plan
+
+See [target](../knowledge/topic/target.md).
+""",
+                "HUMANS/README.md": "See [target](knowledge/topic/target.md).\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_find_references"]("knowledge/topic/target.md")
+            )
+        )
+
+        self.assertEqual(payload["query"], "knowledge/topic/target.md")
+        self.assertEqual(payload["total"], 3)
+        self.assertEqual(
+            [match["ref_type"] for match in payload["matches"]],
+            ["frontmatter_path", "frontmatter_path", "markdown_link"],
+        )
+        self.assertTrue(
+            all(match["from_path"] == "plans/reference-plan.md" for match in payload["matches"])
+        )
+        self.assertEqual(
+            payload["matches"][-1]["resolved_path"],
+            "knowledge/topic/target.md",
+        )
+
+    def test_memory_find_references_include_body_scans_path_like_strings(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Target\n",
+                "knowledge/topic/note.md": "# Note\n\nSee knowledge/topic/target.md for context.\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        without_body = json.loads(
+            asyncio.run(
+                tools["memory_find_references"](
+                    "knowledge/topic/target.md",
+                    include_body=False,
+                )
+            )
+        )
+        with_body = json.loads(
+            asyncio.run(
+                tools["memory_find_references"](
+                    "knowledge/topic/target.md",
+                    include_body=True,
+                )
+            )
+        )
+
+        self.assertEqual(without_body["total"], 0)
+        self.assertEqual(with_body["total"], 1)
+        self.assertEqual(with_body["matches"][0]["ref_type"], "body_path")
+        self.assertEqual(with_body["matches"][0]["from_path"], "knowledge/topic/note.md")
+
+    def test_memory_validate_links_reports_broken_targets_and_missing_anchors(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Target\n\n## Details\n",
+                "knowledge/topic/note.md": """---
+related:
+  - missing.md
+---
+
+# Note
+
+See [target](target.md#details).
+See [broken anchor](target.md#absent).
+See [missing](missing.md).
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_validate_links"]("knowledge/topic")))
+
+        self.assertEqual(payload["scope"], "knowledge/topic")
+        self.assertEqual(payload["checked"], 4)
+        self.assertEqual(payload["ok_count"], 1)
+        self.assertEqual(len(payload["broken"]), 3)
+        self.assertIn(
+            {
+                "from_path": "knowledge/topic/note.md",
+                "ref_type": "frontmatter_path",
+                "target": "missing.md",
+                "resolved_path": "knowledge/topic/missing.md",
+                "reason": "target not found",
+                "line": 3,
+            },
+            payload["broken"],
+        )
+        self.assertIn(
+            {
+                "from_path": "knowledge/topic/note.md",
+                "ref_type": "markdown_link",
+                "target": "target.md#absent",
+                "resolved_path": "knowledge/topic/target.md",
+                "reason": "anchor not found: #absent",
+                "line": 4,
+            },
+            payload["broken"],
+        )
+
+    def test_memory_validate_links_handles_cross_folder_relative_paths(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Topic Target\n",
+                "plans/demo.md": """---
+related:
+  - ../knowledge/topic/target.md
+---
+
+# Demo
+
+See [topic](../knowledge/topic/target.md).
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_validate_links"]("plans")))
+
+        self.assertEqual(payload["scope"], "plans")
+        self.assertEqual(payload["checked"], 2)
+        self.assertEqual(payload["ok_count"], 2)
+        self.assertEqual(payload["broken"], [])
+
+    def test_memory_reorganize_preview_includes_moves_reference_updates_and_summary_targets(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai-frontier/alignment/beta.md": "# Beta\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+                "plans/reorg.md": """---
+related:
+  - knowledge/ai-frontier/alpha.md
+---
+
+# Reorg
+
+See [alpha](../knowledge/ai-frontier/alpha.md).
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_reorganize_preview"](
+                    "knowledge/ai-frontier",
+                    "knowledge/ai/frontier",
+                )
+            )
+        )
+
+        self.assertEqual(payload["source"], "knowledge/ai-frontier")
+        self.assertEqual(payload["dest"], "knowledge/ai/frontier")
+        self.assertEqual(
+            payload["files_to_move"],
+            [
+                "knowledge/ai-frontier/alignment/beta.md",
+                "knowledge/ai-frontier/alpha.md",
+            ],
+        )
+        self.assertEqual(
+            payload["summary_updates"],
+            ["knowledge/SUMMARY.md", "knowledge/ai/SUMMARY.md"],
+        )
+        self.assertEqual(payload["warnings"], [])
+        self.assertEqual(len(payload["files_with_references"]), 1)
+        refs = payload["files_with_references"][0]["refs"]
+        self.assertEqual(payload["files_with_references"][0]["path"], "plans/reorg.md")
+        self.assertEqual(
+            {(ref["old"], ref["new"]) for ref in refs},
+            {
+                ("knowledge/ai-frontier/alpha.md", "knowledge/ai/frontier/alpha.md"),
+                ("../knowledge/ai-frontier/alpha.md", "../knowledge/ai/frontier/alpha.md"),
+            },
+        )
+
+    def test_memory_reorganize_preview_warns_on_destination_conflicts(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "knowledge/ai/frontier/alpha.md": "# Existing Alpha\n",
+                "knowledge/ai/SUMMARY.md": "# AI\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_reorganize_preview"](
+                    "knowledge/ai-frontier",
+                    "knowledge/ai/frontier",
+                )
+            )
+        )
+
+        self.assertIn("Destination already exists: knowledge/ai/frontier", payload["warnings"])
+        self.assertIn("Destination conflict: knowledge/ai/frontier/alpha.md", payload["warnings"])
+
     def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())
         tools = self._create_tools(repo_root)

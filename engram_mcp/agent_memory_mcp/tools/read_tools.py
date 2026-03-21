@@ -5,6 +5,7 @@ These extend the existing read-only tool set with:
   - memory_read_file   : returns version_token + parsed frontmatter
   - memory_list_folder : unchanged from existing (re-implemented here)
     - memory_search      : unchanged from existing (re-implemented here)
+        - memory_find_references: structured path/reference discovery across governed markdown
     - memory_route_intent: recommend the best governed operation for an intent
     - memory_get_policy_state: compile the live policy contract for an operation/path
     - memory_get_tool_profiles: report tool-profile metadata for host-side narrowing
@@ -38,6 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
+from .reference_extractor import find_references, preview_reorganization, validate_links
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -3038,6 +3040,111 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return "\n".join(results)
 
     # ------------------------------------------------------------------
+    # memory_find_references
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_find_references",
+        annotations=_tool_annotations(
+            title="Find Path References",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_find_references(path: str, include_body: bool = False) -> str:
+        """Return structured references to a path or path fragment across governed markdown."""
+        from ..errors import ValidationError
+
+        if not isinstance(path, str) or not path.strip():
+            raise ValidationError("path must be a non-empty string")
+
+        root = get_root()
+        matches = find_references(root, path.strip(), include_body=include_body)
+        payload = {
+            "query": path.strip(),
+            "include_body": include_body,
+            "matches": matches,
+            "total": len(matches),
+        }
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_validate_links
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_validate_links",
+        annotations=_tool_annotations(
+            title="Validate Internal Links",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_validate_links(path: str = "") -> str:
+        """Validate internal markdown and frontmatter path references within governed content."""
+        from ..errors import ValidationError
+
+        root = get_root()
+        requested_path = path.strip().replace("\\", "/")
+        if requested_path:
+            scope_path = (root / requested_path).resolve()
+            try:
+                scope_path.relative_to(root)
+            except ValueError as exc:
+                raise ValidationError("path must stay within the repository root") from exc
+            if not scope_path.exists():
+                return f"Error: Path not found: {path}"
+
+        payload = validate_links(root, requested_path)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # memory_reorganize_preview
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_reorganize_preview",
+        annotations=_tool_annotations(
+            title="Preview Path Reorganization",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_reorganize_preview(source: str, dest: str) -> str:
+        """Preview the impact of moving a file or subtree to a new repository path."""
+        from ..errors import ValidationError
+
+        if not isinstance(source, str) or not source.strip():
+            raise ValidationError("source must be a non-empty string")
+        if not isinstance(dest, str) or not dest.strip():
+            raise ValidationError("dest must be a non-empty string")
+
+        root = get_root()
+        normalized_source = source.strip().replace("\\", "/").strip("/")
+        normalized_dest = dest.strip().replace("\\", "/").strip("/")
+        source_path = (root / normalized_source).resolve()
+        dest_path = (root / normalized_dest).resolve()
+
+        try:
+            source_path.relative_to(root)
+            dest_path.relative_to(root)
+        except ValueError as exc:
+            raise ValidationError("source and dest must stay within the repository root") from exc
+
+        if not source_path.exists():
+            return f"Error: Path not found: {source}"
+
+        dest_parent = dest_path.parent
+        if not dest_parent.exists():
+            raise ValidationError(f"destination parent does not exist: {dest_parent.relative_to(root).as_posix()}")
+
+        payload = preview_reorganization(root, normalized_source, normalized_dest)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_check_cross_references
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -5247,6 +5354,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_list_folder": memory_list_folder,
         "memory_review_unverified": memory_review_unverified,
         "memory_search": memory_search,
+        "memory_find_references": memory_find_references,
+        "memory_validate_links": memory_validate_links,
+        "memory_reorganize_preview": memory_reorganize_preview,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
         "memory_access_analytics": memory_access_analytics,
