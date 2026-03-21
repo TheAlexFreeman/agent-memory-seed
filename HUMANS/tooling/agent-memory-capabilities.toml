@@ -12,6 +12,8 @@ capabilities = 1
 preview = 1
 resources = 1
 prompts = 1
+provenance = 1
+structured_read = 1
 
 [tool_sets]
 read_support = [
@@ -40,6 +42,7 @@ read_support = [
   "memory_aggregate_access",
   "memory_run_periodic_review",
   "memory_get_file_provenance",
+  "memory_extract_file",
   "memory_inspect_commit",
   "memory_diff",
   # memory_audit_trust supports optional `warn_pct` and may return an
@@ -212,6 +215,24 @@ when_to_use = "Guide a protected periodic-review workflow using the compact revi
 name = "memory_session_wrap_up_prompt"
 backed_by = "memory_record_session"
 when_to_use = "Guide end-of-session summarization, reflection, and deferred follow-up capture."
+
+[provenance_schema]
+optional_fields = [
+  "origin_commit",
+  "produced_by",
+  "verified_by",
+  "inputs",
+  "related_sources",
+]
+backward_compatible = true
+guidance = "These fields are additive lineage hints. Older files remain valid when they are absent."
+
+[structured_read]
+tool = "memory_extract_file"
+purpose = "Return frontmatter, heading outline, selected sections, and bounded previews without temp-file fallback for common large-file inspection."
+supports_markdown_outline = true
+supports_selected_headings = true
+supports_preview_windows = true
 
 [ui_feedback]
 panel_title = "Governed Memory Writes"

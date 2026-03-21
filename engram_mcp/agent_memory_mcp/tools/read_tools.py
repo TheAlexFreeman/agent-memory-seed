@@ -68,6 +68,7 @@ _PERIODIC_REVIEW_DAYS = 30
 _STAGE_ORDER = ("Exploration", "Calibration", "Consolidation")
 _CAPABILITIES_MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
 _MARKDOWN_LINK_RE = re.compile(r"(?<!\!)\[[^\]]+\]\(([^)]+)\)")
+_MARKDOWN_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 _CURATION_HIGH_ACCESS_THRESHOLD = 5
 _CURATION_RETIREMENT_THRESHOLD = 3
 _CURATION_HIGH_HELPFULNESS_THRESHOLD = 0.5
@@ -1061,6 +1062,66 @@ def _extract_heading_and_paragraph(body: str, fallback_title: str) -> tuple[str,
     return heading, description
 
 
+def _normalize_heading_key(text: str) -> str:
+    return re.sub(r"\s+", " ", text.strip().lower())
+
+
+def _build_markdown_sections(body: str) -> list[dict[str, Any]]:
+    lines = body.splitlines()
+    headings: list[dict[str, Any]] = []
+    for index, line in enumerate(lines):
+        match = _MARKDOWN_HEADING_RE.match(line)
+        if match is None:
+            continue
+        headings.append(
+            {
+                "level": len(match.group(1)),
+                "title": match.group(2).strip(),
+                "line": index + 1,
+                "index": index,
+            }
+        )
+
+    sections: list[dict[str, Any]] = []
+    for position, heading in enumerate(headings):
+        start_index = cast(int, heading["index"])
+        end_index = len(lines)
+        for next_heading in headings[position + 1 :]:
+            if cast(int, next_heading["level"]) <= cast(int, heading["level"]):
+                end_index = cast(int, next_heading["index"])
+                break
+        section_content = "\n".join(lines[start_index:end_index]).strip()
+        sections.append(
+            {
+                "heading": heading["title"],
+                "level": heading["level"],
+                "start_line": heading["line"],
+                "end_line": end_index,
+                "anchor": re.sub(r"[^a-z0-9]+", "-", _normalize_heading_key(cast(str, heading["title"]))).strip("-"),
+                "content": section_content,
+            }
+        )
+    return sections
+
+
+def _match_requested_sections(
+    sections: list[dict[str, Any]], requested_headings: list[str]
+) -> list[dict[str, Any]]:
+    if not requested_headings:
+        return sections
+
+    normalized_requests = [_normalize_heading_key(item) for item in requested_headings]
+    matched: list[dict[str, Any]] = []
+    for section in sections:
+        normalized_heading = _normalize_heading_key(cast(str, section["heading"]))
+        if any(
+            normalized_heading == request or normalized_heading.startswith(request)
+            for request in normalized_requests
+        ):
+            matched.append(section)
+    return matched
+
+
 def _build_summary_metadata(fm_dict: dict[str, Any]) -> str:
     parts: list[str] = []
     trust = fm_dict.get("trust")
@@ -1970,6 +2031,47 @@ def _requires_provenance_pause(path: str, frontmatter: dict[str, Any]) -> bool:
     return not (source == "user-stated" or bool(last_verified))
 
 
+def _extract_provenance_fields(frontmatter: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "source": frontmatter.get("source"),
+        "origin_session": frontmatter.get("origin_session"),
+        "origin_commit": frontmatter.get("origin_commit"),
+        "produced_by": frontmatter.get("produced_by"),
+        "verified_by": _coerce_path_list(frontmatter.get("verified_by")) or None,
+        "inputs": _coerce_path_list(frontmatter.get("inputs")) or None,
+        "related_sources": _coerce_path_list(
+            frontmatter.get("related_sources") or frontmatter.get("related")
+        )
+        or None,
+        "verified_against_commit": frontmatter.get("verified_against_commit"),
+        "last_verified": frontmatter.get("last_verified"),
+        "trust": frontmatter.get("trust"),
+    }
+
+
+def _build_lineage_summary(path: str, provenance: dict[str, Any]) -> list[str]:
+    notes: list[str] = []
+    if provenance.get("origin_commit"):
+        notes.append(f"Origin commit recorded for {path}.")
+    if provenance.get("produced_by"):
+        notes.append(f"Produced by {provenance['produced_by']}.")
+    if provenance.get("verified_by"):
+        notes.append(
+            f"Verified by {len(cast(list[str], provenance['verified_by']))} source reference(s)."
+        )
+    if provenance.get("inputs"):
+        notes.append(f"Declares {len(cast(list[str], provenance['inputs']))} explicit input(s).")
+    if provenance.get("related_sources"):
+        notes.append(
+            f"Carries {len(cast(list[str], provenance['related_sources']))} related source link(s)."
+        )
+    if provenance.get("verified_against_commit"):
+        notes.append("Includes a verified-against commit marker.")
+    if not notes:
+        notes.append("No optional lineage fields recorded; fall back to frontmatter, ACCESS history, and git history.")
+    return notes
+
+
 def _repo_relative(path: Path, root: Path) -> Path:
     """Return a path relative to the repo root."""
     return path.relative_to(root)
@@ -2233,7 +2335,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         payload = dict(cast(dict[str, Any], manifest))
         payload["summary"] = _build_capabilities_summary(payload)
-        return json.dumps(payload, indent=2)
+        return json.dumps(payload, indent=2, default=str)
 
     # ------------------------------------------------------------------
     # memory_get_tool_profiles
@@ -2261,7 +2363,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             return json.dumps(error_payload, indent=2)
 
         payload = _build_tool_profile_payload(cast(dict[str, Any], manifest))
-        return json.dumps(payload, indent=2)
+        return json.dumps(payload, indent=2, default=str)
 
     # ------------------------------------------------------------------
     # memory_get_policy_state
@@ -4383,6 +4485,88 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_extract_file
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_extract_file",
+        annotations=_tool_annotations(
+            title="Extract Structured File Content",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_extract_file(
+        path: str,
+        section_headings: str = "",
+        max_sections: int = 5,
+        preview_chars: int = 1200,
+        include_outline: bool = True,
+    ) -> str:
+        """Return frontmatter, outline, selected sections, and bounded previews for a file.
+
+        This is the structured alternative to temp-file fallback when a caller
+        needs targeted inspection of larger Markdown files.
+        """
+        from ..errors import NotFoundError, ValidationError
+        from ..frontmatter_utils import read_with_frontmatter
+
+        if max_sections < 1:
+            raise ValidationError("max_sections must be >= 1")
+        if preview_chars < 1:
+            raise ValidationError("preview_chars must be >= 1")
+
+        repo = get_repo()
+        abs_path = repo.abs_path(path)
+        if not abs_path.exists() or not abs_path.is_file():
+            raise NotFoundError(f"File not found: {path}")
+
+        requested_headings = _split_csv_or_lines(section_headings)
+        frontmatter, body = read_with_frontmatter(abs_path)
+        content = abs_path.read_text(encoding="utf-8")
+        size_bytes = len(content.encode("utf-8"))
+        markdown_sections = _build_markdown_sections(body)
+        matched_sections = _match_requested_sections(markdown_sections, requested_headings)
+        selected_sections = matched_sections[:max_sections]
+        outline = [
+            {
+                "heading": section["heading"],
+                "level": section["level"],
+                "start_line": section["start_line"],
+                "anchor": section["anchor"],
+            }
+            for section in markdown_sections[:50]
+        ]
+
+        payload = {
+            "path": path,
+            "size_bytes": size_bytes,
+            "frontmatter": frontmatter or None,
+            "preview": body[:preview_chars],
+            "selected_headings": requested_headings or None,
+            "outline": outline if include_outline else None,
+            "sections": [
+                {
+                    "heading": section["heading"],
+                    "level": section["level"],
+                    "start_line": section["start_line"],
+                    "end_line": section["end_line"],
+                    "anchor": section["anchor"],
+                    "content": cast(str, section["content"])[:preview_chars],
+                    "truncated": len(cast(str, section["content"])) > preview_chars,
+                }
+                for section in selected_sections
+            ],
+            "available_section_count": len(markdown_sections),
+            "delivery": {
+                "uses_temp_file_fallback": False,
+                "preview_chars": preview_chars,
+            },
+        }
+        return json.dumps(payload, indent=2, default=str)
+
+    # ------------------------------------------------------------------
     # memory_get_file_provenance
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -4414,6 +4598,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         latest_commit = commit_history[0] if commit_history else None
         first_tracked_date = repo.first_tracked_author_date(path)
         effective_date = _effective_date(frontmatter)
+        provenance_fields = _extract_provenance_fields(frontmatter)
+        lineage_summary = _build_lineage_summary(path, provenance_fields)
 
         payload = {
             "path": path,
@@ -4424,6 +4610,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             else None,
             "effective_date": str(effective_date) if effective_date is not None else None,
             "frontmatter": frontmatter or None,
+            "provenance_fields": provenance_fields,
+            "lineage_summary": lineage_summary,
             "requires_provenance_pause": _requires_provenance_pause(path, frontmatter),
             "access_summary": access_summary,
             "latest_commit": latest_commit,
@@ -4979,6 +5167,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_prepare_unverified_review": memory_prepare_unverified_review,
         "memory_prepare_promotion_batch": memory_prepare_promotion_batch,
         "memory_prepare_periodic_review": memory_prepare_periodic_review,
+        "memory_extract_file": memory_extract_file,
         "memory_check_knowledge_freshness": memory_check_knowledge_freshness,
         "memory_check_aggregation_triggers": memory_check_aggregation_triggers,
         "memory_aggregate_access": memory_aggregate_access,

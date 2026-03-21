@@ -100,7 +100,10 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertEqual(payload["contract_versions"]["capabilities"], 1)
         self.assertEqual(payload["contract_versions"]["resources"], 1)
         self.assertEqual(payload["contract_versions"]["prompts"], 1)
+        self.assertEqual(payload["contract_versions"]["provenance"], 1)
+        self.assertEqual(payload["contract_versions"]["structured_read"], 1)
         self.assertIn("memory_get_capabilities", payload["tool_sets"]["read_support"])
+        self.assertIn("memory_extract_file", payload["tool_sets"]["read_support"])
         self.assertEqual(payload["summary"]["contract_versions"]["mcp"], 1)
         self.assertGreaterEqual(payload["summary"]["total_tools"], 1)
         self.assertGreaterEqual(payload["summary"]["tool_profile_count"], 1)
@@ -213,6 +216,7 @@ class MemoryMCPTests(unittest.TestCase):
             "memory_aggregate_access",
             "memory_run_periodic_review",
             "memory_get_file_provenance",
+            "memory_extract_file",
             "memory_inspect_commit",
             "memory_record_periodic_review",
             "memory_mark_plan_item_complete",

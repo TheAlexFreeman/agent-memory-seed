@@ -1,10 +1,10 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-21'
-next_action: 'Phase 7: enrich provenance and add structured large-file read support.'
+next_action: 'All planned phases complete.'
 origin_session: manual
 source: agent-generated
-status: active
+status: complete
 title: MCP Agent-Friendliness Improvements
 trust: medium
 type: implementation-plan
@@ -232,10 +232,10 @@ Add a read-only tool such as `memory_read_sections` or `memory_extract_file` tha
 Ensure older files without the new fields remain valid and that the new structured-read flow works on both frontmatter-heavy and plain markdown files.
 
 Checklist:
-- [ ] 7.1 Add optional provenance fields and schema guidance
-- [ ] 7.2 Surface enriched provenance through read tools
-- [ ] 7.3 Implement structured large-file extraction tool
-- [ ] 7.4 Add backward-compatibility and extraction tests
+- [x] 7.1 Add optional provenance fields and schema guidance
+- [x] 7.2 Surface enriched provenance through read tools
+- [x] 7.3 Implement structured large-file extraction tool
+- [x] 7.4 Add backward-compatibility and extraction tests
 
 ---
 
@@ -280,12 +280,12 @@ Checklist:
 - [x] 6.2 Add prompts for review, promotion preview, periodic review, and session wrap-up workflows
 - [x] 6.3 Document resources-vs-tools boundaries
 - [x] 6.4 Add integration coverage for resource/prompt enumeration and consistency
-- [ ] 7.1 Add optional provenance fields and schema guidance
-- [ ] 7.2 Surface enriched provenance through read tools
-- [ ] 7.3 Implement structured large-file extraction tool
-- [ ] 7.4 Add backward-compatibility and extraction tests
+- [x] 7.1 Add optional provenance fields and schema guidance
+- [x] 7.2 Surface enriched provenance through read tools
+- [x] 7.3 Implement structured large-file extraction tool
+- [x] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 27/31 items complete
+**Progress:** 31/31 items complete
 
 ---
 
@@ -323,3 +323,4 @@ Checklist:
 - 2026-03-20: Completed Phase 4. Added compact workflow-bundle read tools for session bootstrap, unverified review prep, promotion prep, and periodic review prep; kept them read-only and layered over existing health/review/reporting primitives; published the new bundle tools in the read-support surface; and added truncation-focused tests to keep the payloads bounded.
 - 2026-03-21: Completed Phase 5. Added manifest-declared advisory tool profiles plus a `memory_get_tool_profiles` read tool for host-side narrowing, extended capability summaries with profile and `listChanged` metadata, explicitly reported that the current runtime keeps a static tool surface with `listChanged` disabled, and added focused runtime tests for profile reporting and export coverage.
 - 2026-03-21: Completed Phase 6. Added MCP-native resources for capability, policy, session-health, and active-plan summaries; exposed recurring workflow prompts for unverified review, promotion preview, periodic review, and session wrap-up; documented the resources-vs-tools boundary in the capability manifest; and added in-process integration tests for resource and prompt enumeration plus payload rendering.
+- 2026-03-21: Completed Phase 7. Added additive provenance-schema guidance to the capability manifest, surfaced optional lineage fields and summaries through `memory_get_file_provenance`, introduced `memory_extract_file` for structured heading/section extraction without temp-file fallback, and added compatibility coverage for both legacy provenance payloads and frontmatter/plain-markdown extraction flows.

@@ -1601,9 +1601,7 @@ declared_gaps = []
         repo_root = self._init_repo(self._policy_contract_seed_files())
         tools = self._create_tools(repo_root)
 
-        payload = json.loads(
-            asyncio.run(tools["memory_get_policy_state"](operation="create_plan"))
-        )
+        payload = json.loads(asyncio.run(tools["memory_get_policy_state"](operation="create_plan")))
 
         self.assertEqual(payload["operation"], "create_plan")
         self.assertEqual(payload["tool"], "memory_create_plan")
@@ -1625,7 +1623,10 @@ declared_gaps = []
 
         self.assertEqual(payload["change_class"], "protected")
         self.assertTrue(payload["path_policy"]["protected_surface"])
-        self.assertIn("Governance and top-level architecture files require explicit approval.", payload["path_policy"]["reasons"])
+        self.assertIn(
+            "Governance and top-level architecture files require explicit approval.",
+            payload["path_policy"]["reasons"],
+        )
 
     def test_memory_route_intent_recommends_knowledge_promotion(self) -> None:
         seed = self._policy_contract_seed_files()
@@ -1761,9 +1762,7 @@ Checklist:
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(
-                tools["memory_session_bootstrap"](max_active_plans=1, max_review_items=1)
-            )
+            asyncio.run(tools["memory_session_bootstrap"](max_active_plans=1, max_review_items=1))
         )
 
         self.assertEqual(len(payload["active_plans"]), 1)
@@ -4504,7 +4503,9 @@ Next: Original next action
         self.assertEqual(new_state["conflict_details"], "")
         self.assertIn("plans/demo.md", new_state["files_changed"])
         self.assertEqual(payload["preview"]["mode"], "preview")
-        self.assertEqual(payload["preview"]["target_files"], [{"path": "plans/demo.md", "change": "revert"}])
+        self.assertEqual(
+            payload["preview"]["target_files"], [{"path": "plans/demo.md", "change": "revert"}]
+        )
         self.assertEqual(payload["preview"]["commit_suggestion"]["message"], f"Revert {target_sha}")
         self.assertEqual(head_after, head_before)
 
@@ -5816,6 +5817,120 @@ Updated note.
         self.assertEqual(payload["latest_commit"]["message"], "[knowledge] update topic")
         self.assertGreaterEqual(len(payload["commit_history"]), 2)
         self.assertIsNotNone(payload["version_token"])
+        self.assertIn("provenance_fields", payload)
+        self.assertIsNone(payload["provenance_fields"]["origin_commit"])
+        self.assertIn("lineage_summary", payload)
+
+    def test_memory_get_file_provenance_surfaces_optional_lineage_fields(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic.md": """---
+source: agent-generated
+created: 2026-03-20
+trust: medium
+origin_commit: abc123def456
+produced_by: memory_generate_summary
+verified_by:
+  - knowledge/sources/paper-a.md
+  - knowledge/sources/paper-b.md
+inputs:
+  - chats/2026/03/20/chat-001/summary.md
+related_sources:
+  - docs/spec.md
+verified_against_commit: fedcba654321
+---
+
+Structured provenance note.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(tools["memory_get_file_provenance"](path="knowledge/topic.md"))
+        )
+
+        self.assertEqual(payload["provenance_fields"]["origin_commit"], "abc123def456")
+        self.assertEqual(payload["provenance_fields"]["produced_by"], "memory_generate_summary")
+        self.assertEqual(
+            payload["provenance_fields"]["verified_by"],
+            ["knowledge/sources/paper-a.md", "knowledge/sources/paper-b.md"],
+        )
+        self.assertEqual(
+            payload["provenance_fields"]["inputs"],
+            ["chats/2026/03/20/chat-001/summary.md"],
+        )
+        self.assertEqual(payload["provenance_fields"]["related_sources"], ["docs/spec.md"])
+        self.assertIn("Origin commit recorded for knowledge/topic.md.", payload["lineage_summary"])
+
+    def test_memory_extract_file_returns_outline_sections_and_frontmatter(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic.md": """---
+title: Extract Me
+source: external-research
+created: 2026-03-20
+trust: medium
+---
+
+# Overview
+
+Intro paragraph.
+
+## Usage
+
+Usage details line one.
+Usage details line two.
+
+## Notes
+
+Closing notes.
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_extract_file"](
+                    path="knowledge/topic.md",
+                    section_headings="Usage",
+                    max_sections=2,
+                    preview_chars=80,
+                )
+            )
+        )
+
+        self.assertEqual(payload["frontmatter"]["title"], "Extract Me")
+        self.assertEqual(payload["selected_headings"], ["Usage"])
+        self.assertFalse(payload["delivery"]["uses_temp_file_fallback"])
+        self.assertGreaterEqual(payload["available_section_count"], 2)
+        self.assertEqual(payload["outline"][0]["heading"], "Overview")
+        self.assertEqual(payload["sections"][0]["heading"], "Usage")
+        self.assertIn("Usage details line one.", payload["sections"][0]["content"])
+
+    def test_memory_extract_file_handles_plain_markdown_without_frontmatter(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/plain.md": "# Plain Heading\n\nAlpha paragraph.\n\n## Details\n\nBeta paragraph.\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(
+            asyncio.run(
+                tools["memory_extract_file"](
+                    path="knowledge/plain.md",
+                    max_sections=2,
+                    preview_chars=40,
+                )
+            )
+        )
+
+        self.assertIsNone(payload["frontmatter"])
+        self.assertEqual(payload["outline"][0]["heading"], "Plain Heading")
+        self.assertEqual(payload["sections"][0]["heading"], "Plain Heading")
+        self.assertIn("Alpha paragraph.", payload["preview"])
 
     def test_memory_inspect_commit_returns_scope_and_prefix_metadata(self) -> None:
         repo_root = self._init_repo(
@@ -6005,7 +6120,9 @@ _Last assessed: 2026-03-01 — Exploration retained_
             }
         )
         tools = self._create_tools(repo_root)
-        quick_reference_before = (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8")
+        quick_reference_before = (repo_root / "meta" / "quick-reference.md").read_text(
+            encoding="utf-8"
+        )
 
         preview = json.loads(
             asyncio.run(

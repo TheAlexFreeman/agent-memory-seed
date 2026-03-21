@@ -8,7 +8,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ### Build plans
 
-- [mcp-agent-friendliness-improvements.md](mcp-agent-friendliness-improvements.md) — active; top-priority build plan for improving routing, previews, workflow bundles, tool-surface shaping, MCP-native resources/prompts, and provenance-aware reads.
+- *(No active build plans. See recent completions below.)*
 
 ### Research plans
 
@@ -16,6 +16,7 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 
 ## Recent completions
 
+- [mcp-agent-friendliness-improvements.md](mcp-agent-friendliness-improvements.md) — completed 2026-03-21; 31/31 items across 7 phases (promotion parity, routing/policy-state helpers, preview contract support, workflow bundles, advisory tool profiles, MCP-native resources/prompts, provenance enrichment, structured extraction); the governed MCP surface now covers routing, previews, workflow bootstraps, host-side narrowing metadata, MCP-native navigation primitives, lineage-aware provenance reads, and section-based large-file inspection.
 - [software-testing-validation-research.md](software-testing-validation-research.md) — completed 2026-03-20; 14/14 items across 5 phases (testing foundations/epistemology, unit testing/TDD/BDD, black-box and white-box design/mutation/property-based testing, integration/system/acceptance/performance testing, formal verification/AI-ML evaluation/behavioral testing/red-teaming); 14 knowledge files in `knowledge/software-engineering/testing/`; pending human review.
 - [ai-frontier-research.md](ai-frontier-research.md) — completed (date unrecorded); 25/25 base + 9 extension items across 7 phases + Phase 2 infrastructure extension + Phase 3 retrieval extension (ColPali, late chunking, agentic RAG patterns, HyDE, reranking); knowledge files in `knowledge/ai/`; pending human review.
 - [relevance-realization-research.md](relevance-realization-research.md) — completed 2026-03-20; 13/13 items across 4 phases (Gestalt/frame-problem antecedents, opponent-processing/four-kinds-of-knowing/aptitudes-of-intelligence, insight behavioral/neural/mechanism, rationality/wisdom/meaning-crisis/synthesis); 13 knowledge files in `knowledge/cognitive-science/relevance-realization/`; pending human review.
@@ -59,11 +60,11 @@ Plans are categorized as **build** (code/infrastructure changes with a defined d
 ---
 
 <!-- BEGIN: mcp-agent-friendliness-improvements -->
-### MCP Agent-Friendliness Improvements · status: active · trust: medium
+### MCP Agent-Friendliness Improvements · status: complete · trust: medium
 Detail: plans/mcp-agent-friendliness-improvements.md
 Scope: Improve the repo-local MCP surface so agents can route intents correctly, preview governed writes consistently, follow common workflows in fewer calls, and reason about policy and provenance with less reconstruction overhead. Top-priority build plan as of 2026-03-20.
-Progress: 27/31 checklist items complete; Phases 1-6 finished (promotion-path parity, routing/policy-state helpers, preview contract support, compact workflow bundles, advisory tool-profile reporting, and MCP-native resources/prompts).
-Next: Phase 7: enrich provenance and add structured large-file read support.
+Progress: 31/31 checklist items complete; Phases 1-7 finished (promotion-path parity, routing/policy-state helpers, preview contract support, compact workflow bundles, advisory tool-profile reporting, MCP-native resources/prompts, and provenance-aware structured extraction).
+Next: All planned phases complete.
 <!-- END: mcp-agent-friendliness-improvements -->
 
 ---
