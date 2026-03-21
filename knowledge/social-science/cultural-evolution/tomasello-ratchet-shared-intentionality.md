@@ -1,8 +1,9 @@
 ---
 created: '2026-03-20'
+last_verified: '2026-03-21'
 origin_session: chats/2026/03/20/chat-002
 source: agent-generated
-trust: low
+trust: medium
 ---
 
 # Tomasello: The Cultural Ratchet and Shared Intentionality

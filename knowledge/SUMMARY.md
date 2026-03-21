@@ -178,4 +178,19 @@ _No access data yet._ After aggregation, this section will contain:
 - **[rag-architecture.md](knowledge/ai/frontier/retrieval-memory/rag-architecture.md)** — Rag Architecture
 - **[reranking-two-stage-retrieval.md](knowledge/ai/frontier/retrieval-memory/reranking-two-stage-retrieval.md)** — Reranking Two Stage Retrieval
 
+<!-- section: social-science -->
+### Social Science
+- **[blackmore-meme-machine.md](knowledge/social-science/cultural-evolution/blackmore-meme-machine.md)** — Blackmore Meme Machine
+- **[boyd-richerson-dual-inheritance.md](knowledge/social-science/cultural-evolution/boyd-richerson-dual-inheritance.md)** — Boyd Richerson Dual Inheritance
+- **[dawkins-meme-concept.md](knowledge/social-science/cultural-evolution/dawkins-meme-concept.md)** — Dawkins Meme Concept
+- **[fricker-epistemic-injustice.md](knowledge/social-science/cultural-evolution/fricker-epistemic-injustice.md)** — Fricker Epistemic Injustice
+- **[henrich-collective-brain.md](knowledge/social-science/cultural-evolution/henrich-collective-brain.md)** — Henrich Collective Brain
+- **[hull-replicator-interactor.md](knowledge/social-science/cultural-evolution/hull-replicator-interactor.md)** — Hull Replicator Interactor
+- **[idea-fitness-vs-truth.md](knowledge/social-science/cultural-evolution/idea-fitness-vs-truth.md)** — Idea Fitness Vs Truth
+- **[llms-cultural-evolution-mechanism.md](knowledge/social-science/cultural-evolution/llms-cultural-evolution-mechanism.md)** — Llms Cultural Evolution Mechanism
+- **[norms-punishment-cultural-group-selection.md](knowledge/social-science/cultural-evolution/norms-punishment-cultural-group-selection.md)** — Norms Punishment Cultural Group Selection
+- **[prestige-cascades-llm-adoption.md](knowledge/social-science/cultural-evolution/prestige-cascades-llm-adoption.md)** — Prestige Cascades Llm Adoption
+- **[tomasello-ratchet-shared-intentionality.md](knowledge/social-science/cultural-evolution/tomasello-ratchet-shared-intentionality.md)** — Tomasello Ratchet Shared Intentionality
+- **[transmission-biases-cognitive-attractors.md](knowledge/social-science/cultural-evolution/transmission-biases-cognitive-attractors.md)** — Transmission Biases Cognitive Attractors
+
 ---
