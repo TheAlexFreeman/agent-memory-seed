@@ -11,7 +11,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, ClassVar, Coroutine, cast
 
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ToolCallable = Callable[..., Coroutine[Any, Any, str]]
 

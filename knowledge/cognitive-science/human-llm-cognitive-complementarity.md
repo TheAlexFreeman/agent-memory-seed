@@ -1,6 +1,6 @@
 ---
 source: agent-generated
-origin_session: chats/2026/03/20
+origin_session: unknown
 created: '2026-03-20'
 trust: medium
 type: analysis

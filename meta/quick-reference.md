@@ -169,10 +169,8 @@ After periodic review:
 
 ## Context budget guideline
 
-| Session mode | Typical token cost | When |
-|---|---|---|
-| First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-| Returning compact session | ~3,000–7,000 | Normal day-to-day use via the compact returning manifest in this file |
-| Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
-
-For models with context windows under 32k, prefer the compact returning manifest in this file after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.
+| Session mode | Typical token cost |
+|---|---|
+| First-run onboarding bootstrap | ~15,000–20,000 |
+| Returning compact session | ~3,000–7,000 |
+| Full bootstrap / periodic review | ~18,000–25,000 |

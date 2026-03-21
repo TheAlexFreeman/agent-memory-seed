@@ -5,7 +5,6 @@ import sys
 import unittest
 from importlib import import_module
 from pathlib import Path
-from types import ModuleType
 from unittest import mock
 
 try:

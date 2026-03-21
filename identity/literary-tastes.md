@@ -1,6 +1,6 @@
 ---
 source: agent-inferred
-origin_session: chats/2026/03/20/cowork-enrichment
+origin_session: unknown
 created: 2026-03-20
 last_verified: 2026-03-20
 trust: medium

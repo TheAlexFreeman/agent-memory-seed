@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 origin_session: chats/2026/03/20/chat-002
-source: agent-synthesis
+source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
 ---

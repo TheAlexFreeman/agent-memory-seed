@@ -4,6 +4,7 @@ import importlib.util
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +16,7 @@ SPEC = importlib.util.spec_from_file_location("validate_memory_repo", VALIDATOR_
 assert SPEC is not None
 validator = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
+sys.modules.setdefault("validate_memory_repo", validator)
 SPEC.loader.exec_module(validator)
 
 
