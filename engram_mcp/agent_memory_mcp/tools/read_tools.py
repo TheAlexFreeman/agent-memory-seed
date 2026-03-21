@@ -19,6 +19,9 @@ These extend the existing read-only tool set with:
     - memory_audit_trust : trust decay audit
     - memory_check_aggregation_triggers : ACCESS.jsonl trigger status
 
+Resources and prompts are also registered here for stable read/navigation state
+and recurring workflow scaffolds.
+
 All tools are registered onto the FastMCP instance passed in via register().
 """
 
@@ -117,6 +120,8 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     desktop_ops = _desktop_operations(manifest)
     tool_profile_contract = _tool_profile_contract(manifest)
     tool_profiles = _tool_profile_definitions(manifest)
+    resources = _native_surface_section(manifest, "resources")
+    prompts = _native_surface_section(manifest, "prompts")
     preview_capable_operations = sorted(
         key
         for key, value in desktop_ops.items()
@@ -144,6 +149,8 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         "profile_selection_mode": tool_profile_contract.get("selection_mode"),
         "dynamic_profile_switching": tool_profile_contract.get("dynamic_runtime_switching") is True,
         "list_changed_supported": tool_profile_contract.get("list_changed_supported") is True,
+        "resource_count": len(resources),
+        "prompt_count": len(prompts),
     }
 
 
@@ -227,7 +234,9 @@ def _manifest_tool_sets(manifest: dict[str, Any]) -> dict[str, list[str]]:
     raw_tool_sets = manifest.get("tool_sets")
     if not isinstance(raw_tool_sets, dict):
         return {}
-    return {name: _string_list(value) for name, value in raw_tool_sets.items() if isinstance(name, str)}
+    return {
+        name: _string_list(value) for name, value in raw_tool_sets.items() if isinstance(name, str)
+    }
 
 
 def _expand_tool_profile(
@@ -240,7 +249,9 @@ def _expand_tool_profile(
         tools.extend(tool_sets.get(tool_set_name, []))
     tools.extend(_string_list(profile_definition.get("tools")))
     excluded_tools = set(_string_list(profile_definition.get("exclude_tools")))
-    unique_tools = sorted({tool for tool in tools if isinstance(tool, str) and tool not in excluded_tools})
+    unique_tools = sorted(
+        {tool for tool in tools if isinstance(tool, str) and tool not in excluded_tools}
+    )
 
     return {
         "name": profile_name,
@@ -267,6 +278,92 @@ def _build_tool_profile_payload(manifest: dict[str, Any]) -> dict[str, Any]:
         "list_changed_supported": contract.get("list_changed_supported") is True,
         "profiles": expanded_profiles,
     }
+
+
+def _native_surface_section(manifest: dict[str, Any], key: str) -> dict[str, dict[str, Any]]:
+    native_surface = manifest.get("mcp_native_surface")
+    if not isinstance(native_surface, dict):
+        return {}
+    raw_section = native_surface.get(key)
+    if not isinstance(raw_section, dict):
+        return {}
+    return {name: value for name, value in raw_section.items() if isinstance(value, dict)}
+
+
+def _build_policy_summary_payload(manifest: dict[str, Any]) -> dict[str, Any]:
+    change_classes = manifest.get("change_classes")
+    if not isinstance(change_classes, dict):
+        change_classes = {}
+    raw_fallback_policy = manifest.get("raw_fallback_policy")
+    if not isinstance(raw_fallback_policy, dict):
+        raw_fallback_policy = {}
+    integration_boundary = manifest.get("integration_boundary")
+    if not isinstance(integration_boundary, dict):
+        integration_boundary = {}
+    tool_profile_contract = _tool_profile_contract(manifest)
+
+    summarized_classes = {
+        name: {
+            "approval": value.get("approval"),
+            "user_awareness": value.get("user_awareness"),
+            "read_only_behavior": value.get("read_only_behavior"),
+            "notes": value.get("notes"),
+        }
+        for name, value in change_classes.items()
+        if isinstance(name, str) and isinstance(value, dict)
+    }
+
+    return {
+        "change_classes": summarized_classes,
+        "raw_fallback_policy": dict(raw_fallback_policy),
+        "integration_boundary": {
+            "model": integration_boundary.get("model"),
+            "prefer": integration_boundary.get("prefer"),
+            "degradation_order": integration_boundary.get("degradation_order"),
+            "desktop_owns": integration_boundary.get("desktop_owns"),
+            "repo_local_mcp_owns": integration_boundary.get("repo_local_mcp_owns"),
+            "native_fallback_owns": integration_boundary.get("native_fallback_owns"),
+        },
+        "tool_profiles": {
+            "default_profile": tool_profile_contract.get("default_profile"),
+            "selection_mode": tool_profile_contract.get("selection_mode"),
+            "dynamic_runtime_switching": tool_profile_contract.get("dynamic_runtime_switching")
+            is True,
+            "list_changed_supported": tool_profile_contract.get("list_changed_supported") is True,
+        },
+        "resources_vs_tools": {
+            "resources_for": [
+                "stable summaries",
+                "navigation snapshots",
+                "read-mostly repo state",
+            ],
+            "prompts_for": [
+                "workflow scaffolding",
+                "host-side UX guidance",
+                "reusable governed conversations",
+            ],
+            "tools_for": [
+                "authoritative mutations",
+                "path-specific policy compilation",
+                "parameterized read operations",
+            ],
+        },
+    }
+
+
+def _build_active_plan_summary_payload(root: Path) -> dict[str, Any]:
+    active_plans = _collect_plan_entries(root, status="active")
+    top_plan = active_plans[0] if active_plans else None
+    return {
+        "generated_at": str(date.today()),
+        "active_plan_count": len(active_plans),
+        "top_plan": top_plan,
+        "plans": active_plans,
+    }
+
+
+def _prompt_json_section(title: str, payload: dict[str, Any]) -> str:
+    return f"## {title}\n\n```json\n{json.dumps(payload, indent=2)}\n```"
 
 
 def _manifest_operations(manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -332,13 +429,19 @@ def _path_policy_state(root: Path, rel_path: str | None) -> dict[str, Any]:
     path_change_class: str | None = None
 
     meta_protected = "Any modification to files in `meta/`" in update_guidelines_text
-    skills_protected = "Creating, modifying, or removing files in `skills/`." in update_guidelines_text
-    identity_proposed = "Adding, modifying, or removing files in `identity/`." in update_guidelines_text
+    skills_protected = (
+        "Creating, modifying, or removing files in `skills/`." in update_guidelines_text
+    )
+    identity_proposed = (
+        "Adding, modifying, or removing files in `identity/`." in update_guidelines_text
+    )
     unverified_inform_only = (
         "Inform only" in curation_policy_text and "never instruct" in curation_policy_text.lower()
     )
 
-    if normalized in {"README.md", "CHANGELOG.md"} or (normalized.startswith("meta/") and meta_protected):
+    if normalized in {"README.md", "CHANGELOG.md"} or (
+        normalized.startswith("meta/") and meta_protected
+    ):
         protected_surface = True
         path_change_class = "protected"
         reasons.append("Governance and top-level architecture files require explicit approval.")
@@ -419,14 +522,38 @@ def _build_policy_state_payload(
     preview_mode = None
     preview_argument = None
     if operation_entry is not None:
-        change_class = operation_entry.get("change_class") if isinstance(operation_entry.get("change_class"), str) else None
-        tool_name = operation_entry.get("tool") if isinstance(operation_entry.get("tool"), str) else None
-        operation_group = operation_entry.get("operation_group") if isinstance(operation_entry.get("operation_group"), str) else operation_entry.get("group") if isinstance(operation_entry.get("group"), str) else None
+        change_class = (
+            operation_entry.get("change_class")
+            if isinstance(operation_entry.get("change_class"), str)
+            else None
+        )
+        tool_name = (
+            operation_entry.get("tool") if isinstance(operation_entry.get("tool"), str) else None
+        )
+        operation_group = (
+            operation_entry.get("operation_group")
+            if isinstance(operation_entry.get("operation_group"), str)
+            else operation_entry.get("group")
+            if isinstance(operation_entry.get("group"), str)
+            else None
+        )
         tier = operation_entry.get("tier") if isinstance(operation_entry.get("tier"), str) else None
-        notes = operation_entry.get("notes") if isinstance(operation_entry.get("notes"), str) else None
-        preview_available = operation_entry.get("preview_support") is True or isinstance(operation_entry.get("preview_mode"), str)
-        preview_mode = operation_entry.get("preview_mode") if isinstance(operation_entry.get("preview_mode"), str) else None
-        preview_argument = operation_entry.get("preview_argument") if isinstance(operation_entry.get("preview_argument"), str) else None
+        notes = (
+            operation_entry.get("notes") if isinstance(operation_entry.get("notes"), str) else None
+        )
+        preview_available = operation_entry.get("preview_support") is True or isinstance(
+            operation_entry.get("preview_mode"), str
+        )
+        preview_mode = (
+            operation_entry.get("preview_mode")
+            if isinstance(operation_entry.get("preview_mode"), str)
+            else None
+        )
+        preview_argument = (
+            operation_entry.get("preview_argument")
+            if isinstance(operation_entry.get("preview_argument"), str)
+            else None
+        )
         raw_fallback_tools = operation_entry.get("fallback_tools")
         if isinstance(raw_fallback_tools, list):
             fallback_tools = [tool for tool in raw_fallback_tools if isinstance(tool, str)]
@@ -464,7 +591,8 @@ def _build_policy_state_payload(
         semantic_target_supported = not (
             path_state["path"]
             and not path_state["protected_surface"]
-            and path_state["top_level_root"] not in {"knowledge", "identity", "plans", "skills", "meta", "chats", "scratchpad"}
+            and path_state["top_level_root"]
+            not in {"knowledge", "identity", "plans", "skills", "meta", "chats", "scratchpad"}
         )
 
     warnings: list[str] = []
@@ -516,33 +644,57 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
 
     if "create" in intent_lower and "plan" in intent_lower:
         add("create_plan", 0.98, "Intent explicitly requests creating a plan.")
-    if "next action" in intent_lower and any(word in intent_lower for word in ("update", "set", "change")):
+    if "next action" in intent_lower and any(
+        word in intent_lower for word in ("update", "set", "change")
+    ):
         add("update_plan_next_action", 0.94, "Intent focuses on updating a plan next_action field.")
-    if "plan" in intent_lower and any(word in intent_lower for word in ("complete", "check off", "mark done")):
+    if "plan" in intent_lower and any(
+        word in intent_lower for word in ("complete", "check off", "mark done")
+    ):
         add("mark_plan_item_complete", 0.94, "Intent sounds like checking off a plan item.")
 
     if "promote" in intent_lower and (
-        "knowledge" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+        "knowledge" in intent_lower
+        or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
     ):
         if path_is_dir and nested_signal:
-            add("promote_knowledge_subtree", 0.98, "Directory target plus nested/subtree wording suggests preserving subpaths.")
+            add(
+                "promote_knowledge_subtree",
+                0.98,
+                "Directory target plus nested/subtree wording suggests preserving subpaths.",
+            )
         elif path_is_dir or plural_signal:
-            add("promote_knowledge_batch", 0.96, "Directory or multi-file wording suggests batched promotion.")
+            add(
+                "promote_knowledge_batch",
+                0.96,
+                "Directory or multi-file wording suggests batched promotion.",
+            )
         else:
-            add("promote_knowledge", 0.97, "Single-file promotion intent matches the one-file semantic tool.")
+            add(
+                "promote_knowledge",
+                0.97,
+                "Single-file promotion intent matches the one-file semantic tool.",
+            )
 
     if any(word in intent_lower for word in ("demote", "move back to unverified")) and (
-        "knowledge" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/"))
+        "knowledge" in intent_lower
+        or (normalized_path and normalized_path.startswith("knowledge/"))
     ):
         add("demote_knowledge", 0.95, "Intent asks to move verified knowledge back into review.")
 
     if "archive" in intent_lower and (
-        "knowledge" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/"))
+        "knowledge" in intent_lower
+        or (normalized_path and normalized_path.startswith("knowledge/"))
     ):
         add("archive_knowledge", 0.95, "Intent explicitly asks to archive knowledge content.")
 
-    if any(word in intent_lower for word in ("add", "create", "write")) and "knowledge" in intent_lower and (
-        "unverified" in intent_lower or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+    if (
+        any(word in intent_lower for word in ("add", "create", "write"))
+        and "knowledge" in intent_lower
+        and (
+            "unverified" in intent_lower
+            or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+        )
     ):
         add("add_knowledge_file", 0.93, "Intent matches writing a new unverified knowledge file.")
 
@@ -555,21 +707,37 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
             "Intent matches ACCESS logging rather than content mutation.",
         )
 
-    if "periodic review" in intent_lower and any(word in intent_lower for word in ("record", "apply", "save")):
-        add("record_periodic_review", 0.92, "Intent targets persisting approved periodic-review outputs.")
+    if "periodic review" in intent_lower and any(
+        word in intent_lower for word in ("record", "apply", "save")
+    ):
+        add(
+            "record_periodic_review",
+            0.92,
+            "Intent targets persisting approved periodic-review outputs.",
+        )
 
-    if "review queue" in intent_lower and any(word in intent_lower for word in ("resolve", "close", "clear")):
+    if "review queue" in intent_lower and any(
+        word in intent_lower for word in ("resolve", "close", "clear")
+    ):
         add("resolve_review_item", 0.92, "Intent sounds like resolving a queued review item.")
-    if "review queue" in intent_lower and any(word in intent_lower for word in ("flag", "add", "queue")):
+    if "review queue" in intent_lower and any(
+        word in intent_lower for word in ("flag", "add", "queue")
+    ):
         add("flag_for_review", 0.9, "Intent sounds like adding a new review-queue entry.")
 
-    if "skill" in intent_lower and any(word in intent_lower for word in ("update", "edit", "change", "create")):
+    if "skill" in intent_lower and any(
+        word in intent_lower for word in ("update", "edit", "change", "create")
+    ):
         add("update_skill", 0.93, "Intent targets a protected skill mutation.")
 
-    if "identity" in intent_lower and any(word in intent_lower for word in ("update", "edit", "change")):
+    if "identity" in intent_lower and any(
+        word in intent_lower for word in ("update", "edit", "change")
+    ):
         add("update_identity_trait", 0.92, "Intent targets an identity trait update.")
 
-    if "session" in intent_lower and any(word in intent_lower for word in ("record", "wrap up", "summarize")):
+    if "session" in intent_lower and any(
+        word in intent_lower for word in ("record", "wrap up", "summarize")
+    ):
         add("record_session", 0.9, "Intent sounds like session wrap-up or persistence.")
 
     deduped: dict[str, dict[str, Any]] = {}
@@ -577,7 +745,10 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
         existing = deduped.get(candidate["operation"])
         if existing is None or candidate["score"] > existing["score"]:
             deduped[candidate["operation"]] = candidate
-    return sorted(deduped.values(), key=lambda item: (-cast(float, item["score"]), cast(str, item["operation"])))
+    return sorted(
+        deduped.values(),
+        key=lambda item: (-cast(float, item["score"]), cast(str, item["operation"])),
+    )
 
 
 def _preview_file_entry(entry: Path, root: Path, preview_chars: int) -> dict[str, Any]:
@@ -1505,7 +1676,9 @@ def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[st
             plan_done = 0
             plan_total = 0
         title_match = re.search(r"(?m)^#\s+(.+?)\s*$", body)
-        title = str(fm_dict.get("title") or (title_match.group(1) if title_match else plan_file.stem))
+        title = str(
+            fm_dict.get("title") or (title_match.group(1) if title_match else plan_file.stem)
+        )
         entries.append(
             {
                 "plan_id": plan_file.stem,
@@ -1529,7 +1702,9 @@ def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[st
     return entries
 
 
-def _truncate_items(items: list[dict[str, Any]], limit: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _truncate_items(
+    items: list[dict[str, Any]], limit: int
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     normalized_limit = max(limit, 0)
     if len(items) <= normalized_limit:
         return items, {"returned": len(items), "total": len(items), "truncated": False}
@@ -2180,7 +2355,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             alternatives = candidates[1:4]
             ambiguous = bool(
                 alternatives
-                and abs(cast(float, recommended["score"]) - cast(float, alternatives[0]["score"])) < 0.03
+                and abs(cast(float, recommended["score"]) - cast(float, alternatives[0]["score"]))
+                < 0.03
             )
         else:
             ambiguous = True
@@ -3971,17 +4147,25 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         recommended_checks: list[str] = []
         if cast(list[dict[str, Any]], session_health["aggregation_due"]):
-            recommended_checks.append("Inspect aggregation pressure with memory_check_aggregation_triggers.")
+            recommended_checks.append(
+                "Inspect aggregation pressure with memory_check_aggregation_triggers."
+            )
         if bool(session_health["periodic_review_due"]):
-            recommended_checks.append("Prepare the protected periodic review workflow with memory_prepare_periodic_review.")
+            recommended_checks.append(
+                "Prepare the protected periodic review workflow with memory_prepare_periodic_review."
+            )
         if pending_review_items:
-            recommended_checks.append("Review pending queue items before any protected cleanup writes.")
+            recommended_checks.append(
+                "Review pending queue items before any protected cleanup writes."
+            )
         if active_plans:
             recommended_checks.append(
                 f"Resume the leading active plan: {active_plans[0]['plan_id']}"
             )
         if not recommended_checks:
-            recommended_checks.append("No urgent maintenance signals detected; continue the current plan or inspect capabilities.")
+            recommended_checks.append(
+                "No urgent maintenance signals detected; continue the current plan or inspect capabilities."
+            )
 
         payload = {
             "capabilities": capabilities_summary,
@@ -4028,7 +4212,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
         )
         candidates: list[dict[str, Any]] = []
-        for group_name, entries in cast(dict[str, list[dict[str, Any]]], review_payload["groups"]).items():
+        for group_name, entries in cast(
+            dict[str, list[dict[str, Any]]], review_payload["groups"]
+        ).items():
             for entry in entries:
                 candidates.append(
                     {
@@ -4095,7 +4281,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         candidates = [
             {
                 "source_path": item["path"],
-                "target_path": cast(str, item["path"]).replace("knowledge/_unverified/", "knowledge/", 1),
+                "target_path": cast(str, item["path"]).replace(
+                    "knowledge/_unverified/", "knowledge/", 1
+                ),
                 "trust": item.get("trust"),
                 "days_old": item.get("age_days"),
                 "source": item.get("source"),
@@ -4112,9 +4300,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         )
         selected_candidates, candidate_budget = _truncate_items(candidates, max_files)
         suggested_operation = (
-            "memory_promote_knowledge"
-            if len(candidates) <= 1
-            else "memory_promote_knowledge_batch"
+            "memory_promote_knowledge" if len(candidates) <= 1 else "memory_promote_knowledge_batch"
         )
         payload = {
             "folder_path": folder_path,
@@ -4153,22 +4339,34 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         session_health = json.loads(await memory_session_health_check())
         review_payload = json.loads(await memory_run_periodic_review())
         security_candidates, security_budget = _truncate_items(
-            cast(list[dict[str, Any]], review_payload["ordered_checks"]["security_flags"]["generated_candidates"]),
+            cast(
+                list[dict[str, Any]],
+                review_payload["ordered_checks"]["security_flags"]["generated_candidates"],
+            ),
             max_queue_items,
         )
         deferred_targets = [
             {"path": path}
-            for path in cast(list[str], review_payload["proposed_outputs"]["deferred_write_targets"])
+            for path in cast(
+                list[str], review_payload["proposed_outputs"]["deferred_write_targets"]
+            )
         ]
         deferred_targets, target_budget = _truncate_items(deferred_targets, max_deferred_targets)
-        overdue_files = cast(list[dict[str, Any]], review_payload["ordered_checks"]["unverified_content"]["overdue_files"])
+        overdue_files = cast(
+            list[dict[str, Any]],
+            review_payload["ordered_checks"]["unverified_content"]["overdue_files"],
+        )
         payload = {
             "review_due": review_payload["review_due"],
             "session_health": session_health,
             "high_signal": {
-                "pending_security_count": review_payload["ordered_checks"]["security_flags"]["pending_count"],
+                "pending_security_count": review_payload["ordered_checks"]["security_flags"][
+                    "pending_count"
+                ],
                 "generated_security_candidates": security_candidates,
-                "overdue_unverified_count": review_payload["ordered_checks"]["unverified_content"]["overdue_count"],
+                "overdue_unverified_count": review_payload["ordered_checks"]["unverified_content"][
+                    "overdue_count"
+                ],
                 "overdue_unverified_files": overdue_files[:max_queue_items],
                 "conflict_count": review_payload["ordered_checks"]["conflict_resolution"]["count"],
             },
@@ -4598,6 +4796,169 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo = get_repo()
         signals = _compute_maturity_signals(root, repo)
         return json.dumps(signals, indent=2)
+
+    # ------------------------------------------------------------------
+    # MCP-native resources
+    # ------------------------------------------------------------------
+    @mcp.resource(
+        "memory://capabilities/summary",
+        name="memory_capability_summary",
+        title="Capability Summary Resource",
+        description="Compact governed capability and profile summary.",
+        mime_type="application/json",
+    )
+    async def memory_capability_summary_resource() -> str:
+        root = get_root()
+        manifest, error_payload = _load_capabilities_manifest(root)
+        if error_payload is not None:
+            return json.dumps(error_payload, indent=2)
+
+        manifest_dict = cast(dict[str, Any], manifest)
+        payload = {
+            "summary": _build_capabilities_summary(manifest_dict),
+            "tool_profiles": _build_tool_profile_payload(manifest_dict),
+        }
+        return json.dumps(payload, indent=2)
+
+    @mcp.resource(
+        "memory://policy/summary",
+        name="memory_policy_summary",
+        title="Policy Summary Resource",
+        description="Stable change-class, fallback, and surface-boundary summary.",
+        mime_type="application/json",
+    )
+    async def memory_policy_summary_resource() -> str:
+        root = get_root()
+        manifest, error_payload = _load_capabilities_manifest(root)
+        if error_payload is not None:
+            return json.dumps(error_payload, indent=2)
+
+        payload = _build_policy_summary_payload(cast(dict[str, Any], manifest))
+        return json.dumps(payload, indent=2)
+
+    @mcp.resource(
+        "memory://session/health",
+        name="memory_session_health_resource",
+        title="Session Health Resource",
+        description="Session-start maintenance and review-health snapshot.",
+        mime_type="application/json",
+    )
+    async def memory_session_health_resource() -> str:
+        return await memory_session_health_check()
+
+    @mcp.resource(
+        "memory://plans/active",
+        name="memory_active_plans_resource",
+        title="Active Plans Resource",
+        description="Compact summary of active plans and next actions.",
+        mime_type="application/json",
+    )
+    async def memory_active_plans_resource() -> str:
+        root = get_root()
+        payload = _build_active_plan_summary_payload(root)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
+    # MCP-native prompts
+    # ------------------------------------------------------------------
+    @mcp.prompt(
+        name="memory_prepare_unverified_review_prompt",
+        title="Prepare Unverified Review Prompt",
+        description="Guide a host through compact unverified-review preparation.",
+    )
+    async def memory_prepare_unverified_review_prompt(
+        folder_path: str = "knowledge/_unverified",
+        max_files: int = 12,
+        max_extract_words: int = 60,
+    ) -> str:
+        bundle = json.loads(
+            await memory_prepare_unverified_review(
+                folder_path=folder_path,
+                max_files=max_files,
+                max_extract_words=max_extract_words,
+            )
+        )
+        sections = [
+            "Guide the user through reviewing low-trust knowledge before any promotion write.",
+            "Surface the highest-signal files first, call out expired items, and recommend the narrowest valid promotion operation.",
+            _prompt_json_section("Review Bundle", bundle),
+            "When the user is ready to act, use memory_promote_knowledge for one file, memory_promote_knowledge_batch for flat multi-file promotion, or memory_promote_knowledge_subtree when nested paths should be preserved.",
+        ]
+        return "\n\n".join(sections)
+
+    @mcp.prompt(
+        name="memory_governed_promotion_preview_prompt",
+        title="Governed Promotion Preview Prompt",
+        description="Structure a governed knowledge-promotion preview conversation.",
+    )
+    async def memory_governed_promotion_preview_prompt(
+        folder_path: str = "knowledge/_unverified",
+        max_files: int = 12,
+    ) -> str:
+        bundle = json.loads(
+            await memory_prepare_promotion_batch(
+                folder_path=folder_path,
+                max_files=max_files,
+            )
+        )
+        sections = [
+            "Use this prompt to prepare a governed promotion preview before any knowledge mutation.",
+            "Confirm candidate paths, target paths, and whether the operation should stay single-file or batch-shaped. If the user approves, follow with the semantic write tool in preview mode first when available.",
+            _prompt_json_section("Promotion Candidates", bundle),
+        ]
+        return "\n\n".join(sections)
+
+    @mcp.prompt(
+        name="memory_prepare_periodic_review_prompt",
+        title="Prepare Periodic Review Prompt",
+        description="Guide a protected periodic-review workflow using the compact preparation bundle.",
+    )
+    async def memory_prepare_periodic_review_prompt(
+        max_queue_items: int = 8,
+        max_deferred_targets: int = 8,
+    ) -> str:
+        bundle = json.loads(
+            await memory_prepare_periodic_review(
+                max_queue_items=max_queue_items,
+                max_deferred_targets=max_deferred_targets,
+            )
+        )
+        sections = [
+            "Use this prompt to walk the user through the protected periodic-review workflow without applying writes prematurely.",
+            "Summarize the due-state, review queue pressure, and deferred write targets. Only call memory_record_periodic_review after the user confirms the protected update.",
+            _prompt_json_section("Periodic Review Bundle", bundle),
+        ]
+        return "\n\n".join(sections)
+
+    @mcp.prompt(
+        name="memory_session_wrap_up_prompt",
+        title="Session Wrap-Up Prompt",
+        description="Guide end-of-session summary, reflection, and deferred follow-up capture.",
+    )
+    async def memory_session_wrap_up_prompt(
+        session_id: str = "",
+        key_topics: str = "",
+    ) -> str:
+        root = get_root()
+        active_plans, _ = _truncate_items(_collect_plan_entries(root, status="active"), 3)
+        payload = {
+            "session_id": session_id or None,
+            "key_topics": _split_csv_or_lines(key_topics) if key_topics.strip() else [],
+            "active_plans": active_plans,
+            "target_tool": "memory_record_session",
+            "recommended_fields": [
+                "summary",
+                "reflection",
+                "key_topics",
+                "access_entries",
+            ],
+        }
+        sections = [
+            "Use this prompt to prepare an end-of-session record before calling memory_record_session.",
+            "Capture what changed, what was learned, which plans advanced, and any deferred actions that should persist into the next session.",
+            _prompt_json_section("Session Wrap-Up Context", payload),
+        ]
+        return "\n\n".join(sections)
 
     return {
         "memory_get_capabilities": memory_get_capabilities,

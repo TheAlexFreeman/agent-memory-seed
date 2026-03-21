@@ -98,6 +98,8 @@ class MemoryMCPTests(unittest.TestCase):
 
         self.assertEqual(payload["kind"], "agent-memory-capabilities")
         self.assertEqual(payload["contract_versions"]["capabilities"], 1)
+        self.assertEqual(payload["contract_versions"]["resources"], 1)
+        self.assertEqual(payload["contract_versions"]["prompts"], 1)
         self.assertIn("memory_get_capabilities", payload["tool_sets"]["read_support"])
         self.assertEqual(payload["summary"]["contract_versions"]["mcp"], 1)
         self.assertGreaterEqual(payload["summary"]["total_tools"], 1)
@@ -106,6 +108,8 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertEqual(payload["summary"]["default_tool_profile"], "full")
         self.assertFalse(payload["summary"]["dynamic_profile_switching"])
         self.assertFalse(payload["summary"]["list_changed_supported"])
+        self.assertGreaterEqual(payload["summary"]["resource_count"], 4)
+        self.assertGreaterEqual(payload["summary"]["prompt_count"], 4)
 
     def test_get_tool_profiles_returns_expanded_advisory_profiles(self) -> None:
         raw = asyncio.run(self.module.memory_get_tool_profiles())
@@ -148,6 +152,52 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertTrue(cast(bool, payload["inline"]))
         self.assertIn("Agent Memory System", cast(str, payload["content"]))
         self.assertIn("version_token", payload)
+
+    def test_native_resources_enumerate_and_read(self) -> None:
+        async def run_call() -> tuple[list[tuple[str, str]], list[Any], dict[str, Any]]:
+            resources = await self.module.mcp.list_resources()
+            resource_pairs = [(str(resource.name), str(resource.uri)) for resource in resources]
+            capability_summary = await self.module.mcp.read_resource("memory://capabilities/summary")
+            capability_payload = json.loads(cast(str, capability_summary[0].content))
+            return resource_pairs, capability_summary, capability_payload
+
+        resource_pairs, capability_summary, capability_payload = asyncio.run(run_call())
+
+        self.assertIn(("memory_capability_summary", "memory://capabilities/summary"), resource_pairs)
+        self.assertIn(("memory_policy_summary", "memory://policy/summary"), resource_pairs)
+        self.assertIn(("memory_session_health_resource", "memory://session/health"), resource_pairs)
+        self.assertIn(("memory_active_plans_resource", "memory://plans/active"), resource_pairs)
+        self.assertEqual(len(capability_summary), 1)
+        self.assertIn("summary", capability_payload)
+        self.assertIn("tool_profiles", capability_payload)
+        self.assertIn("full", capability_payload["tool_profiles"]["profiles"])
+
+    def test_native_prompts_enumerate_and_render(self) -> None:
+        async def run_call() -> tuple[list[str], Any, Any]:
+            prompts = await self.module.mcp.list_prompts()
+            prompt_names = [str(prompt.name) for prompt in prompts]
+            review_prompt = await self.module.mcp.get_prompt(
+                "memory_prepare_unverified_review_prompt",
+                {"folder_path": "knowledge/_unverified", "max_files": 2, "max_extract_words": 20},
+            )
+            wrap_up_prompt = await self.module.mcp.get_prompt(
+                "memory_session_wrap_up_prompt",
+                {"session_id": "session-123", "key_topics": "routing,preview"},
+            )
+            return prompt_names, review_prompt, wrap_up_prompt
+
+        prompt_names, review_prompt, wrap_up_prompt = asyncio.run(run_call())
+
+        self.assertIn("memory_prepare_unverified_review_prompt", prompt_names)
+        self.assertIn("memory_governed_promotion_preview_prompt", prompt_names)
+        self.assertIn("memory_prepare_periodic_review_prompt", prompt_names)
+        self.assertIn("memory_session_wrap_up_prompt", prompt_names)
+        self.assertEqual(len(review_prompt.messages), 1)
+        self.assertIn("Review Bundle", cast(str, review_prompt.messages[0].content.text))
+        self.assertIn("memory_promote_knowledge", cast(str, review_prompt.messages[0].content.text))
+        self.assertEqual(len(wrap_up_prompt.messages), 1)
+        self.assertIn("Session Wrap-Up Context", cast(str, wrap_up_prompt.messages[0].content.text))
+        self.assertIn("memory_record_session", cast(str, wrap_up_prompt.messages[0].content.text))
 
     def test_new_tools_are_exported(self) -> None:
         for name in (

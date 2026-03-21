@@ -10,6 +10,8 @@ access = 1
 mcp = 1
 capabilities = 1
 preview = 1
+resources = 1
+prompts = 1
 
 [tool_sets]
 read_support = [
@@ -161,6 +163,55 @@ tool_sets = ["read_support", "semantic_extensions"]
 label = "Read Only"
 description = "Limit host discovery to read and reporting tools when writes are unavailable or undesired."
 tool_sets = ["read_support"]
+
+[mcp_native_surface]
+resources_enabled = true
+prompts_enabled = true
+resource_listing_api = "FastMCP list_resources/read_resource"
+prompt_listing_api = "FastMCP list_prompts/get_prompt"
+resource_fallback_tool = "memory_get_capabilities"
+prompt_fallback_tool = "memory_get_capabilities"
+boundary_note = "Resources expose stable read-mostly state; prompts package recurring workflows; tools remain authoritative for mutations and parameterized reads."
+
+[mcp_native_surface.resources.capability_summary]
+uri = "memory://capabilities/summary"
+backed_by = "memory_get_capabilities"
+when_to_use = "Load the compact capability and profile snapshot without invoking a tool call."
+
+[mcp_native_surface.resources.policy_summary]
+uri = "memory://policy/summary"
+backed_by = "memory_get_policy_state"
+when_to_use = "Inspect stable change-class, fallback, and profile policy boundaries before path-specific compilation."
+
+[mcp_native_surface.resources.session_health]
+uri = "memory://session/health"
+backed_by = "memory_session_health_check"
+when_to_use = "Check aggregation pressure, review cadence, and pending queue state at session start."
+
+[mcp_native_surface.resources.active_plans]
+uri = "memory://plans/active"
+backed_by = "memory_list_plans"
+when_to_use = "Load a compact summary of active plans and next actions for navigation."
+
+[mcp_native_surface.prompts.unverified_review]
+name = "memory_prepare_unverified_review_prompt"
+backed_by = "memory_prepare_unverified_review"
+when_to_use = "Guide a host through review of low-trust knowledge before promotion."
+
+[mcp_native_surface.prompts.promotion_preview]
+name = "memory_governed_promotion_preview_prompt"
+backed_by = "memory_prepare_promotion_batch"
+when_to_use = "Structure a governed promotion-preview conversation before applying knowledge promotions."
+
+[mcp_native_surface.prompts.periodic_review]
+name = "memory_prepare_periodic_review_prompt"
+backed_by = "memory_prepare_periodic_review"
+when_to_use = "Guide a protected periodic-review workflow using the compact review bundle."
+
+[mcp_native_surface.prompts.session_wrap_up]
+name = "memory_session_wrap_up_prompt"
+backed_by = "memory_record_session"
+when_to_use = "Guide end-of-session summarization, reflection, and deferred follow-up capture."
 
 [ui_feedback]
 panel_title = "Governed Memory Writes"

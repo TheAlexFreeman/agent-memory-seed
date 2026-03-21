@@ -1,7 +1,7 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-21'
-next_action: 'Phase 6: expose stable read/navigation state through MCP-native resources and prompts.'
+next_action: 'Phase 7: enrich provenance and add structured large-file read support.'
 origin_session: manual
 source: agent-generated
 status: active
@@ -208,10 +208,10 @@ Clarify when callers should use resources, prompts, or tools. Avoid duplicating 
 Verify that resources and prompts enumerate cleanly and remain consistent with the live capabilities contract.
 
 Checklist:
-- [ ] 6.1 Add stable MCP resources for capability, policy, health, and active-plan state
-- [ ] 6.2 Add prompts for review, promotion preview, periodic review, and session wrap-up workflows
-- [ ] 6.3 Document resources-vs-tools boundaries
-- [ ] 6.4 Add integration coverage for resource/prompt enumeration and consistency
+- [x] 6.1 Add stable MCP resources for capability, policy, health, and active-plan state
+- [x] 6.2 Add prompts for review, promotion preview, periodic review, and session wrap-up workflows
+- [x] 6.3 Document resources-vs-tools boundaries
+- [x] 6.4 Add integration coverage for resource/prompt enumeration and consistency
 
 ---
 
@@ -276,16 +276,16 @@ Checklist:
 - [x] 5.2 Implement profile-aware exposure or profile metadata reporting
 - [x] 5.3 Add `listChanged` support where runtime-safe
 - [x] 5.4 Update capability docs and fallback behavior for non-profile-aware hosts
-- [ ] 6.1 Add stable MCP resources for capability, policy, health, and active-plan state
-- [ ] 6.2 Add prompts for review, promotion preview, periodic review, and session wrap-up workflows
-- [ ] 6.3 Document resources-vs-tools boundaries
-- [ ] 6.4 Add integration coverage for resource/prompt enumeration and consistency
+- [x] 6.1 Add stable MCP resources for capability, policy, health, and active-plan state
+- [x] 6.2 Add prompts for review, promotion preview, periodic review, and session wrap-up workflows
+- [x] 6.3 Document resources-vs-tools boundaries
+- [x] 6.4 Add integration coverage for resource/prompt enumeration and consistency
 - [ ] 7.1 Add optional provenance fields and schema guidance
 - [ ] 7.2 Surface enriched provenance through read tools
 - [ ] 7.3 Implement structured large-file extraction tool
 - [ ] 7.4 Add backward-compatibility and extraction tests
 
-**Progress:** 23/31 items complete
+**Progress:** 27/31 items complete
 
 ---
 
@@ -322,3 +322,4 @@ Checklist:
 - 2026-03-20: Completed Phase 3. Added a shared governed preview envelope to `MemoryWriteResult`, published preview support in the capability manifest and read-side summaries, wired preview mode into representative proposed/protected semantic writes including plan creation, knowledge promotion/demotion/archive, skill and identity updates, review-queue resolution, periodic review recording, and revert flows, and added preview-vs-apply equivalence coverage plus apply-regression checks.
 - 2026-03-20: Completed Phase 4. Added compact workflow-bundle read tools for session bootstrap, unverified review prep, promotion prep, and periodic review prep; kept them read-only and layered over existing health/review/reporting primitives; published the new bundle tools in the read-support surface; and added truncation-focused tests to keep the payloads bounded.
 - 2026-03-21: Completed Phase 5. Added manifest-declared advisory tool profiles plus a `memory_get_tool_profiles` read tool for host-side narrowing, extended capability summaries with profile and `listChanged` metadata, explicitly reported that the current runtime keeps a static tool surface with `listChanged` disabled, and added focused runtime tests for profile reporting and export coverage.
+- 2026-03-21: Completed Phase 6. Added MCP-native resources for capability, policy, session-health, and active-plan summaries; exposed recurring workflow prompts for unverified review, promotion preview, periodic review, and session wrap-up; documented the resources-vs-tools boundary in the capability manifest; and added in-process integration tests for resource and prompt enumeration plus payload rendering.
