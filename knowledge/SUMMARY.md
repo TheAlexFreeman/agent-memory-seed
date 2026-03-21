@@ -180,17 +180,26 @@ _No access data yet._ After aggregation, this section will contain:
 
 <!-- section: social-science -->
 ### Social Science
-- **[blackmore-meme-machine.md](knowledge/social-science/cultural-evolution/blackmore-meme-machine.md)** — Blackmore Meme Machine
-- **[boyd-richerson-dual-inheritance.md](knowledge/social-science/cultural-evolution/boyd-richerson-dual-inheritance.md)** — Boyd Richerson Dual Inheritance
-- **[dawkins-meme-concept.md](knowledge/social-science/cultural-evolution/dawkins-meme-concept.md)** — Dawkins Meme Concept
-- **[fricker-epistemic-injustice.md](knowledge/social-science/cultural-evolution/fricker-epistemic-injustice.md)** — Fricker Epistemic Injustice
-- **[henrich-collective-brain.md](knowledge/social-science/cultural-evolution/henrich-collective-brain.md)** — Henrich Collective Brain
-- **[hull-replicator-interactor.md](knowledge/social-science/cultural-evolution/hull-replicator-interactor.md)** — Hull Replicator Interactor
-- **[idea-fitness-vs-truth.md](knowledge/social-science/cultural-evolution/idea-fitness-vs-truth.md)** — Idea Fitness Vs Truth
-- **[llms-cultural-evolution-mechanism.md](knowledge/social-science/cultural-evolution/llms-cultural-evolution-mechanism.md)** — Llms Cultural Evolution Mechanism
-- **[norms-punishment-cultural-group-selection.md](knowledge/social-science/cultural-evolution/norms-punishment-cultural-group-selection.md)** — Norms Punishment Cultural Group Selection
-- **[prestige-cascades-llm-adoption.md](knowledge/social-science/cultural-evolution/prestige-cascades-llm-adoption.md)** — Prestige Cascades Llm Adoption
-- **[tomasello-ratchet-shared-intentionality.md](knowledge/social-science/cultural-evolution/tomasello-ratchet-shared-intentionality.md)** — Tomasello Ratchet Shared Intentionality
-- **[transmission-biases-cognitive-attractors.md](knowledge/social-science/cultural-evolution/transmission-biases-cognitive-attractors.md)** — Transmission Biases Cognitive Attractors
+
+#### `cultural-evolution/` — Memetics, dual inheritance, transmission, cultural group selection (promoted 2026-03-21, trust: medium)
+- **[blackmore-meme-machine.md](knowledge/social-science/cultural-evolution/blackmore-meme-machine.md)** — Blackmore: memes as replicators, meme's-eye view, critique of memetics
+- **[boyd-richerson-dual-inheritance.md](knowledge/social-science/cultural-evolution/boyd-richerson-dual-inheritance.md)** — Dual inheritance theory, transmission biases, gene-culture coevolution
+- **[dawkins-meme-concept.md](knowledge/social-science/cultural-evolution/dawkins-meme-concept.md)** — Dawkins: meme as cultural replicator, vehicles, extended phenotype
+- **[fricker-epistemic-injustice.md](knowledge/social-science/cultural-evolution/fricker-epistemic-injustice.md)** — Testimonial and hermeneutical injustice; credibility gaps as biased cultural transmission
+- **[henrich-collective-brain.md](knowledge/social-science/cultural-evolution/henrich-collective-brain.md)** — Collective brain, cumulative culture, population size and cultural complexity
+- **[hull-replicator-interactor.md](knowledge/social-science/cultural-evolution/hull-replicator-interactor.md)** — Replicator/interactor distinction, units of selection, generalised Darwinism
+- **[idea-fitness-vs-truth.md](knowledge/social-science/cultural-evolution/idea-fitness-vs-truth.md)** — Why adaptive ideas outcompete true ideas; epistemic implications
+- **[llms-cultural-evolution-mechanism.md](knowledge/social-science/cultural-evolution/llms-cultural-evolution-mechanism.md)** — LLMs as a new axis of cultural transmission; implications for idea fitness
+- **[norms-punishment-cultural-group-selection.md](knowledge/social-science/cultural-evolution/norms-punishment-cultural-group-selection.md)** — Norm enforcement, altruistic punishment, cultural group selection
+- **[prestige-cascades-llm-adoption.md](knowledge/social-science/cultural-evolution/prestige-cascades-llm-adoption.md)** — Prestige bias, cascades, LLM adoption as a case study
+- **[tomasello-ratchet-shared-intentionality.md](knowledge/social-science/cultural-evolution/tomasello-ratchet-shared-intentionality.md)** — Ratchet effect, shared intentionality, cumulative cultural learning
+- **[transmission-biases-cognitive-attractors.md](knowledge/social-science/cultural-evolution/transmission-biases-cognitive-attractors.md)** — Conformist, prestige, content, and skill biases; cognitive attractors (Sperber)
+
+#### `sociology-of-knowledge/` — How knowledge is socially produced, contested, and stabilized (promoted 2026-03-21, trust: low — awaiting review)
+- **[mannheim-sociology-of-knowledge.md](knowledge/social-science/sociology-of-knowledge/mannheim-sociology-of-knowledge.md)** — Mannheim: knowledge as socially situated; ideology vs utopia; the free-floating intellectual; relationism vs relativism
+- **[merton-scientific-norms.md](knowledge/social-science/sociology-of-knowledge/merton-scientific-norms.md)** — CUDOS norms (Communalism, Universalism, Disinterestedness, Organized Skepticism); Matthew Effect; normative vs descriptive debate
+- **[kuhn-paradigms-scientific-revolutions.md](knowledge/social-science/sociology-of-knowledge/kuhn-paradigms-scientific-revolutions.md)** — Normal science, paradigms, anomalies, crisis, scientific revolution, incommensurability; applies directly to AI paradigm genealogy
+- **[latour-actor-network-theory.md](knowledge/social-science/sociology-of-knowledge/latour-actor-network-theory.md)** — ANT: translation, enrollment, black-boxing, inscription, immutable mobiles; symmetry between human and nonhuman actors
+- **[social-construction-of-scientific-knowledge.md](knowledge/social-science/sociology-of-knowledge/social-construction-of-scientific-knowledge.md)** — Edinburgh strong programme (Bloor), experimenter's regress (Collins), science wars (Sokal), synthesis position
 
 ---

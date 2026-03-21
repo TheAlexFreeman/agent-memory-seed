@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-next_action: 'Execute Phase 1 (Sociology of Knowledge & STS): Mannheim, Merton, Kuhn, Latour — how scientific knowledge is socially produced and contested.'
+next_action: 'Execute Phase 2 (Collective Action & Institutions): Olson, Ostrom, North, Acemoglu/Robinson — how groups solve coordination and cooperation problems.'
 origin_session: chats/2026/03/21
 source: agent-generated
 status: active
@@ -80,13 +80,13 @@ Target subfolder: `knowledge/_unverified/social-science/sociology-of-knowledge/`
 5. **`social-construction-of-scientific-knowledge.md`** — Synthesis: the strong programme (Bloor), the science wars, the difference between "knowledge is socially produced" (uncontroversial) and "knowledge is merely social" (controversial). How this connects to idea fitness vs truth and epistemic virtue in communities.
 
 Checklist:
-- [ ] 1.1 Write `mannheim-sociology-of-knowledge.md`
-- [ ] 1.2 Write `merton-scientific-norms.md`
-- [ ] 1.3 Write `kuhn-paradigms-scientific-revolutions.md`
-- [ ] 1.4 Write `latour-actor-network-theory.md`
-- [ ] 1.5 Write `social-construction-of-scientific-knowledge.md`
-- [ ] 1.6 Promote subtree to `knowledge/social-science/sociology-of-knowledge/`
-- [ ] 1.7 Update `knowledge/SUMMARY.md`
+- [x] 1.1 Write `mannheim-sociology-of-knowledge.md`
+- [x] 1.2 Write `merton-scientific-norms.md`
+- [x] 1.3 Write `kuhn-paradigms-scientific-revolutions.md`
+- [x] 1.4 Write `latour-actor-network-theory.md`
+- [x] 1.5 Write `social-construction-of-scientific-knowledge.md`
+- [x] 1.6 Promote subtree to `knowledge/social-science/sociology-of-knowledge/`
+- [x] 1.7 Update `knowledge/SUMMARY.md`
 
 ---
 
@@ -262,7 +262,7 @@ Each file should:
 
 | Phase | Files | Status |
 |-------|-------|--------|
-| Phase 1 — Sociology of Knowledge & STS | 5 | 0/5 |
+| Phase 1 — Sociology of Knowledge & STS | 5 | 5/5 ✓ |
 | Phase 2 — Collective Action | 5 | 0/5 |
 | Phase 3 — Social Psychology | 6 | 0/6 |
 | Phase 4 — Behavioral Economics | 5 | 0/5 |
