@@ -168,17 +168,6 @@ System-internal analysis files produced by the Engram agent analyzing its own ar
 - **[memetic-security-design-implications.md](knowledge/_unverified/system-notes/memetic-security-design-implications.md)** — Five actionable design specs for Engram security improvements — contradiction detection, trust-weighted retrieval, identity integrity check, curation as surface reduction, and session write review — with implementation priority ranking.
 - **[memetic-security-irreducible-core.md](knowledge/_unverified/system-notes/memetic-security-irreducible-core.md)** — Formal analysis of three irreducible limits — capability-robustness tradeoff, social/institutional trust residual, and self-referential paradox — establishing what cannot be engineered away in memetic security.
 
-<!-- section: rationalist-community -->
-### `rationalist-community/` — LessWrong and the Rationalist Community research (started 2026-03-19)
-
-Eleven-file narrative research program on the LessWrong/Rationalist community. See `plans/lesswrong-rationalist-community-research.md` for the full plan. All files carry `trust: low` pending Alex's review. Progress: 1/11.
-
-#### `origins/`
-- **`eliezer-yudkowsky-intellectual-biography.md`** — Yudkowsky's early autodidact background, Extropian/singularitarian milieu, the founding of SIAI, his central doctrines (recursive self-improvement, Friendly AI, Bayesian epistemology, reductionism, metaethics / CEV, "raising the sanity waterline"), and his role as writer-founder. Distinguishes biographical, doctrinal, and institutional-entrepreneurship dimensions.
-- **[the-sequences-core-arguments.md](knowledge/_unverified/rationalist-community/origins/the-sequences-core-arguments.md)** — The Sequences — core arguments, structure, sources, and community function: map/territory, Bayes arc, bias catalog, reductionism, metaethics/CEV, pedagogical and initiation roles
-- **[heuristics-biases-bayes-and-bounded-rationality.md](knowledge/_unverified/rationalist-community/origins/heuristics-biases-bayes-and-bounded-rationality.md)** — Source literatures: Kahneman/Tversky heuristics-and-biases, Simon bounded rationality, Jaynes Bayesian probability, Tetlock forecasting — with how the community reinterpreted and outran each
-- **[academic-and-online-prehistory.md](knowledge/_unverified/rationalist-community/origins/academic-and-online-prehistory.md)** — Prehistory of the rationalist community: Extropianism, transhumanism, Bostrom/FHI, hard SF, cryonics, mailing-list/blogosphere culture, economics/prediction markets, libertarian defaults
-
 <!-- section: react -->
 ### `react/` — React 19 + Chakra UI 3 frontend research (ingested 2026-03-18)
 
