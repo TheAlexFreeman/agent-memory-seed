@@ -28,6 +28,7 @@ read_support = [
   "memory_find_references",
   "memory_validate_links",
   "memory_reorganize_preview",
+  "memory_suggest_structure",
   "memory_check_cross_references",
   "memory_generate_summary",
   "memory_access_analytics",
@@ -71,6 +72,7 @@ semantic_extensions = [
   "memory_mark_plan_item_complete",
   "memory_update_plan_next_action",
   "memory_add_knowledge_file",
+  "memory_reorganize_path",
   "memory_promote_knowledge_batch",
   "memory_promote_knowledge",
   "memory_demote_knowledge",
@@ -732,6 +734,37 @@ result_fields = [
   "trust",
   "promoted_files",
   "summary_updates",
+]
+fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
+error_kinds = ["NotFoundError", "ValidationError", "StagingError"]
+
+[operations.memory_reorganize_path]
+group = "knowledge"
+tier = "semantic"
+change_class = "proposed"
+preview_support = true
+preview_mode = "dry_run"
+preview_argument = "dry_run"
+commit_model = "auto_commit"
+commit_category_hint = "curation"
+writes = [
+  "knowledge/**/{path}",
+  "plans/**/{file}.md",
+  "identity/**/{file}.md",
+  "skills/**/{file}.md",
+  "meta/**/{file}.md",
+]
+owns_frontmatter = ["knowledge/**/{path}.md", "plans/**/{file}.md"]
+owns_summaries = ["knowledge/SUMMARY.md", "knowledge/**/SUMMARY.md"]
+owns_access_logs = []
+owns_review_queue = []
+result_fields = [
+  "source",
+  "dest",
+  "moved_count",
+  "refs_updated",
+  "summary_updates",
+  "files_to_move",
 ]
 fallback_tools = ["memory_move", "memory_update_frontmatter", "memory_commit"]
 error_kinds = ["NotFoundError", "ValidationError", "StagingError"]

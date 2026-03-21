@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 from posixpath import relpath as posix_relpath
-from typing import Any
+from typing import Any, cast
 
 from ..frontmatter_utils import read_with_frontmatter
 
@@ -14,6 +14,9 @@ _BODY_PATH_RE = re.compile(
     r"(?P<path>(?:\.\.?/|identity/|knowledge/|plans/|skills/|meta/)[^\s)\]>'\"]+)"
 )
 _HEADING_RE = re.compile(r"^#{1,6}\s+(?P<text>.+?)\s*$", re.MULTILINE)
+_STRUCTURE_HEURISTICS = frozenset(
+    {"orphan_topics", "deep_nesting", "naming_inconsistency", "summary_drift"}
+)
 
 
 def _normalize_for_match(value: str) -> str:
@@ -74,7 +77,9 @@ def _resolve_reference(from_path: str, target: str, root: Path) -> str | None:
         return None
 
 
-def _resolve_target_path(from_path: str, target: str, root: Path) -> tuple[str | None, str | None, str | None]:
+def _resolve_target_path(
+    from_path: str, target: str, root: Path
+) -> tuple[str | None, str | None, str | None]:
     raw_path, anchor = _split_target_and_anchor(target)
     if not raw_path and anchor:
         return from_path, anchor, None
@@ -399,10 +404,14 @@ def _normalize_repo_path(path: str) -> str:
     return path.strip().replace("\\", "/").strip("/")
 
 
+def _path_is_within(path: str, prefix: str) -> bool:
+    return path == prefix or path.startswith(f"{prefix}/")
+
+
 def _replace_path_prefix(path: str, source: str, dest: str) -> str:
     if path == source:
         return dest
-    return f"{dest}/{path[len(source) + 1:]}"
+    return f"{dest}/{path[len(source) + 1 :]}"
 
 
 def _source_descendants(root: Path, source: str) -> list[str]:
@@ -457,49 +466,125 @@ def _summary_targets_for_reorganization(source: str, dest: str) -> list[str]:
     return sorted(targets)
 
 
-def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
+def plan_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
     normalized_source = _normalize_repo_path(source)
     normalized_dest = _normalize_repo_path(dest)
     files_to_move = _source_descendants(root, normalized_source)
+    future_paths = {
+        path: _replace_path_prefix(path, normalized_source, normalized_dest)
+        for path in files_to_move
+    }
     file_moves = [
         {
             "source": path,
-            "dest": _replace_path_prefix(path, normalized_source, normalized_dest),
+            "dest": future_paths[path],
         }
         for path in files_to_move
     ]
 
+    refs_by_file: dict[str, dict[str, Any]] = {}
+
+    def add_ref_update(
+        *,
+        current_path: str,
+        display_path: str,
+        ref_type: str,
+        old_value: str,
+        new_value: str,
+        line: int | None,
+        resolved_old: str | None,
+        resolved_new: str | None,
+        ref_key: str | None = None,
+        applies_in_execution: bool,
+    ) -> None:
+        if old_value == new_value:
+            return
+        bucket = refs_by_file.setdefault(
+            display_path,
+            {
+                "path": display_path,
+                "current_path": current_path,
+                "refs": [],
+            },
+        )
+        bucket["refs"].append(
+            {
+                "type": ref_type,
+                "old": old_value,
+                "new": new_value,
+                "line": line,
+                "ref_key": ref_key,
+                "resolved_old": resolved_old,
+                "resolved_new": resolved_new,
+                "applies_in_execution": applies_in_execution,
+            }
+        )
+
     source_refs = find_references(root, normalized_source, include_body=True)
-    refs_by_file: dict[str, list[dict[str, Any]]] = {}
     for match in source_refs:
+        current_from_path = str(match["from_path"])
+        if current_from_path in future_paths:
+            continue
         resolved_path = match.get("resolved_path")
-        if not isinstance(resolved_path, str) or not (
-            resolved_path == normalized_source
-            or resolved_path.startswith(f"{normalized_source}/")
-        ):
+        if not isinstance(resolved_path, str) or not _path_is_within(resolved_path, normalized_source):
             continue
         new_resolved_path = _replace_path_prefix(resolved_path, normalized_source, normalized_dest)
-        refs_by_file.setdefault(str(match["from_path"]), []).append(
-            {
-                "type": match["ref_type"],
-                "old": match["ref_value"],
-                "new": _rewrite_reference_target(
-                    str(match["from_path"]),
-                    str(match["ref_value"]),
-                    new_resolved_path,
-                ),
-                "resolved_old": resolved_path,
-                "resolved_new": new_resolved_path,
-                "line": match.get("line"),
-            }
+        add_ref_update(
+            current_path=current_from_path,
+            display_path=current_from_path,
+            ref_type=str(match["ref_type"]),
+            old_value=str(match["ref_value"]),
+            new_value=_rewrite_reference_target(
+                current_from_path,
+                str(match["ref_value"]),
+                new_resolved_path,
+            ),
+            line=cast(int | None, match.get("line")),
+            resolved_old=resolved_path,
+            resolved_new=new_resolved_path,
+            ref_key=cast(str | None, match.get("ref_key")),
+            applies_in_execution=str(match["ref_type"]) != "body_path",
+        )
+
+    for item in _iter_validation_targets(root, normalized_source):
+        current_from_path = str(item["from_path"])
+        future_from_path = future_paths.get(current_from_path, current_from_path)
+        resolved_path = cast(str | None, item.get("resolved_path"))
+        future_resolved_path = (
+            _replace_path_prefix(resolved_path, normalized_source, normalized_dest)
+            if isinstance(resolved_path, str) and _path_is_within(resolved_path, normalized_source)
+            else resolved_path
+        )
+        add_ref_update(
+            current_path=current_from_path,
+            display_path=future_from_path,
+            ref_type=str(item["ref_type"]),
+            old_value=str(item["target"]),
+            new_value=_rewrite_reference_target(
+                future_from_path,
+                str(item["target"]),
+                future_resolved_path or current_from_path,
+            ),
+            line=cast(int | None, item.get("line")),
+            resolved_old=resolved_path,
+            resolved_new=future_resolved_path,
+            ref_key=cast(str | None, item.get("ref_key")),
+            applies_in_execution=True,
         )
 
     files_with_references = [
         {
-            "path": from_path,
-            "refs": refs,
+            **payload,
+            "refs": sorted(
+                cast(list[dict[str, Any]], payload["refs"]),
+                key=lambda item: (
+                    str(item["type"]),
+                    int(item["line"] or 0),
+                    str(item["old"]),
+                ),
+            ),
         }
-        for from_path, refs in sorted(refs_by_file.items())
+        for _, payload in sorted(refs_by_file.items())
     ]
 
     warnings: list[str] = []
@@ -518,9 +603,224 @@ def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]
         "files_to_move": files_to_move,
         "file_moves": file_moves,
         "files_with_references": files_with_references,
+        "reference_updates": sum(len(item["refs"]) for item in files_with_references),
         "summary_updates": _summary_targets_for_reorganization(
             normalized_source,
             normalized_dest,
         ),
         "warnings": sorted(set(warnings)),
+    }
+
+
+def preview_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
+    return plan_reorganization(root, source, dest)
+
+
+def _folder_content_files(folder: Path) -> list[Path]:
+    return [
+        path
+        for path in sorted(folder.rglob("*.md"))
+        if path.is_file() and path.name != "SUMMARY.md"
+    ]
+
+
+def _summary_mentions_path(summary_text: str, rel_path: str) -> bool:
+    normalized = rel_path.replace("\\", "/")
+    name = Path(normalized).name
+    stem = Path(normalized).stem
+    folder_name = Path(normalized).parts[-2] if len(Path(normalized).parts) >= 2 else stem
+    candidates = {
+        normalized,
+        name,
+        stem,
+        folder_name,
+        f"({name})",
+        f"({normalized})",
+        f"({folder_name}/SUMMARY.md)",
+        f"({folder_name}/",
+    }
+    return any(candidate in summary_text for candidate in candidates)
+
+
+def _iter_governed_directories_in_scope(root: Path, scope: str = "") -> list[str]:
+    normalized_scope = _normalize_repo_path(scope)
+    if normalized_scope:
+        scope_path = root / normalized_scope
+        if not scope_path.exists() or not scope_path.is_dir():
+            return []
+        return [
+            path.relative_to(root).as_posix()
+            for path in sorted(scope_path.rglob("*"))
+            if path.is_dir()
+        ]
+
+    directories: list[str] = []
+    for folder in _GOVERNED_REFERENCE_ROOTS:
+        folder_path = root / folder
+        if not folder_path.is_dir():
+            continue
+        directories.append(folder)
+        directories.extend(
+            path.relative_to(root).as_posix()
+            for path in sorted(folder_path.rglob("*"))
+            if path.is_dir()
+        )
+    return directories
+
+
+def _orphan_topic_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    for rel_dir in _iter_governed_directories_in_scope(root, scope):
+        if not rel_dir.startswith("knowledge/"):
+            continue
+        abs_dir = root / rel_dir
+        content_files = _folder_content_files(abs_dir)
+        if not content_files or len(content_files) > 2:
+            continue
+        parent_summary = abs_dir.parent / "SUMMARY.md"
+        if not parent_summary.exists():
+            continue
+        parent_summary_rel = parent_summary.relative_to(root).as_posix()
+        summary_text = parent_summary.read_text(encoding="utf-8")
+        if _summary_mentions_path(summary_text, rel_dir):
+            continue
+        suggestions.append(
+            {
+                "heuristic": "orphan_topics",
+                "suggestion": f"Consider merging or summarizing {rel_dir}.",
+                "rationale": f"{rel_dir} has {len(content_files)} content file(s) and is not referenced from {parent_summary_rel}.",
+                "confidence": "medium",
+                "affected_paths": [rel_dir, parent_summary_rel],
+            }
+        )
+    return suggestions
+
+
+def _deep_nesting_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    seen_paths: set[str] = set()
+    for rel_path in _iter_governed_markdown_files_in_scope(root, scope):
+        if rel_path.endswith("SUMMARY.md"):
+            continue
+        parts = Path(rel_path).parts
+        if len(parts) < 6:
+            continue
+        parent = Path(rel_path).parent.as_posix()
+        if parent in seen_paths:
+            continue
+        seen_paths.add(parent)
+        suggestions.append(
+            {
+                "heuristic": "deep_nesting",
+                "suggestion": f"Consider an intermediate summary or flattening under {parent}.",
+                "rationale": f"{rel_path} sits {len(parts) - 2} levels below its top-level root, which may make retrieval and maintenance harder.",
+                "confidence": "low",
+                "affected_paths": [parent],
+            }
+        )
+    return suggestions
+
+
+def _naming_inconsistency_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    seen_pairs: set[tuple[str, str]] = set()
+    directories = set(_iter_governed_directories_in_scope(root, scope))
+    for rel_dir in sorted(directories):
+        dir_path = Path(rel_dir)
+        folder_name = dir_path.name
+        if "-" not in folder_name:
+            continue
+        parent = dir_path.parent.as_posix()
+        left, right = folder_name.split("-", 1)
+        alternate = Path(parent) / left / right if parent != "." else Path(left) / right
+        alternate_rel = alternate.as_posix()
+        if alternate_rel not in directories:
+            continue
+        ordered_pair = sorted((rel_dir, alternate_rel))
+        pair = (ordered_pair[0], ordered_pair[1])
+        if pair in seen_pairs:
+            continue
+        seen_pairs.add(pair)
+        suggestions.append(
+            {
+                "heuristic": "naming_inconsistency",
+                "suggestion": f"Align {rel_dir} and {alternate_rel} to one naming pattern.",
+                "rationale": f"Both the hyphenated folder {rel_dir} and the nested folder {alternate_rel} exist, which splits related material across two path conventions.",
+                "confidence": "high",
+                "affected_paths": [rel_dir, alternate_rel],
+            }
+        )
+    return suggestions
+
+
+def _summary_drift_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
+    suggestions: list[dict[str, Any]] = []
+    scope_dirs = _iter_governed_directories_in_scope(root, scope)
+    summary_dirs = [rel_dir for rel_dir in scope_dirs if (root / rel_dir / "SUMMARY.md").exists()]
+    for rel_dir in sorted(summary_dirs):
+        abs_dir = root / rel_dir
+        summary_path = abs_dir / "SUMMARY.md"
+        summary_rel = summary_path.relative_to(root).as_posix()
+        summary_text = summary_path.read_text(encoding="utf-8")
+        missing_entries: list[str] = []
+        for child in sorted(abs_dir.iterdir()):
+            if child.name == "SUMMARY.md":
+                continue
+            if child.is_file() and child.suffix.lower() == ".md":
+                child_rel = child.relative_to(root).as_posix()
+                if not _summary_mentions_path(summary_text, child_rel):
+                    missing_entries.append(child_rel)
+            elif child.is_dir():
+                child_summary = child / "SUMMARY.md"
+                if child_summary.exists() or _folder_content_files(child):
+                    child_rel = child.relative_to(root).as_posix()
+                    if not _summary_mentions_path(summary_text, child_rel):
+                        missing_entries.append(child_rel)
+        if not missing_entries:
+            continue
+        suggestions.append(
+            {
+                "heuristic": "summary_drift",
+                "suggestion": f"Update {summary_rel} to cover {len(missing_entries)} missing path(s).",
+                "rationale": f"{summary_rel} does not mention: {', '.join(missing_entries[:4])}{' ...' if len(missing_entries) > 4 else ''}.",
+                "confidence": "high",
+                "affected_paths": [summary_rel, *missing_entries[:8]],
+            }
+        )
+    return suggestions
+
+
+def suggest_structure(
+    root: Path,
+    scope: str = "",
+    heuristics: list[str] | None = None,
+) -> dict[str, Any]:
+    requested = list(heuristics or sorted(_STRUCTURE_HEURISTICS))
+    invalid = [item for item in requested if item not in _STRUCTURE_HEURISTICS]
+    if invalid:
+        raise ValueError(f"Unsupported heuristics: {', '.join(sorted(invalid))}")
+
+    suggestions: list[dict[str, Any]] = []
+    for heuristic in requested:
+        if heuristic == "orphan_topics":
+            suggestions.extend(_orphan_topic_suggestions(root, scope))
+        elif heuristic == "deep_nesting":
+            suggestions.extend(_deep_nesting_suggestions(root, scope))
+        elif heuristic == "naming_inconsistency":
+            suggestions.extend(_naming_inconsistency_suggestions(root, scope))
+        elif heuristic == "summary_drift":
+            suggestions.extend(_summary_drift_suggestions(root, scope))
+
+    suggestions.sort(
+        key=lambda item: (
+            str(item["heuristic"]),
+            str(cast(list[str], item["affected_paths"])[0]),
+            str(item["suggestion"]),
+        )
+    )
+    return {
+        "scope": _normalize_repo_path(scope) or ".",
+        "heuristics": requested,
+        "suggestions": suggestions,
+        "total": len(suggestions),
     }
