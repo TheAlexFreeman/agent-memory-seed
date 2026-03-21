@@ -104,6 +104,7 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertEqual(payload["contract_versions"]["structured_read"], 1)
         self.assertIn("memory_get_capabilities", payload["tool_sets"]["read_support"])
         self.assertIn("memory_find_references", payload["tool_sets"]["read_support"])
+        self.assertIn("memory_validate_links", payload["tool_sets"]["read_support"])
         self.assertIn("memory_extract_file", payload["tool_sets"]["read_support"])
         self.assertEqual(payload["summary"]["contract_versions"]["mcp"], 1)
         self.assertGreaterEqual(payload["summary"]["total_tools"], 1)
@@ -214,6 +215,7 @@ class MemoryMCPTests(unittest.TestCase):
             "memory_get_tool_profiles",
             "memory_check_cross_references",
             "memory_find_references",
+            "memory_validate_links",
             "memory_generate_summary",
             "memory_access_analytics",
             "memory_diff_branch",

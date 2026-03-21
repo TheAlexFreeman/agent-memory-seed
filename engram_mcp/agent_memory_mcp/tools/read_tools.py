@@ -39,7 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
-from .reference_extractor import find_references
+from .reference_extractor import find_references, validate_links
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -3070,6 +3070,37 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return json.dumps(payload, indent=2)
 
     # ------------------------------------------------------------------
+    # memory_validate_links
+    # ------------------------------------------------------------------
+    @mcp.tool(
+        name="memory_validate_links",
+        annotations=_tool_annotations(
+            title="Validate Internal Links",
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_validate_links(path: str = "") -> str:
+        """Validate internal markdown and frontmatter path references within governed content."""
+        from ..errors import ValidationError
+
+        root = get_root()
+        requested_path = path.strip().replace("\\", "/")
+        if requested_path:
+            scope_path = (root / requested_path).resolve()
+            try:
+                scope_path.relative_to(root)
+            except ValueError as exc:
+                raise ValidationError("path must stay within the repository root") from exc
+            if not scope_path.exists():
+                return f"Error: Path not found: {path}"
+
+        payload = validate_links(root, requested_path)
+        return json.dumps(payload, indent=2)
+
+    # ------------------------------------------------------------------
     # memory_check_cross_references
     # ------------------------------------------------------------------
     @mcp.tool(
@@ -5280,6 +5311,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         "memory_review_unverified": memory_review_unverified,
         "memory_search": memory_search,
         "memory_find_references": memory_find_references,
+        "memory_validate_links": memory_validate_links,
         "memory_check_cross_references": memory_check_cross_references,
         "memory_generate_summary": memory_generate_summary,
         "memory_access_analytics": memory_access_analytics,

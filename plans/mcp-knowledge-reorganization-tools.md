@@ -2,7 +2,7 @@
 type: build
 category: build
 status: active
-next_action: Execute Phase 2 — define link validation scope and implement memory_validate_links
+next_action: Execute Phase 3 — define reorganization preview output and implement memory_reorganize_preview
 last_verified: 2026-03-21
 trust: medium
 ---
@@ -113,10 +113,10 @@ memory_validate_links(path: str = "") -> str
 - Cross-folder relative path correctness
 
 **Checklist:**
-- [ ] 2.1 Document validation scope and resolution rules
-- [ ] 2.2 Implement link validator module
-- [ ] 2.3 Implement and register `memory_validate_links`
-- [ ] 2.4 Add tests
+- [x] 2.1 Document validation scope and resolution rules
+- [x] 2.2 Implement link validator module
+- [x] 2.3 Implement and register `memory_validate_links`
+- [x] 2.4 Add tests
 
 ---
 

@@ -1790,6 +1790,78 @@ See [target](../knowledge/topic/target.md).
         self.assertEqual(with_body["matches"][0]["ref_type"], "body_path")
         self.assertEqual(with_body["matches"][0]["from_path"], "knowledge/topic/note.md")
 
+    def test_memory_validate_links_reports_broken_targets_and_missing_anchors(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Target\n\n## Details\n",
+                "knowledge/topic/note.md": """---
+related:
+  - missing.md
+---
+
+# Note
+
+See [target](target.md#details).
+See [broken anchor](target.md#absent).
+See [missing](missing.md).
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_validate_links"]("knowledge/topic")))
+
+        self.assertEqual(payload["scope"], "knowledge/topic")
+        self.assertEqual(payload["checked"], 4)
+        self.assertEqual(payload["ok_count"], 1)
+        self.assertEqual(len(payload["broken"]), 3)
+        self.assertIn(
+            {
+                "from_path": "knowledge/topic/note.md",
+                "ref_type": "frontmatter_path",
+                "target": "missing.md",
+                "resolved_path": "knowledge/topic/missing.md",
+                "reason": "target not found",
+                "line": 3,
+            },
+            payload["broken"],
+        )
+        self.assertIn(
+            {
+                "from_path": "knowledge/topic/note.md",
+                "ref_type": "markdown_link",
+                "target": "target.md#absent",
+                "resolved_path": "knowledge/topic/target.md",
+                "reason": "anchor not found: #absent",
+                "line": 4,
+            },
+            payload["broken"],
+        )
+
+    def test_memory_validate_links_handles_cross_folder_relative_paths(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "knowledge/topic/target.md": "# Topic Target\n",
+                "plans/demo.md": """---
+related:
+  - ../knowledge/topic/target.md
+---
+
+# Demo
+
+See [topic](../knowledge/topic/target.md).
+""",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_validate_links"]("plans")))
+
+        self.assertEqual(payload["scope"], "plans")
+        self.assertEqual(payload["checked"], 2)
+        self.assertEqual(payload["ok_count"], 2)
+        self.assertEqual(payload["broken"], [])
+
     def test_memory_route_intent_recommends_automatic_access_logging(self) -> None:
         repo_root = self._init_repo(self._policy_contract_seed_files())
         tools = self._create_tools(repo_root)
