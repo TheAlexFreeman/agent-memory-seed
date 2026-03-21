@@ -130,7 +130,6 @@ Twelve files covering the personal identity debate from Locke through Parfit to 
 
 Mathematical foundations of the compression-intelligence thesis, covering Shannon information theory, rate-distortion, MDL, PAC learning, VC dimension, modern generalization theory, and synthesis. All carry `trust: low`. See `plans/information-theory-stat-learning-research.md` (completed 12/12).
 
-- **`limits-open-questions.md`** — Open questions and limits — theory-practice generalization gap, compression-as-explanation limits, why power-law scaling laws, emergence debate (Wei vs Schaeffer), distribution shift bounds, in-context learning theory, complexity measure quest, scaling saturation uncertainty, and epistemic humility guidelines for Engram knowledge file writing.
 ### `mathematics/logic-foundations/` — Formal logic and foundations of mathematics (started 2026-03-20)
 
 Mathematical logic and foundations research covering classical logic, incompleteness/undecidability, type theory, and set theory. All carry `trust: low`. See `plans/formal-logic-foundations-research.md` (completed 11/11).
