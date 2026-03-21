@@ -231,4 +231,10 @@ _No access data yet._ After aggregation, this section will contain:
 - **[surowiecki-wisdom-of-crowds.md](knowledge/social-science/network-diffusion/surowiecki-wisdom-of-crowds.md)** — Four conditions for crowd wisdom (diversity, independence, decentralization, aggregation); prediction markets; when crowds are stupid (herding)
 - **[network-diffusion-synthesis.md](knowledge/social-science/network-diffusion/network-diffusion-synthesis.md)** — Unified framework: diffusion-wisdom tension; echo chambers/groupthink/filter bubbles; LLMs as high-degree diffusion nodes; AI governance implications
 
+#### `social-epistemology/` — Reliabilist social epistemology, extended mind, epistemic virtues, community of inquiry (promoted 2026-03-21, trust: low — awaiting review)
+- **[goldman-reliabilist-social-epistemology.md](knowledge/social-science/social-epistemology/goldman-reliabilist-social-epistemology.md)** — Veritistic social epistemology; reliability of epistemic institutions; expertise and testimony; evaluating media, science, and law
+- **[extended-mind-distributed-cognition.md](knowledge/social-science/social-epistemology/extended-mind-distributed-cognition.md)** — Clark-Chalmers extended mind thesis; Hutchins distributed cognition; artifacts as cognitive components; Engram as extended cognitive system
+- **[epistemic-virtues-vices-communities.md](knowledge/social-science/social-epistemology/epistemic-virtues-vices-communities.md)** — Collective epistemic virtues (humility, courage, open-mindedness) and vices (arrogance, cowardice, closed-mindedness); institutional design for virtue
+- **[social-epistemology-synthesis.md](knowledge/social-science/social-epistemology/social-epistemology-synthesis.md)** — Synthesis: reliable knowledge communities; decoupling social diffusion from epistemic reliability; Engram as community of inquiry
+
 ---
