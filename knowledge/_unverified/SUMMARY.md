@@ -186,47 +186,6 @@ System-internal analysis files produced by the Engram agent analyzing its own ar
 - **[memetic-security-design-implications.md](knowledge/_unverified/system-notes/memetic-security-design-implications.md)** — Five actionable design specs for Engram security improvements — contradiction detection, trust-weighted retrieval, identity integrity check, curation as surface reduction, and session write review — with implementation priority ranking.
 - **[memetic-security-irreducible-core.md](knowledge/_unverified/system-notes/memetic-security-irreducible-core.md)** — Formal analysis of three irreducible limits — capability-robustness tradeoff, social/institutional trust residual, and self-referential paradox — establishing what cannot be engineered away in memetic security.
 
-<!-- section: ai-frontier -->
-### `ai-frontier/` — Frontier AI technical knowledge base (created 2026-03-19)
-
-Twenty-one files covering the active frontier of AI research — mechanisms, tradeoffs, and open questions across reasoning, alignment, retrieval, multi-agent systems, interpretability, emerging architectures, and AI epistemology. All carry `trust: low` pending review. See `plans/ai-frontier-research.md` (completed 21/21).
-
-#### `reasoning/`
-- **`reasoning-models.md`** — o1/o3/DeepSeek R1/extended thinking: chain-of-thought emergence, PRMs vs. ORMs, MCTS at test time, GRPO training, when reasoning helps and when it doesn't.
-- **`test-time-compute-scaling.md`** — Snell et al. scaling curves, best-of-N sampling, majority voting, trade-off between large-model/short-chain vs. small-model/long-chain, connection to pretraining scaling.
-- **`benchmarking-reasoning.md`** — MATH/AMC/AIME/HumanEval/SWE-bench/GPQA/ARC-AGI overview, benchmark contamination and saturation mechanisms, why ARC-AGI resists current methods.
-
-#### `alignment/`
-- **`rlhf-reward-models.md`** — InstructGPT pipeline, Goodhart's law, Constitutional AI/RLAIF, reward hacking, DPO vs. PPO tradeoffs, GRPO (DeepSeek's no-reference-model approach).
-- **`instruction-following.md`** — Instruction hierarchy and trust levels, prompt injection as attack surface, over-refusal and alignment tax, system prompt confidentiality.
-- **`frontier-alignment-research.md`** — Scalable oversight, debate alignment, superalignment, interpretability-as-alignment-prerequisite, what "alignment" means at different capability levels.
-
-#### `retrieval-memory/`
-- **`rag-architecture.md`** — Dense vs. sparse retrieval, bi-encoder/cross-encoder/BM25, chunking strategies, HyDE query expansion, two-stage retrieval, lost-in-the-middle, agentic RAG.
-- **`long-context-architecture.md`** — Flash Attention, RoPE and extrapolation (YaRN), effective context window vs. nominal, KV cache constraints, what 1M+ token context enables.
-- **`persistent-memory-architectures.md`** — Knowledge graph memory, episodic/semantic/procedural frame, vector store strengths/weaknesses, the write/update problem, forgetting as a feature.
-
-#### `multi-agent/`
-- **`agent-architecture-patterns.md`** — ReAct, plan-and-execute, Reflexion, orchestrator/subagent patterns, Anthropic's canonical taxonomy (augmented LLM → autonomous agents), swarm architectures.
-- **`multi-agent-coordination.md`** — Context sharing, tool conflict/resource locking, trust hierarchies between agents, prompt injection in multi-agent settings, evaluation challenges.
-- **`human-in-the-loop.md`** — When to interrupt vs. proceed, approval gate design, reversibility scoring, MCP elicitation primitive, building trust incrementally.
-
-#### `interpretability/`
-- **`mechanistic-interpretability.md`** — Superposition hypothesis, Sparse Autoencoders (SAEs), Anthropic scaling monosemanticity, circuit analysis, dictionary learning, what features have been found.
-- **`llm-representation-confabulation.md`** — World models vs. lookup tables debate, hallucination taxonomy (fabrication/mis-attribution/temporal/confident-wrong), calibration, probing classifiers.
-- **`emergence-phase-transitions.md`** — The emergence debate (Schaeffer et al. on measurement artifacts), grokking, in-context learning emergence, the bitter lesson, what "capability" means.
-
-#### `architectures/`
-- **`state-space-models.md`** — Recurrence vs. attention O(n) trade-off, SSM parallel training via convolution, Mamba selective state spaces, hybrid Mamba-Transformer architectures.
-- **`mixture-of-experts.md`** — Sparse MoE routing (k-of-N experts), expert collapse and load balancing, DeepSeek MoE (fine-grained + shared experts, auxiliary-loss-free balancing), inference economics, expert specialization.
-- **`synthetic-data-self-improvement.md`** — Post-Chinchilla data bottleneck, distillation at scale (DeepSeek R1), self-play/AlphaGo Zero paradigm, constitutional filtering, model collapse problem (Shumailov et al.), limits of AI novelty generation.
-
-#### `epistemology/`
-- **`knowledge-and-knowing.md`** — Dispositional knowledge analysis, Chinese Room and modern reformulations, stochastic parrots vs. world models, distributional semantics and its limits, grounding and embodiment argument.
-- **`llms-as-dynamical-systems.md`** — LLMs as fixed-weight dynamical systems, activation trajectories, in-context learning as transient dynamics, reasoning as extended trajectory, attractor states in residual stream.
-- **`compression-and-intelligence.md`** — Next-token prediction as MDL compression, what LLMs compress (syntax, facts, world regularities), what cannot be compressed (counterfactuals, embodied knowledge), compression-confabulation link, limits of the compression-intelligence thesis. Cross-references `philosophy/compression-intelligence-ait.md`.
-- **[memetic-security-capability-robustness.md](knowledge/_unverified/ai-frontier/memetic-security-capability-robustness.md)** — Formalization of the capability-robustness coupling — the structural tradeoff between contextual reasoning ability and resistance to contextual manipulation — with literature connections (sycophancy, adversarial attacks, alignment) and Engram-specific implications.
-
 <!-- section: rationalist-community -->
 ### `rationalist-community/` — LessWrong and the Rationalist Community research (started 2026-03-19)
 
