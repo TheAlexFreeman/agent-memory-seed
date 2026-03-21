@@ -146,7 +146,6 @@ Mathematical foundations of the compression-intelligence thesis, covering Shanno
 
 Mathematical logic and foundations research covering classical logic, incompleteness/undecidability, type theory, and set theory. All carry `trust: low`. See `plans/formal-logic-foundations-research.md` (completed 11/11).
 
-- **[compactness-lowenheim-skolem.md](knowledge/_unverified/mathematics/logic-foundations/compactness-lowenheim-skolem.md)** — Compactness theorem (satisfiability = finite satisfiability), both proofs (via completeness, via ultraproducts), applications (non-standard models, impossibility results, transfer principle), Löwenheim-Skolem theorems (downward/upward), Skolem's paradox, non-standard models of arithmetic (Tennenbaum's theorem, order type), categoricity and Morley's theorem, Lindström's characterization of FOL as maximally expressive with compactness + Löwenheim-Skolem, and implications for AI alignment and knowledge base design.
 
 <!-- section: social-science -->
 ### `social-science/cultural-evolution/` — Cultural evolution and epistemics (started 2026-03-20)
