@@ -1,8 +1,8 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Execute Phase 2 (Probability Theory & Stochastic Processes): foundational
-  substructure for info-theory, PAC/VC, Bayesian inference, and FEP.'
+next_action: 'Execute Phase 3 (Statistical Mechanics & Energy-Based Systems): bridges
+  FEP, information theory, and ML at a deep mathematical level.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -122,15 +122,15 @@ Target subfolder: `knowledge/mathematics/probability/`
 7. **`stochastic-processes-brownian-sde.md`** — Brownian motion, the Wiener process, stochastic differential equations (Itô calculus), the Fokker-Planck equation. Bridge to the FEP (Friston's equations are SDEs) and to diffusion models in generative AI.
 
 Checklist:
-- ☐ Write `measure-theoretic-foundations.md`
-- ☐ Write `bayesian-inference-priors-posteriors.md`
-- ☐ Write `concentration-inequalities.md`
-- ☐ Write `markov-chains-mixing-times.md`
-- ☐ Write `gaussian-processes-bayesian-nonparametrics.md`
-- ☐ Write `martingales-optional-stopping.md`
-- ☐ Write `stochastic-processes-brownian-sde.md`
-- ☐ Promote all 7 files to `knowledge/mathematics/probability/`
-- ☐ Update `knowledge/SUMMARY.md` entry
+- ☑ Write `measure-theoretic-foundations.md` (2026-03-21)
+- ☑ Write `bayesian-inference-priors-posteriors.md` (2026-03-21)
+- ☑ Write `concentration-inequalities.md` (2026-03-21)
+- ☑ Write `markov-chains-mixing-times.md` (2026-03-21)
+- ☑ Write `gaussian-processes-bayesian-nonparametrics.md` (2026-03-21)
+- ☑ Write `martingales-optional-stopping.md` (2026-03-21)
+- ☑ Write `stochastic-processes-brownian-sde.md` (2026-03-21)
+- ☑ Promote all 7 files to `knowledge/mathematics/probability/` (2026-03-21, written directly with trust: medium)
+- ☑ Update `knowledge/SUMMARY.md` entry (2026-03-21)
 
 ---
 
