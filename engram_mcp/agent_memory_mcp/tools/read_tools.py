@@ -1761,14 +1761,23 @@ def _scan_unverified_content(root: Path, low_threshold: int) -> dict[str, Any]:
 def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[str, Any]]:
     from ..frontmatter_utils import parse_plan_items, read_with_frontmatter
 
-    plans_dir = root / "plans"
-    if not plans_dir.is_dir():
-        return []
-
     entries: list[dict[str, Any]] = []
-    for plan_file in sorted(plans_dir.glob("*.md")):
-        if plan_file.name == "SUMMARY.md":
-            continue
+
+    plan_files: list[tuple[Path, str | None]] = []
+    projects_root = root / "projects"
+    if projects_root.is_dir():
+        for plan_file in sorted(projects_root.glob("*/plans/*.md")):
+            if plan_file.is_file():
+                plan_files.append((plan_file, plan_file.parents[1].name))
+
+    legacy_plans_dir = root / "plans"
+    if legacy_plans_dir.is_dir():
+        for plan_file in sorted(legacy_plans_dir.glob("*.md")):
+            if plan_file.name == "SUMMARY.md":
+                continue
+            plan_files.append((plan_file, None))
+
+    for plan_file, project_id in plan_files:
         try:
             fm_dict, body = read_with_frontmatter(plan_file)
         except Exception:
@@ -1790,6 +1799,8 @@ def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[st
         entries.append(
             {
                 "plan_id": plan_file.stem,
+                "project_id": project_id,
+                "path": plan_file.relative_to(root).as_posix(),
                 "title": title,
                 "status": plan_status,
                 "trust": fm_dict.get("trust", "unknown"),
@@ -1804,6 +1815,7 @@ def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[st
     entries.sort(
         key=lambda item: (
             0 if item["status"] == "active" else 1,
+            cast(str, item.get("project_id") or ""),
             cast(str, item["plan_id"]),
         )
     )

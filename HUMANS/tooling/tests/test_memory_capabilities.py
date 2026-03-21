@@ -545,7 +545,11 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertTrue(create_plan["preview_required"])
         self.assertEqual(
             create_plan["changed_files"],
-            ["plans/{plan_id}.md", "plans/SUMMARY.md"],
+            [
+                "projects/{project_id}/plans/{plan_id}.md",
+                "projects/{project_id}/SUMMARY.md",
+                "projects/SUMMARY.md",
+            ],
         )
         self.assertEqual(
             create_plan["highlighted_result_labels"],

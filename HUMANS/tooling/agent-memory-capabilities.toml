@@ -622,9 +622,16 @@ preview_mode = "preview"
 preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
-writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
-owns_frontmatter = ["plans/{plan_id}.md"]
-owns_summaries = ["plans/SUMMARY.md"]
+writes = [
+  "projects/{project_id}/plans/{plan_id}.md",
+  "projects/{project_id}/SUMMARY.md",
+  "projects/SUMMARY.md",
+]
+owns_frontmatter = [
+  "projects/{project_id}/plans/{plan_id}.md",
+  "projects/{project_id}/SUMMARY.md",
+]
+owns_summaries = ["projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["plan_path", "status"]
@@ -637,9 +644,16 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
-writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
-owns_frontmatter = ["plans/{plan_id}.md"]
-owns_summaries = ["plans/SUMMARY.md"]
+writes = [
+  "projects/{project_id}/plans/{plan_id}.md",
+  "projects/{project_id}/SUMMARY.md",
+  "projects/SUMMARY.md",
+]
+owns_frontmatter = [
+  "projects/{project_id}/plans/{plan_id}.md",
+  "projects/{project_id}/SUMMARY.md",
+]
+owns_summaries = ["projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["next_action", "phase_progress", "plan_progress", "status"]
@@ -657,9 +671,16 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
-writes = ["plans/{plan_id}.md", "plans/SUMMARY.md"]
-owns_frontmatter = ["plans/{plan_id}.md"]
-owns_summaries = ["plans/SUMMARY.md"]
+writes = [
+  "projects/{project_id}/plans/{plan_id}.md",
+  "projects/{project_id}/SUMMARY.md",
+  "projects/SUMMARY.md",
+]
+owns_frontmatter = [
+  "projects/{project_id}/plans/{plan_id}.md",
+  "projects/{project_id}/SUMMARY.md",
+]
+owns_summaries = ["projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["next_action"]

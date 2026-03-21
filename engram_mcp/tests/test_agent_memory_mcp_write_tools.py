@@ -471,7 +471,33 @@ Philosophy of mind studies consciousness intentionality and representation.
     def test_mark_plan_item_complete_updates_frontmatter_and_summary(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/test-plan.md": """---
+                "projects/SUMMARY.md": """---
+type: projects-navigator
+generated: 2026-03-21
+project_count: 1
+---
+
+# Projects
+
+_No active or ongoing projects._
+""",
+                "projects/example/SUMMARY.md": """---
+source: agent-generated
+origin_session: manual
+created: 2026-03-21
+trust: medium
+type: project
+status: active
+cognitive_mode: exploration
+open_questions: 0
+active_plans: 1
+last_activity: 2026-03-21
+current_focus: Ship the first project milestone.
+---
+
+# Project: Example
+""",
+                "projects/example/plans/test-plan.md": """---
 source: agent-generated
 type: implementation-plan
 created: 2026-03-17
@@ -493,17 +519,6 @@ next_action: Do first step
 | Date | Action |
 |---|---|
 """,
-                "plans/SUMMARY.md": """# Plans — Summary
-
-## Active plans
-
-<!-- BEGIN: test-plan -->
-### `test-plan.md` · status: active · trust: medium
-Detail: plans/test-plan.md
-Progress: 0/2 complete
-Next: Do first step
-<!-- END: test-plan -->
-""",
             }
         )
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
@@ -511,25 +526,30 @@ Next: Do first step
         raw = asyncio.run(
             tools["memory_mark_plan_item_complete"](
                 plan_id="test-plan",
+                project_id="example",
                 phase_index=0,
                 item_index=0,
             )
         )
         payload = json.loads(raw)
         frontmatter, body = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "plans" / "test-plan.md"
+            repo_root / "projects" / "example" / "plans" / "test-plan.md"
         )
-        summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+        project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "projects" / "example" / "SUMMARY.md"
+        )
+        summary = (repo_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
 
         self.assertEqual(payload["new_state"]["next_action"], "Do second step")
         self.assertEqual(payload["new_state"]["phase_progress"], [1, 2])
         self.assertEqual(payload["new_state"]["plan_progress"], [1, 2])
         self.assertEqual(frontmatter["next_action"], "Do second step")
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
+        self.assertEqual(project_frontmatter["active_plans"], 1)
         self.assertIn("1. ☑ Do first step", body)
-        self.assertIn("### Test Plan · status: active · trust: medium", summary)
-        self.assertIn("Progress: 1/2 complete", summary)
-        self.assertIn("Next: Do second step", summary)
+        self.assertIn(
+            "| example | active | exploration | 0 | Ship the first project milestone. |", summary
+        )
 
     def test_promote_knowledge_updates_frontmatter_and_both_summaries(self) -> None:
         repo_root = self._init_repo(
@@ -1287,7 +1307,33 @@ trust: high
     def test_update_plan_next_action_rejects_stale_version_token(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/test-plan.md": """---
+                "projects/SUMMARY.md": """---
+type: projects-navigator
+generated: 2026-03-21
+project_count: 1
+---
+
+# Projects
+
+_No active or ongoing projects._
+""",
+                "projects/example/SUMMARY.md": """---
+source: agent-generated
+origin_session: manual
+created: 2026-03-21
+trust: medium
+type: project
+status: active
+cognitive_mode: exploration
+open_questions: 0
+active_plans: 1
+last_activity: 2026-03-21
+current_focus: Example project.
+---
+
+# Project: Example
+""",
+                "projects/example/plans/test-plan.md": """---
 source: agent-generated
 type: implementation-plan
 created: 2026-03-17
@@ -1308,24 +1354,15 @@ next_action: Original next action
 | Date | Action |
 |---|---|
 """,
-                "plans/SUMMARY.md": """# Plans — Summary
-
-## Active plans
-
-<!-- BEGIN: test-plan -->
-### `test-plan.md` · status: active · trust: medium
-Detail: plans/test-plan.md
-Progress: 0/1 complete
-Next: Original next action
-<!-- END: test-plan -->
-""",
             }
         )
         tools = self._create_tools(repo_root)
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="plans/test-plan.md")))
+        read_payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="projects/example/plans/test-plan.md"))
+        )
         old_token = read_payload["version_token"]
 
-        plan_path = repo_root / "plans" / "test-plan.md"
+        plan_path = repo_root / "projects" / "example" / "plans" / "test-plan.md"
         plan_path.write_text(
             plan_path.read_text(encoding="utf-8").replace(
                 "Original next action",
@@ -1339,6 +1376,7 @@ Next: Original next action
             asyncio.run(
                 tools["memory_update_plan_next_action"](
                     plan_id="test-plan",
+                    project_id="example",
                     next_action="Fresh next action",
                     version_token=old_token,
                 )
@@ -3038,13 +3076,19 @@ Detailed descriptions should preserve the first paragraph.
             )
 
     def test_memory_create_plan_rejects_noncanonical_session_id(self) -> None:
-        repo_root = self._init_repo({"plans/SUMMARY.md": "# Plans\n"})
+        repo_root = self._init_repo(
+            {
+                "projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
+                "projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Example project.\n---\n\n# Project: Example\n",
+            }
+        )
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_create_plan"](
                     plan_id="test-plan",
+                    project_id="example",
                     title="Test",
                     description="desc",
                     content="# Plan\n",
@@ -3054,12 +3098,18 @@ Detailed descriptions should preserve the first paragraph.
             )
 
     def test_memory_create_plan_uses_human_title_in_summary(self) -> None:
-        repo_root = self._init_repo({"plans/SUMMARY.md": "# Plans\n\n## Active plans\n"})
+        repo_root = self._init_repo(
+            {
+                "projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
+                "projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Investigate regressions.\n---\n\n# Project: Example\n",
+            }
+        )
         tools = self._create_tools(repo_root)
 
         asyncio.run(
             tools["memory_create_plan"](
                 plan_id="test-plan",
+                project_id="example",
                 title="Test Plan",
                 description="Investigate regressions",
                 content="# Test Plan\n\n## Context\n",
@@ -3069,22 +3119,31 @@ Detailed descriptions should preserve the first paragraph.
         )
 
         plan_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "plans" / "test-plan.md"
+            repo_root / "projects" / "example" / "plans" / "test-plan.md"
         )
-        summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+        project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "projects" / "example" / "SUMMARY.md"
+        )
+        summary = (repo_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
 
         self.assertEqual(plan_frontmatter["title"], "Test Plan")
-        self.assertIn("### Test Plan · status: active · trust: medium", summary)
-        self.assertIn("Detail: plans/test-plan.md", summary)
+        self.assertEqual(project_frontmatter["active_plans"], 1)
+        self.assertIn("| example | active | exploration | 0 | Investigate regressions. |", summary)
 
     def test_memory_create_plan_preview_does_not_write_and_matches_apply(self) -> None:
-        repo_root = self._init_repo({"plans/SUMMARY.md": "# Plans\n\n## Active plans\n"})
+        repo_root = self._init_repo(
+            {
+                "projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
+                "projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Preview the plan write.\n---\n\n# Project: Example\n",
+            }
+        )
         tools = self._create_tools(repo_root)
 
         preview = json.loads(
             asyncio.run(
                 tools["memory_create_plan"](
                     plan_id="preview-plan",
+                    project_id="example",
                     title="Preview Plan",
                     description="Preview the plan write",
                     content="# Preview Plan\n",
@@ -3095,7 +3154,9 @@ Detailed descriptions should preserve the first paragraph.
             )
         )
 
-        self.assertFalse((repo_root / "plans" / "preview-plan.md").exists())
+        self.assertFalse(
+            (repo_root / "projects" / "example" / "plans" / "preview-plan.md").exists()
+        )
         self.assertEqual(preview["preview"]["mode"], "preview")
         self.assertEqual(
             preview["preview"]["commit_suggestion"]["message"],
@@ -3106,6 +3167,7 @@ Detailed descriptions should preserve the first paragraph.
             asyncio.run(
                 tools["memory_create_plan"](
                     plan_id="preview-plan",
+                    project_id="example",
                     title="Preview Plan",
                     description="Preview the plan write",
                     content="# Preview Plan\n",
@@ -3115,7 +3177,7 @@ Detailed descriptions should preserve the first paragraph.
             )
         )
 
-        self.assertTrue((repo_root / "plans" / "preview-plan.md").exists())
+        self.assertTrue((repo_root / "projects" / "example" / "plans" / "preview-plan.md").exists())
         self.assertEqual(applied["commit_message"], "[plan] Create preview-plan")
         self.assertEqual(applied["preview"]["mode"], "apply")
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
@@ -4282,7 +4344,33 @@ Load compact context.
     def test_memory_update_plan_next_action_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/test-plan.md": """---
+                "projects/SUMMARY.md": """---
+type: projects-navigator
+generated: 2026-03-21
+project_count: 1
+---
+
+# Projects
+
+_No active or ongoing projects._
+""",
+                "projects/example/SUMMARY.md": """---
+source: agent-generated
+origin_session: manual
+created: 2026-03-21
+trust: medium
+type: project
+status: active
+cognitive_mode: exploration
+open_questions: 0
+active_plans: 1
+last_activity: 2026-03-21
+current_focus: Example project.
+---
+
+# Project: Example
+""",
+                "projects/example/plans/test-plan.md": """---
 source: agent-generated
 type: implementation-plan
 title: Test Plan
@@ -4304,17 +4392,6 @@ next_action: Original next action
 | Date | Action |
 |---|---|
 """,
-                "plans/SUMMARY.md": """# Plans — Summary
-
-## Active plans
-
-<!-- BEGIN: test-plan -->
-### `test-plan.md` · status: active · trust: medium
-Detail: plans/test-plan.md
-Progress: 0/1 complete
-Next: Original next action
-<!-- END: test-plan -->
-""",
             }
         )
         tools = self._create_tools(repo_root)
@@ -4322,13 +4399,13 @@ Next: Original next action
         asyncio.run(
             tools["memory_update_plan_next_action"](
                 plan_id="test-plan",
+                project_id="example",
                 next_action="Fresh next action",
             )
         )
 
-        summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
-        self.assertIn("### Test Plan · status: active · trust: medium", summary)
-        self.assertIn("Next: Fresh next action", summary)
+        summary = (repo_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        self.assertIn("| example | active | exploration | 0 | Example project. |", summary)
 
     def test_memory_write_allows_knowledge_path(self) -> None:
         """Sanity check: knowledge/ writes still work after the policy change."""

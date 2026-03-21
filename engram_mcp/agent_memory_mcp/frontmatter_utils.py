@@ -1,10 +1,13 @@
 """
 Frontmatter parsing/writing and SUMMARY.md manipulation utilities.
 
-Anchor conventions (from plans/agent-memory-mcp.md):
-  plans/SUMMARY.md          → BEGIN/END pairs wrapping each plan's block
-  knowledge/SUMMARY.md      → single <!-- section: {id} --> anchors above ### headings
-  knowledge/_unverified/SUMMARY.md → same
+Anchor conventions:
+    plans/SUMMARY.md          → BEGIN/END pairs wrapping each legacy plan block
+    knowledge/SUMMARY.md      → single <!-- section: {id} --> anchors above ### headings
+    knowledge/_unverified/SUMMARY.md → same
+
+Project-scoped helpers generate the top-level projects navigator from
+projects/*/SUMMARY.md frontmatter.
 
 These utilities are intentionally side-effect-free: they take content strings
 and return new content strings. Callers handle reading/writing and staging.
@@ -75,6 +78,136 @@ def update_frontmatter_fields(
 
 def today_str() -> str:
     return str(date.today())
+
+
+def _coerce_int(value: Any, default: int = 0) -> int:
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value.strip())
+        except ValueError:
+            return default
+    return default
+
+
+_PROJECT_STATUS_ORDER = {
+    "active": 0,
+    "ongoing": 1,
+    "blocked": 2,
+    "completed": 3,
+    "archived": 4,
+}
+
+
+def collect_project_entries(root: Path) -> list[dict[str, Any]]:
+    """Collect project-routing fields from project-local SUMMARY.md files."""
+    projects_root = root / "projects"
+    if not projects_root.is_dir():
+        return []
+
+    entries: list[dict[str, Any]] = []
+    for project_dir in sorted(projects_root.iterdir()):
+        if not project_dir.is_dir():
+            continue
+        if project_dir.name == "OUT" or project_dir.name.startswith("_"):
+            continue
+
+        summary_path = project_dir / "SUMMARY.md"
+        if not summary_path.is_file():
+            continue
+
+        try:
+            fm_dict, _ = read_with_frontmatter(summary_path)
+        except Exception:
+            fm_dict = {}
+
+        entries.append(
+            {
+                "project_id": project_dir.name,
+                "status": str(fm_dict.get("status", "unknown")),
+                "cognitive_mode": str(fm_dict.get("cognitive_mode", "unknown")),
+                "open_questions": _coerce_int(fm_dict.get("open_questions"), 0),
+                "current_focus": str(fm_dict.get("current_focus", "")),
+                "last_activity": str(fm_dict.get("last_activity", "")),
+            }
+        )
+
+    entries.sort(
+        key=lambda item: (
+            _PROJECT_STATUS_ORDER.get(str(item["status"]), 99),
+            str(item["project_id"]),
+        )
+    )
+    return entries
+
+
+def render_projects_navigator(
+    project_entries: list[dict[str, Any]],
+    generated_at: str | None = None,
+) -> str:
+    """Render the derived projects/SUMMARY.md navigator."""
+    generated = generated_at or today_str()
+    has_active_or_ongoing = any(
+        str(entry.get("status")) in {"active", "ongoing"} for entry in project_entries
+    )
+
+    lines = [
+        "---",
+        "type: projects-navigator",
+        f"generated: {generated}",
+        f"project_count: {len(project_entries)}",
+        "---",
+        "",
+        "# Projects",
+        "",
+    ]
+
+    if not has_active_or_ongoing:
+        lines.append("_No active or ongoing projects._")
+        lines.append("")
+        return "\n".join(lines)
+
+    lines.extend(
+        [
+            "| Project | Status | Mode | Open Qs | Focus | Last activity |",
+            "|---|---|---|---|---|---|",
+        ]
+    )
+    for entry in project_entries:
+        lines.append(
+            "| {project_id} | {status} | {mode} | {open_questions} | {focus} | {last_activity} |".format(
+                project_id=str(entry.get("project_id", "")),
+                status=str(entry.get("status", "unknown")),
+                mode=str(entry.get("cognitive_mode", "unknown")),
+                open_questions=_coerce_int(entry.get("open_questions"), 0),
+                focus=str(entry.get("current_focus", "")).replace("|", "\\|"),
+                last_activity=str(entry.get("last_activity", "")),
+            )
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def count_active_project_plans(root: Path, project_id: str) -> int:
+    """Count active plans within one project-local plans/ directory."""
+    plans_dir = root / "projects" / project_id / "plans"
+    if not plans_dir.is_dir():
+        return 0
+
+    active_count = 0
+    for plan_file in plans_dir.glob("*.md"):
+        if not plan_file.is_file():
+            continue
+        try:
+            fm_dict, _ = read_with_frontmatter(plan_file)
+        except Exception:
+            continue
+        if str(fm_dict.get("status", "unknown")) == "active":
+            active_count += 1
+    return active_count
 
 
 # ---------------------------------------------------------------------------
