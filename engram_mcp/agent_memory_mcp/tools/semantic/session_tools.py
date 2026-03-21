@@ -25,7 +25,7 @@ def _tool_annotations(**kwargs: object) -> Any:
     return cast(Any, kwargs)
 
 
-_ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "chats")
+_ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "projects", "chats")
 _ACCESS_MODES = frozenset({"read", "write", "update", "create"})
 _ACCESS_TASK_ID_MANIFEST = PurePosixPath("HUMANS/tooling/agent-memory-capabilities.toml")
 _ACCESS_SCANS_FILENAME = "ACCESS_SCANS.jsonl"
@@ -37,7 +37,7 @@ _REVIEW_QUEUE_HEADING_RE = re.compile(
 )
 _REVIEW_QUEUE_FIELD_RE = re.compile(r"(?m)^\*\*(.+?):\*\*\s*(.+)$")
 _REVERT_ALLOWED_TOP_LEVELS = frozenset(
-    {"identity", "knowledge", "skills", "plans", "chats", "meta", "scratchpad"}
+    {"identity", "knowledge", "skills", "plans", "projects", "chats", "meta", "scratchpad"}
 )
 _REVERT_ALLOWED_FILES = frozenset({"CHANGELOG.md"})
 _REVERT_SYSTEM_TOP_LEVELS = frozenset({"meta"})

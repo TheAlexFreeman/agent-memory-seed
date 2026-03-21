@@ -27,7 +27,7 @@ KNOWN_COMMIT_PREFIXES: frozenset[str] = frozenset(
 )
 
 _PROTECTED_ROOTS = ("identity", "meta", "chats", "skills")
-_RAW_MUTATION_ROOTS = ("knowledge", "plans", "scratchpad")
+_RAW_MUTATION_ROOTS = ("knowledge", "plans", "projects", "scratchpad")
 
 
 def resolve_repo_path(repo, raw_path: str, *, field_name: str = "path") -> tuple[str, Path]:
@@ -44,8 +44,8 @@ def validate_raw_write_target(repo, raw_path: str, *, field_name: str = "path") 
     """Normalize and validate write targets against the protected-directory policy.
 
     Protected directories (identity/, meta/, chats/, skills/) are blocked for
-    raw Tier 2 writes. Tier 2 writes must stay under knowledge/, plans/, or
-    scratchpad/. Use Tier 1 semantic tools for governed writes to protected
+    raw Tier 2 writes. Tier 2 writes must stay under knowledge/, plans/,
+    projects/, or scratchpad/. Use Tier 1 semantic tools for governed writes to protected
     directories (e.g. memory_update_identity_trait,
     memory_record_chat_summary).
 
