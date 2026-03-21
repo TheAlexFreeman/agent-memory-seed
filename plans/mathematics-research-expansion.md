@@ -1,8 +1,8 @@
 ---
 created: '2026-03-20'
 last_verified: '2026-03-20'
-next_action: 'Execute Phase 1 (Dynamical Systems & Chaos): highest priority — Alex''s
-  stated primary framework for intelligence has no files in the knowledge base.'
+next_action: 'Execute Phase 2 (Probability Theory & Stochastic Processes): foundational
+  substructure for info-theory, PAC/VC, Bayesian inference, and FEP.'
 origin_session: chats/2026/03/20/chat-003
 source: agent-generated
 status: active
@@ -87,15 +87,15 @@ Target subfolder: `knowledge/mathematics/dynamical-systems/`
 7. **`fractals-dimension-multiscale.md`** — Fractal dimension (Hausdorff), self-similarity, iterated function systems, multiscale structure in nature and data. How fractals relate to strange attractors and self-organized criticality.
 
 Checklist:
-- ☐ Write `dynamical-systems-fundamentals.md`
-- ☐ Write `bifurcation-theory-catastrophe.md`
-- ☐ Write `chaos-lorenz-strange-attractors.md`
-- ☐ Write `self-organized-criticality.md`
-- ☐ Write `ergodic-theory-mixing.md`
-- ☐ Write `complex-networks-small-world-scale-free.md`
-- ☐ Write `fractals-dimension-multiscale.md`
-- ☐ Promote all 7 files to `knowledge/mathematics/dynamical-systems/`
-- ☐ Update `knowledge/SUMMARY.md` with `<!-- section: mathematics -->` entry for dynamical-systems
+- ☑ Write `dynamical-systems-fundamentals.md` (2026-03-21)
+- ☑ Write `bifurcation-theory-catastrophe.md` (2026-03-21)
+- ☑ Write `chaos-lorenz-strange-attractors.md` (2026-03-21)
+- ☑ Write `self-organized-criticality.md` (2026-03-21)
+- ☑ Write `ergodic-theory-mixing.md` (2026-03-21)
+- ☑ Write `complex-networks-small-world-scale-free.md` (2026-03-21)
+- ☑ Write `fractals-dimension-multiscale.md` (2026-03-21)
+- ☑ Promote all 7 files to `knowledge/mathematics/dynamical-systems/` (2026-03-21, written directly with trust: medium)
+- ☑ Update `knowledge/SUMMARY.md` with `<!-- section: mathematics -->` entry for dynamical-systems (2026-03-21)
 
 ---
 
