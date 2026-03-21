@@ -139,9 +139,7 @@ def _normalize_min_helpfulness(min_helpfulness: object) -> float | None:
         raise ValidationError("min_helpfulness must be a float between 0.0 and 1.0")
     threshold = float(min_helpfulness)
     if not (0.0 <= threshold <= 1.0):
-        raise ValidationError(
-            f"min_helpfulness must be between 0.0 and 1.0, got {threshold}"
-        )
+        raise ValidationError(f"min_helpfulness must be between 0.0 and 1.0, got {threshold}")
     return threshold
 
 
@@ -1307,11 +1305,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             session_id=session_id,
         )
 
-        files_changed.extend(
-            path
-            for path in access_files_changed
-            if path not in files_changed
-        )
+        files_changed.extend(path for path in access_files_changed if path not in files_changed)
 
         commit_msg = f"[chat] Record session {session_id}"
         commit_result = repo.commit(commit_msg)
@@ -1637,7 +1631,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         updated_review_queue: str | None = None
         if review_queue_entries.strip():
             review_queue_content = abs_review_queue.read_text(encoding="utf-8")
-            updated_review_queue = _append_markdown_block(review_queue_content, review_queue_entries)
+            updated_review_queue = _append_markdown_block(
+                review_queue_content, review_queue_entries
+            )
             files_changed.append(review_queue_rel)
             review_queue_written = True
 
@@ -1719,8 +1715,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             summary=f"Revert governed commit {preview['resolved_sha']}.",
             reasoning="Revert uses a preview-first flow so callers can inspect eligibility, conflicts, and touched files before mutation.",
             target_files=[
-                preview_target(path, "revert")
-                for path in cast(list[str], preview["files_changed"])
+                preview_target(path, "revert") for path in cast(list[str], preview["files_changed"])
             ],
             invariant_effects=[
                 "Requires a fresh preview token before apply.",

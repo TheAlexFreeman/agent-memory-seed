@@ -160,13 +160,17 @@ class MemoryMCPTests(unittest.TestCase):
         async def run_call() -> tuple[list[tuple[str, str]], list[Any], dict[str, Any]]:
             resources = await self.module.mcp.list_resources()
             resource_pairs = [(str(resource.name), str(resource.uri)) for resource in resources]
-            capability_summary = await self.module.mcp.read_resource("memory://capabilities/summary")
+            capability_summary = await self.module.mcp.read_resource(
+                "memory://capabilities/summary"
+            )
             capability_payload = json.loads(cast(str, capability_summary[0].content))
             return resource_pairs, capability_summary, capability_payload
 
         resource_pairs, capability_summary, capability_payload = asyncio.run(run_call())
 
-        self.assertIn(("memory_capability_summary", "memory://capabilities/summary"), resource_pairs)
+        self.assertIn(
+            ("memory_capability_summary", "memory://capabilities/summary"), resource_pairs
+        )
         self.assertIn(("memory_policy_summary", "memory://policy/summary"), resource_pairs)
         self.assertIn(("memory_session_health_resource", "memory://session/health"), resource_pairs)
         self.assertIn(("memory_active_plans_resource", "memory://plans/active"), resource_pairs)

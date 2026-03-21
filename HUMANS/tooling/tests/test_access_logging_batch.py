@@ -59,7 +59,9 @@ class AccessLoggingBatchTests(unittest.TestCase):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
 
-        subprocess.run(["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True)
+        subprocess.run(
+            ["git", "add", "."], cwd=repo_root, check=True, capture_output=True, text=True
+        )
         subprocess.run(
             ["git", "commit", "-m", "seed"],
             cwd=repo_root,
@@ -81,8 +83,7 @@ class AccessLoggingBatchTests(unittest.TestCase):
                 "knowledge/lit/foo.md": "# Foo\n",
                 "plans/demo.md": "# Demo\n",
                 "HUMANS/tooling/agent-memory-capabilities.toml": (
-                    '[access_logging]\n'
-                    'task_ids = ["plan-review", "validation"]\n'
+                    '[access_logging]\ntask_ids = ["plan-review", "validation"]\n'
                 ),
             }
         )

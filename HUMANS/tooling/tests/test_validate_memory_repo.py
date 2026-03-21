@@ -1252,7 +1252,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
 
-            self.assertFalse(any(warning.startswith("CoverageGap: skills/") for warning in result.warnings))
+            self.assertFalse(
+                any(warning.startswith("CoverageGap: skills/") for warning in result.warnings)
+            )
 
     def test_invalid_source_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

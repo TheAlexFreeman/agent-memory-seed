@@ -327,9 +327,7 @@ def validate_manifest(repo_root: Path) -> tuple[dict[str, Any], list[str], list[
         "ui_feedback.details_when_blocked_only",
         ui_feedback.get("details_when_blocked_only"),
     )
-    _ensure_bool(
-        errors, "ui_feedback.green_summary_only", ui_feedback.get("green_summary_only")
-    )
+    _ensure_bool(errors, "ui_feedback.green_summary_only", ui_feedback.get("green_summary_only"))
     status_labels = ui_feedback.get("status_labels")
     if not isinstance(status_labels, dict):
         errors.append(f"{MANIFEST_PATH}: ui_feedback.status_labels must be a TOML table")
@@ -368,14 +366,10 @@ def validate_manifest(repo_root: Path) -> tuple[dict[str, Any], list[str], list[
 
     missing_profiles = [profile for profile in EXPECTED_PROFILES if profile not in profiles]
     if missing_profiles:
-        errors.append(
-            f"{MANIFEST_PATH}: missing required profiles: {', '.join(missing_profiles)}"
-        )
+        errors.append(f"{MANIFEST_PATH}: missing required profiles: {', '.join(missing_profiles)}")
     missing_checks = [check_id for check_id in EXPECTED_CHECKS if check_id not in checks]
     if missing_checks:
-        errors.append(
-            f"{MANIFEST_PATH}: missing required checks: {', '.join(missing_checks)}"
-        )
+        errors.append(f"{MANIFEST_PATH}: missing required checks: {', '.join(missing_checks)}")
 
     for profile_name in EXPECTED_PROFILES:
         profile = profiles.get(profile_name)
@@ -1450,9 +1444,7 @@ def build_ui_feedback(
             status = "blocked"
             reason = profile["blocked_reason"]
             if any(blocker["unchanged_since_previous"] for blocker in blockers):
-                recovery_message = (
-                    "A previous blocker is unchanged. Skip repeated publish or install attempts until the environment changes."
-                )
+                recovery_message = "A previous blocker is unchanged. Skip repeated publish or install attempts until the environment changes."
         elif resolved_previous:
             status = "attention"
             reason = "A previously blocked environment probe is healthy again."
@@ -1585,9 +1577,7 @@ def resolve_task_readiness(
     )
 
     if resolved_previous and automation_integration.get("notify_when_restored"):
-        warnings.append(
-            "One or more previously carried-forward blockers are no longer active."
-        )
+        warnings.append("One or more previously carried-forward blockers are no longer active.")
 
     skip_unchanged_publish_attempts = (
         automation_integration.get("skip_unchanged_publish_attempts")

@@ -28,6 +28,9 @@ jobs:
       - name: Lint Python
         run: python -m ruff check HUMANS/tooling/scripts/ HUMANS/tooling/tests/ engram_mcp/
 
+      - name: Check Python formatting
+        run: python -m ruff format --check HUMANS/tooling/scripts/ HUMANS/tooling/tests/ engram_mcp/
+
       - name: Run validator
         run: python HUMANS/tooling/scripts/validate_memory_repo.py
 

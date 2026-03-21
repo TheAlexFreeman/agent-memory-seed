@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import os
 import re
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -790,8 +790,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             target_files=[
                 preview_target(source_path, "move_from"),
                 preview_target(target_path, "move_to", from_path=source_path),
-                *([preview_target(source_summary_path, "update")] if abs_src_summary.exists() else []),
-                *([preview_target(target_summary_path, "update")] if abs_tgt_summary.exists() else []),
+                *(
+                    [preview_target(source_summary_path, "update")]
+                    if abs_src_summary.exists()
+                    else []
+                ),
+                *(
+                    [preview_target(target_summary_path, "update")]
+                    if abs_tgt_summary.exists()
+                    else []
+                ),
             ],
             invariant_effects=[
                 "Updates trust and last_verified before moving the file into verified knowledge.",

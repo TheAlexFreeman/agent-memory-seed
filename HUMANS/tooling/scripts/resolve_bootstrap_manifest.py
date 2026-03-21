@@ -230,9 +230,7 @@ def has_chat_history(repo_root: Path) -> bool:
 
 
 def repo_looks_first_run(repo_root: Path) -> bool:
-    profile_source = parse_frontmatter_value(
-        repo_root / "identity" / "profile.md", "source"
-    )
+    profile_source = parse_frontmatter_value(repo_root / "identity" / "profile.md", "source")
     if has_chat_history(repo_root):
         return False
     return profile_source in {None, "template"}
@@ -683,9 +681,7 @@ def _resolve_skip_manifest(
         ("AGENTS.md", "agents-manifest"),
         ("README.md", "readme"),
     ]:
-        fallback_steps.append(
-            {"path": path_str, "role": role, "required": False, "cost": "medium"}
-        )
+        fallback_steps.append({"path": path_str, "role": role, "required": False, "cost": "medium"})
 
     trace, budget = resolve_trace(
         repo_root,
@@ -801,9 +797,7 @@ def resolve_startup(
 
     mode_config = manifest["modes"][mode]
     host_repo_root = resolve_host_repo_root(repo_root, manifest)
-    current_git_state = git_state or detect_git_state(
-        repo_root, expected_branch=expected_branch
-    )
+    current_git_state = git_state or detect_git_state(repo_root, expected_branch=expected_branch)
     host_git_state = None
     if host_repo_root is not None:
         host_git_state = detect_git_state(host_repo_root)
@@ -826,9 +820,7 @@ def resolve_startup(
         token_budget=int(mode_config["token_budget"]),
         prefer_summaries=bool(mode_config["prefer_summaries"]),
         on_demand=[str(item) for item in mode_config.get("on_demand", [])],
-        maintenance_probes=[
-            str(item) for item in mode_config.get("maintenance_probes", [])
-        ],
+        maintenance_probes=[str(item) for item in mode_config.get("maintenance_probes", [])],
         preload_access_mode="startup_trace_only",
         budget=budget,
         git_state=current_git_state,

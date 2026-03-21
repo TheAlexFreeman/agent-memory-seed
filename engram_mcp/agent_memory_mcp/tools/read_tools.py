@@ -1097,7 +1097,9 @@ def _build_markdown_sections(body: str) -> list[dict[str, Any]]:
                 "level": heading["level"],
                 "start_line": heading["line"],
                 "end_line": end_index,
-                "anchor": re.sub(r"[^a-z0-9]+", "-", _normalize_heading_key(cast(str, heading["title"]))).strip("-"),
+                "anchor": re.sub(
+                    r"[^a-z0-9]+", "-", _normalize_heading_key(cast(str, heading["title"]))
+                ).strip("-"),
                 "content": section_content,
             }
         )
@@ -2068,7 +2070,9 @@ def _build_lineage_summary(path: str, provenance: dict[str, Any]) -> list[str]:
     if provenance.get("verified_against_commit"):
         notes.append("Includes a verified-against commit marker.")
     if not notes:
-        notes.append("No optional lineage fields recorded; fall back to frontmatter, ACCESS history, and git history.")
+        notes.append(
+            "No optional lineage fields recorded; fall back to frontmatter, ACCESS history, and git history."
+        )
     return notes
 
 
@@ -2683,7 +2687,6 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if max_extract_words < 0:
             raise ValidationError("max_extract_words must be >= 0")
 
-        repo = get_repo()
         root = get_root()
         folder = (root / folder_path).resolve()
         if not folder.exists():

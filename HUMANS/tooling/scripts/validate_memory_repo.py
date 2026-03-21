@@ -493,7 +493,11 @@ def is_deployed_worktree_repo(root: Path) -> bool:
         return False
 
     host_repo_root = manifest.get("host_repo_root")
-    return isinstance(host_repo_root, str) and bool(host_repo_root.strip()) and is_git_worktree_root(root)
+    return (
+        isinstance(host_repo_root, str)
+        and bool(host_repo_root.strip())
+        and is_git_worktree_root(root)
+    )
 
 
 def read_text(path: Path, result: ValidationResult) -> str | None:

@@ -8,9 +8,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-RESOLVER_PATH = (
-    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_task_readiness.py"
-)
+RESOLVER_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_task_readiness.py"
 
 SPEC = importlib.util.spec_from_file_location("resolve_task_readiness", RESOLVER_PATH)
 assert SPEC is not None
@@ -29,7 +27,7 @@ def fail(stderr: str, returncode: int = 1) -> dict[str, object]:
 
 
 def make_command_runner(
-    responses: dict[tuple[str, ...], dict[str, object] | str]
+    responses: dict[tuple[str, ...], dict[str, object] | str],
 ) -> resolver.CommandRunner:
     def runner(repo_root: Path, command: list[str], timeout: int) -> resolver.CommandProbeResult:
         del repo_root, timeout
@@ -45,7 +43,7 @@ def make_command_runner(
 
 
 def make_network_runner(
-    responses: dict[tuple[str, int], resolver.NetworkProbeResult]
+    responses: dict[tuple[str, int], resolver.NetworkProbeResult],
 ) -> resolver.NetworkRunner:
     def runner(host: str, port: int, timeout: int) -> resolver.NetworkProbeResult:
         del timeout
@@ -119,9 +117,7 @@ class TaskReadinessTests(unittest.TestCase):
     def test_pull_request_profile_reports_ready_when_all_checks_pass(self) -> None:
         command_runner = make_command_runner(
             {
-                ("git", "remote", "get-url", "origin"): ok(
-                    "https://github.com/example/repo.git"
-                ),
+                ("git", "remote", "get-url", "origin"): ok("https://github.com/example/repo.git"),
                 ("git", "branch", "--show-current"): ok("main"),
                 ("git", "--version"): ok("git version 2.47.0"),
                 ("git", "ls-remote", "--exit-code", "origin", "HEAD"): ok("ref"),
@@ -162,9 +158,7 @@ class TaskReadinessTests(unittest.TestCase):
     def test_missing_gh_becomes_publish_blocker(self) -> None:
         command_runner = make_command_runner(
             {
-                ("git", "remote", "get-url", "origin"): ok(
-                    "https://github.com/example/repo.git"
-                ),
+                ("git", "remote", "get-url", "origin"): ok("https://github.com/example/repo.git"),
                 ("git", "branch", "--show-current"): ok("main"),
                 ("git", "--version"): ok("git version 2.47.0"),
                 ("git", "ls-remote", "--exit-code", "origin", "HEAD"): ok("ref"),
@@ -195,7 +189,9 @@ class TaskReadinessTests(unittest.TestCase):
         )
 
         self.assertEqual(resolution["ui_feedback"]["status"], "blocked")
-        blocker = next(blocker for blocker in resolution["blockers"] if blocker["check_id"] == "gh_auth")
+        blocker = next(
+            blocker for blocker in resolution["blockers"] if blocker["check_id"] == "gh_auth"
+        )
         self.assertEqual(blocker["classification"], "missing")
         self.assertEqual(
             resolution["ui_feedback"]["fallback_message"],
@@ -205,9 +201,7 @@ class TaskReadinessTests(unittest.TestCase):
     def test_locked_gh_config_is_classified_as_config(self) -> None:
         command_runner = make_command_runner(
             {
-                ("git", "remote", "get-url", "origin"): ok(
-                    "https://github.com/example/repo.git"
-                ),
+                ("git", "remote", "get-url", "origin"): ok("https://github.com/example/repo.git"),
                 ("git", "branch", "--show-current"): ok("main"),
                 ("git", "--version"): ok("git version 2.47.0"),
                 ("git", "ls-remote", "--exit-code", "origin", "HEAD"): ok("ref"),
@@ -241,7 +235,9 @@ class TaskReadinessTests(unittest.TestCase):
             network_runner=network_runner,
         )
 
-        blocker = next(blocker for blocker in resolution["blockers"] if blocker["check_id"] == "gh_auth")
+        blocker = next(
+            blocker for blocker in resolution["blockers"] if blocker["check_id"] == "gh_auth"
+        )
         self.assertEqual(blocker["classification"], "config")
 
     def test_python_validation_blocks_when_runtime_is_missing(self) -> None:
@@ -272,9 +268,7 @@ class TaskReadinessTests(unittest.TestCase):
     def test_reachable_remote_but_unauthenticated_push_is_classified_as_auth(self) -> None:
         command_runner = make_command_runner(
             {
-                ("git", "remote", "get-url", "origin"): ok(
-                    "https://github.com/example/repo.git"
-                ),
+                ("git", "remote", "get-url", "origin"): ok("https://github.com/example/repo.git"),
                 ("git", "branch", "--show-current"): ok("main"),
                 ("git", "--version"): ok("git version 2.47.0"),
                 ("git", "ls-remote", "--exit-code", "origin", "HEAD"): ok("ref"),
@@ -304,16 +298,16 @@ class TaskReadinessTests(unittest.TestCase):
         )
 
         blocker = next(
-            blocker for blocker in resolution["blockers"] if blocker["check_id"] == "git_push_dry_run"
+            blocker
+            for blocker in resolution["blockers"]
+            if blocker["check_id"] == "git_push_dry_run"
         )
         self.assertEqual(blocker["classification"], "auth")
 
     def test_unchanged_publish_blocker_requests_skip_of_repeated_publish_attempts(self) -> None:
         command_runner = make_command_runner(
             {
-                ("git", "remote", "get-url", "origin"): ok(
-                    "https://github.com/example/repo.git"
-                ),
+                ("git", "remote", "get-url", "origin"): ok("https://github.com/example/repo.git"),
                 ("git", "branch", "--show-current"): ok("main"),
                 ("git", "--version"): ok("git version 2.47.0"),
                 ("git", "ls-remote", "--exit-code", "origin", "HEAD"): ok("ref"),
@@ -347,19 +341,17 @@ class TaskReadinessTests(unittest.TestCase):
         )
 
         blocker = next(
-            blocker for blocker in resolution["blockers"] if blocker["check_id"] == "git_push_dry_run"
+            blocker
+            for blocker in resolution["blockers"]
+            if blocker["check_id"] == "git_push_dry_run"
         )
         self.assertTrue(blocker["unchanged_since_previous"])
-        self.assertTrue(
-            resolution["automation_integration"]["skip_unchanged_publish_attempts_now"]
-        )
+        self.assertTrue(resolution["automation_integration"]["skip_unchanged_publish_attempts_now"])
 
     def test_resolved_previous_blocker_surfaces_attention(self) -> None:
         command_runner = make_command_runner(
             {
-                ("git", "remote", "get-url", "origin"): ok(
-                    "https://github.com/example/repo.git"
-                ),
+                ("git", "remote", "get-url", "origin"): ok("https://github.com/example/repo.git"),
                 ("git", "branch", "--show-current"): ok("main"),
                 ("git", "--version"): ok("git version 2.47.0"),
                 ("git", "ls-remote", "--exit-code", "origin", "HEAD"): ok("ref"),

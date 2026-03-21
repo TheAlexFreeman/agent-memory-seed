@@ -9,9 +9,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-RESOLVER_PATH = (
-    REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_bootstrap_manifest.py"
-)
+RESOLVER_PATH = REPO_ROOT / "HUMANS" / "tooling" / "scripts" / "resolve_bootstrap_manifest.py"
 SPEC = importlib.util.spec_from_file_location("resolve_bootstrap_manifest", RESOLVER_PATH)
 assert SPEC is not None
 resolver = importlib.util.module_from_spec(SPEC)
@@ -190,19 +188,17 @@ class BootstrapResolverTests(unittest.TestCase):
 
             self.assertEqual(trace_by_path["meta/quick-reference.md"].status, "loaded")
             self.assertEqual(resolution.startup_panel.mode_label, "Returning")
-            self.assertEqual(resolution.startup_panel.repo_next_step.path, "meta/quick-reference.md")
+            self.assertEqual(
+                resolution.startup_panel.repo_next_step.path, "meta/quick-reference.md"
+            )
             self.assertEqual(resolution.startup_panel.loaded_count, 3)
             self.assertEqual(resolution.startup_panel.skipped_count, 3)
             self.assertEqual(trace_by_path["plans/SUMMARY.md"].status, "skipped")
             self.assertEqual(trace_by_path["plans/SUMMARY.md"].reason, "no_active_plans")
             self.assertEqual(trace_by_path["scratchpad/USER.md"].status, "skipped")
-            self.assertEqual(
-                trace_by_path["scratchpad/USER.md"].reason, "placeholder_or_empty"
-            )
+            self.assertEqual(trace_by_path["scratchpad/USER.md"].reason, "placeholder_or_empty")
             self.assertEqual(trace_by_path["scratchpad/CURRENT.md"].status, "skipped")
-            self.assertEqual(
-                trace_by_path["scratchpad/CURRENT.md"].reason, "placeholder_or_empty"
-            )
+            self.assertEqual(trace_by_path["scratchpad/CURRENT.md"].reason, "placeholder_or_empty")
 
     def test_duplicate_paths_are_deduplicated_after_normalization(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -218,7 +214,9 @@ class BootstrapResolverTests(unittest.TestCase):
             )
 
             resolution = resolver.resolve_startup(root, requested_mode="returning")
-            identity_steps = [step for step in resolution.trace if step.path == "identity/SUMMARY.md"]
+            identity_steps = [
+                step for step in resolution.trace if step.path == "identity/SUMMARY.md"
+            ]
 
             self.assertEqual(len(identity_steps), 2)
             self.assertEqual(identity_steps[0].status, "loaded")
@@ -267,8 +265,8 @@ class BootstrapResolverTests(unittest.TestCase):
             write(
                 root / "agent-bootstrap.toml",
                 BOOTSTRAP_MANIFEST.replace(
-                    '[modes.returning]\ntoken_budget = 7000',
-                    '[modes.returning]\ntoken_budget = 1500',
+                    "[modes.returning]\ntoken_budget = 7000",
+                    "[modes.returning]\ntoken_budget = 1500",
                     1,
                 ).replace(
                     '[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
@@ -300,8 +298,8 @@ class BootstrapResolverTests(unittest.TestCase):
             write(
                 root / "agent-bootstrap.toml",
                 BOOTSTRAP_MANIFEST.replace(
-                    '[modes.returning]\ntoken_budget = 7000',
-                    '[modes.returning]\ntoken_budget = 2500',
+                    "[modes.returning]\ntoken_budget = 7000",
+                    "[modes.returning]\ntoken_budget = 2500",
                     1,
                 ).replace(
                     '[[modes.returning.steps]]\npath = "plans/SUMMARY.md"\nrole = "plan-summary"\nrequired = false\nskip_if = "no_active_plans"\ncost = "light"',
@@ -361,7 +359,10 @@ class BootstrapResolverTests(unittest.TestCase):
             )
 
     def test_host_repo_root_surfaces_host_git_state_when_configured(self) -> None:
-        with tempfile.TemporaryDirectory() as tempdir, tempfile.TemporaryDirectory() as host_tempdir:
+        with (
+            tempfile.TemporaryDirectory() as tempdir,
+            tempfile.TemporaryDirectory() as host_tempdir,
+        ):
             root = Path(tempdir)
             host_root = Path(host_tempdir)
             build_repo(root, placeholder_scratchpad=False)
@@ -461,7 +462,6 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertTrue(
                 all(warning.severity == "warning" for warning in resolution.startup_panel.warnings)
             )
-
 
     # ------------------------------------------------------------------
     # Manual override controls (Phase 3, item 9)

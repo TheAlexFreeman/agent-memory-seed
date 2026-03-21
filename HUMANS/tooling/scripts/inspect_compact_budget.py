@@ -84,8 +84,12 @@ def render_human_report(report: dict[str, Any]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Inspect compact startup budget usage.")
-    parser.add_argument("root", nargs="?", default=None, help="Repo root (defaults to current repo).")
-    parser.add_argument("--json", action="store_true", dest="as_json", help="Emit machine-readable JSON.")
+    parser.add_argument(
+        "root", nargs="?", default=None, help="Repo root (defaults to current repo)."
+    )
+    parser.add_argument(
+        "--json", action="store_true", dest="as_json", help="Emit machine-readable JSON."
+    )
     args = parser.parse_args(argv)
 
     root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parents[3]
