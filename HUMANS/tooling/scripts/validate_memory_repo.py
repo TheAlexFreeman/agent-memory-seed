@@ -514,6 +514,15 @@ def should_ignore(path: Path) -> bool:
     return any(part in IGNORED_DIR_NAMES for part in path.parts)
 
 
+def is_project_plan_path(relative_path: Path) -> bool:
+    parts = relative_path.parts
+    return len(parts) >= 4 and parts[0] == "projects" and parts[2] == "plans"
+
+
+def is_plan_path(relative_path: Path) -> bool:
+    return relative_path.parts[0] == "plans" or is_project_plan_path(relative_path)
+
+
 def iter_content_files(root: Path) -> list[Path]:
     paths: list[Path] = []
     for dirname in CONTENT_DIRS:
@@ -521,6 +530,15 @@ def iter_content_files(root: Path) -> list[Path]:
         if not base.exists():
             continue
         for path in base.rglob("*.md"):
+            if should_ignore(path.relative_to(root)):
+                continue
+            if path.name == "SUMMARY.md":
+                continue
+            paths.append(path)
+
+    projects_root = root / "projects"
+    if projects_root.exists():
+        for path in projects_root.glob("*/plans/*.md"):
             if should_ignore(path.relative_to(root)):
                 continue
             if path.name == "SUMMARY.md":
@@ -729,7 +747,7 @@ def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> No
         )
 
     relative_path = path.relative_to(root)
-    if relative_path.parts[0] == "plans":
+    if is_plan_path(relative_path):
         plan_type = frontmatter.get("type")
         if not plan_type:
             result.error(f"{path}: plan files must define frontmatter key 'type'")
