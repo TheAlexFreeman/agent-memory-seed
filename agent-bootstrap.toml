@@ -21,16 +21,16 @@ token_budget = 20000
 prefer_summaries = false
 
 [[modes.first_run.steps]]
-path = "meta/quick-reference.md"
-role = "router"
-required = true
-cost = "light"
-
-[[modes.first_run.steps]]
 path = "README.md"
 role = "architecture-reference"
 required = true
 cost = "medium"
+
+[[modes.first_run.steps]]
+path = "meta/quick-reference.md"
+role = "router"
+required = true
+cost = "light"
 
 [[modes.first_run.steps]]
 path = "meta/first-run.md"
@@ -45,12 +45,19 @@ maintenance_probes = [
   "meta/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
 
 [[modes.returning.steps]]
 path = "meta/quick-reference.md"
 role = "router"
 required = true
+cost = "light"
+
+[[modes.returning.steps]]
+path = "projects/SUMMARY.md"
+role = "project-summary"
+required = false
+skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.returning.steps]]
@@ -64,13 +71,6 @@ path = "chats/SUMMARY.md"
 role = "chat-summary"
 required = false
 skip_if = "placeholder_or_empty"
-cost = "light"
-
-[[modes.returning.steps]]
-path = "projects/SUMMARY.md"
-role = "project-summary"
-required = false
-skip_if = "no_active_projects"
 cost = "light"
 
 [[modes.returning.steps]]
@@ -94,7 +94,13 @@ maintenance_probes = [
   "meta/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+
+[[modes.full_bootstrap.steps]]
+path = "README.md"
+role = "architecture-reference"
+required = true
+cost = "medium"
 
 [[modes.full_bootstrap.steps]]
 path = "meta/quick-reference.md"
@@ -103,10 +109,11 @@ required = true
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "README.md"
-role = "architecture-reference"
-required = true
-cost = "medium"
+path = "projects/SUMMARY.md"
+role = "project-summary"
+required = false
+skip_if = "placeholder_or_empty"
+cost = "light"
 
 [[modes.full_bootstrap.steps]]
 path = "identity/SUMMARY.md"
@@ -119,13 +126,6 @@ path = "chats/SUMMARY.md"
 role = "chat-summary"
 required = false
 skip_if = "placeholder_or_empty"
-cost = "light"
-
-[[modes.full_bootstrap.steps]]
-path = "projects/SUMMARY.md"
-role = "project-summary"
-required = false
-skip_if = "no_active_projects"
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
@@ -167,7 +167,13 @@ maintenance_probes = [
   "meta/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+
+[[modes.periodic_review.steps]]
+path = "README.md"
+role = "architecture-reference"
+required = true
+cost = "medium"
 
 [[modes.periodic_review.steps]]
 path = "meta/quick-reference.md"
@@ -176,10 +182,11 @@ required = true
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "README.md"
-role = "architecture-reference"
-required = true
-cost = "medium"
+path = "projects/SUMMARY.md"
+role = "project-summary"
+required = false
+skip_if = "placeholder_or_empty"
+cost = "light"
 
 [[modes.periodic_review.steps]]
 path = "identity/SUMMARY.md"
@@ -192,13 +199,6 @@ path = "chats/SUMMARY.md"
 role = "chat-summary"
 required = false
 skip_if = "placeholder_or_empty"
-cost = "light"
-
-[[modes.periodic_review.steps]]
-path = "projects/SUMMARY.md"
-role = "project-summary"
-required = false
-skip_if = "no_active_projects"
 cost = "light"
 
 [[modes.periodic_review.steps]]
@@ -264,7 +264,7 @@ maintenance_probes = [
   "meta/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
 
 [[modes.automation.steps]]
 path = "meta/quick-reference.md"
@@ -290,5 +290,5 @@ cost = "light"
 path = "projects/SUMMARY.md"
 role = "project-summary"
 required = false
-skip_if = "no_active_projects"
+skip_if = "placeholder_or_empty"
 cost = "light"

@@ -101,7 +101,7 @@ The underlying philosophy is that memory quality matters more than memory volume
 
 ### 4a. ACCESS logs are structured event streams
 
-Retrieval feedback is not just a loose note. It is a structured event stream with a few fields that now carry distinct meaning:
+Retrieval feedback is not just a loose note. It is a structured event stream for the access-tracked memory namespaces (`identity/`, `knowledge/`, `skills/`, `plans/`, `projects/`, and `chats/`). `meta/` stays outside this lifecycle for now because it is governance, not retrievable memory. The event stream has a few fields that now carry distinct meaning:
 
 - `session_id`: identifies the chat session when the access came from a real session boundary. When present consistently, it makes session-level analytics reliable.
 - `mode`: distinguishes `read`, `write`, `update`, and `create` so the system can tell whether a file was only consulted or actually changed.

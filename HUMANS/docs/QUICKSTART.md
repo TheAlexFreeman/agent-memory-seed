@@ -71,12 +71,13 @@ If you want a human-readable explanation of the repo-local MCP layer itself, rea
 
 Open a conversation with your AI in the repo directory. The agent will:
 
-1. Read `meta/quick-reference.md` and follow its routing.
-2. Detect that this is a fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet).
-3. Read `README.md` only if `meta/quick-reference.md` routes it into first-run bootstrap, then run the onboarding skill.
-4. Propose an initial profile, ask you to confirm it, then write to `identity/` and record the session.
+1. Read `README.md` for the architecture and startup contract.
+2. Continue to `meta/quick-reference.md` for live routing and thresholds.
+3. Detect that this is a fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet).
+4. Continue to `meta/first-run.md` only if `meta/quick-reference.md` routes the session into first-run bootstrap, then run the onboarding skill.
+5. Propose an initial profile, ask you to confirm it, then write to `identity/` and record the session.
 
-From session two onward, the agent will greet you with what it knows and pick up where you left off.
+From session two onward, the agent will use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless the router points somewhere more specific.
 
 ---
 
@@ -92,7 +93,7 @@ To use it:
 2. Ensure the project is trusted so project-scoped `.codex/config.toml` is applied.
 3. Restart or reopen the repo if Codex was already open.
 
-Codex will then prefer the repo-local semantic agent-memory MCP surface by default. Raw fallback tools are available only when the runtime explicitly enables `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`. Startup routing still comes from `meta/quick-reference.md`.
+Codex will then prefer the repo-local semantic agent-memory MCP surface by default. Raw fallback tools are available only when the runtime explicitly enables `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`. `README.md` remains the architectural starting point; `meta/quick-reference.md` still provides live routing once the session starts.
 
 ### Claude Code
 
@@ -116,8 +117,8 @@ Copy the following into your ChatGPT custom instructions (Settings → Personali
 ```
 I have a persistent memory system stored as a git repository.
 
-Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
-Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
+Start with `README.md` for the architecture and startup contract, then use `meta/quick-reference.md` for live routing and context-loading rules.
+Use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `meta/quick-reference.md` routes you to first-run, full bootstrap, or a more specific path.
 
 Key rules:
 - meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds.
@@ -142,8 +143,8 @@ Use this preamble in your system prompt or session initialization:
 ```
 You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: identity/ (who the user is), knowledge/ (what they know), skills/ (how to perform tasks), plans/ (multi-session roadmaps), chats/ (conversation history), and meta/ (governance rules and context loading guide).
 
-Start with `meta/quick-reference.md` and follow its routing and context-loading rules.
-Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
+Start with `README.md` for the architecture and startup contract, then use `meta/quick-reference.md` for live routing and context-loading rules.
+Use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `meta/quick-reference.md` routes you to first-run, full bootstrap, or a more specific path.
 
 Key rules:
 - meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds.

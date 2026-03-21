@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Start with `README.md` for the architecture and startup contract, then use `meta/quick-reference.md` for live routing and context-loading rules.
+# Use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `meta/quick-reference.md` routes you to first-run, full bootstrap, or a more specific path.
+
 # Agent Memory System — Post-clone setup script
 # Personalizes the template repo for a new user.
 

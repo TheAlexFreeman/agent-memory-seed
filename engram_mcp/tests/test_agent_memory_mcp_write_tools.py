@@ -5867,6 +5867,46 @@ next_action: Original next action
         self.assertEqual(payload["reports"][0]["invalid_lines"], 1)
         self.assertEqual(payload["reports"][0]["status"], "below")
 
+    def test_memory_check_aggregation_triggers_ignores_meta_access_logs(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "meta/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": f"meta/note-{idx}.md",
+                            "date": "2026-03-19",
+                            "task": "governance lookup",
+                            "helpfulness": 0.8,
+                            "note": "ignored",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(20)
+                ),
+                "plans/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "plans/demo.md",
+                        "date": "2026-03-19",
+                        "task": "planning",
+                        "helpfulness": 0.6,
+                        "note": "counted",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_check_aggregation_triggers"]()))
+
+        self.assertEqual(payload["files_checked"], 1)
+        self.assertEqual(
+            [item["access_file"] for item in payload["reports"]], ["plans/ACCESS.jsonl"]
+        )
+        self.assertEqual(payload["above_trigger"], [])
+        self.assertEqual(payload["near_trigger"], [])
+
     def test_memory_session_health_check_reports_due_aggregation(self) -> None:
         repo_root = self._init_repo(
             {
@@ -6026,6 +6066,47 @@ next_action: Original next action
             payload["proposed_outputs"]["review_queue_candidates"][0]["file"],
             "plans/low-value.md",
         )
+
+    def test_memory_aggregate_access_ignores_meta_access_logs(self) -> None:
+        repo_root = self._init_repo(
+            {
+                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "meta/ACCESS.jsonl": "".join(
+                    json.dumps(
+                        {
+                            "file": f"meta/note-{idx}.md",
+                            "date": "2026-03-19",
+                            "task": "governance lookup",
+                            "helpfulness": 0.1,
+                            "note": "ignored",
+                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                        }
+                    )
+                    + "\n"
+                    for idx in range(3)
+                ),
+                "plans/ACCESS.jsonl": json.dumps(
+                    {
+                        "file": "plans/kept.md",
+                        "date": "2026-03-19",
+                        "task": "planning",
+                        "helpfulness": 0.8,
+                        "note": "counted",
+                        "session_id": "chats/2026/03/19/chat-001",
+                    }
+                )
+                + "\n",
+            }
+        )
+        tools = self._create_tools(repo_root)
+
+        payload = json.loads(asyncio.run(tools["memory_aggregate_access"]()))
+
+        self.assertEqual(payload["entries_considered"], 1)
+        self.assertEqual(payload["files_considered"], 1)
+        self.assertEqual(payload["high_value_files"], [])
+        self.assertEqual(payload["low_value_files"], [])
+        self.assertEqual(payload["co_retrieval_clusters"], [])
 
     def test_memory_aggregate_access_filters_by_folder_date_and_helpfulness(self) -> None:
         repo_root = self._init_repo(

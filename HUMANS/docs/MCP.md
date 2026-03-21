@@ -19,6 +19,8 @@ In plain language:
 - Git is the history and recovery mechanism.
 - MCP is the safe operating interface.
 
+The default architectural entry point for a new session remains `README.md`. After that initial orientation, `meta/quick-reference.md` handles live routing and `projects/SUMMARY.md` is the primary orientation surface for a normal returning session unless the router points somewhere more specific.
+
 That separation is intentional. It keeps the system portable and inspectable while still making it ergonomic for modern agent runtimes.
 
 ## Available MCP resources

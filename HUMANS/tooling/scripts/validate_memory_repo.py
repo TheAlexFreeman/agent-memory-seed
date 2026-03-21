@@ -26,8 +26,8 @@ else:
 
 
 CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
-ACCESS_DIRS = ("meta", "identity", "knowledge", "skills", "plans", "chats")
-ACCESS_COVERAGE_DIRS = ("meta", "skills", "identity", "chats")
+ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "projects", "chats")
+ACCESS_COVERAGE_DIRS = ("skills", "identity", "chats")
 IGNORED_DIR_NAMES = {".git", ".claude", "__pycache__", ".pytest_cache"}
 PLACEHOLDER_SNIPPETS = (
     "_Nothing here yet.",
@@ -97,23 +97,23 @@ EXPECTED_BOOTSTRAP_PREFER_SUMMARIES = {
 }
 EXPECTED_RETURNING_STEP_PATHS = (
     "meta/quick-reference.md",
+    "projects/SUMMARY.md",
     "identity/SUMMARY.md",
     "chats/SUMMARY.md",
-    "projects/SUMMARY.md",
     "scratchpad/USER.md",
     "scratchpad/CURRENT.md",
 )
 EXPECTED_FIRST_RUN_STEP_PATHS = (
-    "meta/quick-reference.md",
     "README.md",
+    "meta/quick-reference.md",
     "meta/first-run.md",
 )
 EXPECTED_FULL_BOOTSTRAP_STEP_PATHS = (
-    "meta/quick-reference.md",
     "README.md",
+    "meta/quick-reference.md",
+    "projects/SUMMARY.md",
     "identity/SUMMARY.md",
     "chats/SUMMARY.md",
-    "projects/SUMMARY.md",
     "scratchpad/USER.md",
     "scratchpad/CURRENT.md",
     "CHANGELOG.md",
@@ -152,14 +152,14 @@ DEPLOYED_WORKTREE_MODE_STEP_PATHS = {
     "periodic_review": DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS,
     "automation": EXPECTED_AUTOMATION_STEP_PATHS,
 }
-EXPECTED_BOOTSTRAP_ON_DEMAND = ("knowledge/SUMMARY.md", "skills/SUMMARY.md")
+EXPECTED_BOOTSTRAP_ON_DEMAND = ("plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md")
 EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
     "meta/review-queue.md:load_only_when_non_placeholder",
     "ACCESS.jsonl:count_non_empty_lines",
 )
 EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
+    "projects/SUMMARY.md": "placeholder_or_empty",
     "chats/SUMMARY.md": "placeholder_or_empty",
-    "projects/SUMMARY.md": "no_active_projects",
     "scratchpad/USER.md": "placeholder_or_empty",
     "scratchpad/CURRENT.md": "placeholder_or_empty",
 }
@@ -274,20 +274,18 @@ EXPECTED_MCP_ENTRYPOINT = Path("engram_mcp/memory_mcp.py")
 LEGACY_MCP_RUNTIME_DIR = Path("tools")
 LEGACY_MCP_ENTRYPOINT = Path("HUMANS/tooling/scripts/memory_mcp.py")
 
-PROMPT_START_LINE = (
-    "Start with `meta/quick-reference.md` and follow its routing and context-loading rules."
-)
-PROMPT_ROUTE_LINE = "Use the compact returning manifest for normal sessions. If `meta/quick-reference.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs."
+PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `meta/quick-reference.md` for live routing and context-loading rules."
+PROMPT_ROUTE_LINE = "Use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `meta/quick-reference.md` routes you to first-run, full bootstrap, or a more specific path."
 PROMPT_MCP_LINE = "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 LIVE_CONFIG_LINE = (
     "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
 )
-ADAPTER_ROUTING_PHRASE = "follow the routing rules in `meta/quick-reference.md`"
+ADAPTER_ROUTING_PHRASE = "Start with `README.md` for the architectural contract, then continue to `meta/quick-reference.md` for live routing and thresholds"
 ADAPTER_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes"
-README_START_PHRASE = "Start every session with `meta/quick-reference.md`."
-README_ARCHITECTURE_PHRASE = "Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review"
+README_START_PHRASE = "Start new sessions from this `README.md` unless a platform or tool opens a more specific surface for you."
+README_ARCHITECTURE_PHRASE = "continue to `meta/quick-reference.md` for live routing, active thresholds, and maintenance triggers"
 MCP_PREFERENCE_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-QUICK_REFERENCE_ROUTER_PHRASE = "Use this file as the operational router for every session:"
+QUICK_REFERENCE_ROUTER_PHRASE = "Use this file as the live operational router once you reach it:"
 FIRST_RUN_MCP_PHRASE = MCP_PREFERENCE_PHRASE
 SESSION_CHECKLISTS_MCP_PHRASE = MCP_PREFERENCE_PHRASE
 SKILLS_SUMMARY_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes while executing these skills; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
@@ -332,7 +330,6 @@ FORBIDDEN_RUNTIME_PATTERNS = (
     r"The active thresholds are always determined by the system's current maturity stage as assessed in `meta/system-maturity\.md`",
     r"The session boundary is proxied by the `date` field",
     r"groups entries by date, identifies file sets co-occurring",
-    r"start with README\.md and follow its routing rules",
     r"Use meta/first-run\.md for blank-slate onboarding, meta/session-checklists\.md for returning sessions",
     r"This file is loaded every session",
     r"follow the bootstrap sequence and rules in README\.md",
@@ -1737,8 +1734,9 @@ def validate_quarantine(root: Path, result: ValidationResult) -> None:
 
         source = frontmatter.get("source")
         relative_path = path.relative_to(root).as_posix()
-        allow_internal_quarantine_source = relative_path == "knowledge/_unverified/brainstorm-pwr-protocol.md" or relative_path.startswith(
-            "knowledge/_unverified/system-notes/"
+        allow_internal_quarantine_source = (
+            relative_path == "knowledge/_unverified/brainstorm-pwr-protocol.md"
+            or relative_path.startswith("knowledge/_unverified/system-notes/")
         )
         if source and source != "external-research" and not allow_internal_quarantine_source:
             result.warn(

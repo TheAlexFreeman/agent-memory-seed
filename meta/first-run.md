@@ -1,6 +1,6 @@
 # First-Run Flow
 
-This document is an agent-facing streamlined flow for the very first session. It condenses the README.md bootstrap into a single checklist with clear silent/interactive annotations.
+This document is an agent-facing streamlined flow for the very first session. It condenses the README-first bootstrap into a single checklist with clear silent/interactive annotations.
 
 > **Authority:** This flow is reached via `meta/quick-reference.md` routing. It is subordinate to `meta/quick-reference.md` for active thresholds and session routing. When in doubt, defer to `meta/quick-reference.md`.
 
@@ -17,11 +17,11 @@ If neither condition matches — a user portrait exists without the `template` m
 
 ## Silent setup (do not produce output for these steps)
 
-1. Read `CHANGELOG.md` — understand the system's evolutionary trajectory. (README bootstrap step 2)
-2. Read `meta/quick-reference.md` — load all active operational thresholds. (README bootstrap step 5)
-3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference only if needed. (README bootstrap step 6)
-4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format. (README bootstrap step 7)
-5. Read `skills/SUMMARY.md` and `skills/onboarding.md`. (README bootstrap step 8)
+1. Read `CHANGELOG.md` to understand the system's recent evolution.
+2. Use the thresholds and routing state already loaded from `meta/quick-reference.md`; do not override them with older prose elsewhere.
+3. Read the following sections of `meta/update-guidelines.md`: "Change categories", "Read-only operation", and the periodic-review trigger reference only if needed.
+4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `meta/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format.
+5. Read `skills/SUMMARY.md` and `skills/onboarding.md`.
 
 At this point you have loaded: system architecture (README.md), evolution history, active thresholds, change-control rules, write-access status, and the onboarding skill. Do not summarize any of this to the user.
 
@@ -43,4 +43,4 @@ At this point you have loaded: system architecture (README.md), evolution histor
 
 ## After first run
 
-From session two onward, return to `meta/quick-reference.md` for live routing. Use the compact returning manifest there for normal sessions, the full bootstrap in `README.md` when `meta/quick-reference.md` routes you there, and `meta/session-checklists.md` only when you want detailed runbooks.
+From session two onward, return to `meta/quick-reference.md` for live routing. Use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless the router points somewhere more specific, keep `plans/SUMMARY.md` task-driven, and load `meta/session-checklists.md` only when you want detailed runbooks.

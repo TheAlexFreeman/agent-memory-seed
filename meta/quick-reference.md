@@ -1,18 +1,18 @@
 # Quick Reference
 
-**Read this file at the start of every session before applying any thresholds or curation rules.**
+**Read this file after `README.md` when you need live routing, active thresholds, or maintenance triggers. If a platform opens this file first, continue here before applying thresholds or curation rules.**
 
-This is the single authoritative source for live operational parameters. Threshold values in `README.md`, `meta/curation-policy.md`, and `meta/system-maturity.md` are reference-only.
+This is the single authoritative source for live operational parameters. Thresholds elsewhere are reference-only.
 
 ---
 
 ## Session routing
 
-Use this file as the operational router for every session:
+Use this file as the live operational router once you reach it:
 
-1. Start here.
-2. If this is a fresh instantiation on a blank or template-backed repo, read `README.md` and then `meta/first-run.md`.
-3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
+1. If you started in `README.md`, continue here for live routing and active parameters.
+2. If this is a fresh instantiation on a blank or template-backed repo, continue to `meta/first-run.md`.
+3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, follow the **Full bootstrap** manifest below.
 4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 
 **MCP discovery:** If the host exposes Engram under a project-prefixed name instead of `agent-memory`, use the identifier shown in the available-server list.
@@ -25,9 +25,9 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 
 | Session type | Files to load |
 |---|---|
-| **First run** | `README.md` → `meta/first-run.md` (which directs: `CHANGELOG.md`, this file, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
-| **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `projects/SUMMARY.md` _(skip if no active or ongoing projects)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
-| **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
+| **First run** | this file → `meta/first-run.md` (which directs: `CHANGELOG.md`, `meta/update-guidelines.md` §§ Change categories + Read-only operation, `skills/SUMMARY.md`, `skills/onboarding.md`) |
+| **Compact returning** | this file → `projects/SUMMARY.md` _(skip if empty or still placeholder)_ → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty or still placeholder)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `plans/SUMMARY.md` plus task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the active project, recent history, or current task makes them relevant |
+| **Full bootstrap** | this file → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
 | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
 | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
@@ -38,8 +38,9 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 
 - Run metadata-first maintenance probes before loading extra governance files.
 - Check whether `meta/review-queue.md` still contains only its placeholder. Load the body only when real entries exist or the user asks about it.
-- Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger. Load entries only when a trigger is hit or the current task requires retrieval analysis.
-- `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
+- Count non-empty lines in `ACCESS.jsonl` files for access-tracked memory namespaces. Skip `meta/`, which is not part of the ACCESS lifecycle for now.
+- `plans/SUMMARY.md`, `knowledge/SUMMARY.md`, and `skills/SUMMARY.md` are task-driven drill-down context, not unconditional startup reads.
+- `projects/SUMMARY.md` is the primary orientation surface for a normal returning session unless the current route or task points somewhere more specific.
 - In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations and the worktree path for memory files and governance.
 
 ---
@@ -53,9 +54,9 @@ Compact startup files are live-state surfaces, not archives. They should answer 
 | File | Keep in compact path | Move to drill-down files | Target budget |
 |---|---|---|---|
 | `meta/quick-reference.md` | Routing authority, active thresholds, compact contract, decision triggers | Long rationale, runbooks, full algorithms | ~2,600 tokens |
+| `projects/SUMMARY.md` | Active-project routing, cognitive mode, open questions, current focus | Full project detail | ~1,700 tokens |
 | `identity/SUMMARY.md` | User portrait, working style, active durable goal | Detailed profile evidence | ~450 tokens |
 | `chats/SUMMARY.md` | Live themes, recent continuity, retrieval guidance | Chat-by-chat narrative | ~750 tokens |
-| `projects/SUMMARY.md` | Active-project routing, cognitive mode, open questions, current focus | Full project detail | ~1,700 tokens |
 | `scratchpad/USER.md` | User-authored current constraints | Historical notes that no longer affect current work | ~400 tokens |
 | `scratchpad/CURRENT.md` | Active threads, immediate next actions, open questions, drill-down refs | Extended analysis and large tables | ~650 tokens |
 

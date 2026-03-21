@@ -8,7 +8,7 @@ trust: high
 
 # Session Start
 
-**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`. Load `meta/session-checklists.md` only when you want more detail than that compact path.
+**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`, using `projects/SUMMARY.md` as the primary orientation surface unless the route points somewhere more specific. Load `meta/session-checklists.md` only when you want more detail than that compact path.
 
 ## When to use this skill
 
@@ -23,6 +23,7 @@ When local agent-memory MCP tools are available, prefer them for memory reads an
 ### 1. Load recent context (silent)
 
 - When available, prefer local agent-memory MCP read/search tools for locating and opening the relevant summary files.
+- Read `projects/SUMMARY.md` first to identify the active project, current focus, and the most relevant drill-down targets for this session.
 - Read the most recent chat summary (`chats/SUMMARY.md` → latest date folder → latest chat `SUMMARY.md`).
 - Note what the user was working on, any open threads, and any action items from the previous session.
 

@@ -73,10 +73,10 @@ The memory system's documentation serves two audiences with fundamentally differ
 
 This tension is not a problem to solve once — it is a permanent design constraint that every file in the system must navigate. The strategies that have emerged:
 
-**Role classification.** Every file in `meta/` falls into one of three roles: *always-load* (read every session — must be lean and non-redundant), *on-demand* (loaded only when a specific operation requires it — can be more detailed), or *human-only* (never loaded by agents — can be as expansive as needed). The context loading manifest in `meta/quick-reference.md` makes these roles explicit.
+**Role classification.** Every file in `meta/` falls into one of three roles: *always-load after entry* (read once the agent reaches the live router — must be lean and non-redundant), *on-demand* (loaded only when a specific operation requires it — can be more detailed), or *human-only* (never loaded by agents — can be as expansive as needed). The context loading manifest in `meta/quick-reference.md` makes these roles explicit.
 
-- *Always-load:* `quick-reference.md`, `session-checklists.md`. These two files carry the full operational weight of a normal session. Together they should stay under ~2,000 words.
-- *On-demand:* `curation-policy.md`, `update-guidelines.md` (loaded on full bootstrap), `curation-algorithms.md` (loaded during aggregation or stage transitions), `deferred-action-template.md` (loaded on first read-only session), `system-maturity.md` (loaded during periodic review).
+- *Always-load after entry:* `quick-reference.md`. The architectural starting point is `README.md`; once the agent reaches `meta/quick-reference.md`, that file carries the live operational weight of a normal session and must stay lean.
+- *On-demand:* `session-checklists.md`, `curation-policy.md`, `update-guidelines.md` (loaded on full bootstrap), `curation-algorithms.md` (loaded during aggregation or stage transitions), `deferred-action-template.md` (loaded on first read-only session), `system-maturity.md` (loaded during periodic review).
 - *Human-only:* `HUMANS/docs/GLOSSARY.md`. Every term it defines is already introduced in context by the governance file that establishes it. It exists for humans browsing the repo, not for agents building context.
 
 **Denormalized lookup files.** `meta/quick-reference.md` is a deliberately denormalized document: it duplicates threshold values, decision guides, and operational parameters from across the governance layer into a single file the agent reads every session. The normative justification for each value lives in the source files (curation-policy, system-maturity), but the agent never needs to load those files just to look up a threshold. This is the database-design principle of trading storage redundancy for read performance, applied to context windows.
@@ -214,14 +214,14 @@ This would make the system's self-organizing dynamics visible and engaging, espe
 
 ### Platform integrations
 
-**MCP (Model Context Protocol) server.** The memory repo could be exposed as an MCP server, allowing any MCP-compatible client (Claude Code, Cursor, IDEs with MCP support) to access memory files through a standardized tool interface. The MCP server would provide:
+**MCP (Model Context Protocol) server.** The memory repo is exposed as an MCP server for MCP-capable clients such as Claude Code, Codex, Cursor, and IDE integrations. The MCP layer provides a standardized tool interface for reading memory, inspecting provenance, and performing governed writes without each client reimplementing the repo's rules. At a high level, the server provides:
 - `read_memory(path)` — retrieve a file with trust-level metadata.
 - `search_memory(query)` — semantic search across the repo.
 - `propose_change(path, content, reasoning)` — queue a proposed change with governance enforcement.
 - `log_access(file, task, helpfulness)` — append to ACCESS.jsonl.
 - `get_context(topic)` — return the most relevant files for a given topic, navigating the summary hierarchy automatically.
 
-This would eliminate the need for platform-specific adapters (CLAUDE.md, .cursorrules) and make the memory system a first-class tool rather than a set of instructions the model must parse and follow. It would also provide a natural enforcement point for context efficiency — the MCP server could implement the context loading manifest programmatically, serving only the files appropriate for the current session type rather than relying on the agent to follow loading instructions.
+The MCP layer already serves as a first-class tool-facing interface, while thin platform-specific adapters still provide the initial handoff into the canonical repo contract. It also provides a natural enforcement point for context efficiency — the MCP server can package compact workflow bundles and policy lookups so clients spend fewer tokens reconstructing the same startup logic.
 
 **VS Code / IDE extension.** A lightweight extension that:
 - Shows the current user profile in a sidebar panel.

@@ -43,392 +43,15 @@ ONBOARDING_SKILL_MCP_LINE = validator.ONBOARDING_SKILL_MCP_PHRASE
 SESSION_START_SKILL_MCP_LINE = validator.SESSION_START_SKILL_MCP_PHRASE
 SESSION_SYNC_SKILL_MCP_LINE = validator.SESSION_SYNC_SKILL_MCP_PHRASE
 SESSION_WRAPUP_SKILL_MCP_LINE = validator.SESSION_WRAPUP_SKILL_MCP_PHRASE
+README_START_LINE = validator.README_START_PHRASE
+README_ARCHITECTURE_LINE = validator.README_ARCHITECTURE_PHRASE
 SETUP_GUIDANCE_LINE = "live routing in `meta/quick-reference.md`"
 
 
-VALID_QUICK_REFERENCE = textwrap.dedent(
-    """\
-    # Quick Reference
+VALID_QUICK_REFERENCE = (REPO_ROOT / "meta" / "quick-reference.md").read_text(encoding="utf-8")
 
-    **Read this file at the start of every session before applying any thresholds or curation rules.**
+VALID_BOOTSTRAP_MANIFEST = (REPO_ROOT / "agent-bootstrap.toml").read_text(encoding="utf-8")
 
-    This is the single authoritative source for active operational parameters.
-
-    ## Session routing
-
-    Use this file as the operational router for every session:
-
-    1. Start here.
-    2. If this is a fresh instantiation on a blank or template-backed repo, read `README.md` and then `meta/first-run.md`.
-    3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, read `README.md` and then follow the **Full bootstrap** manifest below.
-    4. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
-
-    ## Context loading manifest
-
-    | Session type | Files to load |
-    |---|---|
-    | **First run** | `README.md` → `meta/first-run.md` |
-    | **Compact returning** | this file → `identity/SUMMARY.md` → `chats/SUMMARY.md` _(skip if empty)_ → `projects/SUMMARY.md` _(skip if no active or ongoing projects)_ → `scratchpad/USER.md` _(skip if only placeholder)_ → `scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md` only when the current task or recent history makes them relevant |
-    | **Full bootstrap** | `README.md` → Compact returning files + `CHANGELOG.md`, `meta/curation-policy.md`, `meta/update-guidelines.md` |
-    | **Periodic review** | Full bootstrap files + `meta/system-maturity.md`, `meta/belief-diff-log.md`, `meta/review-queue.md`, `meta/integrity-checklist.md` |
-    | **ACCESS aggregation** | This file + `meta/curation-algorithms.md` |
-    | **Stage transition** | Periodic review files + `meta/curation-algorithms.md` |
-
-    **Do not load** `HUMANS/docs/*`. `meta/session-checklists.md` and `meta/scratchpad-guidelines.md` are on-demand only.
-
-    ### Compact returning notes
-
-    - Run metadata-first maintenance probes before loading extra governance files.
-    - Check whether `meta/review-queue.md` still contains only its placeholder.
-    - Count non-empty lines in `ACCESS.jsonl` files to see whether any folder has reached the aggregation trigger.
-    - `knowledge/SUMMARY.md` and `skills/SUMMARY.md` are task-driven context, not unconditional startup reads.
-    - In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations and the worktree path for memory files and governance.
-
-    ## Compact bootstrap contract
-
-    **Startup strategy:** Whole-file compact mode.
-
-    | File | Keep in compact path | Move to drill-down files | Target budget |
-    |---|---|---|---|
-    | `meta/quick-reference.md` | Routing and thresholds | Longer rationale | ~2,600 tokens |
-    | `identity/SUMMARY.md` | User portrait | Detailed evidence | ~450 tokens |
-    | `chats/SUMMARY.md` | Themes and retrieval guidance | Narrative history | ~750 tokens |
-    | `projects/SUMMARY.md` | Active project routing and current focus | Full project detail | ~1,700 tokens |
-    | `scratchpad/USER.md` | Current user notes | Older context | ~400 tokens |
-    | `scratchpad/CURRENT.md` | Active threads and refs | Extended analysis | ~650 tokens |
-
-    ## Compact file success criteria
-
-    - `projects/SUMMARY.md` must preserve active-project routing and current focus.
-    - `chats/SUMMARY.md` must preserve current themes and retrieval guidance.
-    - `scratchpad/CURRENT.md` must preserve active threads and drill-down refs.
-
-    ## Current active stage: Exploration
-
-    _Last assessed: not yet assessed — Exploration defaults apply_
-
-    ## Active thresholds
-
-    | Parameter | Active value | Stage |
-    |-----------|-------------|-------|
-    | Low-trust retirement threshold | 120 days | Exploration |
-    | Medium-trust flagging threshold | 180 days | Exploration |
-    | Staleness trigger (no access) | 120 days | Exploration |
-    | Aggregation trigger | 15 entries | Exploration |
-    | Identity churn alarm | 5 traits/session | Exploration |
-    | Knowledge flooding alarm | 5 files/day | Exploration |
-    | Task similarity method | Session co-occurrence | Exploration |
-    | Cluster co-retrieval threshold | 3 sessions | Exploration |
-
-    ## Active task similarity method
-
-    **Grouping precedence:** Group ACCESS entries by `session_id` when present, then fall back to `date`.
-
-    ## Context budget guideline
-
-    | Session mode | Typical token cost | When |
-    | --- | --- | --- |
-    | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-    | Returning compact session | ~3,000–7,000 | Normal day-to-day use via the compact returning manifest in this file |
-    | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
-    """
-)
-
-VALID_BOOTSTRAP_MANIFEST = textwrap.dedent(
-    """\
-    version = 1
-    router = "meta/quick-reference.md"
-    default_mode = "returning"
-    adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]
-
-    [mode_detection]
-    automation = "scheduled_or_recurring_run"
-    periodic_review = "explicit_or_scheduled_governance_review"
-    first_run = "blank_or_template_backed_repo"
-    full_bootstrap = "fresh_instantiation_on_returning_repo"
-    returning = "default_existing_repo_session"
-    warn_on_detached_head = true
-    warn_on_worktree_branch_drift = true
-    warn_on_branch_checked_out_elsewhere = true
-
-    [modes.first_run]
-    token_budget = 20000
-    prefer_summaries = false
-
-    [[modes.first_run.steps]]
-    path = "meta/quick-reference.md"
-    role = "router"
-    required = true
-    cost = "light"
-
-    [[modes.first_run.steps]]
-    path = "README.md"
-    role = "architecture-reference"
-    required = true
-    cost = "medium"
-
-    [[modes.first_run.steps]]
-    path = "meta/first-run.md"
-    role = "first-run-manifest"
-    required = true
-    cost = "light"
-
-    [modes.returning]
-    token_budget = 7000
-    prefer_summaries = true
-    maintenance_probes = [
-      "meta/review-queue.md:load_only_when_non_placeholder",
-      "ACCESS.jsonl:count_non_empty_lines",
-    ]
-    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
-
-    [[modes.returning.steps]]
-    path = "meta/quick-reference.md"
-    role = "router"
-    required = true
-    cost = "light"
-
-    [[modes.returning.steps]]
-    path = "identity/SUMMARY.md"
-    role = "identity-summary"
-    required = true
-    cost = "light"
-
-    [[modes.returning.steps]]
-    path = "chats/SUMMARY.md"
-    role = "chat-summary"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.returning.steps]]
-    path = "projects/SUMMARY.md"
-    role = "project-summary"
-    required = false
-    skip_if = "no_active_projects"
-    cost = "light"
-
-    [[modes.returning.steps]]
-    path = "scratchpad/USER.md"
-    role = "scratchpad-user"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.returning.steps]]
-    path = "scratchpad/CURRENT.md"
-    role = "scratchpad-current"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [modes.full_bootstrap]
-    token_budget = 25000
-    prefer_summaries = true
-    maintenance_probes = [
-      "meta/review-queue.md:load_only_when_non_placeholder",
-      "ACCESS.jsonl:count_non_empty_lines",
-    ]
-    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
-
-    [[modes.full_bootstrap.steps]]
-    path = "meta/quick-reference.md"
-    role = "router"
-    required = true
-    cost = "light"
-
-    [[modes.full_bootstrap.steps]]
-    path = "README.md"
-    role = "architecture-reference"
-    required = true
-    cost = "medium"
-
-    [[modes.full_bootstrap.steps]]
-    path = "identity/SUMMARY.md"
-    role = "identity-summary"
-    required = true
-    cost = "light"
-
-    [[modes.full_bootstrap.steps]]
-    path = "chats/SUMMARY.md"
-    role = "chat-summary"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.full_bootstrap.steps]]
-    path = "projects/SUMMARY.md"
-    role = "project-summary"
-    required = false
-    skip_if = "no_active_projects"
-    cost = "light"
-
-    [[modes.full_bootstrap.steps]]
-    path = "scratchpad/USER.md"
-    role = "scratchpad-user"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.full_bootstrap.steps]]
-    path = "scratchpad/CURRENT.md"
-    role = "scratchpad-current"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.full_bootstrap.steps]]
-    path = "CHANGELOG.md"
-    role = "system-history"
-    required = true
-    cost = "medium"
-
-    [[modes.full_bootstrap.steps]]
-    path = "meta/curation-policy.md"
-    role = "governance-reference"
-    required = true
-    cost = "medium"
-
-    [[modes.full_bootstrap.steps]]
-    path = "meta/update-guidelines.md"
-    role = "change-control"
-    required = true
-    cost = "medium"
-
-    [modes.periodic_review]
-    token_budget = 25000
-    prefer_summaries = true
-    maintenance_probes = [
-      "meta/review-queue.md:load_only_when_non_placeholder",
-      "ACCESS.jsonl:count_non_empty_lines",
-    ]
-    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
-
-    [[modes.periodic_review.steps]]
-    path = "meta/quick-reference.md"
-    role = "router"
-    required = true
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "README.md"
-    role = "architecture-reference"
-    required = true
-    cost = "medium"
-
-    [[modes.periodic_review.steps]]
-    path = "identity/SUMMARY.md"
-    role = "identity-summary"
-    required = true
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "chats/SUMMARY.md"
-    role = "chat-summary"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "projects/SUMMARY.md"
-    role = "project-summary"
-    required = false
-    skip_if = "no_active_projects"
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "scratchpad/USER.md"
-    role = "scratchpad-user"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "scratchpad/CURRENT.md"
-    role = "scratchpad-current"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "CHANGELOG.md"
-    role = "system-history"
-    required = true
-    cost = "medium"
-
-    [[modes.periodic_review.steps]]
-    path = "meta/curation-policy.md"
-    role = "governance-reference"
-    required = true
-    cost = "medium"
-
-    [[modes.periodic_review.steps]]
-    path = "meta/update-guidelines.md"
-    role = "change-control"
-    required = true
-    cost = "medium"
-
-    [[modes.periodic_review.steps]]
-    path = "meta/system-maturity.md"
-    role = "stage-reference"
-    required = true
-    cost = "medium"
-
-    [[modes.periodic_review.steps]]
-    path = "meta/belief-diff-log.md"
-    role = "drift-audit"
-    required = true
-    cost = "medium"
-
-    [[modes.periodic_review.steps]]
-    path = "meta/review-queue.md"
-    role = "pending-proposals"
-    required = true
-    cost = "light"
-
-    [[modes.periodic_review.steps]]
-    path = "meta/integrity-checklist.md"
-    role = "integrity-audit"
-    required = true
-    cost = "medium"
-
-    [modes.automation]
-    token_budget = 7000
-    prefer_summaries = true
-    maintenance_probes = [
-      "meta/review-queue.md:load_only_when_non_placeholder",
-      "ACCESS.jsonl:count_non_empty_lines",
-    ]
-    on_demand = ["knowledge/SUMMARY.md", "skills/SUMMARY.md"]
-
-    [[modes.automation.steps]]
-    path = "meta/quick-reference.md"
-    role = "router"
-    required = true
-    cost = "light"
-
-    [[modes.automation.steps]]
-    path = "scratchpad/USER.md"
-    role = "scratchpad-user"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.automation.steps]]
-    path = "scratchpad/CURRENT.md"
-    role = "scratchpad-current"
-    required = false
-    skip_if = "placeholder_or_empty"
-    cost = "light"
-
-    [[modes.automation.steps]]
-    path = "projects/SUMMARY.md"
-    role = "project-summary"
-    required = false
-    skip_if = "no_active_projects"
-    cost = "light"
-    """
-)
 VALID_TASK_READINESS_MANIFEST = (
     REPO_ROOT / "HUMANS" / "tooling" / "agent-task-readiness.toml"
 ).read_text(encoding="utf-8")
@@ -474,11 +97,11 @@ def build_minimal_repo(root: Path) -> None:
     write(
         root / "README.md",
         textwrap.dedent(
-            """\
+            f"""\
             # README
 
-            Start every session with `meta/quick-reference.md`.
-            Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review.
+            {README_START_LINE}
+            When you need the live operating contract, {README_ARCHITECTURE_LINE}.
             When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
             """
         ),
@@ -704,7 +327,7 @@ def init_host_git_repo(root: Path) -> None:
 def add_host_repo_root(manifest_path: Path, host_root: Path) -> None:
     text = manifest_path.read_text(encoding="utf-8")
     host_line = f'host_repo_root = "{host_root.as_posix()}"'
-    if "host_repo_root = " in text:
+    if re.search(r'^host_repo_root = ".*"$', text, flags=re.MULTILINE):
         text = re.sub(r'^host_repo_root = ".*"$', host_line, text, count=1, flags=re.MULTILINE)
     else:
         text = text.replace(
@@ -777,6 +400,9 @@ def build_worktree_repo(
     git(temp_worktree, "commit", "-m", "seed memory")
     git(host_root, "worktree", "remove", "--force", str(temp_worktree))
     git(host_root, "worktree", "add", str(memory_root), "agent-memory")
+    if include_host_repo_root:
+        add_host_repo_root(memory_root / "agent-bootstrap.toml", host_root)
+        normalize_worktree_bootstrap_manifest(memory_root / "agent-bootstrap.toml")
 
 
 def strip_standalone_only_files(root: Path) -> None:
@@ -1834,7 +1460,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             self.assertEqual(result.errors, [], "\n".join(result.errors))
             self.assertFalse(
-                any("quarantine file expected source: external-research" in w for w in result.warnings)
+                any(
+                    "quarantine file expected source: external-research" in w
+                    for w in result.warnings
+                )
             )
 
     def test_brainstorm_quarantine_file_allows_agent_generated_source(self) -> None:
@@ -1861,7 +1490,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             self.assertEqual(result.errors, [], "\n".join(result.errors))
             self.assertFalse(
-                any("quarantine file expected source: external-research" in w for w in result.warnings)
+                any(
+                    "quarantine file expected source: external-research" in w
+                    for w in result.warnings
+                )
             )
 
     def test_single_quoted_frontmatter_dates_pass(self) -> None:
@@ -2038,9 +1670,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         text = (REPO_ROOT / "skills" / "session-start.md").read_text(encoding="utf-8")
 
         self.assertIn(
-            "For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`.",
+            "For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`",
             text,
         )
+        self.assertIn("projects/SUMMARY.md` as the primary orientation surface", text)
         self.assertIn(
             "Load `meta/session-checklists.md` only when you want more detail",
             text,

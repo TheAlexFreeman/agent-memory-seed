@@ -12,7 +12,7 @@ An adaptive, self-organizing, version-controlled memory layer for AI agents. Any
 
 ## Agent bootstrap
 
-You are an AI agent reading this repository. Start every session with `meta/quick-reference.md`. Read this file in full when `meta/quick-reference.md` routes you to a first run, full bootstrap, or periodic review, or when you need the system architecture and governance reference.
+You are an AI agent reading this repository. Start new sessions from this `README.md` unless a platform or tool opens a more specific surface for you. After this architectural pass, continue to `meta/quick-reference.md` for live routing, active thresholds, and maintenance triggers. If a platform opens `meta/quick-reference.md` first, treat it as the live router and continue normally.
 
 ## Purpose
 
@@ -30,23 +30,24 @@ Agents proposing or evaluating system-level changes should explain the impact on
 
 ## How to orient yourself
 
-1. **Start with `meta/quick-reference.md`** — it routes you to the right files for your session type.
-2. **Read this file when routed here** — for first runs, full bootstraps, or periodic reviews.
-3. **Read `identity/SUMMARY.md`** to understand who the user is and how they prefer to interact.
-4. **Read `SUMMARY.md` in whichever folder is relevant** to the current task.
-5. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
-6. **Log your access** using the access-note format described below.
+1. **Start here for the architecture and current startup contract.** This file explains how the system is organized and where live routing authority lives.
+2. **Continue to `meta/quick-reference.md`** for live routing, active thresholds, and session-type decisions.
+3. **Use `projects/SUMMARY.md` as the primary orientation surface for a normal returning session unless directed otherwise.** It is the first summary to consult for current work, active projects, and immediate focus.
+4. **Load `identity/`, `chats/`, and scratchpad summaries after project orientation** so you can calibrate communication style, continuity, and near-term working context.
+5. **Treat `plans/SUMMARY.md`, `knowledge/SUMMARY.md`, and `skills/SUMMARY.md` as drill-down surfaces.** Load them when the active project, recent history, or task requires more detail.
+6. **Retrieve specific files only as needed.** Do not load everything into context. Use summaries to decide what to retrieve.
+7. **Log your access** using the access-note format described below when the accessed folder participates in the ACCESS lifecycle.
 
-> **This README is the architectural reference.** It is not a sequential entry point. For session routing, always start from `meta/quick-reference.md`.
+> **This README is the default architectural starting point.** `meta/quick-reference.md` is the live router and threshold surface once you continue past this file.
 
 ## Agent routing
 
-Use `meta/quick-reference.md` as the operational router:
+Use `meta/quick-reference.md` as the operational router after this architectural entry pass:
 
-1. Start with `meta/quick-reference.md`.
-2. If it routes you to **First run**, read this `README.md` and then `meta/first-run.md`.
-3. If it routes you to **Full bootstrap** or **Periodic review**, read this `README.md` and continue with the relevant manifest.
-4. Otherwise, stay on the compact returning manifest in `meta/quick-reference.md` and load `knowledge/` or `skills/` summaries only when the current task makes them relevant.
+1. Start in this `README.md`, then continue to `meta/quick-reference.md` for the live route.
+2. If `meta/quick-reference.md` routes you to **First run**, continue to `meta/first-run.md`.
+3. If it routes you to **Full bootstrap** or **Periodic review**, keep this `README.md` in scope as the architectural reference and continue with the relevant manifest.
+4. Otherwise, stay on the compact returning manifest in `meta/quick-reference.md`, orient around `projects/SUMMARY.md` first, and load `plans/`, `knowledge/`, or `skills/` summaries only when the current task makes them relevant.
 
 For the complete mapping of which files to load per session type, see `meta/quick-reference.md` § "Context loading manifest". For detailed runbooks, see `meta/session-checklists.md`.
 
@@ -97,6 +98,11 @@ For the complete mapping of which files to load per session type, see `meta/quic
 │   ├── ACCESS.jsonl       ← Access-tracking log for plan retrievals.
 │   └── (*.md)             ← Individual plans with status and next-action state.
 │
+├── projects/              ← Project-level orientation and durable work contexts.
+│   ├── SUMMARY.md         ← Primary orientation surface for normal returning sessions.
+│   ├── ACCESS.jsonl       ← Access-tracking log for project content retrievals.
+│   └── project-id/        ← Project-specific summaries, notes, plans, and artifacts.
+│
 ├── meta/                  ← Governance. How this system updates itself.
 │   ├── quick-reference.md    ← Active operational parameters and context loading manifest.
 │   ├── curation-policy.md    ← Rules for memory hygiene, decay, and promotion.
@@ -137,9 +143,11 @@ For the complete mapping of which files to load per session type, see `meta/quic
 
 A **session** is one chat folder under `chats/YYYY/MM/DD/` (e.g. `chat-001`); one conversation corresponds to one session.
 
-Every folder that stores retrievable memory contains an `ACCESS.jsonl` file. Each time you retrieve a specific content file from that folder during a session, append a note in this format:
+Retrievable memory namespaces currently use `ACCESS.jsonl` in `identity/`, `knowledge/`, `skills/`, `plans/`, `projects/`, and `chats/`. `meta/` is the governance layer and is **not** part of the ACCESS lifecycle for now.
 
-**What counts as a retrieval:** Opening a specific content file (in `identity/`, `knowledge/`, `skills/`, `plans/`, or `chats/`) in response to a user query. SUMMARY.md files and `meta/` governance files are navigation tools — do not log reads of those. Log every retrieved content file, **whether or not it was ultimately used in the response**. Misses are signal too.
+Each time you retrieve a specific content file from an access-tracked folder during a session, append a note in this format:
+
+**What counts as a retrieval:** Opening a specific content file in `identity/`, `knowledge/`, `skills/`, `plans/`, `projects/`, or `chats/` in response to a user query. `SUMMARY.md` files and `meta/` governance files are navigation tools — do not log reads of those. Log every retrieved content file, **whether or not it was ultimately used in the response**. Misses are signal too.
 
 ```json
 {
@@ -157,9 +165,13 @@ Required ACCESS fields: `file`, `date`, `task`, `helpfulness`, `note`.
 Optional ACCESS fields:
 
 - `session_id`: e.g. `chats/2026/03/16/chat-001` — set when the session path is known; supports joining with reflection and session-scoped analysis. Include it whenever the chat folder is known.
+- `mode`: one of `read`, `write`, `update`, or `create` when the tooling needs to distinguish retrieval from mutation activity.
+- `task_id`: a short controlled label such as `plan-review` or `validation` when the tooling supports workflow grouping.
 - `category`: added at Consolidation stage only. Uses the controlled vocabulary in `meta/task-categories.md` once that file exists.
 
 The `category` field is **added at Consolidation stage only** — omit it until then. It uses a controlled vocabulary that emerges from usage patterns during the Calibration stage. See `meta/curation-algorithms.md` § "Phase 3" for how it develops.
+
+When tooling applies a `min_helpfulness` threshold, low-signal entries may be routed to `ACCESS_SCANS.jsonl` in the same folder instead of the hot `ACCESS.jsonl` stream. This preserves auditability without polluting the high-signal operational log.
 
 `helpfulness` is the agent's judgment of whether a retrieval was useful to producing the session's responses, on a 0.0–1.0 scale:
 
@@ -181,7 +193,7 @@ Score what actually happened, not what should have happened. A high-quality file
 
 When an `ACCESS.jsonl` file accumulates entries at or above the active aggregation trigger (see `meta/quick-reference.md` for the current threshold), the agent should load `meta/curation-algorithms.md` for the full algorithmic specifications and then:
 
-Entries are counted since the last aggregation; if no `ACCESS.archive.jsonl` exists in that folder yet (e.g. first run), count all current entries in `ACCESS.jsonl`.
+Entries are counted since the last aggregation; if no `ACCESS.archive.jsonl` exists in that folder yet (e.g. first run), count all current entries in `ACCESS.jsonl`. Do not count `ACCESS_SCANS.jsonl` or archive files toward the hot-log aggregation trigger.
 
 1. Analyze the access patterns (which files are retrieved often, which are never touched, what tasks drive retrieval).
 2. Update the folder's `SUMMARY.md` with a "Usage patterns" section describing how and why the agent typically uses this folder.

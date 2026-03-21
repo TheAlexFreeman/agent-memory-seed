@@ -883,6 +883,8 @@ def _iter_live_access_files(root: Path) -> list[Path]:
             continue
         if rel.parts and rel.parts[0].startswith("."):
             continue
+        if rel.parts and rel.parts[0] == "meta":
+            continue
         access_files.append(access_file)
     return sorted(access_files)
 
@@ -969,6 +971,8 @@ def _iter_access_history_files(root: Path) -> list[Path]:
         except ValueError:
             continue
         if rel.parts and rel.parts[0].startswith("."):
+            continue
+        if rel.parts and rel.parts[0] == "meta":
             continue
         if access_file.name == "ACCESS.jsonl" or re.match(
             r"ACCESS\.archive\.\d{4}-\d{2}\.jsonl$",

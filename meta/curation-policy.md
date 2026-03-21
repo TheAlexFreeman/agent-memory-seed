@@ -34,6 +34,8 @@ Memories that are stale, contradicted, or consistently unhelpful are: **Demoted*
 
 ## Access-driven curation
 
+ACCESS-driven curation applies to the retrievable memory namespaces (`identity/`, `knowledge/`, `skills/`, `plans/`, `projects/`, and `chats/`). `meta/` is the governance layer and is not part of the ACCESS lifecycle for now.
+
 The ACCESS.jsonl feedback loop is the primary curation signal:
 
 - **High access + high helpfulness** (mean ≥ 0.5)**:** Core memory. Ensure it stays current and prominent in summaries.
