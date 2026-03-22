@@ -25,9 +25,20 @@ else:
     TOML_MODULE = tomllib
 
 
-CONTENT_DIRS = ("identity", "knowledge", "skills", "plans")
-ACCESS_DIRS = ("identity", "knowledge", "skills", "plans", "projects", "chats")
-ACCESS_COVERAGE_DIRS = ("skills", "identity", "chats")
+CONTENT_DIRS = (
+    "core/memory/users",
+    "core/memory/knowledge",
+    "core/memory/skills",
+    "core/memory/working/projects",
+)
+ACCESS_DIRS = (
+    "core/memory/users",
+    "core/memory/knowledge",
+    "core/memory/skills",
+    "core/memory/working/projects",
+    "core/memory/activity",
+)
+ACCESS_COVERAGE_DIRS = ("core/memory/skills", "core/memory/users", "core/memory/activity")
 IGNORED_DIR_NAMES = {".git", ".claude", "__pycache__", ".pytest_cache"}
 PLACEHOLDER_SNIPPETS = (
     "_Nothing here yet.",
@@ -54,7 +65,7 @@ ALLOWED_SOURCE_VALUES = {
 }
 ALLOWED_TRUST_VALUES = {"high", "medium", "low"}
 ALLOWED_PLAN_STATUS_VALUES = {"active", "paused", "complete"}
-CANONICAL_ORIGIN_SESSION_RE = re.compile(r"^chats/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
+CANONICAL_ORIGIN_SESSION_RE = re.compile(r"^core/memory/activity/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
 LEGACY_ORIGIN_SESSION_RE = re.compile(r"^chat-\d{3}$")
 SPECIAL_ORIGIN_SESSION_VALUES = {"setup", "manual", "unknown"}
 
@@ -96,35 +107,35 @@ EXPECTED_BOOTSTRAP_PREFER_SUMMARIES = {
     "automation": True,
 }
 EXPECTED_RETURNING_STEP_PATHS = (
-    "meta/quick-reference.md",
-    "projects/SUMMARY.md",
-    "identity/SUMMARY.md",
-    "chats/SUMMARY.md",
-    "scratchpad/USER.md",
-    "scratchpad/CURRENT.md",
+    "core/HOME.md",
+    "core/memory/working/projects/SUMMARY.md",
+    "core/memory/users/SUMMARY.md",
+    "core/memory/activity/SUMMARY.md",
+    "core/memory/working/scratchpad/USER.md",
+    "core/memory/working/scratchpad/CURRENT.md",
 )
 EXPECTED_FIRST_RUN_STEP_PATHS = (
     "README.md",
-    "meta/quick-reference.md",
-    "meta/first-run.md",
+    "core/HOME.md",
+    "core/governance/first-run.md",
 )
 EXPECTED_FULL_BOOTSTRAP_STEP_PATHS = (
     "README.md",
-    "meta/quick-reference.md",
-    "projects/SUMMARY.md",
-    "identity/SUMMARY.md",
-    "chats/SUMMARY.md",
-    "scratchpad/USER.md",
-    "scratchpad/CURRENT.md",
+    "core/HOME.md",
+    "core/memory/working/projects/SUMMARY.md",
+    "core/memory/users/SUMMARY.md",
+    "core/memory/activity/SUMMARY.md",
+    "core/memory/working/scratchpad/USER.md",
+    "core/memory/working/scratchpad/CURRENT.md",
     "CHANGELOG.md",
-    "meta/curation-policy.md",
-    "meta/update-guidelines.md",
+    "core/governance/curation-policy.md",
+    "core/governance/update-guidelines.md",
 )
 EXPECTED_PERIODIC_REVIEW_STEP_PATHS = EXPECTED_FULL_BOOTSTRAP_STEP_PATHS + (
-    "meta/system-maturity.md",
-    "meta/belief-diff-log.md",
-    "meta/review-queue.md",
-    "meta/integrity-checklist.md",
+    "core/governance/system-maturity.md",
+    "core/governance/belief-diff-log.md",
+    "core/governance/review-queue.md",
+    "core/governance/integrity-checklist.md",
 )
 DEPLOYED_WORKTREE_FULL_BOOTSTRAP_STEP_PATHS = tuple(
     path for path in EXPECTED_FULL_BOOTSTRAP_STEP_PATHS if path != "CHANGELOG.md"
@@ -133,10 +144,10 @@ DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS = tuple(
     path for path in EXPECTED_PERIODIC_REVIEW_STEP_PATHS if path != "CHANGELOG.md"
 )
 EXPECTED_AUTOMATION_STEP_PATHS = (
-    "meta/quick-reference.md",
-    "scratchpad/USER.md",
-    "scratchpad/CURRENT.md",
-    "projects/SUMMARY.md",
+    "core/HOME.md",
+    "core/memory/working/scratchpad/USER.md",
+    "core/memory/working/scratchpad/CURRENT.md",
+    "core/memory/working/projects/SUMMARY.md",
 )
 EXPECTED_MODE_STEP_PATHS = {
     "first_run": EXPECTED_FIRST_RUN_STEP_PATHS,
@@ -152,25 +163,29 @@ DEPLOYED_WORKTREE_MODE_STEP_PATHS = {
     "periodic_review": DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS,
     "automation": EXPECTED_AUTOMATION_STEP_PATHS,
 }
-EXPECTED_BOOTSTRAP_ON_DEMAND = ("plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md")
+EXPECTED_BOOTSTRAP_ON_DEMAND = (
+    "core/memory/working/projects/SUMMARY.md",
+    "core/memory/knowledge/SUMMARY.md",
+    "core/memory/skills/SUMMARY.md",
+)
 EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
-    "meta/review-queue.md:load_only_when_non_placeholder",
+    "core/governance/review-queue.md:load_only_when_non_placeholder",
     "ACCESS.jsonl:count_non_empty_lines",
 )
 EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
-    "projects/SUMMARY.md": "placeholder_or_empty",
-    "chats/SUMMARY.md": "placeholder_or_empty",
-    "scratchpad/USER.md": "placeholder_or_empty",
-    "scratchpad/CURRENT.md": "placeholder_or_empty",
+    "core/memory/working/projects/SUMMARY.md": "placeholder_or_empty",
+    "core/memory/activity/SUMMARY.md": "placeholder_or_empty",
+    "core/memory/working/scratchpad/USER.md": "placeholder_or_empty",
+    "core/memory/working/scratchpad/CURRENT.md": "placeholder_or_empty",
 }
 COMPACT_RETURNING_BUDGET = EXPECTED_BOOTSTRAP_TOKEN_BUDGETS["returning"]
 COMPACT_RETURNING_TARGETS = {
-    "meta/quick-reference.md": 2600,
-    "identity/SUMMARY.md": 450,
-    "chats/SUMMARY.md": 750,
-    "projects/SUMMARY.md": 1700,
-    "scratchpad/USER.md": 400,
-    "scratchpad/CURRENT.md": 650,
+    "core/HOME.md": 2600,
+    "core/memory/users/SUMMARY.md": 450,
+    "core/memory/activity/SUMMARY.md": 750,
+    "core/memory/working/projects/SUMMARY.md": 1700,
+    "core/memory/working/scratchpad/USER.md": 400,
+    "core/memory/working/scratchpad/CURRENT.md": 650,
 }
 COMPACT_RETURNING_HEADROOM = 1000
 TASK_READINESS_MANIFEST_PATH = Path("HUMANS/tooling/agent-task-readiness.toml")
@@ -245,10 +260,10 @@ ALLOWED_TASK_READINESS_FAILURE_MODES = {
 RUNTIME_GUIDANCE_FILES = (
     Path("README.md"),
     Path("HUMANS/docs/QUICKSTART.md"),
-    Path("meta/quick-reference.md"),
-    Path("meta/curation-policy.md"),
-    Path("meta/update-guidelines.md"),
-    Path("meta/session-checklists.md"),
+    Path("core/HOME.md"),
+    Path("core/governance/curation-policy.md"),
+    Path("core/governance/update-guidelines.md"),
+    Path("core/governance/session-checklists.md"),
 )
 PROMPT_COPY_FILES = (
     Path("setup/setup.sh"),
@@ -274,16 +289,16 @@ EXPECTED_MCP_ENTRYPOINT = Path("engram_mcp/memory_mcp.py")
 LEGACY_MCP_RUNTIME_DIR = Path("tools")
 LEGACY_MCP_ENTRYPOINT = Path("HUMANS/tooling/scripts/memory_mcp.py")
 
-PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `meta/quick-reference.md` for live routing and context-loading rules."
-PROMPT_ROUTE_LINE = "Use `projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `meta/quick-reference.md` routes you to first-run, full bootstrap, or a more specific path."
+PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules."
+PROMPT_ROUTE_LINE = "Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path."
 PROMPT_MCP_LINE = "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-LIVE_CONFIG_LINE = (
-    "meta/quick-reference.md is the live runtime config; do not use hardcoded thresholds."
-)
-ADAPTER_ROUTING_PHRASE = "Start with `README.md` for the architectural contract, then continue to `meta/quick-reference.md` for live routing and thresholds"
+LIVE_CONFIG_LINE = "core/HOME.md is the live runtime config; do not use hardcoded thresholds."
+ADAPTER_ROUTING_PHRASE = "Start with `README.md` for the architectural contract, then continue to `core/HOME.md` for live routing and thresholds"
 ADAPTER_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes"
 README_START_PHRASE = "Start new sessions from this `README.md` unless a platform or tool opens a more specific surface for you."
-README_ARCHITECTURE_PHRASE = "continue to `meta/quick-reference.md` for live routing, active thresholds, and maintenance triggers"
+README_ARCHITECTURE_PHRASE = (
+    "continue to `core/HOME.md` for live routing, active thresholds, and maintenance triggers"
+)
 MCP_PREFERENCE_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 QUICK_REFERENCE_ROUTER_PHRASE = "Use this file as the live operational router once you reach it:"
 FIRST_RUN_MCP_PHRASE = MCP_PREFERENCE_PHRASE
@@ -294,48 +309,50 @@ SESSION_START_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are availabl
 SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
-SETUP_GUIDANCE_REQUIRED_PATTERNS = (r"live routing (?:in|from)\s+`?meta/quick-reference\.md`?",)
+SETUP_GUIDANCE_REQUIRED_PATTERNS = (
+    r"live routing (?:in|from)\s+`?core/governance/quick-reference\.md`?",
+)
 SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
-SESSION_START_SKILL_PATH = Path("skills/session-start.md")
+SESSION_START_SKILL_PATH = Path("core/memory/skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
-    "compact returning manifest in `meta/quick-reference.md`",
-    "Load `meta/session-checklists.md` only when you want more detail",
-    "If `meta/review-queue.md` still contains only its placeholder, skip it.",
+    "compact returning manifest in `core/HOME.md`",
+    "Load `core/governance/session-checklists.md` only when you want more detail",
+    "If `core/governance/review-queue.md` still contains only its placeholder, skip it.",
     "Load it only when there are real pending items or the user asks about them.",
     SESSION_START_SKILL_MCP_PHRASE,
 )
 SESSION_START_FORBIDDEN_PATTERNS = (
     r"after README\.md has been read",
-    r"^- Read `meta/review-queue\.md`\.",
-    r"compact checklist in `meta/session-checklists\.md` is sufficient",
+    r"^- Read `core/governance/review-queue\.md`\.",
+    r"compact checklist in `core/governance/session-checklists\.md` is sufficient",
 )
-SESSION_WRAPUP_SKILL_PATH = Path("skills/session-wrapup.md")
+SESSION_WRAPUP_SKILL_PATH = Path("core/memory/skills/session-wrapup.md")
 SESSION_WRAPUP_REQUIRED_PHRASES = (
-    "Load `meta/session-checklists.md` only when you want",
+    "Load `core/governance/session-checklists.md` only when you want",
     "session-end runbook",
     SESSION_WRAPUP_SKILL_MCP_PHRASE,
 )
 SESSION_WRAPUP_FORBIDDEN_PATTERNS = (
-    r"compact checklist in `meta/session-checklists\.md` is sufficient",
+    r"compact checklist in `core/governance/session-checklists\.md` is sufficient",
 )
-SKILLS_SUMMARY_PATH = Path("skills/SUMMARY.md")
-ONBOARDING_SKILL_PATH = Path("skills/onboarding.md")
-SESSION_SYNC_SKILL_PATH = Path("skills/session-sync.md")
+SKILLS_SUMMARY_PATH = Path("core/memory/skills/SUMMARY.md")
+ONBOARDING_SKILL_PATH = Path("core/memory/skills/onboarding.md")
+SESSION_SYNC_SKILL_PATH = Path("core/memory/skills/session-sync.md")
 
 FORBIDDEN_RUNTIME_PATTERNS = (
-    r"Check the current maturity stage in `meta/system-maturity\.md`",
-    r"see `meta/system-maturity\.md` for the stage-appropriate value",
-    r"use those values from `meta/system-maturity\.md`",
-    r"Thresholds are stage-specific; see `meta/system-maturity\.md`",
-    r"The active thresholds are always determined by the system's current maturity stage as assessed in `meta/system-maturity\.md`",
+    r"Check the current maturity stage in `core/governance/system-maturity\.md`",
+    r"see `core/governance/system-maturity\.md` for the stage-appropriate value",
+    r"use those values from `core/governance/system-maturity\.md`",
+    r"Thresholds are stage-specific; see `core/governance/system-maturity\.md`",
+    r"The active thresholds are always determined by the system's current maturity stage as assessed in `core/governance/system-maturity\.md`",
     r"The session boundary is proxied by the `date` field",
     r"groups entries by date, identifies file sets co-occurring",
-    r"Use meta/first-run\.md for blank-slate onboarding, meta/session-checklists\.md for returning sessions",
+    r"Use core/governance/first-run\.md for blank-slate onboarding, core/governance/session-checklists\.md for returning sessions",
     r"This file is loaded every session",
     r"follow the bootstrap sequence and rules in README\.md",
     r"This file is your entry point\. Read it fully before doing anything else\.",
-    r"Normal day-to-day use via `meta/session-checklists\.md`",
-    r"Use `meta/session-checklists\.md` § \"Session start\"",
+    r"Normal day-to-day use via `core/governance/session-checklists\.md`",
+    r"Use `core/governance/session-checklists\.md` § \"Session start\"",
     r"compact returning-session checklist",
     r"~2,000–5,000",
 )
@@ -511,13 +528,29 @@ def should_ignore(path: Path) -> bool:
     return any(part in IGNORED_DIR_NAMES for part in path.parts)
 
 
+def _namespace_for_path(posix_path: str) -> str | None:
+    """Return the matching ACCESS_DIRS / ACCESS_COVERAGE_DIRS prefix for a path, or None."""
+    all_dirs = set(ACCESS_DIRS) | set(ACCESS_COVERAGE_DIRS)
+    best: str | None = None
+    for prefix in all_dirs:
+        if posix_path == prefix or posix_path.startswith(prefix + "/"):
+            if best is None or len(prefix) > len(best):
+                best = prefix
+    return best
+
+
 def is_project_plan_path(relative_path: Path) -> bool:
+    """Check if path matches core/memory/working/projects/<project>/plans/<file>."""
     parts = relative_path.parts
-    return len(parts) >= 4 and parts[0] == "projects" and parts[2] == "plans"
+    return (
+        len(parts) >= 7
+        and parts[:4] == ("core", "memory", "working", "projects")
+        and parts[5] == "plans"
+    )
 
 
 def is_plan_path(relative_path: Path) -> bool:
-    return relative_path.parts[0] == "plans" or is_project_plan_path(relative_path)
+    return is_project_plan_path(relative_path)
 
 
 def iter_content_files(root: Path) -> list[Path]:
@@ -533,7 +566,7 @@ def iter_content_files(root: Path) -> list[Path]:
                 continue
             paths.append(path)
 
-    projects_root = root / "projects"
+    projects_root = root / "core" / "memory" / "working" / "projects"
     if projects_root.exists():
         for path in projects_root.glob("*/plans/*.md"):
             if should_ignore(path.relative_to(root)):
@@ -614,7 +647,7 @@ def collect_last_access_dates_by_folder(root: Path) -> dict[str, date]:
             except ValueError:
                 continue
 
-            folder = PurePosixPath(normalized_file).parts[0]
+            folder = _namespace_for_path(normalized_file)
             if folder not in ACCESS_COVERAGE_DIRS:
                 continue
             current = last_seen.get(folder)
@@ -736,11 +769,11 @@ def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> No
         pass
     elif LEGACY_ORIGIN_SESSION_RE.fullmatch(origin_session):
         result.warn(
-            f"{path}: legacy origin_session {origin_session!r}; prefer chats/YYYY/MM/DD/chat-NNN"
+            f"{path}: legacy origin_session {origin_session!r}; prefer core/memory/activity/YYYY/MM/DD/chat-NNN"
         )
     else:
         result.error(
-            f"{path}: origin_session must be chats/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
+            f"{path}: origin_session must be core/memory/activity/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
         )
 
     relative_path = path.relative_to(root)
@@ -770,7 +803,7 @@ def validate_access_file(path: Path, root: Path, result: ValidationResult) -> No
     text = read_text(path, result)
     if text is None:
         return
-    namespace = path.relative_to(root).parts[0]
+    namespace = _namespace_for_path(path.relative_to(root).as_posix())
     is_archive = path.name == "ACCESS.archive.jsonl"
 
     for line_number, raw_line in enumerate(text.splitlines(), start=1):
@@ -803,8 +836,8 @@ def validate_access_file(path: Path, root: Path, result: ValidationResult) -> No
                     f"{path}:{line_number}: file must be a repo-relative path inside the memory repo"
                 )
             else:
-                file_parts = PurePosixPath(normalized_file).parts
-                if not file_parts or file_parts[0] != namespace:
+                file_ns = _namespace_for_path(normalized_file)
+                if file_ns is None or file_ns != namespace:
                     result.error(
                         f"{path}:{line_number}: file must stay inside the owning namespace {namespace!r}, got {normalized_file!r}"
                     )
@@ -834,7 +867,7 @@ def validate_access_file(path: Path, root: Path, result: ValidationResult) -> No
                 result.error(f"{path}:{line_number}: session_id must be a string when present")
             elif not CANONICAL_ORIGIN_SESSION_RE.fullmatch(session_id):
                 result.error(
-                    f"{path}:{line_number}: session_id must match chats/YYYY/MM/DD/chat-NNN when present, got {session_id!r}"
+                    f"{path}:{line_number}: session_id must match core/memory/activity/YYYY/MM/DD/chat-NNN when present, got {session_id!r}"
                 )
         if "category" in payload and not isinstance(payload["category"], str):
             result.error(f"{path}:{line_number}: category must be a string when present")
@@ -847,7 +880,7 @@ def validate_access_file(path: Path, root: Path, result: ValidationResult) -> No
 
 
 def validate_chat_leaf_sessions(root: Path, result: ValidationResult) -> None:
-    chats_root = root / "chats"
+    chats_root = root / "core" / "memory" / "activity"
     if not chats_root.exists():
         return
 
@@ -937,10 +970,17 @@ def iter_compact_startup_measurements(
         if text is None:
             continue
 
-        if rel_path in {"chats/SUMMARY.md", "scratchpad/USER.md", "scratchpad/CURRENT.md"}:
+        if rel_path in {
+            "core/memory/activity/SUMMARY.md",
+            "core/memory/working/scratchpad/USER.md",
+            "core/memory/working/scratchpad/CURRENT.md",
+        }:
             if is_placeholder_or_empty_text(text):
                 continue
-        if rel_path == "projects/SUMMARY.md" and not projects_summary_has_active_projects(text):
+        if (
+            rel_path == "core/memory/working/projects/SUMMARY.md"
+            and not projects_summary_has_active_projects(text)
+        ):
             continue
 
         measurements.append((rel_path, estimate_token_count(text), text))
@@ -1024,8 +1064,10 @@ def validate_chats_summary_shape(
     if "Load dated summaries" not in text and "Load dated summaries when" not in text:
         result.error(f"{path}: must include retrieval guidance for dated summaries")
 
-    if not find_repo_path_references(text, root, ("chats/",)):
-        result.error(f"{path}: must include at least one drill-down path into chats/")
+    if not find_repo_path_references(text, root, ("core/memory/activity/",)):
+        result.error(
+            f"{path}: must include at least one drill-down path into core/memory/activity/"
+        )
 
 
 def validate_scratchpad_current_shape(
@@ -1048,7 +1090,15 @@ def validate_scratchpad_current_shape(
     if not find_repo_path_references(
         text,
         root,
-        ("plans/", "scratchpad/", "knowledge/", "meta/", "chats/", "skills/", "identity/"),
+        (
+            "core/memory/working/projects/",
+            "core/memory/working/scratchpad/",
+            "core/memory/knowledge/",
+            "core/governance/",
+            "core/memory/activity/",
+            "core/memory/skills/",
+            "core/memory/users/",
+        ),
     ):
         result.error(f"{path}: must include at least one drill-down reference into the repo")
 
@@ -1080,11 +1130,11 @@ def validate_compact_startup_contract(root: Path, result: ValidationResult) -> N
             )
 
         path = root / rel_path
-        if rel_path == "projects/SUMMARY.md":
+        if rel_path == "core/memory/working/projects/SUMMARY.md":
             validate_projects_summary_shape(path, text, root, result)
-        elif rel_path == "chats/SUMMARY.md":
+        elif rel_path == "core/memory/activity/SUMMARY.md":
             validate_chats_summary_shape(path, text, root, result)
-        elif rel_path == "scratchpad/CURRENT.md":
+        elif rel_path == "core/memory/working/scratchpad/CURRENT.md":
             validate_scratchpad_current_shape(path, text, root, result)
 
 
@@ -1109,8 +1159,8 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
         result.error(f"{path}: version must be 1, got {version!r}")
 
     router = manifest.get("router")
-    if router != "meta/quick-reference.md":
-        result.error(f"{path}: router must be 'meta/quick-reference.md', got {router!r}")
+    if router != "core/HOME.md":
+        result.error(f"{path}: router must be 'core/HOME.md', got {router!r}")
     elif not (root / router).exists():
         result.error(f"{path}: router target {router!r} does not exist")
 
@@ -1446,7 +1496,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
 
 
 def validate_quick_reference(root: Path, result: ValidationResult) -> None:
-    path = root / "meta" / "quick-reference.md"
+    path = root / "core" / "HOME.md"
     text = read_text(path, result)
     if text is None:
         return
@@ -1464,7 +1514,7 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
         "Exploration defaults apply",
         "metadata-first maintenance probes",
         "Count non-empty lines in `ACCESS.jsonl` files",
-        "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",
+        "task-relevant `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md`",
         "Whole-file compact mode",
         "Compact file success criteria",
         "Target budget",
@@ -1479,12 +1529,12 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
         return
 
     required_compact_markers = (
-        "identity/SUMMARY.md",
-        "chats/SUMMARY.md",
-        "projects/SUMMARY.md",
-        "scratchpad/USER.md",
-        "scratchpad/CURRENT.md",
-        "task-relevant `knowledge/SUMMARY.md` and/or `skills/SUMMARY.md`",
+        "core/memory/users/SUMMARY.md",
+        "core/memory/activity/SUMMARY.md",
+        "core/memory/working/projects/SUMMARY.md",
+        "core/memory/working/scratchpad/USER.md",
+        "core/memory/working/scratchpad/CURRENT.md",
+        "task-relevant `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md`",
     )
     for marker in required_compact_markers:
         if marker not in compact_row:
@@ -1587,8 +1637,8 @@ def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
         text = read_text(path, result)
         if text is None:
             continue
-        if "meta/quick-reference.md" not in text:
-            result.error(f"{path}: must point agents to meta/quick-reference.md")
+        if "core/HOME.md" not in text:
+            result.error(f"{path}: must point agents to core/HOME.md")
         if ADAPTER_ROUTING_PHRASE not in text:
             result.error(f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}")
         if ADAPTER_MCP_PHRASE not in text:
@@ -1658,18 +1708,22 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
             if phrase not in readme:
                 result.error(f"{root / 'README.md'}: missing contract phrase {phrase!r}")
 
-    session_checklists = read_text(root / "meta" / "session-checklists.md", result)
+    session_checklists = read_text(root / "core" / "governance" / "session-checklists.md", result)
     if session_checklists is not None:
         if SESSION_CHECKLISTS_ON_DEMAND_PHRASE not in session_checklists:
-            result.error(f"{root / 'meta' / 'session-checklists.md'}: missing on-demand guidance")
+            result.error(
+                f"{root / 'core' / 'governance' / 'session-checklists.md'}: missing on-demand guidance"
+            )
         if SESSION_CHECKLISTS_MCP_PHRASE not in session_checklists:
             result.error(
-                f"{root / 'meta' / 'session-checklists.md'}: missing MCP preference guidance"
+                f"{root / 'core' / 'governance' / 'session-checklists.md'}: missing MCP preference guidance"
             )
 
-    first_run = read_text(root / "meta" / "first-run.md", result)
+    first_run = read_text(root / "core" / "governance" / "first-run.md", result)
     if first_run is not None and FIRST_RUN_MCP_PHRASE not in first_run:
-        result.error(f"{root / 'meta' / 'first-run.md'}: missing MCP preference guidance")
+        result.error(
+            f"{root / 'core' / 'governance' / 'first-run.md'}: missing MCP preference guidance"
+        )
 
     session_start = root / SESSION_START_SKILL_PATH
     if session_start.exists():
@@ -1711,7 +1765,7 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:
-    unverified = root / "knowledge" / "_unverified"
+    unverified = root / "core" / "memory" / "knowledge" / "_unverified"
     if not unverified.exists():
         return
 
@@ -1735,8 +1789,8 @@ def validate_quarantine(root: Path, result: ValidationResult) -> None:
         source = frontmatter.get("source")
         relative_path = path.relative_to(root).as_posix()
         allow_internal_quarantine_source = (
-            relative_path == "knowledge/_unverified/brainstorm-pwr-protocol.md"
-            or relative_path.startswith("knowledge/_unverified/system-notes/")
+            relative_path == "core/memory/knowledge/_unverified/brainstorm-pwr-protocol.md"
+            or relative_path.startswith("core/memory/knowledge/_unverified/system-notes/")
         )
         if source and source != "external-research" and not allow_internal_quarantine_source:
             result.warn(

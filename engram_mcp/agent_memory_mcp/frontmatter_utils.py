@@ -2,12 +2,12 @@
 Frontmatter parsing/writing and SUMMARY.md manipulation utilities.
 
 Anchor conventions:
-    plans/SUMMARY.md          → BEGIN/END pairs wrapping each legacy plan block
-    knowledge/SUMMARY.md      → single <!-- section: {id} --> anchors above ### headings
-    knowledge/_unverified/SUMMARY.md → same
+    SUMMARY.md in projects   → BEGIN/END pairs wrapping each plan block
+    memory/knowledge/SUMMARY.md      → single <!-- section: {id} --> anchors above ### headings
+    memory/knowledge/_unverified/SUMMARY.md → same
 
 Project-scoped helpers generate the top-level projects navigator from
-projects/*/SUMMARY.md frontmatter.
+memory/working/projects/*/SUMMARY.md frontmatter.
 
 These utilities are intentionally side-effect-free: they take content strings
 and return new content strings. Callers handle reading/writing and staging.
@@ -104,7 +104,7 @@ _PROJECT_STATUS_ORDER = {
 
 def collect_project_entries(root: Path) -> list[dict[str, Any]]:
     """Collect project-routing fields from project-local SUMMARY.md files."""
-    projects_root = root / "projects"
+    projects_root = root / "memory" / "working" / "projects"
     if not projects_root.is_dir():
         return []
 
@@ -148,7 +148,7 @@ def render_projects_navigator(
     project_entries: list[dict[str, Any]],
     generated_at: str | None = None,
 ) -> str:
-    """Render the derived projects/SUMMARY.md navigator."""
+    """Render the derived memory/working/projects/SUMMARY.md navigator."""
     generated = generated_at or today_str()
     has_active_or_ongoing = any(
         str(entry.get("status")) in {"active", "ongoing"} for entry in project_entries
@@ -193,7 +193,7 @@ def render_projects_navigator(
 
 def count_active_project_plans(root: Path, project_id: str) -> int:
     """Count active plans within one project-local plans/ directory."""
-    plans_dir = root / "projects" / project_id / "plans"
+    plans_dir = root / "memory" / "working" / "projects" / project_id / "plans"
     if not plans_dir.is_dir():
         return 0
 
@@ -445,7 +445,7 @@ def build_plan_summary_block(
     plan_progress: tuple[int, int],
     description: str = "",
 ) -> str:
-    """Build a BEGIN/END block for plans/SUMMARY.md."""
+    """Build a BEGIN/END block for the plans SUMMARY."""
     done, total = plan_progress
     status_str = status
     next_str = next_action or "(all complete)"
@@ -453,7 +453,7 @@ def build_plan_summary_block(
     lines = [
         f"<!-- BEGIN: {plan_id} -->",
         f"### {heading_title} · status: {status_str} · trust: {trust}",
-        f"Detail: plans/{plan_id}.md",
+        f"Detail: memory/working/projects/{plan_id}.md",
     ]
     if description:
         lines.append(f"Scope: {description}")
@@ -466,7 +466,7 @@ def build_plan_summary_block(
 
 
 def append_plan_to_summary(summary_content: str, block: str) -> str:
-    """Append a new plan block to plans/SUMMARY.md (for new plans)."""
+    """Append a new plan block to the plans SUMMARY (for new plans)."""
     # Append before the final "## Completed plans" section if it exists,
     # otherwise at end
     completed_marker = "## Completed plans"
@@ -477,7 +477,7 @@ def append_plan_to_summary(summary_content: str, block: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# knowledge/SUMMARY.md — section anchor manipulation
+# memory/knowledge/SUMMARY.md — section anchor manipulation
 # ---------------------------------------------------------------------------
 
 
@@ -566,9 +566,9 @@ def remove_entry_from_section(
 def infer_section_id_from_path(rel_path: str) -> str:
     """Infer the SUMMARY.md section anchor from a knowledge file's path.
 
-    knowledge/_unverified/django/celery-canvas.md → "django"
-    knowledge/react/tanstack-query.md             → "react"
-    knowledge/philosophy/history/foo.md           → "philosophy"
+    memory/knowledge/_unverified/django/celery-canvas.md → "django"
+    memory/knowledge/react/tanstack-query.md             → "react"
+    memory/knowledge/philosophy/history/foo.md           → "philosophy"
     """
     parts = Path(rel_path).parts
     # Find the first folder after "knowledge/" or "knowledge/_unverified/"

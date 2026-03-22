@@ -55,7 +55,7 @@ class GitPublicationResult:
 
 
 class GitRepo:
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, content_prefix: str = "") -> None:
         candidate_root = Path(root).resolve()
         if not candidate_root.is_dir():
             raise ValueError(f"Not a git repository: {candidate_root}")
@@ -82,6 +82,33 @@ class GitRepo:
 
         self.root = Path(result.stdout.strip()).resolve()
         self.git_dir = Path(git_dir_result.stdout.strip()).resolve()
+        # Content prefix: when set, all content-relative paths are resolved
+        # under root / content_prefix (e.g., root / "core").  Tool-facing
+        # methods accept and return content-relative paths; git operations
+        # use full repo-relative paths internally.
+        self.content_prefix = content_prefix
+        self.content_root: Path = (self.root / content_prefix) if content_prefix else self.root
+
+    # ------------------------------------------------------------------
+    # Path translation (content-relative <-> git-relative)
+    # ------------------------------------------------------------------
+
+    def _to_git_path(self, content_rel: str) -> str:
+        """Convert a content-relative path to a git-relative path."""
+        if self.content_prefix:
+            return f"{self.content_prefix}/{content_rel}"
+        return content_rel
+
+    def _from_git_path(self, git_rel: str) -> str:
+        """Convert a git-relative path to a content-relative path.
+
+        Returns the path unchanged if it is not under the content prefix.
+        """
+        if self.content_prefix:
+            prefix = self.content_prefix + "/"
+            if git_rel.startswith(prefix):
+                return git_rel[len(prefix) :]
+        return git_rel
 
     # ------------------------------------------------------------------
     # Internal runner
@@ -136,7 +163,7 @@ class GitRepo:
 
         This is the version token: if it changes, the file was modified.
         """
-        abs_path = str(self.root / rel_path)
+        abs_path = str(self.content_root / rel_path)
         result = self._run(["git", "hash-object", abs_path])
         return result.stdout.strip()
 
@@ -160,10 +187,11 @@ class GitRepo:
     # ------------------------------------------------------------------
 
     def add(self, *rel_paths: str) -> None:
-        """Stage one or more files."""
+        """Stage one or more content-relative files."""
         if not rel_paths:
             return
-        self._run(["git", "add", "--"] + list(rel_paths))
+        git_paths = [self._to_git_path(p) for p in rel_paths]
+        self._run(["git", "add", "--"] + git_paths)
 
     def add_all(self) -> None:
         """Stage all changes (git add -A)."""
@@ -180,24 +208,25 @@ class GitRepo:
         if not rel_paths:
             return
 
+        git_paths = [self._to_git_path(p) for p in rel_paths]
         cmd = ["git", "restore", f"--source={source}"]
         if staged:
             cmd.append("--staged")
         if worktree:
             cmd.append("--worktree")
-        cmd += ["--", *rel_paths]
+        cmd += ["--", *git_paths]
         self._run(cmd)
 
     def rm(self, rel_path: str) -> None:
         """Remove file from working tree and stage the deletion."""
-        self._run(["git", "rm", "--", rel_path])
+        self._run(["git", "rm", "--", self._to_git_path(rel_path)])
 
     def mv(self, rel_src: str, rel_dst: str) -> None:
         """Rename/move a file and stage the change (preserves history)."""
         # Ensure destination directory exists
-        dst_abs = self.root / rel_dst
+        dst_abs = self.content_root / rel_dst
         dst_abs.parent.mkdir(parents=True, exist_ok=True)
-        self._run(["git", "mv", "--", rel_src, rel_dst])
+        self._run(["git", "mv", "--", self._to_git_path(rel_src), self._to_git_path(rel_dst)])
 
     # ------------------------------------------------------------------
     # Committing
@@ -212,22 +241,33 @@ class GitRepo:
         """True if the staging area contains changes for the given paths."""
         if not rel_paths:
             return not self.nothing_staged()
-        result = self._run(["git", "diff", "--cached", "--quiet", "--", *rel_paths], check=False)
+        git_paths = [self._to_git_path(p) for p in rel_paths]
+        result = self._run(["git", "diff", "--cached", "--quiet", "--", *git_paths], check=False)
         return result.returncode == 1
 
-    def staged_paths(self, *rel_paths: str) -> list[str]:
-        """Return staged paths, optionally filtered to a path subset."""
+    def _staged_paths_git(self, *git_paths: str) -> list[str]:
+        """Internal: return staged paths as raw git-relative strings."""
         cmd = ["git", "diff", "--cached", "--name-only"]
-        if rel_paths:
-            cmd += ["--", *rel_paths]
+        if git_paths:
+            cmd += ["--", *git_paths]
         result = self._run(cmd, check=False)
         return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+    def staged_paths(self, *rel_paths: str) -> list[str]:
+        """Return staged paths, optionally filtered to a path subset.
+
+        Accepts and returns content-relative paths.
+        """
+        git_paths = [self._to_git_path(p) for p in rel_paths] if rel_paths else []
+        raw = self._staged_paths_git(*git_paths)
+        return [self._from_git_path(p) for p in raw]
 
     def has_unstaged_changes(self, *rel_paths: str) -> bool:
         """True if the working tree has unstaged changes for the given paths."""
         cmd = ["git", "diff", "--quiet"]
         if rel_paths:
-            cmd += ["--", *rel_paths]
+            git_paths = [self._to_git_path(p) for p in rel_paths]
+            cmd += ["--", *git_paths]
         result = self._run(cmd, check=False)
         return result.returncode == 1
 
@@ -347,7 +387,7 @@ class GitRepo:
         branch_ref = self._current_branch_ref()
         parent_sha = self.current_head()
         parent_tree = self._head_tree()
-        selected_paths = list(dict.fromkeys(paths)) if paths else self.staged_paths()
+        selected_paths = list(dict.fromkeys(paths)) if paths else self._staged_paths_git()
 
         if not selected_paths and not allow_empty:
             raise StagingError("Nothing staged to commit.")
@@ -409,15 +449,19 @@ class GitRepo:
         paths: list[str] | None = None,
         allow_empty: bool = False,
     ) -> GitPublicationResult:
-        """Commit staged changes. Returns the new commit SHA."""
+        """Commit staged changes. Returns the new commit SHA.
+
+        *paths* are content-relative; converted to git-relative internally.
+        """
         self.ensure_author_identity()
+        git_paths = [self._to_git_path(p) for p in paths] if paths else None
         with self.write_lock("commit"):
             try:
-                return self._commit_porcelain(message, paths=paths, allow_empty=allow_empty)
+                return self._commit_porcelain(message, paths=git_paths, allow_empty=allow_empty)
             except StagingError as error:
                 if not self._should_fallback_to_plumbing(error):
                     raise
-                return self._commit_with_plumbing(message, paths=paths, allow_empty=allow_empty)
+                return self._commit_with_plumbing(message, paths=git_paths, allow_empty=allow_empty)
 
     # ------------------------------------------------------------------
     # Inspection
@@ -443,7 +487,7 @@ class GitRepo:
         if since is not None:
             cmd.append(f"--after={since}")
         if path_filter is not None:
-            cmd += ["--", path_filter]
+            cmd += ["--", self._to_git_path(path_filter)]
 
         result = self._run(cmd)
 
@@ -459,7 +503,7 @@ class GitRepo:
             sha = lines[0].strip()
             message = lines[1].strip()
             date = lines[2].strip()
-            files = [line.strip() for line in lines[3:] if line.strip()]
+            files = [self._from_git_path(line.strip()) for line in lines[3:] if line.strip()]
             commits.append(
                 {
                     "sha": sha,
@@ -474,7 +518,8 @@ class GitRepo:
         """Return the number of commits since a date, optionally filtered to paths."""
         cmd = ["git", "rev-list", "--count", f"--since={since}", "HEAD"]
         if paths:
-            cmd += ["--", *paths]
+            git_paths = [self._to_git_path(p) for p in paths]
+            cmd += ["--", *git_paths]
         result = self._run(cmd)
         return int(result.stdout.strip() or "0")
 
@@ -497,7 +542,11 @@ class GitRepo:
             ["git", "diff-tree", "--no-commit-id", "--name-only", "--root", "-r", full_sha]
         )
         parents = [parent for parent in lines[2].split() if parent]
-        files_changed = [line.strip() for line in files_result.stdout.splitlines() if line.strip()]
+        files_changed = [
+            self._from_git_path(line.strip())
+            for line in files_result.stdout.splitlines()
+            if line.strip()
+        ]
         return {
             "sha": lines[0].strip(),
             "message": lines[1].strip(),
@@ -595,7 +644,8 @@ class GitRepo:
             cmd.append("-i")
         if max_count is not None:
             cmd += [f"--max-count={max_count}"]
-        cmd += [pattern, "--", glob]
+        actual_glob = f"{self.content_prefix}/{glob}" if self.content_prefix else glob
+        cmd += [pattern, "--", actual_glob]
 
         result = self._run(cmd, check=False)
 
@@ -616,7 +666,7 @@ class GitRepo:
             try:
                 path_part, rest = line.split(":", 1)
                 line_no_str, text = rest.split(":", 1)
-                matches.append((path_part, int(line_no_str), text))
+                matches.append((self._from_git_path(path_part), int(line_no_str), text))
             except ValueError:
                 continue
         return matches
@@ -633,9 +683,9 @@ class GitRepo:
             return [line for line in result.stdout.strip().splitlines() if line.strip()]
 
         return {
-            "staged": _lines(staged_result),
-            "unstaged": _lines(unstaged_result),
-            "untracked": _lines(untracked_result),
+            "staged": [self._from_git_path(l) for l in _lines(staged_result)],
+            "unstaged": [self._from_git_path(l) for l in _lines(unstaged_result)],
+            "untracked": [self._from_git_path(l) for l in _lines(untracked_result)],
         }
 
     def first_tracked_author_date(self, rel_path: str) -> date | None:
@@ -649,7 +699,7 @@ class GitRepo:
                 "--format=%aI",
                 "--reverse",
                 "--",
-                rel_path,
+                self._to_git_path(rel_path),
             ],
             check=False,
         )
@@ -673,10 +723,11 @@ class GitRepo:
     # ------------------------------------------------------------------
 
     def abs_path(self, rel_path: str) -> Path:
-        p = (self.root / rel_path).resolve()
-        # Ensure it's within the repo root (prevent path traversal)
+        """Resolve a content-relative path to an absolute path."""
+        p = (self.content_root / rel_path).resolve()
+        # Ensure it's within the content root (prevent path traversal)
         try:
-            p.relative_to(self.root)
+            p.relative_to(self.content_root)
         except ValueError:
             from .errors import MemoryPermissionError
 
@@ -684,4 +735,5 @@ class GitRepo:
         return p
 
     def rel_path(self, abs_path: Path) -> str:
-        return str(abs_path.relative_to(self.root))
+        """Return content-relative path from an absolute path."""
+        return str(abs_path.relative_to(self.content_root))

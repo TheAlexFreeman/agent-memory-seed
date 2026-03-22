@@ -58,7 +58,7 @@ The script will:
 2. materialize the memory worktree at the configured path
 3. write host-root adapter files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`)
 4. write MCP client config for the selected platform
-5. seed a starter codebase-survey plan and `knowledge/codebase/` skeleton
+5. seed a starter codebase-survey plan and `core/memory/knowledge/codebase/` skeleton
 6. add worktree-local `.ignore` and `.editorconfig` defaults
 
 ## Worktree mode: CI/CD exemptions
@@ -252,4 +252,4 @@ In worktree mode, the init script writes `mcp-config-example.json` in the host r
 2. Exempt the memory branch from CI and branch protection.
 3. Exclude the worktree path from host tooling.
 4. Trust the generated MCP config for your client.
-5. Start with `projects/codebase-survey/plans/survey-plan.md` and fill `knowledge/codebase/` as you learn the host repo.
+5. Start with `core/memory/working/projects/codebase-survey/plans/survey-plan.md` and fill `core/memory/knowledge/codebase/` as you learn the host repo.

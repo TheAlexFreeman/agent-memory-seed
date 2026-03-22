@@ -1,7 +1,7 @@
 ---
 source: template
 origin_session: setup
-created: {{TODAY}}
+created: { { TODAY } }
 trust: low
 ---
 
@@ -20,4 +20,4 @@ This directory holds durable notes about the host repository at `{{HOST_REPO_ROO
 
 - These files start as low-trust templates and should be replaced with verified notes as the survey plan advances.
 - Add `related` frontmatter as soon as a note is grounded in specific host-repo paths.
-- Use `projects/codebase-survey/plans/survey-plan.md` to decide which stub to replace next.
+- Use `memory/working/projects/codebase-survey/plans/survey-plan.md` to decide which stub to replace next.

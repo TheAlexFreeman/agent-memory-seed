@@ -184,8 +184,8 @@ class SetupFlowTests(unittest.TestCase):
                 "Writing code and debugging",
             )
 
-            summary = (root / "identity" / "SUMMARY.md").read_text(encoding="utf-8")
-            profile = (root / "identity" / "profile.md").read_text(encoding="utf-8")
+            summary = (root / "memory" / "users" / "SUMMARY.md").read_text(encoding="utf-8")
+            profile = (root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
 
             self.assertIn("**User:** Alex", summary)
             self.assertIn("**Uses AI for:** Writing code and debugging", summary)
@@ -283,7 +283,7 @@ class SetupFlowTests(unittest.TestCase):
             ).stdout.strip()
             self.assertEqual("agent-memory", branch_name)
 
-            profile_text = (worktree_root / "identity" / "profile.md").read_text(encoding="utf-8")
+            profile_text = (worktree_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
             projects_summary = (worktree_root / "projects" / "SUMMARY.md").read_text(
                 encoding="utf-8"
             )
@@ -327,11 +327,11 @@ class SetupFlowTests(unittest.TestCase):
             host_cursor = (host_root / ".cursorrules").read_text(encoding="utf-8")
             worktree_agents = (worktree_root / "AGENTS.md").read_text(encoding="utf-8")
 
-            self.assertIn(".agent-memory/meta/quick-reference.md", host_agents)
+            self.assertIn(".agent-memory/core/HOME.md", host_agents)
             self.assertIn(".codex/config.toml", host_agents)
             self.assertIn("agent-memory", host_agents)
-            self.assertIn(".agent-memory/meta/quick-reference.md", host_claude)
-            self.assertIn(".agent-memory/meta/quick-reference.md", host_cursor)
+            self.assertIn(".agent-memory/core/HOME.md", host_claude)
+            self.assertIn(".agent-memory/core/HOME.md", host_cursor)
             self.assertNotEqual(worktree_agents, host_agents)
 
     def test_init_worktree_end_to_end_validation_passes(self) -> None:
@@ -570,7 +570,7 @@ class SetupFlowTests(unittest.TestCase):
             )
             self.assertIn("setup/initial-commit-paths.txt", head_files)
             self.assertIn("README.md", head_files)
-            self.assertIn("projects/SUMMARY.md", head_files)
+            self.assertIn("core/memory/working/projects/SUMMARY.md", head_files)
             self.assertNotIn("notes.txt", head_files)
             self.assertNotIn("system-prompt.txt", head_files)
 
@@ -645,7 +645,7 @@ class SetupFlowTests(unittest.TestCase):
 
             self.assertIn("README.md", staged_files)
             self.assertIn("setup/initial-commit-paths.txt", staged_files)
-            self.assertIn("projects/SUMMARY.md", staged_files)
+            self.assertIn("core/memory/working/projects/SUMMARY.md", staged_files)
             self.assertNotIn("notes.txt", staged_files)
             self.assertNotIn("system-prompt.txt", staged_files)
 

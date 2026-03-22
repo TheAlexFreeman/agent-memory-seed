@@ -84,7 +84,7 @@ def register_tools(mcp: "FastMCP", get_repo) -> dict[str, object]:
             raise ValidationError(f"mode must be 'upsert', 'append', or 'replace': {mode}")
 
         file = validate_slug(file, field_name="file")
-        rel_path, abs_path = resolve_repo_path(repo, f"skills/{file}.md")
+        rel_path, abs_path = resolve_repo_path(repo, f"memory/skills/{file}.md")
         today = today_str()
         file_exists = abs_path.exists()
 
@@ -132,12 +132,12 @@ def register_tools(mcp: "FastMCP", get_repo) -> dict[str, object]:
             body = body.rstrip() + f"\n\n{section_heading}\n\n{content.strip()}\n"
 
         fm_dict["last_verified"] = today
-        commit_msg = f"[skill] Update {section} in skills/{file}.md"
+        commit_msg = f"[skill] Update {section} in memory/skills/{file}.md"
         new_state = {"section": section, "mode": mode}
         preview_payload = build_governed_preview(
             mode="preview" if preview else "apply",
             change_class="protected",
-            summary=f"Update skill section {section} in skills/{file}.md.",
+            summary=f"Update skill section {section} in memory/skills/{file}.md.",
             reasoning="Skill files are protected because they can directly shape agent procedure.",
             target_files=[preview_target(rel_path, "update" if file_exists else "create")],
             invariant_effects=[

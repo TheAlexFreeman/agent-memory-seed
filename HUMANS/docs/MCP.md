@@ -19,7 +19,7 @@ In plain language:
 - Git is the history and recovery mechanism.
 - MCP is the safe operating interface.
 
-The default architectural entry point for a new session remains `README.md`. After that initial orientation, `meta/quick-reference.md` handles live routing and `projects/SUMMARY.md` is the primary orientation surface for a normal returning session unless the router points somewhere more specific.
+The default architectural entry point for a new session remains `README.md`. After that initial orientation, `core/HOME.md` handles live routing and `core/memory/working/projects/SUMMARY.md` is the primary orientation surface for a normal returning session unless the router points somewhere more specific.
 
 That separation is intentional. It keeps the system portable and inspectable while still making it ergonomic for modern agent runtimes.
 
@@ -199,7 +199,7 @@ These are low-level mutation tools:
 - `memory_update_frontmatter_bulk`
 - `memory_commit`
 
-They stage changes but do not auto-commit. They also reject protected directories such as `identity/`, `meta/`, `chats/`, and `skills/`.
+They stage changes but do not auto-commit. They also reject protected directories such as `memory/users/`, `governance/`, `memory/activity/`, and `memory/skills/`.
 
 Most importantly, they are **not enabled by default**. The server only exposes them when the runtime explicitly sets:
 
@@ -239,7 +239,7 @@ That preserves the project's core bet: memory should live in files the user owns
 
 The preferred path is always a named operation that understands the memory model.
 
-For example, recording a periodic review is not treated as an arbitrary edit to `meta/` files. It is a specific semantic action with bounded ownership, protected approval, expected commit metadata, and known result fields.
+For example, recording a periodic review is not treated as an arbitrary edit to `governance/` files. It is a specific semantic action with bounded ownership, protected approval, expected commit metadata, and known result fields.
 
 This reduces the chance of partial updates, broken invariants, or accidental policy drift.
 

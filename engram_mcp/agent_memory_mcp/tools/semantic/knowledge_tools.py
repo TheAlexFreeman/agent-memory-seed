@@ -135,11 +135,14 @@ def _apply_reorganization_updates(abs_path: Path, refs: list[dict[str, Any]]) ->
             ref_key = cast(str | None, ref.get("ref_key"))
             if ref_key is None:
                 continue
-            frontmatter_changed = _set_frontmatter_value(
-                frontmatter,
-                ref_key,
-                cast(str, ref["new"]),
-            ) or frontmatter_changed
+            frontmatter_changed = (
+                _set_frontmatter_value(
+                    frontmatter,
+                    ref_key,
+                    cast(str, ref["new"]),
+                )
+                or frontmatter_changed
+            )
         elif ref_type == "markdown_link":
             markdown_replacements[cast(str, ref["old"])] = cast(str, ref["new"])
 
@@ -310,7 +313,7 @@ def _update_target_summary_after_promotion(
     return updated_target
 
 
-def _review_log_path(folder_path: str = "knowledge/_unverified") -> str:
+def _review_log_path(folder_path: str = "memory/knowledge/_unverified") -> str:
     return f"{folder_path.rstrip('/')}/REVIEW_LOG.jsonl"
 
 
@@ -346,7 +349,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         Use this when several reviewed files should move together. Accepts either
         a JSON array of repo-relative paths or a folder path to expand into a
-        flat batch. Missing target sections in knowledge/SUMMARY.md are
+        flat batch. Missing target sections in memory/knowledge/SUMMARY.md are
         auto-created with default entries so routine promotion work stays
         atomic.
 
@@ -381,12 +384,12 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
             validate_top_level_root(
                 explicit_target_folder,
-                allowed_roots=("knowledge",),
+                allowed_roots=("memory",),
                 field_name="target_folder",
             )
             forbid_prefix(
                 explicit_target_folder,
-                "knowledge/_unverified",
+                "memory/knowledge/_unverified",
                 field_name="target_folder",
             )
 
@@ -405,14 +408,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 source_path, abs_source = resolve_repo_path(
                     repo, source_path, field_name="source_path"
                 )
-                require_under_prefix(source_path, "knowledge/_unverified", field_name="source_path")
+                require_under_prefix(
+                    source_path, "memory/knowledge/_unverified", field_name="source_path"
+                )
                 if source_path.endswith("/SUMMARY.md") or Path(source_path).name == "SUMMARY.md":
                     raise ValidationError(f"Cannot batch-promote SUMMARY.md: {source_path}")
                 if not abs_source.exists():
                     raise NotFoundError(f"Source file not found: {source_path}")
 
                 inferred_folder = Path(
-                    source_path.replace("knowledge/_unverified/", "knowledge/", 1)
+                    source_path.replace("memory/knowledge/_unverified/", "memory/knowledge/", 1)
                 ).parent.as_posix()
                 inferred_target_folders.add(inferred_folder)
                 resolved_target_folder = explicit_target_folder or inferred_folder
@@ -422,10 +427,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 )
                 validate_top_level_root(
                     target_path,
-                    allowed_roots=("knowledge",),
+                    allowed_roots=("memory",),
                     field_name="target_path",
                 )
-                forbid_prefix(target_path, "knowledge/_unverified", field_name="target_path")
+                forbid_prefix(target_path, "memory/knowledge/_unverified", field_name="target_path")
                 if target_path in seen_targets:
                     raise ValidationError(f"target path collision in batch: {target_path}")
                 seen_targets.add(target_path)
@@ -462,13 +467,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         files_changed: list[str] = []
         promoted_files: list[str] = []
 
-        source_summary_path = "knowledge/_unverified/SUMMARY.md"
+        source_summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         abs_source_summary = root / source_summary_path
         source_summary_content = (
             abs_source_summary.read_text(encoding="utf-8") if abs_source_summary.exists() else None
         )
 
-        target_summary_path = "knowledge/SUMMARY.md"
+        target_summary_path = "memory/knowledge/SUMMARY.md"
         abs_target_summary = root / target_summary_path
         target_summary_content = (
             abs_target_summary.read_text(encoding="utf-8") if abs_target_summary.exists() else None
@@ -566,7 +571,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Use this when a full topic tree should move together and nested paths
         must be preserved. The tool validates the whole subtree before moving
         anything, supports dry-run previews, and auto-creates missing target
-        sections in knowledge/SUMMARY.md with default entries.
+        sections in memory/knowledge/SUMMARY.md with default entries.
 
         Prefer this over memory_promote_knowledge_batch when the source is a
         nested folder hierarchy rather than a flat batch.
@@ -589,15 +594,17 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         source_folder, abs_source_folder = resolve_repo_path(
             repo, source_folder, field_name="source_folder"
         )
-        require_under_prefix(source_folder, "knowledge/_unverified", field_name="source_folder")
+        require_under_prefix(
+            source_folder, "memory/knowledge/_unverified", field_name="source_folder"
+        )
         if not abs_source_folder.exists():
             raise NotFoundError(f"Source folder not found: {source_folder}")
         if not abs_source_folder.is_dir():
             raise ValidationError(f"source_folder must be a directory: {source_folder}")
 
         dest_folder, _ = resolve_repo_path(repo, dest_folder, field_name="dest_folder")
-        validate_top_level_root(dest_folder, allowed_roots=("knowledge",), field_name="dest_folder")
-        forbid_prefix(dest_folder, "knowledge/_unverified", field_name="dest_folder")
+        validate_top_level_root(dest_folder, allowed_roots=("memory",), field_name="dest_folder")
+        forbid_prefix(dest_folder, "memory/knowledge/_unverified", field_name="dest_folder")
 
         markdown_files = [
             child
@@ -625,10 +632,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 )
                 validate_top_level_root(
                     target_path,
-                    allowed_roots=("knowledge",),
+                    allowed_roots=("memory",),
                     field_name="target_path",
                 )
-                forbid_prefix(target_path, "knowledge/_unverified", field_name="target_path")
+                forbid_prefix(target_path, "memory/knowledge/_unverified", field_name="target_path")
                 if target_path in seen_targets:
                     raise ValidationError(f"target path collision in subtree: {target_path}")
                 seen_targets.add(target_path)
@@ -685,13 +692,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         files_changed: list[str] = []
         promoted_files: list[str] = []
 
-        source_summary_path = "knowledge/_unverified/SUMMARY.md"
+        source_summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         abs_source_summary = root / source_summary_path
         source_summary_content = (
             abs_source_summary.read_text(encoding="utf-8") if abs_source_summary.exists() else None
         )
 
-        target_summary_path = "knowledge/SUMMARY.md"
+        target_summary_path = "memory/knowledge/SUMMARY.md"
         abs_target_summary = root / target_summary_path
         target_summary_content = (
             abs_target_summary.read_text(encoding="utf-8") if abs_target_summary.exists() else None
@@ -795,10 +802,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         source, abs_source = resolve_repo_path(repo, source, field_name="source")
         dest, abs_dest = resolve_repo_path(repo, dest, field_name="dest")
-        validate_top_level_root(source, allowed_roots=("knowledge",), field_name="source")
-        validate_top_level_root(dest, allowed_roots=("knowledge",), field_name="dest")
-        forbid_prefix(source, "knowledge/_unverified", field_name="source")
-        forbid_prefix(dest, "knowledge/_unverified", field_name="dest")
+        validate_top_level_root(source, allowed_roots=("memory",), field_name="source")
+        validate_top_level_root(dest, allowed_roots=("memory",), field_name="dest")
+        forbid_prefix(source, "memory/knowledge/_unverified", field_name="source")
+        forbid_prefix(dest, "memory/knowledge/_unverified", field_name="dest")
 
         if not abs_source.exists():
             raise NotFoundError(f"Source path not found: {source}")
@@ -823,9 +830,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 f"{preview_only_refs} plain body-path mention(s) are previewed but not rewritten automatically."
             )
 
-        conflict_warnings = [
-            warning for warning in warnings if warning.startswith("Destination ")
-        ]
+        conflict_warnings = [warning for warning in warnings if warning.startswith("Destination ")]
         file_moves = cast(list[dict[str, str]], plan["file_moves"])
         reference_files = cast(list[dict[str, Any]], plan["files_with_references"])
         ref_update_count = sum(
@@ -965,10 +970,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         version_token: str | None = None,
         preview: bool = False,
     ) -> str:
-        """Move one file from knowledge/_unverified/ to knowledge/, updating trust.
+        """Move one file from memory/knowledge/_unverified/ to memory/knowledge/, updating trust.
 
         Use this for one-off promotions after a review decision. When
-        summary_entry is provided, knowledge/SUMMARY.md is auto-updated even if
+        summary_entry is provided, memory/knowledge/SUMMARY.md is auto-updated even if
         the target section is missing: a stub section is appended and the entry
         is inserted there. Without summary_entry, missing target sections still
         produce a warning so callers can repair SUMMARY.md manually.
@@ -990,7 +995,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         warnings: list[str] = []
 
         source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
-        require_under_prefix(source_path, "knowledge/_unverified", field_name="source_path")
+        require_under_prefix(source_path, "memory/knowledge/_unverified", field_name="source_path")
         if trust_level not in ("medium", "high"):
             raise ValidationError(f"trust_level must be 'medium' or 'high', got: {trust_level}")
 
@@ -1000,14 +1005,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.check_version_token(source_path, version_token)
 
         if target_path is None:
-            target_path = source_path.replace("knowledge/_unverified/", "knowledge/", 1)
+            target_path = source_path.replace(
+                "memory/knowledge/_unverified/", "memory/knowledge/", 1
+            )
         target_path, _ = resolve_repo_path(repo, target_path, field_name="target_path")
         validate_top_level_root(
             target_path,
-            allowed_roots=("knowledge",),
+            allowed_roots=("memory",),
             field_name="target_path",
         )
-        forbid_prefix(target_path, "knowledge/_unverified", field_name="target_path")
+        forbid_prefix(target_path, "memory/knowledge/_unverified", field_name="target_path")
 
         fm_dict, body = read_with_frontmatter(abs_source)
         fm_dict["trust"] = trust_level
@@ -1016,7 +1023,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         filename = Path(source_path).name
         preview_files_changed = [source_path, target_path]
         preview_warnings: list[str] = []
-        source_summary_path = "knowledge/_unverified/SUMMARY.md"
+        source_summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         abs_src_summary = root / source_summary_path
         if abs_src_summary.exists():
             src_summary = abs_src_summary.read_text(encoding="utf-8")
@@ -1029,7 +1036,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
             preview_files_changed.append(source_summary_path)
 
-        target_summary_path = "knowledge/SUMMARY.md"
+        target_summary_path = "memory/knowledge/SUMMARY.md"
         abs_tgt_summary = root / target_summary_path
         if abs_tgt_summary.exists():
             tgt_summary = abs_tgt_summary.read_text(encoding="utf-8")
@@ -1046,7 +1053,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             preview_files_changed.append(target_summary_path)
 
         subject = infer_section_id_from_path(target_path)
-        commit_msg = f"[curation] Promote {filename} to knowledge/{subject}/ (trust: {trust_level})"
+        commit_msg = (
+            f"[curation] Promote {filename} to memory/knowledge/{subject}/ (trust: {trust_level})"
+        )
         new_state = {"new_path": target_path, "trust": trust_level}
         preview_payload = build_governed_preview(
             mode="preview" if preview else "apply",
@@ -1095,7 +1104,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         files_changed = [source_path, target_path]
 
-        source_summary_path = "knowledge/_unverified/SUMMARY.md"
+        source_summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         abs_src_summary = root / source_summary_path
         if abs_src_summary.exists():
             src_summary = abs_src_summary.read_text(encoding="utf-8")
@@ -1110,7 +1119,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             repo.add(source_summary_path)
             files_changed.append(source_summary_path)
 
-        target_summary_path = "knowledge/SUMMARY.md"
+        target_summary_path = "memory/knowledge/SUMMARY.md"
         abs_tgt_summary = root / target_summary_path
         if abs_tgt_summary.exists():
             tgt_summary = abs_tgt_summary.read_text(encoding="utf-8")
@@ -1174,10 +1183,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
         validate_top_level_root(
             source_path,
-            allowed_roots=("knowledge",),
+            allowed_roots=("memory",),
             field_name="source_path",
         )
-        if source_path.startswith("knowledge/_unverified/"):
+        if source_path.startswith("memory/knowledge/_unverified/"):
             raise ValidationError(
                 f"source_path is already under _unverified/: {source_path}. "
                 "Use memory_archive_knowledge instead if you want to archive it."
@@ -1187,13 +1196,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         repo.check_version_token(source_path, version_token)
 
-        target_path = source_path.replace("knowledge/", "knowledge/_unverified/", 1)
+        target_path = source_path.replace("memory/knowledge/", "memory/knowledge/_unverified/", 1)
         filename = Path(source_path).name
         section_id = infer_section_id_from_path(source_path)
 
-        src_summary_path = "knowledge/SUMMARY.md"
+        src_summary_path = "memory/knowledge/SUMMARY.md"
         abs_src_summary = root / src_summary_path
-        tgt_summary_path = "knowledge/_unverified/SUMMARY.md"
+        tgt_summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         abs_tgt_summary = root / tgt_summary_path
         tgt_section_id = infer_section_id_from_path(target_path)
         preview_warnings: list[str] = []
@@ -1223,7 +1232,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         preview_payload = build_governed_preview(
             mode="preview" if preview else "apply",
             change_class="proposed",
-            summary=f"Demote {filename} back into knowledge/_unverified.",
+            summary=f"Demote {filename} back into memory/knowledge/_unverified.",
             reasoning="Demotion is a proposed write because it lowers trust and returns verified content to the review queue.",
             target_files=[
                 preview_target(source_path, "move_from"),
@@ -1307,7 +1316,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         version_token: str | None = None,
         preview: bool = False,
     ) -> str:
-        """Move a knowledge file to knowledge/_archive/ and mark it archived.
+        """Move a knowledge file to memory/knowledge/_archive/ and mark it archived.
 
         Use this when content should leave the active retrieval path without
         being deleted from git history. Prefer demotion if the file still needs
@@ -1330,7 +1339,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         source_path, abs_source = resolve_repo_path(repo, source_path, field_name="source_path")
         validate_top_level_root(
             source_path,
-            allowed_roots=("knowledge",),
+            allowed_roots=("memory",),
             field_name="source_path",
         )
         if not abs_source.exists():
@@ -1339,16 +1348,16 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.check_version_token(source_path, version_token)
 
         filename = Path(source_path).name
-        rel_to_knowledge = source_path[len("knowledge/") :]
+        rel_to_knowledge = source_path[len("memory/knowledge/") :]
         if rel_to_knowledge.startswith("_unverified/"):
             rel_to_knowledge = rel_to_knowledge[len("_unverified/") :]
-        archive_path = f"knowledge/_archive/{rel_to_knowledge}"
+        archive_path = f"memory/knowledge/_archive/{rel_to_knowledge}"
 
         section_id = infer_section_id_from_path(source_path)
-        if source_path.startswith("knowledge/_unverified/"):
-            summary_path = "knowledge/_unverified/SUMMARY.md"
+        if source_path.startswith("memory/knowledge/_unverified/"):
+            summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         else:
-            summary_path = "knowledge/SUMMARY.md"
+            summary_path = "memory/knowledge/SUMMARY.md"
         abs_summary = root / summary_path
         preview_warnings: list[str] = []
         if abs_summary.exists():
@@ -1367,7 +1376,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         preview_payload = build_governed_preview(
             mode="preview" if preview else "apply",
             change_class="proposed",
-            summary=f"Archive {filename} under knowledge/_archive.",
+            summary=f"Archive {filename} under memory/knowledge/_archive.",
             reasoning="Archival is a proposed write because it removes content from the active retrieval path while preserving history.",
             target_files=[
                 preview_target(source_path, "move_from"),
@@ -1443,7 +1452,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         """Create a new unverified knowledge file with frontmatter and SUMMARY entry.
 
         Use this for new material that has not yet been explicitly reviewed.
-        The file is always written under knowledge/_unverified and indexed in
+        The file is always written under memory/knowledge/_unverified and indexed in
         the unverified summary when possible. Use a promotion tool only after
         review.
         """
@@ -1462,7 +1471,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         validate_session_id(session_id)
         path, abs_path = resolve_repo_path(repo, path)
-        require_under_prefix(path, "knowledge/_unverified")
+        require_under_prefix(path, "memory/knowledge/_unverified")
         if trust != "low":
             raise ValidationError("trust must be 'low' for new unverified knowledge")
 
@@ -1495,7 +1504,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         section_id = infer_section_id_from_path(path)
         filename = Path(path).name
-        summary_path = "knowledge/_unverified/SUMMARY.md"
+        summary_path = "memory/knowledge/_unverified/SUMMARY.md"
         abs_summary = root / summary_path
         if abs_summary.exists():
             summary_content = abs_summary.read_text(encoding="utf-8")
@@ -1548,7 +1557,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
 
         path, abs_path = resolve_repo_path(repo, path, field_name="path")
-        require_under_prefix(path, "knowledge/_unverified", field_name="path")
+        require_under_prefix(path, "memory/knowledge/_unverified", field_name="path")
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
         if verdict not in _REVIEW_VERDICTS:
@@ -1599,7 +1608,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             openWorldHint=False,
         ),
     )
-    async def memory_list_pending_reviews(folder_path: str = "knowledge/_unverified") -> str:
+    async def memory_list_pending_reviews(folder_path: str = "memory/knowledge/_unverified") -> str:
         """List the latest pending review verdicts for unverified knowledge files."""
         from ...errors import ValidationError
 
@@ -1607,8 +1616,10 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
 
         folder_path, abs_folder = resolve_repo_path(repo, folder_path, field_name="folder_path")
-        if folder_path != "knowledge/_unverified":
-            require_under_prefix(folder_path, "knowledge/_unverified", field_name="folder_path")
+        if folder_path != "memory/knowledge/_unverified":
+            require_under_prefix(
+                folder_path, "memory/knowledge/_unverified", field_name="folder_path"
+            )
         if not abs_folder.exists() or not abs_folder.is_dir():
             raise ValidationError(f"folder_path must be an existing directory: {folder_path}")
 

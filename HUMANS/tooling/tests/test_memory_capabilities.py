@@ -332,7 +332,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "automatic",
         )
         self.assertEqual(
-            operations["memory_update_identity_trait"]["change_class"],
+            operations["memory_update_user_trait"]["change_class"],
             "proposed",
         )
         self.assertEqual(
@@ -369,7 +369,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
             "knowledge",
         )
         self.assertEqual(
-            operations["memory_update_identity_trait"]["commit_category_hint"],
+            operations["memory_update_user_trait"]["commit_category_hint"],
             "identity",
         )
         self.assertEqual(
@@ -546,9 +546,9 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(
             create_plan["changed_files"],
             [
-                "projects/{project_id}/plans/{plan_id}.md",
-                "projects/{project_id}/SUMMARY.md",
-                "projects/SUMMARY.md",
+                "memory/working/projects/{project_id}/plans/{plan_id}.md",
+                "memory/working/projects/{project_id}/SUMMARY.md",
+                "memory/working/projects/SUMMARY.md",
             ],
         )
         self.assertEqual(

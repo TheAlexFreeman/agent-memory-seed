@@ -24,13 +24,13 @@ class ValidateMemoryRepoProjectPlanTests(unittest.TestCase):
             root = Path(tempdir)
             fixtures.build_minimal_repo(root)
             fixtures.write(
-                root / "projects" / "seed-project" / "plans" / "roadmap.md",
+                root / "core" / "memory" / "working" / "projects" / "seed-project" / "plans" / "roadmap.md",
                 textwrap.dedent(
                     """\
                     ---
                     source: agent-generated
                     type: implementation-plan
-                    origin_session: chats/2026/03/16/chat-001
+                    origin_session: core/memory/activity/2026/03/16/chat-001
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: medium
@@ -51,13 +51,13 @@ class ValidateMemoryRepoProjectPlanTests(unittest.TestCase):
             root = Path(tempdir)
             fixtures.build_minimal_repo(root)
             fixtures.write(
-                root / "projects" / "seed-project" / "plans" / "roadmap.md",
+                root / "core" / "memory" / "working" / "projects" / "seed-project" / "plans" / "roadmap.md",
                 textwrap.dedent(
                     """\
                     ---
                     source: agent-generated
                     type: implementation-plan
-                    origin_session: chats/2026/03/16/chat-001
+                    origin_session: core/memory/activity/2026/03/16/chat-001
                     created: 2026-03-16
                     last_verified: 2026-03-16
                     trust: medium

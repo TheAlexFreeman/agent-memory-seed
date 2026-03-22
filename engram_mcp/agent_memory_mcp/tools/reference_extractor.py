@@ -7,11 +7,17 @@ from typing import Any, cast
 
 from ..frontmatter_utils import read_with_frontmatter
 
-_GOVERNED_REFERENCE_ROOTS = ("identity", "knowledge", "plans", "skills", "meta")
+_GOVERNED_REFERENCE_ROOTS = (
+    "memory/users",
+    "memory/knowledge",
+    "memory/working",
+    "memory/skills",
+    "governance",
+)
 _URL_PREFIXES = ("http://", "https://", "mailto:", "memory://", "file://", "vscode://")
 _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)\n]+)\)")
 _BODY_PATH_RE = re.compile(
-    r"(?P<path>(?:\.\.?/|identity/|knowledge/|plans/|skills/|meta/)[^\s)\]>'\"]+)"
+    r"(?P<path>(?:\.\..?/|memory/users/|memory/knowledge/|memory/working/|memory/skills/|governance/)[^\s)\]>'\"+])"
 )
 _HEADING_RE = re.compile(r"^#{1,6}\s+(?P<text>.+?)\s*$", re.MULTILINE)
 _STRUCTURE_HEURISTICS = frozenset(
@@ -526,7 +532,9 @@ def plan_reorganization(root: Path, source: str, dest: str) -> dict[str, Any]:
         if current_from_path in future_paths:
             continue
         resolved_path = match.get("resolved_path")
-        if not isinstance(resolved_path, str) or not _path_is_within(resolved_path, normalized_source):
+        if not isinstance(resolved_path, str) or not _path_is_within(
+            resolved_path, normalized_source
+        ):
             continue
         new_resolved_path = _replace_path_prefix(resolved_path, normalized_source, normalized_dest)
         add_ref_update(

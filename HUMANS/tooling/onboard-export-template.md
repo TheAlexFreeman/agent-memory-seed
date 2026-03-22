@@ -6,7 +6,7 @@ Do not edit the frontmatter keys or section headers — the import script uses t
 
 ```yaml
 ---
-session_id: chats/YYYY/MM/DD/chat-001
+session_id: memory/activity/YYYY/MM/DD/chat-001
 session_date: YYYY-MM-DD
 ---
 ```
@@ -16,7 +16,7 @@ session_date: YYYY-MM-DD
 ## Identity Profile
 
 <!-- The agent writes the proposed user profile here, using the same format
-     as identity/ files. Include all confirmed traits with [observed] tags.
+     as core/memory/users/ files. Include all confirmed traits with [observed] tags.
      Example:
 
 ## Role and context
@@ -40,7 +40,7 @@ session_date: YYYY-MM-DD
 
 <!-- The agent writes the first-session transcript or a faithful transcript-style
      reconstruction here. Preserve the original ordering of the conversation so
-     the import script can recreate chats/YYYY/MM/DD/chat-001/transcript.md.
+     the import script can recreate core/memory/activity/YYYY/MM/DD/chat-001/transcript.md.
 -->
 
 ## Session Summary

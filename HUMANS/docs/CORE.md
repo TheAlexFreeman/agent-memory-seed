@@ -54,14 +54,14 @@ The system accepts that tradeoff because transparency and portability are more i
 
 ### 2. Routing is separate from reference material
 
-The live operational router is [meta/quick-reference.md](../../meta/quick-reference.md).
+The live operational router is [core/HOME.md](../../core/HOME.md).
 
 That file tells an agent what to load for the current kind of session. It is intentionally compact because most sessions do not need the full governance stack.
 
 Other files have different roles:
 
 - [README.md](../../README.md): architecture and protocol reference.
-- `meta/`: governance and operational rules for agents.
+- `core/governance/`: governance and operational rules for agents.
 - `HUMANS/docs/`: explanation for people, not startup context for agents.
 
 This separation is deliberate. It prevents the common failure mode where every important rule is repeated everywhere and drifts out of sync.
@@ -101,7 +101,7 @@ The underlying philosophy is that memory quality matters more than memory volume
 
 ### 4a. ACCESS logs are structured event streams
 
-Retrieval feedback is not just a loose note. It is a structured event stream for the access-tracked memory namespaces (`identity/`, `knowledge/`, `skills/`, `plans/`, `projects/`, and `chats/`). `meta/` stays outside this lifecycle for now because it is governance, not retrievable memory. The event stream has a few fields that now carry distinct meaning:
+Retrieval feedback is not just a loose note. It is a structured event stream for the access-tracked memory namespaces (`core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/working/projects/`, and `core/memory/activity/`). `core/governance/` stays outside this lifecycle for now because it is governance, not retrievable memory. The event stream has a few fields that now carry distinct meaning:
 
 - `session_id`: identifies the chat session when the access came from a real session boundary. When present consistently, it makes session-level analytics reliable.
 - `mode`: distinguishes `read`, `write`, `update`, and `create` so the system can tell whether a file was only consulted or actually changed.
@@ -123,7 +123,7 @@ Not every file is allowed to tell an agent what to do.
 The system distinguishes between:
 
 - Informational memory: identity, knowledge, plans, chats.
-- Procedural authority: `skills/`, `meta/`, and task-local sequencing inside the currently relevant file in `plans/`.
+- Procedural authority: `core/memory/skills/`, `core/governance/`, and task-local sequencing inside the currently relevant file in `core/memory/working/projects/`.
 
 This matters for safety. A knowledge file might contain useful facts, but it should not be able to smuggle in behavioral instructions that quietly change how the agent operates.
 
@@ -139,13 +139,13 @@ Why:
 - A useful system must distinguish user-confirmed truth from inferred patterns and external research.
 - Maintenance decisions depend on knowing how old and how verified content is.
 
-This is why external material goes to `knowledge/_unverified/` first instead of becoming trusted memory automatically.
+This is why external material goes to `core/memory/knowledge/_unverified/` first instead of becoming trusted memory automatically.
 
 ### 7. Humans stay in control of system-level changes
 
 The system is adaptive, but it is not meant to rewrite its own rules without oversight.
 
-Changes to high-leverage surfaces such as `meta/`, `skills/`, `README.md`, and other architectural references are deliberately governed. Significant system changes are logged in `CHANGELOG.md`.
+Changes to high-leverage surfaces such as `core/governance/`, `core/memory/skills/`, `README.md`, and other architectural references are deliberately governed. Significant system changes are logged in `CHANGELOG.md`.
 
 Why:
 

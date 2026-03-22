@@ -80,8 +80,8 @@ class AccessLoggingBatchTests(unittest.TestCase):
     ) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
                 "HUMANS/tooling/agent-memory-capabilities.toml": (
                     '[access_logging]\ntask_ids = ["plan-review", "validation"]\n'
                 ),
@@ -103,7 +103,7 @@ class AccessLoggingBatchTests(unittest.TestCase):
             tools["memory_log_access_batch"](
                 access_entries=[
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "task": "batch test",
                         "helpfulness": 0.8,
                         "note": "knowledge entry",
@@ -111,13 +111,13 @@ class AccessLoggingBatchTests(unittest.TestCase):
                         "task_id": "plan-review",
                     },
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "task": "batch test",
                         "helpfulness": 0.6,
                         "note": "plan entry",
                     },
                 ],
-                session_id="chats/2026/03/20/chat-020",
+                session_id="memory/activity/2026/03/20/chat-020",
             )
         )
 
@@ -136,25 +136,25 @@ class AccessLoggingBatchTests(unittest.TestCase):
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_entry = json.loads(
-            (repo_root / "plans" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
 
         self.assertEqual(after_count - before_count, 1)
         self.assertEqual(payload["new_state"]["entry_count"], 2)
         self.assertEqual(
             sorted(payload["new_state"]["access_jsonls"]),
-            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS.jsonl"],
         )
-        self.assertEqual(knowledge_entry["session_id"], "chats/2026/03/20/chat-020")
+        self.assertEqual(knowledge_entry["session_id"], "memory/activity/2026/03/20/chat-020")
         self.assertEqual(knowledge_entry["mode"], "write")
         self.assertEqual(knowledge_entry["task_id"], "plan-review")
-        self.assertEqual(plan_entry["session_id"], "chats/2026/03/20/chat-020")
+        self.assertEqual(plan_entry["session_id"], "memory/activity/2026/03/20/chat-020")
 
     def test_memory_log_access_batch_routes_low_helpfulness_to_scans_sidecar(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -163,19 +163,19 @@ class AccessLoggingBatchTests(unittest.TestCase):
             tools["memory_log_access_batch"](
                 access_entries=[
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "task": "batch test",
                         "helpfulness": 0.9,
                         "note": "keep in hot log",
                     },
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "task": "batch test",
                         "helpfulness": 0.2,
                         "note": "route to scans",
                     },
                 ],
-                session_id="chats/2026/03/20/chat-021",
+                session_id="memory/activity/2026/03/20/chat-021",
                 min_helpfulness=0.7,
             )
         )
@@ -185,14 +185,14 @@ class AccessLoggingBatchTests(unittest.TestCase):
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_scan_entry = json.loads(
-            (repo_root / "plans" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
         )
 
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
         self.assertEqual(
             sorted(payload["new_state"]["access_jsonls"]),
-            ["knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
         )
-        self.assertEqual(knowledge_entry["session_id"], "chats/2026/03/20/chat-021")
-        self.assertEqual(plan_scan_entry["session_id"], "chats/2026/03/20/chat-021")
+        self.assertEqual(knowledge_entry["session_id"], "memory/activity/2026/03/20/chat-021")
+        self.assertEqual(plan_scan_entry["session_id"], "memory/activity/2026/03/20/chat-021")
         self.assertEqual(plan_scan_entry["helpfulness"], 0.2)

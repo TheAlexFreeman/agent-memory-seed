@@ -35,25 +35,25 @@ def build_repo(
     write(root / "agent-bootstrap.toml", BOOTSTRAP_MANIFEST)
 
     for path in (
-        "meta/quick-reference.md",
+        "HOME.md",
         "README.md",
-        "meta/first-run.md",
+        "governance/first-run.md",
         "CHANGELOG.md",
-        "meta/curation-policy.md",
-        "meta/update-guidelines.md",
-        "meta/system-maturity.md",
-        "meta/belief-diff-log.md",
-        "meta/review-queue.md",
-        "meta/integrity-checklist.md",
-        "identity/SUMMARY.md",
-        "chats/SUMMARY.md",
-        "projects/SUMMARY.md",
+        "governance/curation-policy.md",
+        "governance/update-guidelines.md",
+        "governance/system-maturity.md",
+        "governance/belief-diff-log.md",
+        "governance/review-queue.md",
+        "governance/integrity-checklist.md",
+        "memory/users/SUMMARY.md",
+        "memory/activity/SUMMARY.md",
+        "memory/working/projects/SUMMARY.md",
     ):
         write(root / path, f"# {Path(path).stem}\n")
 
     profile_source = "template" if first_run else "user-stated"
     write(
-        root / "identity" / "profile.md",
+        root / "memory" / "users" / "profile.md",
         textwrap.dedent(
             f"""\
             ---
@@ -69,7 +69,7 @@ def build_repo(
     )
 
     if not first_run:
-        write(root / "chats" / "2026" / "03" / "18" / "chat-001" / "SUMMARY.md", "# Chat\n")
+        write(root / "memory" / "activity" / "2026" / "03" / "18" / "chat-001" / "SUMMARY.md", "# Chat\n")
 
     projects_summary = (
         "---\ntype: projects-navigator\ngenerated: 2026-03-21 12:00\nproject_count: 1\n---\n\n# Projects\n\n| Project | Status | Mode | Open Qs | Focus | Last activity |\n|---|---|---|---|---|---|\n| example-project | ongoing | exploration | 2 | Example focus | 2026-03-21 |\n"
@@ -80,16 +80,16 @@ def build_repo(
 
     if placeholder_scratchpad:
         write(
-            root / "scratchpad" / "USER.md",
+            root / "memory" / "working" / "scratchpad" / "USER.md",
             "# User notes\n\n_Nothing here yet. Add any context you'd like the agent to pick up at session start._\n",
         )
         write(
-            root / "scratchpad" / "CURRENT.md",
+            root / "memory" / "working" / "scratchpad" / "CURRENT.md",
             "# Agent working notes\n\n_No current notes._\n",
         )
     else:
-        write(root / "scratchpad" / "USER.md", "# User notes\n\nImportant note.\n")
-        write(root / "scratchpad" / "CURRENT.md", "# Agent working notes\n\nWorking note.\n")
+        write(root / "memory" / "working" / "scratchpad" / "USER.md", "# User notes\n\nImportant note.\n")
+        write(root / "memory" / "working" / "scratchpad" / "CURRENT.md", "# Agent working notes\n\nWorking note.\n")
 
 
 class BootstrapResolverTests(unittest.TestCase):
@@ -157,7 +157,7 @@ class BootstrapResolverTests(unittest.TestCase):
             root = Path(tempdir)
             build_repo(root, first_run=True)
             write(
-                root / "identity" / "profile.md",
+                root / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -186,19 +186,19 @@ class BootstrapResolverTests(unittest.TestCase):
             resolution = resolver.resolve_startup(root, requested_mode="returning")
             trace_by_path = {step.path: step for step in resolution.trace}
 
-            self.assertEqual(trace_by_path["meta/quick-reference.md"].status, "loaded")
+            self.assertEqual(trace_by_path["HOME.md"].status, "loaded")
             self.assertEqual(resolution.startup_panel.mode_label, "Returning")
             self.assertEqual(
-                resolution.startup_panel.repo_next_step.path, "meta/quick-reference.md"
+                resolution.startup_panel.repo_next_step.path, "HOME.md"
             )
             self.assertEqual(resolution.startup_panel.loaded_count, 3)
             self.assertEqual(resolution.startup_panel.skipped_count, 3)
-            self.assertEqual(trace_by_path["projects/SUMMARY.md"].status, "skipped")
-            self.assertEqual(trace_by_path["projects/SUMMARY.md"].reason, "no_active_projects")
-            self.assertEqual(trace_by_path["scratchpad/USER.md"].status, "skipped")
-            self.assertEqual(trace_by_path["scratchpad/USER.md"].reason, "placeholder_or_empty")
-            self.assertEqual(trace_by_path["scratchpad/CURRENT.md"].status, "skipped")
-            self.assertEqual(trace_by_path["scratchpad/CURRENT.md"].reason, "placeholder_or_empty")
+            self.assertEqual(trace_by_path["memory/working/projects/SUMMARY.md"].status, "skipped")
+            self.assertEqual(trace_by_path["memory/working/projects/SUMMARY.md"].reason, "no_active_projects")
+            self.assertEqual(trace_by_path["memory/working/scratchpad/USER.md"].status, "skipped")
+            self.assertEqual(trace_by_path["memory/working/scratchpad/USER.md"].reason, "placeholder_or_empty")
+            self.assertEqual(trace_by_path["memory/working/scratchpad/CURRENT.md"].status, "skipped")
+            self.assertEqual(trace_by_path["memory/working/scratchpad/CURRENT.md"].reason, "placeholder_or_empty")
 
     def test_duplicate_paths_are_deduplicated_after_normalization(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:
@@ -207,15 +207,15 @@ class BootstrapResolverTests(unittest.TestCase):
             write(
                 root / "agent-bootstrap.toml",
                 BOOTSTRAP_MANIFEST.replace(
-                    '[[modes.returning.steps]]\npath = "identity/SUMMARY.md"',
-                    '[[modes.returning.steps]]\npath = "./identity/SUMMARY.md"\nrole = "identity-summary-alias"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "identity/SUMMARY.md"',
+                    '[[modes.returning.steps]]\npath = "memory/users/SUMMARY.md"',
+                    '[[modes.returning.steps]]\npath = "./memory/users/SUMMARY.md"\nrole = "identity-summary-alias"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "memory/users/SUMMARY.md"',
                     1,
                 ),
             )
 
             resolution = resolver.resolve_startup(root, requested_mode="returning")
             identity_steps = [
-                step for step in resolution.trace if step.path == "identity/SUMMARY.md"
+                step for step in resolution.trace if step.path == "memory/users/SUMMARY.md"
             ]
 
             self.assertEqual(len(identity_steps), 2)
@@ -269,8 +269,8 @@ class BootstrapResolverTests(unittest.TestCase):
                     "[modes.returning]\ntoken_budget = 1500",
                     1,
                 ).replace(
-                    '[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
-                    '[[modes.returning.steps]]\npath = "docs/heavy-context.md"\nrole = "heavy-context"\nrequired = false\ncost = "medium"\n\n[[modes.returning.steps]]\npath = "chats/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "memory/activity/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "docs/heavy-context.md"\nrole = "heavy-context"\nrequired = false\ncost = "medium"\n\n[[modes.returning.steps]]\npath = "memory/activity/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
                     1,
                 ),
             )
@@ -302,8 +302,8 @@ class BootstrapResolverTests(unittest.TestCase):
                     "[modes.returning]\ntoken_budget = 2500",
                     1,
                 ).replace(
-                    '[[modes.returning.steps]]\npath = "projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"',
-                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"',
                     1,
                 ),
             )
@@ -423,7 +423,7 @@ class BootstrapResolverTests(unittest.TestCase):
             self.assertEqual(resolution.host_git_state.current_branch, "main")
             self.assertEqual(
                 resolution.startup_panel.files[0].path,
-                "meta/quick-reference.md",
+                "HOME.md",
             )
 
     def test_startup_panel_surfaces_all_branch_and_worktree_warnings(self) -> None:

@@ -159,8 +159,8 @@ if [[ "$LEGACY_EXPORT" == false ]]; then
         exit 1
     fi
 
-    if [[ ! "$SESSION_ID" =~ ^chats/[0-9]{4}/[0-9]{2}/[0-9]{2}/chat-[0-9]{3}$ ]]; then
-        echo "Error: session_id must match chats/YYYY/MM/DD/chat-NNN. Got: $SESSION_ID"
+    if [[ ! "$SESSION_ID" =~ ^core/memory/activity/[0-9]{4}/[0-9]{2}/[0-9]{2}/chat-[0-9]{3}$ ]]; then
+        echo "Error: session_id must match core/memory/activity/YYYY/MM/DD/chat-NNN. Got: $SESSION_ID"
         exit 1
     fi
 
@@ -169,7 +169,7 @@ if [[ "$LEGACY_EXPORT" == false ]]; then
         exit 1
     fi
 
-    SESSION_PATH_DATE=$(printf '%s\n' "$SESSION_ID" | sed -E 's#^chats/([0-9]{4})/([0-9]{2})/([0-9]{2})/chat-[0-9]{3}$#\1-\2-\3#')
+    SESSION_PATH_DATE=$(printf '%s\n' "$SESSION_ID" | sed -E 's#^core/memory/activity/([0-9]{4})/([0-9]{2})/([0-9]{2})/chat-[0-9]{3}$#\1-\2-\3#')
     if [[ "$SESSION_PATH_DATE" != "$SESSION_DATE" ]]; then
         echo "Error: session_date ($SESSION_DATE) must match the date encoded in session_id ($SESSION_ID)."
         exit 1
@@ -186,7 +186,7 @@ if [[ "$LEGACY_EXPORT" == false ]]; then
     fi
 else
     echo "[warn] Legacy onboarding export detected — missing session metadata and transcript section."
-    echo "       Falling back to today's date and chats/YYYY/MM/DD/chat-001."
+    echo "       Falling back to today's date and core/memory/activity/YYYY/MM/DD/chat-001."
     if [[ -z "$SESSION_SUMMARY" ]]; then
         echo "[warn] No content found in '## Session Summary' section. Skipping chat record."
     fi
@@ -196,7 +196,7 @@ fi
 IMPORT_DATE=$(date +%Y-%m-%d)
 if [[ "$LEGACY_EXPORT" == true ]]; then
     SESSION_DATE="$IMPORT_DATE"
-    CHAT_DIR="chats/$(date +%Y/%m/%d)/chat-001"
+    CHAT_DIR="core/memory/activity/$(date +%Y/%m/%d)/chat-001"
 else
     CHAT_DIR="$SESSION_ID"
 fi
@@ -207,8 +207,8 @@ echo ""
 
 WRITTEN_PATHS=()
 
-# 1. Write identity/profile.md
-PROFILE_FILE="identity/profile.md"
+# 1. Write core/memory/users/profile.md
+PROFILE_FILE="core/memory/users/profile.md"
 PROFILE_CONTENT="---
 source: user-stated
 origin_session: ${CHAT_DIR}
@@ -221,14 +221,14 @@ ${IDENTITY_CONTENT}"
 
 echo "[plan] Write identity profile to: $PROFILE_FILE"
 
-# 2. Write identity/SUMMARY.md
+# 2. Write core/memory/users/SUMMARY.md
 SUMMARY_CONTENT="# Identity Summary
 
 User profile created via onboarding export on ${SESSION_DATE}.
 
 See [profile.md](profile.md) for the full portrait."
 
-echo "[plan] Update identity summary: identity/SUMMARY.md"
+echo "[plan] Update identity summary: core/memory/users/SUMMARY.md"
 
 # 3. Write chat record (if session summary provided)
 if [[ -n "$SESSION_SUMMARY" ]]; then
@@ -251,12 +251,12 @@ ${SESSION_REFLECTION}"
     fi
 fi
 
-# 4. Update chats/SUMMARY.md
+# 4. Update core/memory/activity/SUMMARY.md
 # Only write when the file is absent or still holds the default placeholder.
 # Real history is present when the file exists and does NOT contain the
 # "*No conversations yet.*" sentinel that ships with the template repo.
 chats_summary_has_history() {
-    local f="chats/SUMMARY.md"
+    local f="core/memory/activity/SUMMARY.md"
     [[ -f "$f" ]] && ! grep -q '\*No conversations yet\.' "$f"
 }
 
@@ -267,9 +267,9 @@ CHATS_SUMMARY_CONTENT="# Chats Summary
 First recorded conversation on ${SESSION_DATE}: **${CHAT_NAME}** — onboarding and initial user profile creation."
 
 if chats_summary_has_history; then
-    echo "[plan] SKIP chats/SUMMARY.md — existing history detected (would overwrite)"
+    echo "[plan] SKIP core/memory/activity/SUMMARY.md — existing history detected (would overwrite)"
 else
-    echo "[plan] Update chat summary: chats/SUMMARY.md"
+    echo "[plan] Update chat summary: core/memory/activity/SUMMARY.md"
 fi
 echo ""
 
@@ -280,7 +280,7 @@ if [[ "$DRY_RUN" == true ]]; then
     echo "--- ${PROFILE_FILE} ---"
     echo "$PROFILE_CONTENT"
     echo ""
-    echo "--- identity/SUMMARY.md ---"
+    echo "--- core/memory/users/SUMMARY.md ---"
     echo "$SUMMARY_CONTENT"
     if [[ -n "$SESSION_SUMMARY" ]]; then
         echo ""
@@ -299,11 +299,11 @@ if [[ "$DRY_RUN" == true ]]; then
     fi
     echo ""
     if chats_summary_has_history; then
-        echo "--- chats/SUMMARY.md ---"
-        echo "[skip] Existing chat history detected — chats/SUMMARY.md will NOT be overwritten."
+        echo "--- core/memory/activity/SUMMARY.md ---"
+        echo "[skip] Existing chat history detected — core/memory/activity/SUMMARY.md will NOT be overwritten."
         echo "       To update it, edit the file manually and add the new entry."
     else
-        echo "--- chats/SUMMARY.md ---"
+        echo "--- core/memory/activity/SUMMARY.md ---"
         echo "$CHATS_SUMMARY_CONTENT"
     fi
     echo ""
@@ -317,9 +317,9 @@ WRITTEN_PATHS+=("$PROFILE_FILE")
 echo "[ok] Wrote $PROFILE_FILE"
 
 # Write identity summary
-printf '%s\n' "$SUMMARY_CONTENT" > "identity/SUMMARY.md"
-WRITTEN_PATHS+=("identity/SUMMARY.md")
-echo "[ok] Updated identity/SUMMARY.md"
+printf '%s\n' "$SUMMARY_CONTENT" > "core/memory/users/SUMMARY.md"
+WRITTEN_PATHS+=("core/memory/users/SUMMARY.md")
+echo "[ok] Updated core/memory/users/SUMMARY.md"
 
 # Write chat record
 if [[ -n "$SESSION_SUMMARY" ]]; then
@@ -341,15 +341,15 @@ if [[ -n "$SESSION_SUMMARY" ]]; then
     fi
 fi
 
-# Update chats/SUMMARY.md — only when no real history exists yet
+# Update core/memory/activity/SUMMARY.md — only when no real history exists yet
 if chats_summary_has_history; then
-    echo "[skip] chats/SUMMARY.md already contains session history — not overwritten."
+    echo "[skip] core/memory/activity/SUMMARY.md already contains session history — not overwritten."
     echo "       Add the new entry manually:"
     echo "         First recorded conversation on ${SESSION_DATE}: **${CHAT_NAME}** — onboarding and initial user profile creation."
 else
-    printf '%s\n' "$CHATS_SUMMARY_CONTENT" > "chats/SUMMARY.md"
-    WRITTEN_PATHS+=("chats/SUMMARY.md")
-    echo "[ok] Updated chats/SUMMARY.md"
+    printf '%s\n' "$CHATS_SUMMARY_CONTENT" > "core/memory/activity/SUMMARY.md"
+    WRITTEN_PATHS+=("core/memory/activity/SUMMARY.md")
+    echo "[ok] Updated core/memory/activity/SUMMARY.md"
 fi
 
 # Stage and commit

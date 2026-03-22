@@ -25,22 +25,33 @@ def _tool_annotations(**kwargs: object) -> Any:
     return cast(Any, kwargs)
 
 
-_ACCESS_ROOTS = ("identity", "knowledge", "skills", "plans", "projects", "chats")
+_ACCESS_ROOTS = (
+    "memory/users",
+    "memory/knowledge",
+    "memory/skills",
+    "memory/working",
+    "memory/activity",
+)
 _ACCESS_MODES = frozenset({"read", "write", "update", "create"})
 _ACCESS_TASK_ID_MANIFEST = PurePosixPath("HUMANS/tooling/agent-memory-capabilities.toml")
 _ACCESS_SCANS_FILENAME = "ACCESS_SCANS.jsonl"
 _CATEGORY_CODE_RE = re.compile(r"`([a-z0-9]+(?:-[a-z0-9]+)*)`")
 _CATEGORY_LIST_RE = re.compile(r"^(?:[-*]|\d+\.)\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s*$")
-_CURRENT_SESSION_SENTINEL = PurePosixPath("chats/CURRENT_SESSION")
+_CURRENT_SESSION_SENTINEL = PurePosixPath("memory/activity/CURRENT_SESSION")
 _REVIEW_QUEUE_HEADING_RE = re.compile(
     r"(?m)^### (?:\[(?P<date>\d{4}-\d{2}-\d{2})\] (?P<title>.+)|(?P<legacy_date>\d{4}-\d{2}-\d{2}) — (?P<legacy_title>.+))$"
 )
 _REVIEW_QUEUE_FIELD_RE = re.compile(r"(?m)^\*\*(.+?):\*\*\s*(.+)$")
-_REVERT_ALLOWED_TOP_LEVELS = frozenset(
-    {"identity", "knowledge", "skills", "plans", "projects", "chats", "meta", "scratchpad"}
+_REVERT_ALLOWED_ROOTS = (
+    "memory/users",
+    "memory/knowledge",
+    "memory/skills",
+    "memory/working",
+    "memory/activity",
+    "governance",
 )
 _REVERT_ALLOWED_FILES = frozenset({"CHANGELOG.md"})
-_REVERT_SYSTEM_TOP_LEVELS = frozenset({"meta"})
+_REVERT_SYSTEM_ROOTS = ("governance",)
 _REVERT_SYSTEM_FILES = frozenset(
     {"AGENTS.md", "CHANGELOG.md", "CLAUDE.md", "README.md", "agent-bootstrap.toml"}
 )
@@ -79,19 +90,20 @@ _PERIODIC_REVIEW_STAGE_SETTINGS: dict[str, dict[str, str | int]] = {
 
 
 def _access_jsonl_for(rel_path: str) -> str | None:
-    parts = PurePosixPath(rel_path).parts
-    if not parts:
-        return None
-    root = parts[0]
-    if root not in _ACCESS_ROOTS:
-        return None
-    if root == "knowledge" and len(parts) > 1 and parts[1] == "_unverified":
-        return "knowledge/_unverified/ACCESS.jsonl"
-    return f"{root}/ACCESS.jsonl"
+    # Special case: knowledge/_unverified gets its own ACCESS.jsonl
+    if (
+        rel_path.startswith("memory/knowledge/_unverified/")
+        or rel_path == "memory/knowledge/_unverified"
+    ):
+        return "memory/knowledge/_unverified/ACCESS.jsonl"
+    for root in _ACCESS_ROOTS:
+        if rel_path == root or rel_path.startswith(root + "/"):
+            return f"{root}/ACCESS.jsonl"
+    return None
 
 
 def _load_task_categories(root: Path) -> set[str]:
-    categories_path = root / "meta" / "task-categories.md"
+    categories_path = root / "governance" / "task-categories.md"
     if not categories_path.exists():
         return set()
 
@@ -279,9 +291,8 @@ def _normalize_access_entry(
     file_path, _ = resolve_repo_path(repo, file_value, field_name="file")
     access_jsonl = _access_jsonl_for(file_path)
     if access_jsonl is None:
-        root_part = PurePosixPath(file_path).parts[0] if file_path else "(empty)"
         raise ValidationError(
-            f"Cannot log access for '{file_path}': '{root_part}/' is not an access-tracked directory. Supported roots: {sorted(_ACCESS_ROOTS)}"
+            f"Cannot log access for '{file_path}': not under an access-tracked directory. Supported roots: {sorted(_ACCESS_ROOTS)}"
         )
 
     if category_value is not None:
@@ -289,7 +300,7 @@ def _normalize_access_entry(
         categories = _load_task_categories(root)
         if not categories:
             raise ValidationError(
-                "category cannot be set until meta/task-categories.md exists with a controlled vocabulary"
+                "category cannot be set until governance/task-categories.md exists with a controlled vocabulary"
             )
         if category not in categories:
             raise ValidationError(f"category must be one of {sorted(categories)}, got: {category}")
@@ -388,7 +399,14 @@ def _normalize_aggregation_folders(folders: list[str] | None) -> list[str] | Non
         raise ValidationError("folders must be a list of repo folder prefixes")
 
     normalized: list[str] = []
-    allowed = {"identity", "knowledge", "knowledge/_unverified", "skills", "plans", "chats"}
+    allowed = {
+        "memory/users",
+        "memory/knowledge",
+        "memory/knowledge/_unverified",
+        "memory/skills",
+        "memory/working",
+        "memory/activity",
+    }
     for raw_folder in folders:
         folder = raw_folder.strip().rstrip("/")
         if folder not in allowed:
@@ -605,17 +623,24 @@ def _archive_target_for_access_file(access_file: str, entries: list[dict[str, An
 
 
 def _resolve_scratchpad_target(target: str) -> str:
-    target_map = {"user": "scratchpad/USER.md", "current": "scratchpad/CURRENT.md"}
+    target_map = {
+        "user": "memory/working/scratchpad/USER.md",
+        "current": "memory/working/scratchpad/CURRENT.md",
+    }
     if target in target_map:
         return target_map[target]
-    if isinstance(target, str) and target.startswith("scratchpad/") and target.endswith(".md"):
-        slug = target[len("scratchpad/") : -len(".md")]
+    if (
+        isinstance(target, str)
+        and target.startswith("memory/working/scratchpad/")
+        and target.endswith(".md")
+    ):
+        slug = target[len("memory/working/scratchpad/") : -len(".md")]
         validate_slug(slug, field_name="target")
-        return f"scratchpad/{slug}.md"
+        return f"memory/working/scratchpad/{slug}.md"
     from ...errors import ValidationError
 
     raise ValidationError(
-        "target must be 'user', 'current', or 'scratchpad/{slug}.md' with a bare kebab-case slug"
+        "target must be 'user', 'current', or 'memory/working/scratchpad/{slug}.md' with a bare kebab-case slug"
     )
 
 
@@ -760,21 +785,25 @@ def _update_current_stage_block(
 
 
 def _is_revertable_memory_path(rel_path: str) -> bool:
-    parts = PurePosixPath(rel_path).parts
-    if not parts:
+    if not rel_path:
         return False
-    if len(parts) == 1 and parts[0] in _REVERT_ALLOWED_FILES:
+    if rel_path in _REVERT_ALLOWED_FILES:
         return True
-    return parts[0] in _REVERT_ALLOWED_TOP_LEVELS
+    for root in _REVERT_ALLOWED_ROOTS:
+        if rel_path == root or rel_path.startswith(root + "/"):
+            return True
+    return False
 
 
 def _is_revertable_system_path(rel_path: str) -> bool:
-    parts = PurePosixPath(rel_path).parts
-    if not parts:
+    if not rel_path:
         return False
-    if len(parts) == 1 and parts[0] in _REVERT_SYSTEM_FILES:
+    if rel_path in _REVERT_SYSTEM_FILES:
         return True
-    return parts[0] in _REVERT_SYSTEM_TOP_LEVELS
+    for root in _REVERT_SYSTEM_ROOTS:
+        if rel_path == root or rel_path.startswith(root + "/"):
+            return True
+    return False
 
 
 def _build_revert_preview(repo, sha: str) -> dict[str, object]:
@@ -940,7 +969,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         repo.add(session_summary_rel)
 
         files_changed = [session_summary_rel]
-        chats_summary_rel = "chats/SUMMARY.md"
+        chats_summary_rel = "memory/activity/SUMMARY.md"
         abs_chats_summary = root / chats_summary_rel
         if abs_chats_summary.exists():
             chats_content = abs_chats_summary.read_text(encoding="utf-8")
@@ -981,7 +1010,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if priority not in ("normal", "urgent"):
             raise ValidationError(f"priority must be 'normal' or 'urgent': {priority}")
 
-        review_queue_rel = "meta/review-queue.md"
+        review_queue_rel = "governance/review-queue.md"
         abs_queue = root / review_queue_rel
         if not abs_queue.exists():
             raise ValidationError(f"Review queue not found: {review_queue_rel}")
@@ -1052,7 +1081,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
 
         item_id = validate_slug(item_id, field_name="item_id")
-        review_queue_rel = "meta/review-queue.md"
+        review_queue_rel = "governance/review-queue.md"
         abs_queue = root / review_queue_rel
         if not abs_queue.exists():
             raise NotFoundError(f"Review queue not found: {review_queue_rel}")
@@ -1285,7 +1314,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             repo.add(reflection_rel)
             files_changed.append(reflection_rel)
 
-        chats_summary_rel = "chats/SUMMARY.md"
+        chats_summary_rel = "memory/activity/SUMMARY.md"
         abs_chats_summary = root / chats_summary_rel
         if abs_chats_summary.exists():
             updated_chats_content = _update_chats_summary_index(
@@ -1344,12 +1373,12 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         selected_folders = _normalize_aggregation_folders(folders)
         default_access_folders = [
-            "identity",
-            "knowledge",
-            "knowledge/_unverified",
-            "skills",
-            "plans",
-            "chats",
+            "memory/users",
+            "memory/knowledge",
+            "memory/knowledge/_unverified",
+            "memory/skills",
+            "memory/working",
+            "memory/activity",
         ]
 
         access_files = [
@@ -1586,9 +1615,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "active_stage must be one of Exploration, Calibration, Consolidation"
             )
 
-        quick_reference_rel = "meta/quick-reference.md"
-        belief_diff_rel = "meta/belief-diff-log.md"
-        review_queue_rel = "meta/review-queue.md"
+        quick_reference_rel = "HOME.md"
+        belief_diff_rel = "governance/belief-diff-log.md"
+        review_queue_rel = "governance/review-queue.md"
 
         abs_quick_reference = root / quick_reference_rel
         abs_belief_diff = root / belief_diff_rel
@@ -1607,7 +1636,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         )
         if updated_quick_reference is None:
             raise ValidationError(
-                "Could not locate the 'Last periodic review' date block in meta/quick-reference.md"
+                "Could not locate the 'Last periodic review' date block in HOME.md"
             )
 
         current_stage_match = re.search(
@@ -1651,7 +1680,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             reasoning="Periodic-review recording is a protected governance write because it edits authoritative meta surfaces.",
             target_files=[preview_target(path, "update") for path in files_changed],
             invariant_effects=[
-                "Updates the last periodic review date and active-stage assessment in meta/quick-reference.md.",
+                "Updates the last periodic review date and active-stage assessment in HOME.md.",
                 "Appends the belief-diff entry and any queued follow-up review items in one governed commit.",
             ],
             commit_message=commit_msg,

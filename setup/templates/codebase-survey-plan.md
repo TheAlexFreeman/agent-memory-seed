@@ -1,6 +1,6 @@
 ---
-created: {{TODAY}}
-last_verified: {{TODAY}}
+created: { { TODAY } }
+last_verified: { { TODAY } }
 next_action: "Phase 0, item 1: identify the application entry points and boot sequence"
 origin_session: setup
 source: template
@@ -19,7 +19,7 @@ Build a compact, maintainable knowledge base for {{PROJECT_NAME}} so future sess
 ## Scope
 
 - map the major entry points, modules, data model, and operational commands
-- capture one durable knowledge file per survey track under `knowledge/codebase/`
+- capture one durable knowledge file per survey track under `core/memory/knowledge/codebase/`
 - attach `related` frontmatter over time so freshness checks can follow host-repo source changes
 
 ## Phases
@@ -27,32 +27,32 @@ Build a compact, maintainable knowledge base for {{PROJECT_NAME}} so future sess
 ### Phase 0 - Entry-point mapping
 
 1. ☐ Identify the application entry points, boot sequence, and top-level package boundaries.
-2. ☐ Replace the placeholder content in `knowledge/codebase/architecture.md` with the initial system map.
+2. ☐ Replace the placeholder content in `core/memory/knowledge/codebase/architecture.md` with the initial system map.
 
 ### Phase 1 - Module and subsystem survey
 
 1. ☐ Trace the major modules, services, or feature areas and record their responsibilities.
-2. ☐ Expand `knowledge/codebase/architecture.md` with module boundaries and cross-references.
+2. ☐ Expand `core/memory/knowledge/codebase/architecture.md` with module boundaries and cross-references.
 
 ### Phase 2 - Data model and API contracts
 
 1. ☐ Document the core entities, persistence layers, and internal or external API boundaries.
-2. ☐ Replace the placeholder content in `knowledge/codebase/data-model.md`.
+2. ☐ Replace the placeholder content in `core/memory/knowledge/codebase/data-model.md`.
 
 ### Phase 3 - Operations and delivery
 
 1. ☐ Capture how to run, test, deploy, debug, and observe the host project.
-2. ☐ Replace the placeholder content in `knowledge/codebase/operations.md`.
+2. ☐ Replace the placeholder content in `core/memory/knowledge/codebase/operations.md`.
 
 ### Phase 4 - Design rationale and history
 
 1. ☐ Record ADRs, important conventions, and historically relevant implementation decisions.
-2. ☐ Replace the placeholder content in `knowledge/codebase/decisions.md`.
+2. ☐ Replace the placeholder content in `core/memory/knowledge/codebase/decisions.md`.
 
 ### Phase 5 - Freshness and maintenance loop
 
 1. ☐ Add `related` frontmatter to each codebase knowledge file so freshness checks can resolve source files.
-2. ☐ Update `knowledge/codebase/SUMMARY.md` with survey coverage and a re-verification cadence.
+2. ☐ Update `core/memory/knowledge/codebase/SUMMARY.md` with survey coverage and a re-verification cadence.
 
 ## Progress tracking
 

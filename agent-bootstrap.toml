@@ -1,5 +1,5 @@
 version = 1
-router = "meta/quick-reference.md"
+router = "HOME.md"
 default_mode = "returning"
 adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]
 # Optional in deployed worktree mode. When set, points at the host codebase root
@@ -27,13 +27,13 @@ required = true
 cost = "medium"
 
 [[modes.first_run.steps]]
-path = "meta/quick-reference.md"
+path = "HOME.md"
 role = "router"
 required = true
 cost = "light"
 
 [[modes.first_run.steps]]
-path = "meta/first-run.md"
+path = "governance/first-run.md"
 role = "first-run-manifest"
 required = true
 cost = "light"
@@ -42,46 +42,46 @@ cost = "light"
 token_budget = 7000
 prefer_summaries = true
 maintenance_probes = [
-  "meta/review-queue.md:load_only_when_non_placeholder",
+  "governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["memory/knowledge/SUMMARY.md", "memory/skills/SUMMARY.md"]
 
 [[modes.returning.steps]]
-path = "meta/quick-reference.md"
+path = "HOME.md"
 role = "router"
 required = true
 cost = "light"
 
 [[modes.returning.steps]]
-path = "projects/SUMMARY.md"
+path = "memory/working/projects/SUMMARY.md"
 role = "project-summary"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.returning.steps]]
-path = "identity/SUMMARY.md"
-role = "identity-summary"
+path = "memory/users/SUMMARY.md"
+role = "user-summary"
 required = true
 cost = "light"
 
 [[modes.returning.steps]]
-path = "chats/SUMMARY.md"
-role = "chat-summary"
+path = "memory/activity/SUMMARY.md"
+role = "activity-summary"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.returning.steps]]
-path = "scratchpad/USER.md"
+path = "memory/working/scratchpad/USER.md"
 role = "scratchpad-user"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.returning.steps]]
-path = "scratchpad/CURRENT.md"
+path = "memory/working/scratchpad/CURRENT.md"
 role = "scratchpad-current"
 required = false
 skip_if = "placeholder_or_empty"
@@ -91,10 +91,10 @@ cost = "light"
 token_budget = 25000
 prefer_summaries = true
 maintenance_probes = [
-  "meta/review-queue.md:load_only_when_non_placeholder",
+  "governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["memory/knowledge/SUMMARY.md", "memory/skills/SUMMARY.md"]
 
 [[modes.full_bootstrap.steps]]
 path = "README.md"
@@ -103,40 +103,40 @@ required = true
 cost = "medium"
 
 [[modes.full_bootstrap.steps]]
-path = "meta/quick-reference.md"
+path = "HOME.md"
 role = "router"
 required = true
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "projects/SUMMARY.md"
+path = "memory/working/projects/SUMMARY.md"
 role = "project-summary"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "identity/SUMMARY.md"
-role = "identity-summary"
+path = "memory/users/SUMMARY.md"
+role = "user-summary"
 required = true
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "chats/SUMMARY.md"
-role = "chat-summary"
+path = "memory/activity/SUMMARY.md"
+role = "activity-summary"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "scratchpad/USER.md"
+path = "memory/working/scratchpad/USER.md"
 role = "scratchpad-user"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "scratchpad/CURRENT.md"
+path = "memory/working/scratchpad/CURRENT.md"
 role = "scratchpad-current"
 required = false
 skip_if = "placeholder_or_empty"
@@ -149,13 +149,13 @@ required = true
 cost = "medium"
 
 [[modes.full_bootstrap.steps]]
-path = "meta/curation-policy.md"
+path = "governance/curation-policy.md"
 role = "governance-reference"
 required = true
 cost = "medium"
 
 [[modes.full_bootstrap.steps]]
-path = "meta/update-guidelines.md"
+path = "governance/update-guidelines.md"
 role = "change-control"
 required = true
 cost = "medium"
@@ -164,10 +164,10 @@ cost = "medium"
 token_budget = 25000
 prefer_summaries = true
 maintenance_probes = [
-  "meta/review-queue.md:load_only_when_non_placeholder",
+  "governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["memory/knowledge/SUMMARY.md", "memory/skills/SUMMARY.md"]
 
 [[modes.periodic_review.steps]]
 path = "README.md"
@@ -176,40 +176,40 @@ required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "meta/quick-reference.md"
+path = "HOME.md"
 role = "router"
 required = true
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "projects/SUMMARY.md"
+path = "memory/working/projects/SUMMARY.md"
 role = "project-summary"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "identity/SUMMARY.md"
-role = "identity-summary"
+path = "memory/users/SUMMARY.md"
+role = "user-summary"
 required = true
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "chats/SUMMARY.md"
-role = "chat-summary"
+path = "memory/activity/SUMMARY.md"
+role = "activity-summary"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "scratchpad/USER.md"
+path = "memory/working/scratchpad/USER.md"
 role = "scratchpad-user"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "scratchpad/CURRENT.md"
+path = "memory/working/scratchpad/CURRENT.md"
 role = "scratchpad-current"
 required = false
 skip_if = "placeholder_or_empty"
@@ -222,37 +222,37 @@ required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "meta/curation-policy.md"
+path = "governance/curation-policy.md"
 role = "governance-reference"
 required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "meta/update-guidelines.md"
+path = "governance/update-guidelines.md"
 role = "change-control"
 required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "meta/system-maturity.md"
+path = "governance/system-maturity.md"
 role = "stage-reference"
 required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "meta/belief-diff-log.md"
+path = "governance/belief-diff-log.md"
 role = "drift-audit"
 required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "meta/review-queue.md"
+path = "governance/review-queue.md"
 role = "pending-proposals"
 required = true
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "meta/integrity-checklist.md"
+path = "governance/integrity-checklist.md"
 role = "integrity-audit"
 required = true
 cost = "medium"
@@ -261,33 +261,33 @@ cost = "medium"
 token_budget = 7000
 prefer_summaries = true
 maintenance_probes = [
-  "meta/review-queue.md:load_only_when_non_placeholder",
+  "governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["plans/SUMMARY.md", "knowledge/SUMMARY.md", "skills/SUMMARY.md"]
+on_demand = ["memory/knowledge/SUMMARY.md", "memory/skills/SUMMARY.md"]
 
 [[modes.automation.steps]]
-path = "meta/quick-reference.md"
+path = "HOME.md"
 role = "router"
 required = true
 cost = "light"
 
 [[modes.automation.steps]]
-path = "scratchpad/USER.md"
+path = "memory/working/scratchpad/USER.md"
 role = "scratchpad-user"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.automation.steps]]
-path = "scratchpad/CURRENT.md"
+path = "memory/working/scratchpad/CURRENT.md"
 role = "scratchpad-current"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.automation.steps]]
-path = "projects/SUMMARY.md"
+path = "memory/working/projects/SUMMARY.md"
 role = "project-summary"
 required = false
 skip_if = "placeholder_or_empty"

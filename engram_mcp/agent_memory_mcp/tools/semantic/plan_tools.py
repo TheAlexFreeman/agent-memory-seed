@@ -1,4 +1,4 @@
-"""Plan-oriented semantic tools."""
+"""Project plan-oriented semantic tools."""
 
 from __future__ import annotations
 
@@ -18,23 +18,23 @@ def _tool_annotations(**kwargs: object) -> Any:
 
 
 def _legacy_plan_path(plan_id: str) -> str:
-    return f"plans/{validate_slug(plan_id, field_name='plan_id')}.md"
+    return f"memory/working/projects/{validate_slug(plan_id, field_name='plan_id')}.md"
 
 
 def _project_plan_path(project_id: str, plan_id: str) -> str:
     project_slug = validate_slug(project_id, field_name="project_id")
     plan_slug = validate_slug(plan_id, field_name="plan_id")
-    return f"projects/{project_slug}/plans/{plan_slug}.md"
+    return f"memory/working/projects/{project_slug}/plans/{plan_slug}.md"
 
 
 def _project_summary_path(project_id: str) -> str:
     project_slug = validate_slug(project_id, field_name="project_id")
-    return f"projects/{project_slug}/SUMMARY.md"
+    return f"memory/working/projects/{project_slug}/SUMMARY.md"
 
 
 def _find_project_plan_matches(root: Path, plan_id: str) -> list[tuple[str, str]]:
     plan_slug = validate_slug(plan_id, field_name="plan_id")
-    projects_root = root / "projects"
+    projects_root = root / "memory" / "working" / "projects"
     if not projects_root.is_dir():
         return []
 
@@ -76,14 +76,14 @@ def _resolve_new_plan_path(
     from ...errors import NotFoundError, ValidationError
 
     if project_id is None:
-        if (root / "plans" / "SUMMARY.md").exists():
+        if (root / "memory" / "working" / "projects" / "SUMMARY.md").exists():
             return _legacy_plan_path(plan_id), None
         raise ValidationError("project_id is required when creating a project-scoped plan.")
 
     project_slug = validate_slug(project_id, field_name="project_id")
     project_summary = root / _project_summary_path(project_slug)
     if not project_summary.exists():
-        raise NotFoundError(f"Project not found: projects/{project_slug}")
+        raise NotFoundError(f"Project not found: memory/working/projects/{project_slug}")
     return _project_plan_path(project_slug, plan_id), project_slug
 
 
@@ -113,7 +113,7 @@ def _sync_project_navigation(
         if project_summary_path not in files_changed:
             files_changed.append(project_summary_path)
 
-    navigator_path = "projects/SUMMARY.md"
+    navigator_path = "memory/working/projects/SUMMARY.md"
     abs_navigator = root / navigator_path
     if abs_navigator.exists():
         navigator_content = render_projects_navigator(collect_project_entries(root))
@@ -124,7 +124,7 @@ def _sync_project_navigation(
 
 
 def _plan_summary_title(fm_dict: dict[str, object], body: str, plan_id: str) -> str:
-    """Resolve a human-readable plan title for plans/SUMMARY.md."""
+    """Resolve a human-readable plan title for the plans SUMMARY."""
     title = fm_dict.get("title")
     if isinstance(title, str) and title.strip():
         return title.strip()
@@ -346,15 +346,15 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         post = fmlib.Post(content, **fm_dict)
         files_changed = [plan_path]
 
-        summary_path = "plans/SUMMARY.md"
+        summary_path = "memory/working/projects/SUMMARY.md"
         abs_summary = root / summary_path
         updated_summary: str | None = None
         if resolved_project_id is not None:
             project_summary_path = _project_summary_path(resolved_project_id)
             if (root / project_summary_path).exists():
                 files_changed.append(project_summary_path)
-            if (root / "projects" / "SUMMARY.md").exists():
-                files_changed.append("projects/SUMMARY.md")
+            if (root / "memory" / "working" / "projects" / "SUMMARY.md").exists():
+                files_changed.append("memory/working/projects/SUMMARY.md")
         elif abs_summary.exists():
             summary_content = abs_summary.read_text(encoding="utf-8")
             new_block = build_plan_summary_block(
@@ -399,9 +399,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     else []
                 ),
                 *(
-                    [preview_target("projects/SUMMARY.md", "update")]
+                    [preview_target("memory/working/projects/SUMMARY.md", "update")]
                     if resolved_project_id is not None
-                    and (root / "projects" / "SUMMARY.md").exists()
+                    and (root / "memory" / "working" / "projects" / "SUMMARY.md").exists()
                     else []
                 ),
                 *(
@@ -413,9 +413,11 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             invariant_effects=[
                 "Creates a governed plan file with standard frontmatter and active status.",
                 *(
-                    ["Updates the project summary and regenerates projects/SUMMARY.md."]
+                    [
+                        "Updates the project summary and regenerates memory/working/projects/SUMMARY.md."
+                    ]
                     if resolved_project_id is not None
-                    else ["Updates plans/SUMMARY.md when the plan index exists."]
+                    else ["Updates the plans index SUMMARY when it exists."]
                 ),
             ],
             commit_message=commit_msg,
@@ -571,7 +573,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         plans = []
 
         plan_files: list[tuple[Path, str | None]] = []
-        projects_root = root / "projects"
+        projects_root = root / "memory" / "working" / "projects"
         if projects_root.is_dir():
             project_glob = (
                 f"{validate_slug(project_id, field_name='project_id')}/plans/*.md"
@@ -582,7 +584,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 if plan_file.is_file():
                     plan_files.append((plan_file, plan_file.parents[1].name))
 
-        legacy_plans_dir = root / "plans"
+        legacy_plans_dir = root / "memory" / "working" / "projects"
         if project_id is None and legacy_plans_dir.is_dir():
             for plan_file in sorted(legacy_plans_dir.glob("*.md")):
                 if plan_file.name == "SUMMARY.md":

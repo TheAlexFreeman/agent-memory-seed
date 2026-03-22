@@ -55,7 +55,7 @@ class MemoryPermissionError(AgentMemoryError):
     """Operation is blocked by the directory restriction policy.
 
     Raised before any filesystem access when the target path is in a
-    protected directory (identity/, meta/, chats/, skills/).
+    protected directory (memory/users/, governance/, memory/activity/, memory/skills/).
     Also raised when cowork file-delete permission cannot be obtained.
 
     Attributes:

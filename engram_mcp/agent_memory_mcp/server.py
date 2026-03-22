@@ -83,7 +83,8 @@ def create_mcp(
 ) -> tuple[FastMCP, dict[str, object], Path, GitRepo]:
     """Create the FastMCP app, register tools, and expose their callables."""
     root = resolve_repo_root(repo_root)
-    repo = GitRepo(root)
+    content_prefix = os.environ.get("MEMORY_CORE_PREFIX", "core")
+    repo = GitRepo(root, content_prefix=content_prefix)
     root = repo.root
     mcp = FastMCP("agent_memory_mcp")
     delete_permission_hook = (
@@ -96,7 +97,7 @@ def create_mcp(
         return repo
 
     def get_root() -> Path:
-        return root
+        return repo.content_root
 
     tools: dict[str, object] = {}
     tools.update(read_tools.register(mcp, get_repo, get_root))

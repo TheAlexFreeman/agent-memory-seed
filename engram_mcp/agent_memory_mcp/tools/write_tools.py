@@ -10,8 +10,8 @@ These replace raw Edit/Write/Bash calls for memory writes. All tools:
 Directory restrictions:
   ALL Tier 2 mutation tools (memory_write, memory_edit, memory_delete,
     memory_move, memory_update_frontmatter, memory_update_frontmatter_bulk)
-    reject paths under protected directories: identity/, meta/, chats/,
-    skills/.
+    reject paths under protected directories: memory/users/, governance/,
+    memory/activity/, memory/skills/.
   Use Tier 1 semantic tools for governed writes to protected directories.
 """
 
@@ -143,14 +143,14 @@ def register(
 
         Call memory_commit when all related writes are staged.
 
-        DIRECTORY RESTRICTIONS: Writes to protected directories (identity/,
-        meta/, chats/, skills/) are blocked. Use the appropriate Tier 1
-        semantic tool instead (e.g. memory_update_identity_trait,
-        memory_record_chat_summary). Allowed targets: knowledge/, plans/,
-        scratchpad/.
+        DIRECTORY RESTRICTIONS: Writes to protected directories (memory/users/,
+        governance/, memory/activity/, memory/skills/) are blocked. Use the
+        appropriate Tier 1 semantic tool instead (e.g. memory_update_user_trait,
+        memory_record_chat_summary). Allowed targets: memory/knowledge/,
+        memory/working/, memory/working/scratchpad/.
 
         Args:
-            path:          Repo-relative path (e.g. 'knowledge/_unverified/django/foo.md').
+            path:          Repo-relative path (e.g. 'memory/knowledge/_unverified/django/foo.md').
             content:       Full file content to write.
             version_token: If provided, checked against the current file hash before
                            writing. Pass the token returned by memory_read_file to
@@ -219,8 +219,9 @@ def register(
         """Exact string replacement in a file, then stage (no auto-commit).
 
         DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
-        (identity/, meta/, chats/, skills/) are blocked for raw edits. Use
-        Tier 1 semantic tools for governed modifications to those directories.
+        (memory/users/, governance/, memory/activity/, memory/skills/) are
+        blocked for raw edits. Use Tier 1 semantic tools for governed
+        modifications to those directories.
 
         Raises ValidationError if old_string is not found, or is not unique
         when replace_all=False.
@@ -297,9 +298,10 @@ def register(
     ) -> str:
         """Delete a file and stage the removal (no auto-commit).
 
-        ALLOWED PATHS ONLY: knowledge/, plans/, scratchpad/.
-        Attempts to delete files under identity/, meta/, chats/, or skills/
-        raise PermissionError immediately, before any filesystem access.
+        ALLOWED PATHS ONLY: memory/knowledge/, memory/working/, memory/working/scratchpad/.
+        Attempts to delete files under memory/users/, governance/, memory/activity/,
+        or memory/skills/ raise PermissionError immediately, before any filesystem
+        access.
 
         The deletion is staged via 'git rm'. Call memory_commit to finalise.
         When a delete-permission hook is configured by the runtime, it is
@@ -307,7 +309,8 @@ def register(
 
         Args:
             path:          Repo-relative path to delete. Must be under
-                           knowledge/, plans/, or scratchpad/.
+                           memory/knowledge/, memory/working/, or
+                           memory/working/scratchpad/.
             version_token: Optional — checked before deletion.
 
         Returns:
@@ -376,9 +379,9 @@ def register(
         """Rename or move a file, preserving git history (git mv).
 
         SOURCE PATH RESTRICTIONS: Same as memory_delete — source paths in
-        identity/, meta/, chats/, or skills/ are blocked. Destination paths
-        in protected directories are also blocked; use Tier 1 semantic tools
-        for governed writes into those folders.
+        memory/users/, governance/, memory/activity/, or memory/skills/ are
+        blocked. Destination paths in protected directories are also blocked;
+        use Tier 1 semantic tools for governed writes into those folders.
 
         The move is staged. Call memory_commit to finalise.
 
@@ -443,8 +446,9 @@ def register(
         """Merge key-value pairs into a file's YAML frontmatter (no auto-commit).
 
         DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
-        (identity/, meta/, chats/, skills/) are blocked for raw frontmatter
-        updates. Use Tier 1 semantic tools for governed modifications.
+        (memory/users/, governance/, memory/activity/, memory/skills/) are
+        blocked for raw frontmatter updates. Use Tier 1 semantic tools for
+        governed modifications.
 
         Does not touch the file body. Always sets last_verified to today's date
         unless 'last_verified' is explicitly included in updates.
@@ -513,8 +517,9 @@ def register(
         """Apply frontmatter updates to multiple files as a single staged transaction.
 
         DIRECTORY RESTRICTIONS: Same as memory_write — protected directories
-        (identity/, meta/, chats/, skills/) are blocked for raw frontmatter
-        updates. Use Tier 1 semantic tools for governed modifications.
+        (memory/users/, governance/, memory/activity/, memory/skills/) are
+        blocked for raw frontmatter updates. Use Tier 1 semantic tools for
+        governed modifications.
 
         Every update object must contain:
         - `path`: repo-relative file path
@@ -656,8 +661,8 @@ def register(
         Should follow the memory commit convention:
           [{category}] {Verb} {description ≤60 chars}
 
-        Known categories: [knowledge] [plan] [identity] [chat] [curation]
-                          [scratchpad] [system]
+        Known categories: [knowledge] [project] [user] [chat] [curation]
+                          [working] [system]
 
         Warns (does not error) on unrecognised prefix — the warning appears
         in new_state.warnings so the agent can decide whether to revise.

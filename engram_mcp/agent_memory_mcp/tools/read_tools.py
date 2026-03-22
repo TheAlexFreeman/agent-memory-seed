@@ -92,8 +92,8 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
 
 
 def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
-    """Try to read low/medium trust thresholds from meta/quick-reference.md."""
-    qr_path = repo_root / "meta" / "quick-reference.md"
+    """Try to read low/medium trust thresholds from HOME.md."""
+    qr_path = repo_root / "HOME.md"
     if not qr_path.exists():
         return _DEFAULT_LOW_THRESHOLD, _DEFAULT_MEDIUM_THRESHOLD
     text = qr_path.read_text(encoding="utf-8")
@@ -436,47 +436,49 @@ def _path_policy_state(root: Path, rel_path: str | None) -> dict[str, Any]:
     protected_surface = False
     path_change_class: str | None = None
 
-    meta_protected = "Any modification to files in `meta/`" in update_guidelines_text
+    meta_protected = "Any modification to files in `governance/`" in update_guidelines_text
     skills_protected = (
-        "Creating, modifying, or removing files in `skills/`." in update_guidelines_text
+        "Creating, modifying, or removing files in `memory/skills/`." in update_guidelines_text
     )
-    identity_proposed = (
-        "Adding, modifying, or removing files in `identity/`." in update_guidelines_text
+    users_proposed = (
+        "Adding, modifying, or removing files in `memory/users/`." in update_guidelines_text
     )
     unverified_inform_only = (
         "Inform only" in curation_policy_text and "never instruct" in curation_policy_text.lower()
     )
 
     if normalized in {"README.md", "CHANGELOG.md"} or (
-        normalized.startswith("meta/") and meta_protected
+        normalized.startswith("governance/") and meta_protected
     ):
         protected_surface = True
         path_change_class = "protected"
         reasons.append("Governance and top-level architecture files require explicit approval.")
-    elif normalized.startswith("skills/") and skills_protected:
+    elif normalized.startswith("memory/skills/") and skills_protected:
         protected_surface = True
         path_change_class = "protected"
         reasons.append("Skill files are protected because they can directly shape agent procedure.")
-    elif normalized.startswith("identity/") and identity_proposed:
+    elif normalized.startswith("memory/users/") and users_proposed:
         path_change_class = "proposed"
-        reasons.append("Identity changes require explicit user awareness before durable writes.")
-    elif normalized.startswith("knowledge/_unverified/"):
+        reasons.append(
+            "User profile changes require explicit user awareness before durable writes."
+        )
+    elif normalized.startswith("memory/knowledge/_unverified/"):
         if unverified_inform_only:
             trust_constraints.append(
                 "Unverified knowledge is low-trust by default and should inform, not instruct."
             )
-    elif normalized.startswith("knowledge/"):
+    elif normalized.startswith("memory/knowledge/"):
         trust_constraints.append(
             "Verified knowledge is usable context, but promotion or archival changes remain governed operations."
         )
 
-    if normalized.startswith("skills/"):
+    if normalized.startswith("memory/skills/"):
         trust_constraints.append(
             "Protected skill surfaces require explicit approval before mutation."
         )
-    if normalized.startswith("meta/"):
+    if normalized.startswith("governance/"):
         trust_constraints.append(
-            "Meta surfaces are protected governance files; machine-generated exceptions are narrow."
+            "Governance surfaces are protected files; machine-generated exceptions are narrow."
         )
 
     return {
@@ -599,8 +601,9 @@ def _build_policy_state_payload(
         semantic_target_supported = not (
             path_state["path"]
             and not path_state["protected_surface"]
-            and path_state["top_level_root"]
-            not in {"knowledge", "identity", "plans", "skills", "meta", "chats", "scratchpad"}
+            and not any(
+                path_state["path"].startswith(prefix) for prefix in ("memory/", "governance/")
+            )
         )
 
     warnings: list[str] = []
@@ -630,8 +633,8 @@ def _build_policy_state_payload(
         "path_policy": path_state,
         "policy_sources": [
             _CAPABILITIES_MANIFEST_PATH.as_posix(),
-            "meta/update-guidelines.md",
-            "meta/curation-policy.md",
+            "governance/update-guidelines.md",
+            "governance/curation-policy.md",
         ],
         "warnings": warnings,
     }
@@ -663,7 +666,7 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
 
     if "promote" in intent_lower and (
         "knowledge" in intent_lower
-        or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+        or (normalized_path and normalized_path.startswith("memory/knowledge/_unverified/"))
     ):
         if path_is_dir and nested_signal:
             add(
@@ -686,13 +689,13 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
 
     if any(word in intent_lower for word in ("demote", "move back to unverified")) and (
         "knowledge" in intent_lower
-        or (normalized_path and normalized_path.startswith("knowledge/"))
+        or (normalized_path and normalized_path.startswith("memory/knowledge/"))
     ):
         add("demote_knowledge", 0.95, "Intent asks to move verified knowledge back into review.")
 
     if "archive" in intent_lower and (
         "knowledge" in intent_lower
-        or (normalized_path and normalized_path.startswith("knowledge/"))
+        or (normalized_path and normalized_path.startswith("memory/knowledge/"))
     ):
         add("archive_knowledge", 0.95, "Intent explicitly asks to archive knowledge content.")
 
@@ -701,7 +704,7 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
         and "knowledge" in intent_lower
         and (
             "unverified" in intent_lower
-            or (normalized_path and normalized_path.startswith("knowledge/_unverified/"))
+            or (normalized_path and normalized_path.startswith("memory/knowledge/_unverified/"))
         )
     ):
         add("add_knowledge_file", 0.93, "Intent matches writing a new unverified knowledge file.")
@@ -741,7 +744,7 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
     if "identity" in intent_lower and any(
         word in intent_lower for word in ("update", "edit", "change")
     ):
-        add("update_identity_trait", 0.92, "Intent targets an identity trait update.")
+        add("update_user_trait", 0.92, "User trait update intent.")
 
     if "session" in intent_lower and any(
         word in intent_lower for word in ("record", "wrap up", "summarize")

@@ -205,7 +205,7 @@ EOF
 
 write_identity_summary() {
     local worktree_root="$1"
-    local summary_path="$worktree_root/identity/SUMMARY.md"
+    local summary_path="$worktree_root/core/memory/users/SUMMARY.md"
     {
         echo "# Identity Summary"
         echo
@@ -305,7 +305,7 @@ install_profile() {
     local worktree_native="$3"
     local profile_name="$4"
     local project_name="$5"
-    local destination="$worktree_root/identity/profile.md"
+    local destination="$worktree_root/core/memory/users/profile.md"
 
     if [[ -n "$profile_name" ]]; then
         local template_path="$SEED_REPO_ROOT/setup/templates/profiles/${profile_name}.md"
@@ -326,7 +326,7 @@ trust: medium
 # User Profile
 
 Worktree-backed memory store. Confirm or replace these defaults during onboarding."
-        write_text_file "$worktree_root/identity/SUMMARY.md" "# Identity Summary
+        write_text_file "$worktree_root/core/memory/users/SUMMARY.md" "# Identity Summary
 
 No confirmed identity summary yet.
 
@@ -340,30 +340,30 @@ write_memory_stubs() {
     local worktree_root="$1"
 
     mkdir -p \
-        "$worktree_root/chats" \
-        "$worktree_root/identity" \
-        "$worktree_root/knowledge/_unverified" \
-        "$worktree_root/projects/OUT" \
-        "$worktree_root/scratchpad"
+        "$worktree_root/core/memory/activity" \
+        "$worktree_root/core/memory/users" \
+        "$worktree_root/core/memory/knowledge/_unverified" \
+        "$worktree_root/core/memory/working/projects/OUT" \
+        "$worktree_root/core/memory/working/scratchpad"
 
-    write_empty_file "$worktree_root/chats/ACCESS.jsonl"
-    write_empty_file "$worktree_root/identity/ACCESS.jsonl"
-    write_empty_file "$worktree_root/knowledge/ACCESS.jsonl"
-    write_empty_file "$worktree_root/knowledge/_unverified/ACCESS.jsonl"
-    write_empty_file "$worktree_root/projects/ACCESS.jsonl"
+    write_empty_file "$worktree_root/core/memory/activity/ACCESS.jsonl"
+    write_empty_file "$worktree_root/core/memory/users/ACCESS.jsonl"
+    write_empty_file "$worktree_root/core/memory/knowledge/ACCESS.jsonl"
+    write_empty_file "$worktree_root/core/memory/knowledge/_unverified/ACCESS.jsonl"
+    write_empty_file "$worktree_root/core/memory/working/projects/ACCESS.jsonl"
 
-    write_text_file "$worktree_root/chats/SUMMARY.md" "# Chats Summary
+    write_text_file "$worktree_root/core/memory/activity/SUMMARY.md" "# Activity Summary
 
 _Nothing here yet._"
-    write_text_file "$worktree_root/knowledge/SUMMARY.md" "# Knowledge Summary
+    write_text_file "$worktree_root/core/memory/knowledge/SUMMARY.md" "# Knowledge Summary
 
 No codebase knowledge has been captured yet.
 
 Add compact architecture notes here as the memory worktree learns the host project."
-    write_text_file "$worktree_root/knowledge/_unverified/SUMMARY.md" "# Unverified Knowledge Summary
+    write_text_file "$worktree_root/core/memory/knowledge/_unverified/SUMMARY.md" "# Unverified Knowledge Summary
 
 Use this area for external research and unverified notes until they are reviewed."
-    write_text_file "$worktree_root/projects/SUMMARY.md" "---
+    write_text_file "$worktree_root/core/memory/working/projects/SUMMARY.md" "---
 type: projects-navigator
 generated: $TODAY 12:00
 project_count: 0
@@ -372,13 +372,13 @@ project_count: 0
 # Projects
 
 _No active or ongoing projects._"
-    write_text_file "$worktree_root/projects/OUT/SUMMARY.md" "# Project Outbox
+    write_text_file "$worktree_root/core/memory/working/projects/OUT/SUMMARY.md" "# Project Outbox
 
 _No shipped artifacts yet._"
-    write_text_file "$worktree_root/scratchpad/CURRENT.md" "# Agent working notes
+    write_text_file "$worktree_root/core/memory/working/scratchpad/CURRENT.md" "# Agent working notes
 
 _No current notes._"
-    write_text_file "$worktree_root/scratchpad/USER.md" "# User Scratchpad
+    write_text_file "$worktree_root/core/memory/working/scratchpad/USER.md" "# User Scratchpad
 
 User-authored constraints and reminders for this codebase belong here."
 }
@@ -389,13 +389,13 @@ write_worktree_hygiene_files() {
     write_text_file "$worktree_root/.ignore" "# Hide memory-content folders from host-repo search tools by default.
 # When working inside the memory worktree directly, use rg --no-ignore (or the
 # equivalent in your editor) if you need to search these folders intentionally.
-chats/
-identity/
-knowledge/
-meta/
-projects/
-scratchpad/
-skills/"
+core/memory/activity/
+core/memory/users/
+core/memory/knowledge/
+core/governance/
+core/memory/working/projects/
+core/memory/working/scratchpad/
+core/memory/skills/"
 
     write_text_file "$worktree_root/.editorconfig" "root = true
 
@@ -425,17 +425,17 @@ write_codebase_starters() {
 
     render_template_file \
         "$template_root/codebase-survey-plan.md" \
-        "$worktree_root/projects/codebase-survey/plans/survey-plan.md" \
+        "$worktree_root/core/memory/working/projects/codebase-survey/plans/survey-plan.md" \
         "$project_name" \
         "$host_root_native" \
         "$worktree_native" \
         "$branch_name"
 
     mkdir -p \
-        "$worktree_root/projects/codebase-survey/IN" \
-        "$worktree_root/projects/codebase-survey/plans"
+        "$worktree_root/core/memory/working/projects/codebase-survey/IN" \
+        "$worktree_root/core/memory/working/projects/codebase-survey/plans"
 
-    write_text_file "$worktree_root/projects/codebase-survey/SUMMARY.md" "---
+    write_text_file "$worktree_root/core/memory/working/projects/codebase-survey/SUMMARY.md" "---
 source: template
 origin_session: setup
 created: $TODAY
@@ -459,14 +459,14 @@ Exploration mode fits the initial survey: the goal is to discover stable structu
 
 ## Artifact flow
 - IN/: temporary exploration notes, rough subsystem maps, and open questions that are not ready for durable promotion
-- OUT contributions: verified knowledge/codebase notes and any reusable operational guidance derived from the host repo
+- OUT contributions: verified core/memory/knowledge/codebase notes and any reusable operational guidance derived from the host repo
 
 ## Notes
 Start from \
 \`plans/survey-plan.md\` and replace the template stubs under \
-\`knowledge/codebase/\` one by one."
+\`core/memory/knowledge/codebase/\` one by one."
 
-    write_text_file "$worktree_root/projects/codebase-survey/questions.md" "---
+    write_text_file "$worktree_root/core/memory/working/projects/codebase-survey/questions.md" "---
 type: questions
 next_question_id: 1
 ---
@@ -484,21 +484,21 @@ _None yet._"
     for template_path in "$template_root"/knowledge/codebase/*.md; do
         render_template_file \
             "$template_path" \
-            "$worktree_root/knowledge/codebase/$(basename "$template_path")" \
+            "$worktree_root/core/memory/knowledge/codebase/$(basename "$template_path")" \
             "$project_name" \
             "$host_root_native" \
             "$worktree_native" \
             "$branch_name"
     done
 
-    write_text_file "$worktree_root/knowledge/SUMMARY.md" "# Knowledge Summary
+    write_text_file "$worktree_root/core/memory/knowledge/SUMMARY.md" "# Knowledge Summary
 
 Starter codebase notes for $project_name live under [codebase/SUMMARY.md](codebase/SUMMARY.md).
 
 Begin with [codebase/architecture.md](codebase/architecture.md), then fill the
 data model, operations, and design-rationale stubs as the survey plan advances."
 
-    write_text_file "$worktree_root/projects/SUMMARY.md" "---
+    write_text_file "$worktree_root/core/memory/working/projects/SUMMARY.md" "---
 type: projects-navigator
 generated: $TODAY 12:00
 project_count: 1
@@ -652,7 +652,7 @@ write_host_adapter_files() {
     local worktree_path_display="$2"
     local branch_name="$3"
     local config_hint="$4"
-    local quick_reference_path="$worktree_path_display/meta/quick-reference.md"
+    local quick_reference_path="$worktree_path_display/core/HOME.md"
 
     cat > "$host_root/AGENTS.md" <<EOF
 # Agent Memory System
@@ -683,8 +683,8 @@ This host repository keeps its persistent memory in a separate worktree.
 - MCP config: $config_hint
 
 Start each session from `$quick_reference_path`. Use the host repository for product
-code work, and use the memory worktree for identity, knowledge, plans, chats,
-scratchpad, skills, and meta governance.
+code work, and use the memory worktree for user profiles, knowledge, projects,
+activity, scratchpad, skills, and governance.
 EOF
 
     cat > "$host_root/.cursorrules" <<EOF

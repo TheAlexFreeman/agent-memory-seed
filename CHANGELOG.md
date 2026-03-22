@@ -16,6 +16,30 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-07-24] Core directory restructure — path migration across all layers
+
+**Changed:**
+
+- **Directory layout consolidated under `core/`.** All content directories now live under a single `core/` prefix: `identity/` → `core/memory/users/`, `knowledge/` → `core/memory/knowledge/`, `skills/` → `core/memory/skills/`, `chats/` → `core/memory/activity/`, `plans/` and `projects/` → `core/memory/working/projects/`, `scratchpad/` → `core/memory/working/scratchpad/`, `meta/` → `core/governance/`, and `meta/quick-reference.md` → `core/HOME.md`.
+
+- **MCP server: content prefix architecture.** `GitRepo` now accepts a `content_prefix` parameter (default `"core"`) and translates between content-relative paths (tool-facing) and git-relative paths (storage-facing) via `_to_git_path()` / `_from_git_path()`. Server reads `MEMORY_CORE_PREFIX` env var.
+
+- **Path policy updated.** Protected roots and mutation roots use multi-segment prefixes with a new `_matches_any_prefix()` helper.
+
+- **Tool rename.** `memory_update_identity_trait` → `memory_update_user_trait`; `identity_tools.py` → `user_tools.py`.
+
+- **All documentation updated.** README, HOME.md, AGENTS.md, CLAUDE.md, agent-bootstrap.toml, all HUMANS/docs files, agent-memory-capabilities.toml, onboard-export-template.md, setup templates — every path reference migrated.
+
+- **Validator structurally reworked.** `validate_memory_repo.py` constants, namespace derivation, pathlib constructions, and path-matching logic all updated to handle nested `core/memory/...` prefixes instead of flat top-level directory checks.
+
+- **Tests migrated.** All test files (11 files, ~1200 lines changed) updated: seed dict keys, pathlib constructions, tool invocation paths, assertion strings.
+
+**Reasoning:** The flat top-level directory structure made it impossible to distinguish memory content from repository infrastructure (setup scripts, docs, tooling). The `core/` prefix creates a clean boundary, and the content-prefix architecture means the MCP server works regardless of where content is mounted. The `identity` → `users` rename better reflects multi-user capability.
+
+**Approved by:** agent (pending review)
+
+---
+
 ## [2026-07-23] Consistency, deduplication, and user-friendliness sweep
 
 **Changed:**

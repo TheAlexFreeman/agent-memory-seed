@@ -195,17 +195,17 @@ preview_support = true
 preview_mode = "preview"
 preview_argument = "preview"
 """,
-            "meta/update-guidelines.md": """## Proposed changes (require user awareness)
+            "governance/update-guidelines.md": """## Proposed changes (require user awareness)
 
-- Adding, modifying, or removing files in `identity/`.
+- Adding, modifying, or removing files in `memory/users/`.
 
 ## Protected changes (require explicit approval)
 
-- Creating, modifying, or removing files in `skills/`.
-- Any modification to files in `meta/`.
+- Creating, modifying, or removing files in `memory/skills/`.
+- Any modification to files in `governance/`.
 - Any modification to `README.md`.
 """,
-            "meta/curation-policy.md": """## Trust-weighted retrieval
+            "governance/curation-policy.md": """## Trust-weighted retrieval
 
 - Trust: low — Inform only; never instruct.
 """,
@@ -214,8 +214,8 @@ preview_argument = "preview"
     def test_create_mcp_accepts_git_subdirectory_root(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/README.md": "# Knowledge\n",
-                "knowledge/topic/note.md": "# Note\n",
+                "memory/knowledge/README.md": "# Knowledge\n",
+                "memory/knowledge/topic/note.md": "# Note\n",
             }
         )
         _, tools, resolved_root, repo = self.server.create_mcp(
@@ -225,7 +225,7 @@ preview_argument = "preview"
 
         self.assertEqual(resolved_root, repo_root)
         self.assertEqual(repo.root, repo_root)
-        payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/topic/note.md")))
+        payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/knowledge/topic/note.md")))
         self.assertTrue(payload["inline"])
         self.assertIn("# Note", payload["content"])
 
@@ -233,16 +233,16 @@ preview_argument = "preview"
         large_body = "A" * 20_100
         repo_root = self._init_repo(
             {
-                "knowledge/topic/large.md": f"---\ncreated: 2026-03-20\nsource: test\ntrust: medium\n---\n\n{large_body}",
+                "memory/knowledge/topic/large.md": f"---\ncreated: 2026-03-20\nsource: test\ntrust: medium\n---\n\n{large_body}",
             }
         )
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_read_file"](path="knowledge/topic/large.md"))
+            asyncio.run(tools["memory_read_file"](path="memory/knowledge/topic/large.md"))
         )
 
-        self.assertEqual(payload["path"], "knowledge/topic/large.md")
+        self.assertEqual(payload["path"], "memory/knowledge/topic/large.md")
         self.assertFalse(payload["inline"])
         self.assertGreater(payload["size_bytes"], 20_000)
         self.assertNotIn("content", payload)
@@ -252,7 +252,7 @@ preview_argument = "preview"
     def test_memory_list_folder_preview_returns_frontmatter_and_preview_for_markdown(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/note.md": """---
+                "memory/knowledge/topic/note.md": """---
 title: Preview Note
 source: agent-generated
 created: 2026-03-20
@@ -261,19 +261,19 @@ trust: low
 
 This is the preview body for the markdown note.
 """,
-                "knowledge/topic/plain.txt": "plain text file\n",
+                "memory/knowledge/topic/plain.txt": "plain text file\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_list_folder"](path="knowledge/topic", preview_chars=20))
+            asyncio.run(tools["memory_list_folder"](path="memory/knowledge/topic", preview_chars=20))
         )
 
         note_entry = next(entry for entry in payload["entries"] if entry["name"] == "note.md")
         text_entry = next(entry for entry in payload["entries"] if entry["name"] == "plain.txt")
 
-        self.assertEqual(payload["path"], "knowledge/topic")
+        self.assertEqual(payload["path"], "memory/knowledge/topic")
         self.assertEqual(payload["preview_chars"], 20)
         self.assertEqual(note_entry["frontmatter"]["title"], "Preview Note")
         self.assertEqual(note_entry["preview"], "This is the preview")
@@ -282,12 +282,12 @@ This is the preview body for the markdown note.
     def test_memory_list_folder_default_output_omits_preview_fields(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/note.md": "# Note\n",
+                "memory/knowledge/topic/note.md": "# Note\n",
             }
         )
         tools = self._create_tools(repo_root)
 
-        output = asyncio.run(tools["memory_list_folder"](path="knowledge/topic"))
+        output = asyncio.run(tools["memory_list_folder"](path="memory/knowledge/topic"))
 
         self.assertIn("📄 note.md", output)
         self.assertNotIn('"preview"', output)
@@ -295,7 +295,7 @@ This is the preview body for the markdown note.
     def test_memory_review_unverified_groups_files_and_flags_expired_entries(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/math/chaos.md": """---
+                "memory/knowledge/_unverified/math/chaos.md": """---
 source: external-research
 created: 2025-01-01
 trust: low
@@ -303,7 +303,7 @@ trust: low
 
 Chaos theory studies sensitive dependence on initial conditions in nonlinear systems.
 """,
-                "knowledge/_unverified/philosophy/mind.md": """---
+                "memory/knowledge/_unverified/philosophy/mind.md": """---
 source: agent-generated
 created: 2026-03-10
 trust: medium
@@ -318,7 +318,7 @@ Philosophy of mind studies consciousness intentionality and representation.
         payload = json.loads(
             asyncio.run(
                 tools["memory_review_unverified"](
-                    folder_path="knowledge/_unverified",
+                    folder_path="memory/knowledge/_unverified",
                     max_extract_words=5,
                 )
             )
@@ -426,7 +426,7 @@ Philosophy of mind studies consciousness intentionality and representation.
         return temp_root
 
     def test_memory_delete_uses_permission_hook_for_allowed_paths(self) -> None:
-        repo_root = self._init_repo_with_file("plans/delete-me.md")
+        repo_root = self._init_repo_with_file("memory/working/projects/delete-me.md")
         calls: list[str] = []
 
         def hook(path: str) -> None:
@@ -438,10 +438,10 @@ Philosophy of mind studies consciousness intentionality and representation.
             enable_raw_write_tools=True,
         )
 
-        asyncio.run(tools["memory_delete"](path="plans/delete-me.md"))
+        asyncio.run(tools["memory_delete"](path="memory/working/projects/delete-me.md"))
 
-        self.assertEqual(calls, ["plans/delete-me.md"])
-        self.assertFalse((repo_root / "plans" / "delete-me.md").exists())
+        self.assertEqual(calls, ["memory/working/projects/delete-me.md"])
+        self.assertFalse((repo_root / "memory" / "working" / "projects" / "delete-me.md").exists())
         staged = subprocess.run(
             ["git", "diff", "--cached", "--name-status"],
             cwd=repo_root,
@@ -452,7 +452,7 @@ Philosophy of mind studies consciousness intentionality and representation.
         self.assertIn("D\tplans/delete-me.md", staged)
 
     def test_memory_delete_blocks_when_permission_hook_rejects(self) -> None:
-        repo_root = self._init_repo_with_file("scratchpad/delete-me.md")
+        repo_root = self._init_repo_with_file("memory/working/scratchpad/delete-me.md")
 
         def hook(path: str) -> None:
             raise RuntimeError(f"blocked {path}")
@@ -464,14 +464,14 @@ Philosophy of mind studies consciousness intentionality and representation.
         )
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_delete"](path="scratchpad/delete-me.md"))
+            asyncio.run(tools["memory_delete"](path="memory/working/scratchpad/delete-me.md"))
 
-        self.assertTrue((repo_root / "scratchpad" / "delete-me.md").exists())
+        self.assertTrue((repo_root / "memory" / "working" / "scratchpad" / "delete-me.md").exists())
 
     def test_mark_plan_item_complete_updates_frontmatter_and_summary(self) -> None:
         repo_root = self._init_repo(
             {
-                "projects/SUMMARY.md": """---
+                "memory/working/projects/SUMMARY.md": """---
 type: projects-navigator
 generated: 2026-03-21
 project_count: 1
@@ -481,7 +481,7 @@ project_count: 1
 
 _No active or ongoing projects._
 """,
-                "projects/example/SUMMARY.md": """---
+                "memory/working/projects/example/SUMMARY.md": """---
 source: agent-generated
 origin_session: manual
 created: 2026-03-21
@@ -497,7 +497,7 @@ current_focus: Ship the first project milestone.
 
 # Project: Example
 """,
-                "projects/example/plans/test-plan.md": """---
+                "memory/working/projects/example/plans/test-plan.md": """---
 source: agent-generated
 type: implementation-plan
 created: 2026-03-17
@@ -533,12 +533,12 @@ next_action: Do first step
         )
         payload = json.loads(raw)
         frontmatter, body = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "projects" / "example" / "plans" / "test-plan.md"
+            repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
         )
         project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "projects" / "example" / "SUMMARY.md"
+            repo_root / "memory" / "working" / "projects" / "example" / "SUMMARY.md"
         )
-        summary = (repo_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
 
         self.assertEqual(payload["new_state"]["next_action"], "Do second step")
         self.assertEqual(payload["new_state"]["phase_progress"], [1, 2])
@@ -554,7 +554,7 @@ next_action: Do first step
     def test_promote_knowledge_updates_frontmatter_and_both_summaries(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/literature/test-note.md": """---
+                "memory/knowledge/_unverified/literature/test-note.md": """---
 title: Test Note
 source: agent-generated
 created: 2026-03-17
@@ -565,15 +565,15 @@ origin_session: manual
 
 # Test Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: literature -->
 ### Literature
-- **[test-note.md](knowledge/_unverified/literature/test-note.md)** — Test Note
+- **[test-note.md](memory/knowledge/_unverified/literature/test-note.md)** — Test Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: literature -->
 ### Literature
@@ -586,7 +586,7 @@ origin_session: manual
 
         raw = asyncio.run(
             tools["memory_promote_knowledge"](
-                source_path="knowledge/_unverified/literature/test-note.md",
+                source_path="memory/knowledge/_unverified/literature/test-note.md",
                 trust_level="high",
             )
         )
@@ -599,19 +599,19 @@ origin_session: manual
         )
         verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
 
-        self.assertEqual(payload["new_state"]["new_path"], "knowledge/literature/test-note.md")
+        self.assertEqual(payload["new_state"]["new_path"], "memory/knowledge/literature/test-note.md")
         self.assertEqual(payload["new_state"]["trust"], "high")
         self.assertFalse(old_path.exists())
         self.assertTrue(target_path.exists())
         self.assertEqual(frontmatter["trust"], "high")
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
-        self.assertNotIn("knowledge/_unverified/literature/test-note.md", unverified_summary)
-        self.assertIn("knowledge/literature/test-note.md", verified_summary)
+        self.assertNotIn("memory/knowledge/_unverified/literature/test-note.md", unverified_summary)
+        self.assertIn("memory/knowledge/literature/test-note.md", verified_summary)
 
     def test_promote_knowledge_with_summary_entry_creates_missing_target_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mathematics/test-note.md": """---
+                "memory/knowledge/_unverified/mathematics/test-note.md": """---
 title: Test Note
 source: agent-generated
 created: 2026-03-17
@@ -622,15 +622,15 @@ origin_session: manual
 
 # Test Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: mathematics -->
 ### Mathematics
-- **[test-note.md](knowledge/_unverified/mathematics/test-note.md)** — Test Note
+- **[test-note.md](memory/knowledge/_unverified/mathematics/test-note.md)** — Test Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: literature -->
 ### Literature
@@ -644,9 +644,9 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge"](
-                    source_path="knowledge/_unverified/mathematics/test-note.md",
+                    source_path="memory/knowledge/_unverified/mathematics/test-note.md",
                     trust_level="high",
-                    summary_entry="- [test-note.md](knowledge/mathematics/test-note.md) — Custom summary entry",
+                    summary_entry="- [test-note.md](memory/knowledge/mathematics/test-note.md) — Custom summary entry",
                 )
             )
         )
@@ -657,14 +657,14 @@ origin_session: manual
         self.assertIn("<!-- section: mathematics -->", verified_summary)
         self.assertIn("### Mathematics", verified_summary)
         self.assertIn(
-            "- [test-note.md](knowledge/mathematics/test-note.md) — Custom summary entry",
+            "- [test-note.md](memory/knowledge/mathematics/test-note.md) — Custom summary entry",
             verified_summary,
         )
 
     def test_promote_knowledge_batch_single_file_matches_single_promotion_behavior(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/literature/test-note.md": """---
+                "memory/knowledge/_unverified/literature/test-note.md": """---
 title: Test Note
 source: agent-generated
 created: 2026-03-17
@@ -675,15 +675,15 @@ origin_session: manual
 
 # Test Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: literature -->
 ### Literature
-- **[test-note.md](knowledge/_unverified/literature/test-note.md)** — Test Note
+- **[test-note.md](memory/knowledge/_unverified/literature/test-note.md)** — Test Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: literature -->
 ### Literature
@@ -697,7 +697,7 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_batch"](
-                    source_paths='["knowledge/_unverified/literature/test-note.md"]',
+                    source_paths='["memory/knowledge/_unverified/literature/test-note.md"]',
                     trust_level="high",
                 )
             )
@@ -708,18 +708,18 @@ origin_session: manual
         verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
 
         self.assertEqual(payload["new_state"]["promoted_count"], 1)
-        self.assertEqual(payload["new_state"]["target_folder"], "knowledge/literature")
+        self.assertEqual(payload["new_state"]["target_folder"], "memory/knowledge/literature")
         self.assertEqual(payload["new_state"]["trust"], "high")
         self.assertEqual(payload["new_state"]["promoted_files"], ["test-note.md"])
-        self.assertIn("knowledge/SUMMARY.md", payload["new_state"]["summary_updates"])
+        self.assertIn("memory/knowledge/SUMMARY.md", payload["new_state"]["summary_updates"])
         self.assertEqual(frontmatter["trust"], "high")
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
-        self.assertIn("knowledge/literature/test-note.md", verified_summary)
+        self.assertIn("memory/knowledge/literature/test-note.md", verified_summary)
 
     def test_promote_knowledge_batch_creates_missing_target_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mathematics/test-note.md": """---
+                "memory/knowledge/_unverified/mathematics/test-note.md": """---
 title: Test Note
 source: agent-generated
 created: 2026-03-17
@@ -729,15 +729,15 @@ origin_session: manual
 
 # Test Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: mathematics -->
 ### Mathematics
-- **[test-note.md](knowledge/_unverified/mathematics/test-note.md)** — Test Note
+- **[test-note.md](memory/knowledge/_unverified/mathematics/test-note.md)** — Test Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: literature -->
 ### Literature
@@ -751,7 +751,7 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_batch"](
-                    source_paths='["knowledge/_unverified/mathematics/test-note.md"]',
+                    source_paths='["memory/knowledge/_unverified/mathematics/test-note.md"]',
                     trust_level="high",
                 )
             )
@@ -762,12 +762,12 @@ origin_session: manual
         self.assertEqual(payload["warnings"], [])
         self.assertIn("<!-- section: mathematics -->", verified_summary)
         self.assertIn("### Mathematics", verified_summary)
-        self.assertIn("knowledge/mathematics/test-note.md", verified_summary)
+        self.assertIn("memory/knowledge/mathematics/test-note.md", verified_summary)
 
     def test_promote_knowledge_batch_folder_expansion_promotes_multiple_files(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mcp/a-note.md": """---
+                "memory/knowledge/_unverified/mcp/a-note.md": """---
 title: A Note
 source: agent-generated
 created: 2026-03-17
@@ -777,7 +777,7 @@ origin_session: manual
 
 # A Note
 """,
-                "knowledge/_unverified/mcp/b-note.md": """---
+                "memory/knowledge/_unverified/mcp/b-note.md": """---
 title: B Note
 source: agent-generated
 created: 2026-03-17
@@ -787,17 +787,17 @@ origin_session: manual
 
 # B Note
 """,
-                "knowledge/_unverified/mcp/SUMMARY.md": "# MCP folder\n",
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/mcp/SUMMARY.md": "# MCP folder\n",
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: mcp -->
 ### MCP
-- **[a-note.md](knowledge/_unverified/mcp/a-note.md)** — A Note
-- **[b-note.md](knowledge/_unverified/mcp/b-note.md)** — B Note
+- **[a-note.md](memory/knowledge/_unverified/mcp/a-note.md)** — A Note
+- **[b-note.md](memory/knowledge/_unverified/mcp/b-note.md)** — B Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: tooling -->
 ### Tooling
@@ -811,15 +811,15 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_batch"](
-                    source_paths="knowledge/_unverified/mcp/",
+                    source_paths="memory/knowledge/_unverified/mcp/",
                     trust_level="medium",
-                    target_folder="knowledge/tooling",
+                    target_folder="memory/knowledge/tooling",
                 )
             )
         )
 
         self.assertEqual(payload["new_state"]["promoted_count"], 2)
-        self.assertEqual(payload["new_state"]["target_folder"], "knowledge/tooling")
+        self.assertEqual(payload["new_state"]["target_folder"], "memory/knowledge/tooling")
         self.assertTrue((repo_root / "knowledge" / "tooling" / "a-note.md").exists())
         self.assertTrue((repo_root / "knowledge" / "tooling" / "b-note.md").exists())
         self.assertFalse((repo_root / "knowledge" / "_unverified" / "mcp" / "a-note.md").exists())
@@ -828,7 +828,7 @@ origin_session: manual
     def test_promote_knowledge_batch_validation_failure_rejects_entire_batch(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/literature/test-note.md": """---
+                "memory/knowledge/_unverified/literature/test-note.md": """---
 title: Test Note
 source: agent-generated
 created: 2026-03-17
@@ -838,8 +838,8 @@ origin_session: manual
 
 # Test Note
 """,
-                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
-                "knowledge/SUMMARY.md": "# Knowledge\n",
+                "memory/knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -847,7 +847,7 @@ origin_session: manual
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_promote_knowledge_batch"](
-                    source_paths='["knowledge/_unverified/literature/test-note.md", "plans/test-plan.md"]',
+                    source_paths='["memory/knowledge/_unverified/literature/test-note.md", "memory/working/projects/test-plan.md"]',
                     trust_level="medium",
                 )
             )
@@ -860,14 +860,14 @@ origin_session: manual
     def test_promote_knowledge_batch_rejects_oversized_batch(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/literature/test-note.md": "# Test\n",
-                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
-                "knowledge/SUMMARY.md": "# Knowledge\n",
+                "memory/knowledge/_unverified/literature/test-note.md": "# Test\n",
+                "memory/knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n",
             }
         )
         tools = self._create_tools(repo_root)
 
-        oversized = json.dumps(["knowledge/_unverified/literature/test-note.md" for _ in range(51)])
+        oversized = json.dumps(["memory/knowledge/_unverified/literature/test-note.md" for _ in range(51)])
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_promote_knowledge_batch"](
@@ -879,7 +879,7 @@ origin_session: manual
     def test_promote_knowledge_subtree_dry_run_reports_moves_without_changes(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mcp/a-note.md": """---
+                "memory/knowledge/_unverified/mcp/a-note.md": """---
 title: A Note
 source: agent-generated
 created: 2026-03-17
@@ -889,7 +889,7 @@ origin_session: manual
 
 # A Note
 """,
-                "knowledge/_unverified/mcp/nested/b-note.md": """---
+                "memory/knowledge/_unverified/mcp/nested/b-note.md": """---
 title: B Note
 source: agent-generated
 created: 2026-03-17
@@ -899,8 +899,8 @@ origin_session: manual
 
 # B Note
 """,
-                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
-                "knowledge/SUMMARY.md": "# Knowledge\n",
+                "memory/knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -918,8 +918,8 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_subtree"](
-                    source_folder="knowledge/_unverified/mcp",
-                    dest_folder="knowledge/tooling",
+                    source_folder="memory/knowledge/_unverified/mcp",
+                    dest_folder="memory/knowledge/tooling",
                     trust_level="medium",
                     dry_run=True,
                 )
@@ -951,8 +951,8 @@ origin_session: manual
         self.assertFalse((repo_root / "knowledge" / "tooling" / "a-note.md").exists())
         self.assertIn(
             {
-                "source_path": "knowledge/_unverified/mcp/nested/b-note.md",
-                "target_path": "knowledge/tooling/nested/b-note.md",
+                "source_path": "memory/knowledge/_unverified/mcp/nested/b-note.md",
+                "target_path": "memory/knowledge/tooling/nested/b-note.md",
             },
             payload["planned_moves"],
         )
@@ -960,7 +960,7 @@ origin_session: manual
     def test_promote_knowledge_subtree_moves_nested_files_in_single_commit(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mcp/a-note.md": """---
+                "memory/knowledge/_unverified/mcp/a-note.md": """---
 title: A Note
 source: agent-generated
 created: 2026-03-17
@@ -970,7 +970,7 @@ origin_session: manual
 
 # A Note
 """,
-                "knowledge/_unverified/mcp/nested/b-note.md": """---
+                "memory/knowledge/_unverified/mcp/nested/b-note.md": """---
 title: B Note
 source: agent-generated
 created: 2026-03-17
@@ -980,16 +980,16 @@ origin_session: manual
 
 # B Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: mcp -->
 ### MCP
-- **[a-note.md](knowledge/_unverified/mcp/a-note.md)** — A Note
-- **[b-note.md](knowledge/_unverified/mcp/nested/b-note.md)** — B Note
+- **[a-note.md](memory/knowledge/_unverified/mcp/a-note.md)** — A Note
+- **[b-note.md](memory/knowledge/_unverified/mcp/nested/b-note.md)** — B Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: tooling -->
 ### Tooling
@@ -1013,8 +1013,8 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_subtree"](
-                    source_folder="knowledge/_unverified/mcp",
-                    dest_folder="knowledge/tooling",
+                    source_folder="memory/knowledge/_unverified/mcp",
+                    dest_folder="memory/knowledge/tooling",
                     trust_level="high",
                 )
             )
@@ -1035,19 +1035,19 @@ origin_session: manual
 
         self.assertEqual(after_count, before_count + 1)
         self.assertEqual(payload["new_state"]["promoted_count"], 2)
-        self.assertEqual(payload["new_state"]["target_folder"], "knowledge/tooling")
+        self.assertEqual(payload["new_state"]["target_folder"], "memory/knowledge/tooling")
         self.assertTrue((repo_root / "knowledge" / "tooling" / "a-note.md").exists())
         self.assertTrue(target_path.exists())
         self.assertFalse((repo_root / "knowledge" / "_unverified" / "mcp" / "a-note.md").exists())
         self.assertEqual(frontmatter["trust"], "high")
         self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
-        self.assertIn("knowledge/tooling/a-note.md", verified_summary)
-        self.assertIn("knowledge/tooling/nested/b-note.md", verified_summary)
+        self.assertIn("memory/knowledge/tooling/a-note.md", verified_summary)
+        self.assertIn("memory/knowledge/tooling/nested/b-note.md", verified_summary)
 
     def test_promote_knowledge_subtree_creates_missing_target_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mcp/a-note.md": """---
+                "memory/knowledge/_unverified/mcp/a-note.md": """---
 title: A Note
 source: agent-generated
 created: 2026-03-17
@@ -1057,15 +1057,15 @@ origin_session: manual
 
 # A Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: mcp -->
 ### MCP
-- **[a-note.md](knowledge/_unverified/mcp/a-note.md)** — A Note
+- **[a-note.md](memory/knowledge/_unverified/mcp/a-note.md)** — A Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: literature -->
 ### Literature
@@ -1079,8 +1079,8 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_subtree"](
-                    source_folder="knowledge/_unverified/mcp",
-                    dest_folder="knowledge/tooling",
+                    source_folder="memory/knowledge/_unverified/mcp",
+                    dest_folder="memory/knowledge/tooling",
                     trust_level="high",
                 )
             )
@@ -1091,12 +1091,12 @@ origin_session: manual
         self.assertEqual(payload["warnings"], [])
         self.assertIn("<!-- section: tooling -->", verified_summary)
         self.assertIn("### Tooling", verified_summary)
-        self.assertIn("knowledge/tooling/a-note.md", verified_summary)
+        self.assertIn("memory/knowledge/tooling/a-note.md", verified_summary)
 
     def test_promote_knowledge_subtree_warns_missing_source_section_as_non_actionable(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/mcp/a-note.md": """---
+                "memory/knowledge/_unverified/mcp/a-note.md": """---
 title: A Note
 source: agent-generated
 created: 2026-03-17
@@ -1106,8 +1106,8 @@ origin_session: manual
 
 # A Note
 """,
-                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
-                "knowledge/SUMMARY.md": """# Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "memory/knowledge/SUMMARY.md": """# Knowledge
 
 <!-- section: tooling -->
 ### Tooling
@@ -1121,8 +1121,8 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge_subtree"](
-                    source_folder="knowledge/_unverified/mcp",
-                    dest_folder="knowledge/tooling",
+                    source_folder="memory/knowledge/_unverified/mcp",
+                    dest_folder="memory/knowledge/tooling",
                     trust_level="high",
                 )
             )
@@ -1134,7 +1134,7 @@ origin_session: manual
     def test_memory_mark_reviewed_appends_jsonl_entry(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/topic/note.md": """---
+                "memory/knowledge/_unverified/topic/note.md": """---
 title: Note
 source: agent-generated
 created: 2026-03-17
@@ -1151,10 +1151,10 @@ origin_session: manual
         payload = json.loads(
             asyncio.run(
                 tools["memory_mark_reviewed"](
-                    path="knowledge/_unverified/topic/note.md",
+                    path="memory/knowledge/_unverified/topic/note.md",
                     verdict="approve",
                     reviewer_notes="Looks good.",
-                    session_id="chats/2026/03/20/chat-003",
+                    session_id="memory/activity/2026/03/20/chat-003",
                 )
             )
         )
@@ -1165,17 +1165,17 @@ origin_session: manual
         entry = json.loads(log_lines[-1])
 
         self.assertEqual(payload["new_state"]["verdict"], "approve")
-        self.assertEqual(entry["path"], "knowledge/_unverified/topic/note.md")
+        self.assertEqual(entry["path"], "memory/knowledge/_unverified/topic/note.md")
         self.assertEqual(entry["verdict"], "approve")
         self.assertEqual(entry["reviewer_notes"], "Looks good.")
-        self.assertEqual(entry["session_id"], "chats/2026/03/20/chat-003")
+        self.assertEqual(entry["session_id"], "memory/activity/2026/03/20/chat-003")
         self.assertEqual(entry["reviewed_by"], "agent")
         self.assertTrue(entry["timestamp"].endswith("Z"))
 
     def test_memory_list_pending_reviews_uses_latest_verdict_per_file(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/topic/alpha.md": """---
+                "memory/knowledge/_unverified/topic/alpha.md": """---
 title: Alpha
 source: agent-generated
 created: 2026-03-17
@@ -1185,7 +1185,7 @@ origin_session: manual
 
 # Alpha
 """,
-                "knowledge/_unverified/topic/beta.md": """---
+                "memory/knowledge/_unverified/topic/beta.md": """---
 title: Beta
 source: agent-generated
 created: 2026-03-17
@@ -1201,20 +1201,20 @@ origin_session: manual
 
         asyncio.run(
             tools["memory_mark_reviewed"](
-                path="knowledge/_unverified/topic/alpha.md",
+                path="memory/knowledge/_unverified/topic/alpha.md",
                 verdict="approve",
             )
         )
         asyncio.run(
             tools["memory_mark_reviewed"](
-                path="knowledge/_unverified/topic/alpha.md",
+                path="memory/knowledge/_unverified/topic/alpha.md",
                 verdict="defer",
                 reviewer_notes="Need another pass.",
             )
         )
         asyncio.run(
             tools["memory_mark_reviewed"](
-                path="knowledge/_unverified/topic/beta.md",
+                path="memory/knowledge/_unverified/topic/beta.md",
                 verdict="reject",
             )
         )
@@ -1224,14 +1224,14 @@ origin_session: manual
         self.assertEqual(payload["counts"]["approve"], 0)
         self.assertEqual(payload["counts"]["defer"], 1)
         self.assertEqual(payload["counts"]["reject"], 1)
-        self.assertEqual(payload["defer"][0]["path"], "knowledge/_unverified/topic/alpha.md")
+        self.assertEqual(payload["defer"][0]["path"], "memory/knowledge/_unverified/topic/alpha.md")
         self.assertEqual(payload["defer"][0]["reviewer_notes"], "Need another pass.")
-        self.assertEqual(payload["reject"][0]["path"], "knowledge/_unverified/topic/beta.md")
+        self.assertEqual(payload["reject"][0]["path"], "memory/knowledge/_unverified/topic/beta.md")
 
     def test_memory_list_pending_reviews_skips_files_no_longer_in_unverified(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/topic/keep.md": """---
+                "memory/knowledge/_unverified/topic/keep.md": """---
 title: Keep
 source: agent-generated
 created: 2026-03-17
@@ -1241,7 +1241,7 @@ origin_session: manual
 
 # Keep
 """,
-                "knowledge/_unverified/topic/promote.md": """---
+                "memory/knowledge/_unverified/topic/promote.md": """---
 title: Promote
 source: agent-generated
 created: 2026-03-17
@@ -1251,29 +1251,29 @@ origin_session: manual
 
 # Promote
 """,
-                "knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
-                "knowledge/SUMMARY.md": "# Knowledge\n",
+                "memory/knowledge/_unverified/SUMMARY.md": "# Unverified Knowledge\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         asyncio.run(
             tools["memory_mark_reviewed"](
-                path="knowledge/_unverified/topic/keep.md",
+                path="memory/knowledge/_unverified/topic/keep.md",
                 verdict="defer",
             )
         )
         asyncio.run(
             tools["memory_mark_reviewed"](
-                path="knowledge/_unverified/topic/promote.md",
+                path="memory/knowledge/_unverified/topic/promote.md",
                 verdict="approve",
             )
         )
         asyncio.run(
             tools["memory_promote_knowledge"](
-                source_path="knowledge/_unverified/topic/promote.md",
+                source_path="memory/knowledge/_unverified/topic/promote.md",
                 trust_level="high",
-                target_path="knowledge/topic/promote.md",
+                target_path="memory/knowledge/topic/promote.md",
             )
         )
 
@@ -1281,12 +1281,12 @@ origin_session: manual
 
         self.assertEqual(payload["counts"]["approve"], 0)
         self.assertEqual(payload["counts"]["defer"], 1)
-        self.assertEqual(payload["defer"][0]["path"], "knowledge/_unverified/topic/keep.md")
+        self.assertEqual(payload["defer"][0]["path"], "memory/knowledge/_unverified/topic/keep.md")
 
     def test_memory_delete_blocks_protected_identity_paths(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 created: 2026-03-17
 last_verified: 2026-03-17
@@ -1300,14 +1300,14 @@ trust: high
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_delete"](path="identity/profile.md"))
+            asyncio.run(tools["memory_delete"](path="memory/users/profile.md"))
 
-        self.assertTrue((repo_root / "identity" / "profile.md").exists())
+        self.assertTrue((repo_root / "memory" / "users" / "profile.md").exists())
 
     def test_update_plan_next_action_rejects_stale_version_token(self) -> None:
         repo_root = self._init_repo(
             {
-                "projects/SUMMARY.md": """---
+                "memory/working/projects/SUMMARY.md": """---
 type: projects-navigator
 generated: 2026-03-21
 project_count: 1
@@ -1317,7 +1317,7 @@ project_count: 1
 
 _No active or ongoing projects._
 """,
-                "projects/example/SUMMARY.md": """---
+                "memory/working/projects/example/SUMMARY.md": """---
 source: agent-generated
 origin_session: manual
 created: 2026-03-21
@@ -1333,7 +1333,7 @@ current_focus: Example project.
 
 # Project: Example
 """,
-                "projects/example/plans/test-plan.md": """---
+                "memory/working/projects/example/plans/test-plan.md": """---
 source: agent-generated
 type: implementation-plan
 created: 2026-03-17
@@ -1358,11 +1358,11 @@ next_action: Original next action
         )
         tools = self._create_tools(repo_root)
         read_payload = json.loads(
-            asyncio.run(tools["memory_read_file"](path="projects/example/plans/test-plan.md"))
+            asyncio.run(tools["memory_read_file"](path="memory/working/projects/example/plans/test-plan.md"))
         )
         old_token = read_payload["version_token"]
 
-        plan_path = repo_root / "projects" / "example" / "plans" / "test-plan.md"
+        plan_path = repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
         plan_path.write_text(
             plan_path.read_text(encoding="utf-8").replace(
                 "Original next action",
@@ -1383,7 +1383,7 @@ next_action: Original next action
             )
 
     def test_raw_write_tools_are_disabled_by_default(self) -> None:
-        repo_root = self._init_repo_with_file("plans/delete-me.md")
+        repo_root = self._init_repo_with_file("memory/working/projects/delete-me.md")
         tools = self._create_tools(repo_root)
 
         self.assertNotIn("memory_delete", tools)
@@ -1391,7 +1391,7 @@ next_action: Original next action
         self.assertIn("memory_mark_plan_item_complete", tools)
 
     def test_raw_write_tools_can_be_enabled_explicitly(self) -> None:
-        repo_root = self._init_repo_with_file("plans/delete-me.md")
+        repo_root = self._init_repo_with_file("memory/working/projects/delete-me.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         self.assertIn("memory_delete", tools)
@@ -1401,7 +1401,7 @@ next_action: Original next action
     def test_memory_update_frontmatter_bulk_stages_single_file_with_version_token(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/test-plan.md": """---
+                "memory/working/projects/test-plan.md": """---
 status: active
 next_action: Ship it
 last_verified: 2026-03-17
@@ -1413,13 +1413,13 @@ last_verified: 2026-03-17
         )
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="plans/test-plan.md")))
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/working/projects/test-plan.md")))
         payload = json.loads(
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
                         {
-                            "path": "plans/test-plan.md",
+                            "path": "memory/working/projects/test-plan.md",
                             "fields": {"status": "complete"},
                             "version_token": read_payload["version_token"],
                         }
@@ -1429,7 +1429,7 @@ last_verified: 2026-03-17
         )
 
         frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "plans/test-plan.md"
+            repo_root / "memory/working/projects/test-plan.md"
         )
         staged = subprocess.run(
             ["git", "diff", "--cached", "--name-only"],
@@ -1439,25 +1439,25 @@ last_verified: 2026-03-17
             text=True,
         ).stdout.splitlines()
 
-        self.assertEqual(payload["files_changed"], ["plans/test-plan.md"])
+        self.assertEqual(payload["files_changed"], ["memory/working/projects/test-plan.md"])
         self.assertEqual(payload["new_state"]["updated_count"], 1)
         self.assertEqual(payload["new_state"]["skipped_count"], 0)
         self.assertEqual(payload["new_state"]["transaction_state"], "staged")
         self.assertEqual(frontmatter["status"], "complete")
-        self.assertIn("plans/test-plan.md", staged)
+        self.assertIn("memory/working/projects/test-plan.md", staged)
 
     def test_memory_update_frontmatter_bulk_stages_multiple_files_and_commit_finalizes(
         self,
     ) -> None:
         repo_root = self._init_repo(
             {
-                "plans/one.md": """---
+                "memory/working/projects/one.md": """---
 status: active
 ---
 
 # One
 """,
-                "plans/two.md": """---
+                "memory/working/projects/two.md": """---
 status: active
 ---
 
@@ -1471,8 +1471,8 @@ status: active
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
-                        {"path": "plans/one.md", "fields": {"status": "complete"}},
-                        {"path": "plans/two.md", "fields": {"status": "complete"}},
+                        {"path": "memory/working/projects/one.md", "fields": {"status": "complete"}},
+                        {"path": "memory/working/projects/two.md", "fields": {"status": "complete"}},
                     ]
                 )
             )
@@ -1482,13 +1482,13 @@ status: active
         )
 
         self.assertEqual(payload["new_state"]["updated_count"], 2)
-        self.assertEqual(sorted(commit_payload["files_changed"]), ["plans/one.md", "plans/two.md"])
+        self.assertEqual(sorted(commit_payload["files_changed"]), ["memory/working/projects/one.md", "memory/working/projects/two.md"])
         self.assertIsNotNone(commit_payload["commit_sha"])
 
     def test_memory_update_frontmatter_bulk_skips_missing_keys_when_disabled(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/test-plan.md": """---
+                "memory/working/projects/test-plan.md": """---
 status: active
 ---
 
@@ -1503,7 +1503,7 @@ status: active
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
                         {
-                            "path": "plans/test-plan.md",
+                            "path": "memory/working/projects/test-plan.md",
                             "fields": {"status": "complete", "next_action": "Later"},
                         }
                     ],
@@ -1513,7 +1513,7 @@ status: active
         )
 
         frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "plans/test-plan.md"
+            repo_root / "memory/working/projects/test-plan.md"
         )
         self.assertEqual(payload["new_state"]["updated_count"], 1)
         self.assertEqual(frontmatter["status"], "complete")
@@ -1522,7 +1522,7 @@ status: active
     def test_memory_update_frontmatter_bulk_rejects_invalid_path_before_staging(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/test-plan.md": """---
+                "memory/working/projects/test-plan.md": """---
 status: active
 ---
 
@@ -1537,7 +1537,7 @@ status: active
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
-                        {"path": "plans/test-plan.md", "fields": {"status": "complete"}},
+                        {"path": "memory/working/projects/test-plan.md", "fields": {"status": "complete"}},
                         {"path": "README.md", "fields": {"title": "Blocked"}},
                     ]
                 )
@@ -1558,13 +1558,13 @@ status: active
     def test_memory_update_frontmatter_bulk_rolls_back_on_stage_failure(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/one.md": """---
+                "memory/working/projects/one.md": """---
 status: active
 ---
 
 # One
 """,
-                "plans/two.md": """---
+                "memory/working/projects/two.md": """---
 status: active
 ---
 
@@ -1593,17 +1593,17 @@ status: active
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
-                        {"path": "plans/one.md", "fields": {"status": "complete"}},
-                        {"path": "plans/two.md", "fields": {"status": "complete"}},
+                        {"path": "memory/working/projects/one.md", "fields": {"status": "complete"}},
+                        {"path": "memory/working/projects/two.md", "fields": {"status": "complete"}},
                     ]
                 )
             )
 
         one_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "plans/one.md"
+            repo_root / "memory/working/projects/one.md"
         )
         two_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "plans/two.md"
+            repo_root / "memory/working/projects/two.md"
         )
         self.assertEqual(one_frontmatter["status"], "active")
         self.assertEqual(two_frontmatter["status"], "active")
@@ -1619,11 +1619,11 @@ status: active
         )
 
     def test_memory_update_frontmatter_bulk_rejects_oversized_batch(self) -> None:
-        repo_root = self._init_repo_with_file("plans/test-plan.md")
+        repo_root = self._init_repo_with_file("memory/working/projects/test-plan.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         oversized = [
-            {"path": "plans/test-plan.md", "fields": {"status": "complete"}} for _ in range(101)
+            {"path": "memory/working/projects/test-plan.md", "fields": {"status": "complete"}} for _ in range(101)
         ]
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_update_frontmatter_bulk"](updates=oversized))
@@ -1689,12 +1689,12 @@ declared_gaps = []
 
     def test_memory_get_policy_state_flags_protected_meta_surface(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["meta/quick-reference.md"] = "# Quick Reference\n"
+        seed["HOME.md"] = "# Quick Reference\n"
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_get_policy_state"](path="meta/quick-reference.md"))
+            asyncio.run(tools["memory_get_policy_state"](path="HOME.md"))
         )
 
         self.assertEqual(payload["change_class"], "protected")
@@ -1706,7 +1706,7 @@ declared_gaps = []
 
     def test_memory_route_intent_recommends_knowledge_promotion(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["knowledge/_unverified/topic/note.md"] = "# Note\n"
+        seed["memory/knowledge/_unverified/topic/note.md"] = "# Note\n"
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
@@ -1714,7 +1714,7 @@ declared_gaps = []
             asyncio.run(
                 tools["memory_route_intent"](
                     intent="promote this unverified knowledge file to verified knowledge",
-                    path="knowledge/_unverified/topic/note.md",
+                    path="memory/knowledge/_unverified/topic/note.md",
                 )
             )
         )
@@ -1726,7 +1726,7 @@ declared_gaps = []
 
     def test_memory_route_intent_adds_subtree_workflow_hint_for_nested_folder(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["knowledge/_unverified/topic/sub/a.md"] = "# A\n"
+        seed["memory/knowledge/_unverified/topic/sub/a.md"] = "# A\n"
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
@@ -1734,7 +1734,7 @@ declared_gaps = []
             asyncio.run(
                 tools["memory_route_intent"](
                     intent="promote this unverified knowledge subtree",
-                    path="knowledge/_unverified/topic",
+                    path="memory/knowledge/_unverified/topic",
                 )
             )
         )
@@ -1761,45 +1761,45 @@ declared_gaps = []
     def test_memory_find_references_finds_markdown_and_frontmatter_paths(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/target.md": "# Target\n",
-                "plans/reference-plan.md": """---
+                "memory/knowledge/topic/target.md": "# Target\n",
+                "memory/working/projects/reference-plan.md": """---
 related:
-  - knowledge/topic/target.md
-domain: knowledge/topic/target.md
+  - memory/knowledge/topic/target.md
+domain: memory/knowledge/topic/target.md
 ---
 
 # Reference Plan
 
 See [target](../knowledge/topic/target.md).
 """,
-                "HUMANS/README.md": "See [target](knowledge/topic/target.md).\n",
+                "HUMANS/README.md": "See [target](memory/knowledge/topic/target.md).\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_find_references"]("knowledge/topic/target.md"))
+            asyncio.run(tools["memory_find_references"]("memory/knowledge/topic/target.md"))
         )
 
-        self.assertEqual(payload["query"], "knowledge/topic/target.md")
+        self.assertEqual(payload["query"], "memory/knowledge/topic/target.md")
         self.assertEqual(payload["total"], 3)
         self.assertEqual(
             [match["ref_type"] for match in payload["matches"]],
             ["frontmatter_path", "frontmatter_path", "markdown_link"],
         )
         self.assertTrue(
-            all(match["from_path"] == "plans/reference-plan.md" for match in payload["matches"])
+            all(match["from_path"] == "memory/working/projects/reference-plan.md" for match in payload["matches"])
         )
         self.assertEqual(
             payload["matches"][-1]["resolved_path"],
-            "knowledge/topic/target.md",
+            "memory/knowledge/topic/target.md",
         )
 
     def test_memory_find_references_include_body_scans_path_like_strings(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/target.md": "# Target\n",
-                "knowledge/topic/note.md": "# Note\n\nSee knowledge/topic/target.md for context.\n",
+                "memory/knowledge/topic/target.md": "# Target\n",
+                "memory/knowledge/topic/note.md": "# Note\n\nSee memory/knowledge/topic/target.md for context.\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -1807,7 +1807,7 @@ See [target](../knowledge/topic/target.md).
         without_body = json.loads(
             asyncio.run(
                 tools["memory_find_references"](
-                    "knowledge/topic/target.md",
+                    "memory/knowledge/topic/target.md",
                     include_body=False,
                 )
             )
@@ -1815,7 +1815,7 @@ See [target](../knowledge/topic/target.md).
         with_body = json.loads(
             asyncio.run(
                 tools["memory_find_references"](
-                    "knowledge/topic/target.md",
+                    "memory/knowledge/topic/target.md",
                     include_body=True,
                 )
             )
@@ -1824,13 +1824,13 @@ See [target](../knowledge/topic/target.md).
         self.assertEqual(without_body["total"], 0)
         self.assertEqual(with_body["total"], 1)
         self.assertEqual(with_body["matches"][0]["ref_type"], "body_path")
-        self.assertEqual(with_body["matches"][0]["from_path"], "knowledge/topic/note.md")
+        self.assertEqual(with_body["matches"][0]["from_path"], "memory/knowledge/topic/note.md")
 
     def test_memory_validate_links_reports_broken_targets_and_missing_anchors(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/target.md": "# Target\n\n## Details\n",
-                "knowledge/topic/note.md": """---
+                "memory/knowledge/topic/target.md": "# Target\n\n## Details\n",
+                "memory/knowledge/topic/note.md": """---
 related:
   - missing.md
 ---
@@ -1845,18 +1845,18 @@ See [missing](missing.md).
         )
         tools = self._create_tools(repo_root)
 
-        payload = json.loads(asyncio.run(tools["memory_validate_links"]("knowledge/topic")))
+        payload = json.loads(asyncio.run(tools["memory_validate_links"]("memory/knowledge/topic")))
 
-        self.assertEqual(payload["scope"], "knowledge/topic")
+        self.assertEqual(payload["scope"], "memory/knowledge/topic")
         self.assertEqual(payload["checked"], 4)
         self.assertEqual(payload["ok_count"], 1)
         self.assertEqual(len(payload["broken"]), 3)
         self.assertIn(
             {
-                "from_path": "knowledge/topic/note.md",
+                "from_path": "memory/knowledge/topic/note.md",
                 "ref_type": "frontmatter_path",
                 "target": "missing.md",
-                "resolved_path": "knowledge/topic/missing.md",
+                "resolved_path": "memory/knowledge/topic/missing.md",
                 "reason": "target not found",
                 "line": 3,
             },
@@ -1864,10 +1864,10 @@ See [missing](missing.md).
         )
         self.assertIn(
             {
-                "from_path": "knowledge/topic/note.md",
+                "from_path": "memory/knowledge/topic/note.md",
                 "ref_type": "markdown_link",
                 "target": "target.md#absent",
-                "resolved_path": "knowledge/topic/target.md",
+                "resolved_path": "memory/knowledge/topic/target.md",
                 "reason": "anchor not found: #absent",
                 "line": 4,
             },
@@ -1877,8 +1877,8 @@ See [missing](missing.md).
     def test_memory_validate_links_handles_cross_folder_relative_paths(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/target.md": "# Topic Target\n",
-                "plans/demo.md": """---
+                "memory/knowledge/topic/target.md": "# Topic Target\n",
+                "memory/working/projects/demo.md": """---
 related:
   - ../knowledge/topic/target.md
 ---
@@ -1903,12 +1903,12 @@ See [topic](../knowledge/topic/target.md).
     ) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
-                "knowledge/ai-frontier/alignment/beta.md": "# Beta\n",
-                "knowledge/ai/SUMMARY.md": "# AI\n",
-                "plans/reorg.md": """---
+                "memory/knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "memory/knowledge/ai-frontier/alignment/beta.md": "# Beta\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n",
+                "memory/working/projects/reorg.md": """---
 related:
-  - knowledge/ai-frontier/alpha.md
+  - memory/knowledge/ai-frontier/alpha.md
 ---
 
 # Reorg
@@ -1922,33 +1922,33 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
         payload = json.loads(
             asyncio.run(
                 tools["memory_reorganize_preview"](
-                    "knowledge/ai-frontier",
-                    "knowledge/ai/frontier",
+                    "memory/knowledge/ai-frontier",
+                    "memory/knowledge/ai/frontier",
                 )
             )
         )
 
-        self.assertEqual(payload["source"], "knowledge/ai-frontier")
-        self.assertEqual(payload["dest"], "knowledge/ai/frontier")
+        self.assertEqual(payload["source"], "memory/knowledge/ai-frontier")
+        self.assertEqual(payload["dest"], "memory/knowledge/ai/frontier")
         self.assertEqual(
             payload["files_to_move"],
             [
-                "knowledge/ai-frontier/alignment/beta.md",
-                "knowledge/ai-frontier/alpha.md",
+                "memory/knowledge/ai-frontier/alignment/beta.md",
+                "memory/knowledge/ai-frontier/alpha.md",
             ],
         )
         self.assertEqual(
             payload["summary_updates"],
-            ["knowledge/SUMMARY.md", "knowledge/ai/SUMMARY.md"],
+            ["memory/knowledge/SUMMARY.md", "memory/knowledge/ai/SUMMARY.md"],
         )
         self.assertEqual(payload["warnings"], [])
         self.assertEqual(len(payload["files_with_references"]), 1)
         refs = payload["files_with_references"][0]["refs"]
-        self.assertEqual(payload["files_with_references"][0]["path"], "plans/reorg.md")
+        self.assertEqual(payload["files_with_references"][0]["path"], "memory/working/projects/reorg.md")
         self.assertEqual(
             {(ref["old"], ref["new"]) for ref in refs},
             {
-                ("knowledge/ai-frontier/alpha.md", "knowledge/ai/frontier/alpha.md"),
+                ("memory/knowledge/ai-frontier/alpha.md", "memory/knowledge/ai/frontier/alpha.md"),
                 ("../knowledge/ai-frontier/alpha.md", "../knowledge/ai/frontier/alpha.md"),
             },
         )
@@ -1956,9 +1956,9 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
     def test_memory_reorganize_preview_warns_on_destination_conflicts(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
-                "knowledge/ai/frontier/alpha.md": "# Existing Alpha\n",
-                "knowledge/ai/SUMMARY.md": "# AI\n",
+                "memory/knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "memory/knowledge/ai/frontier/alpha.md": "# Existing Alpha\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -1966,21 +1966,21 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
         payload = json.loads(
             asyncio.run(
                 tools["memory_reorganize_preview"](
-                    "knowledge/ai-frontier",
-                    "knowledge/ai/frontier",
+                    "memory/knowledge/ai-frontier",
+                    "memory/knowledge/ai/frontier",
                 )
             )
         )
 
-        self.assertIn("Destination already exists: knowledge/ai/frontier", payload["warnings"])
-        self.assertIn("Destination conflict: knowledge/ai/frontier/alpha.md", payload["warnings"])
+        self.assertIn("Destination already exists: memory/knowledge/ai/frontier", payload["warnings"])
+        self.assertIn("Destination conflict: memory/knowledge/ai/frontier/alpha.md", payload["warnings"])
 
     def test_memory_reorganize_path_dry_run_returns_governed_preview(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
-                "knowledge/ai/SUMMARY.md": "# AI\n",
-                "plans/reorg.md": "See [alpha](../knowledge/ai-frontier/alpha.md).\n",
+                "memory/knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n",
+                "memory/working/projects/reorg.md": "See [alpha](../knowledge/ai-frontier/alpha.md).\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -1988,8 +1988,8 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
         payload = json.loads(
             asyncio.run(
                 tools["memory_reorganize_path"](
-                    source="knowledge/ai-frontier",
-                    dest="knowledge/ai/frontier",
+                    source="memory/knowledge/ai-frontier",
+                    dest="memory/knowledge/ai/frontier",
                 )
             )
         )
@@ -1998,15 +1998,15 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
         self.assertTrue(payload["new_state"]["dry_run"])
         self.assertTrue(payload["new_state"]["would_commit"])
         self.assertEqual(payload["preview"]["mode"], "preview")
-        self.assertTrue((repo_root / "knowledge/ai-frontier/alpha.md").exists())
-        self.assertFalse((repo_root / "knowledge/ai/frontier/alpha.md").exists())
+        self.assertTrue((repo_root / "memory/knowledge/ai-frontier/alpha.md").exists())
+        self.assertFalse((repo_root / "memory/knowledge/ai/frontier/alpha.md").exists())
 
     def test_memory_reorganize_path_applies_move_and_reference_updates(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/shared/guide.md": "# Guide\n",
-                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
-                "knowledge/ai-frontier/alignment/beta.md": """---
+                "memory/knowledge/shared/guide.md": "# Guide\n",
+                "memory/knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "memory/knowledge/ai-frontier/alignment/beta.md": """---
 related:
   - ../../shared/guide.md
 ---
@@ -2015,9 +2015,9 @@ related:
 
 See [alpha](../alpha.md).
 """,
-                "knowledge/SUMMARY.md": "- [alpha](ai-frontier/alpha.md)\n",
-                "knowledge/ai/SUMMARY.md": "# AI\n",
-                "plans/reorg.md": "See [alpha](../knowledge/ai-frontier/alpha.md).\n",
+                "memory/knowledge/SUMMARY.md": "- [alpha](ai-frontier/alpha.md)\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n",
+                "memory/working/projects/reorg.md": "See [alpha](../knowledge/ai-frontier/alpha.md).\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -2025,8 +2025,8 @@ See [alpha](../alpha.md).
         payload = json.loads(
             asyncio.run(
                 tools["memory_reorganize_path"](
-                    source="knowledge/ai-frontier",
-                    dest="knowledge/ai/frontier",
+                    source="memory/knowledge/ai-frontier",
+                    dest="memory/knowledge/ai/frontier",
                     dry_run=False,
                 )
             )
@@ -2034,26 +2034,26 @@ See [alpha](../alpha.md).
 
         self.assertIsNotNone(payload["commit_sha"])
         self.assertFalse(payload["new_state"]["dry_run"])
-        self.assertTrue((repo_root / "knowledge/ai/frontier/alpha.md").exists())
-        self.assertTrue((repo_root / "knowledge/ai/frontier/alignment/beta.md").exists())
-        self.assertFalse((repo_root / "knowledge/ai-frontier/alpha.md").exists())
-        self.assertFalse((repo_root / "knowledge/ai-frontier").exists())
-        beta_text = (repo_root / "knowledge/ai/frontier/alignment/beta.md").read_text(
+        self.assertTrue((repo_root / "memory/knowledge/ai/frontier/alpha.md").exists())
+        self.assertTrue((repo_root / "memory/knowledge/ai/frontier/alignment/beta.md").exists())
+        self.assertFalse((repo_root / "memory/knowledge/ai-frontier/alpha.md").exists())
+        self.assertFalse((repo_root / "memory/knowledge/ai-frontier").exists())
+        beta_text = (repo_root / "memory/knowledge/ai/frontier/alignment/beta.md").read_text(
             encoding="utf-8"
         )
         self.assertIn("../../../shared/guide.md", beta_text)
         self.assertIn("../alpha.md", beta_text)
-        summary_text = (repo_root / "knowledge/SUMMARY.md").read_text(encoding="utf-8")
+        summary_text = (repo_root / "memory/knowledge/SUMMARY.md").read_text(encoding="utf-8")
         self.assertIn("ai/frontier/alpha.md", summary_text)
-        plan_text = (repo_root / "plans/reorg.md").read_text(encoding="utf-8")
+        plan_text = (repo_root / "memory/working/projects/reorg.md").read_text(encoding="utf-8")
         self.assertIn("../knowledge/ai/frontier/alpha.md", plan_text)
 
     def test_memory_reorganize_path_blocks_existing_destination_without_mutation(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai-frontier/alpha.md": "# Alpha\n",
-                "knowledge/ai/frontier/alpha.md": "# Existing\n",
-                "knowledge/ai/SUMMARY.md": "# AI\n",
+                "memory/knowledge/ai-frontier/alpha.md": "# Alpha\n",
+                "memory/knowledge/ai/frontier/alpha.md": "# Existing\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -2061,32 +2061,32 @@ See [alpha](../alpha.md).
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_reorganize_path"](
-                    source="knowledge/ai-frontier",
-                    dest="knowledge/ai/frontier",
+                    source="memory/knowledge/ai-frontier",
+                    dest="memory/knowledge/ai/frontier",
                     dry_run=False,
                 )
             )
 
-        self.assertTrue((repo_root / "knowledge/ai-frontier/alpha.md").exists())
-        self.assertTrue((repo_root / "knowledge/ai/frontier/alpha.md").exists())
+        self.assertTrue((repo_root / "memory/knowledge/ai-frontier/alpha.md").exists())
+        self.assertTrue((repo_root / "memory/knowledge/ai/frontier/alpha.md").exists())
 
     def test_memory_suggest_structure_detects_orphan_topics(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai/SUMMARY.md": "# AI\n\n- [overview](overview.md)\n",
-                "knowledge/ai/overview.md": "# Overview\n",
-                "knowledge/ai/lone-topic/note.md": "# Note\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n\n- [overview](overview.md)\n",
+                "memory/knowledge/ai/overview.md": "# Overview\n",
+                "memory/knowledge/ai/lone-topic/note.md": "# Note\n",
             }
         )
         tools = self._create_tools(repo_root)
 
-        payload = json.loads(asyncio.run(tools["memory_suggest_structure"]("knowledge/ai")))
+        payload = json.loads(asyncio.run(tools["memory_suggest_structure"]("memory/knowledge/ai")))
 
-        self.assertEqual(payload["scope"], "knowledge/ai")
+        self.assertEqual(payload["scope"], "memory/knowledge/ai")
         self.assertTrue(
             any(
                 item["heuristic"] == "orphan_topics"
-                and "knowledge/ai/lone-topic" in item["affected_paths"]
+                and "memory/knowledge/ai/lone-topic" in item["affected_paths"]
                 for item in payload["suggestions"]
             )
         )
@@ -2094,8 +2094,8 @@ See [alpha](../alpha.md).
     def test_memory_suggest_structure_detects_naming_inconsistency(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai-frontier/topic.md": "# Topic\n",
-                "knowledge/ai/frontier/other.md": "# Other\n",
+                "memory/knowledge/ai-frontier/topic.md": "# Topic\n",
+                "memory/knowledge/ai/frontier/other.md": "# Other\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -2114,14 +2114,14 @@ See [alpha](../alpha.md).
         self.assertEqual(payload["suggestions"][0]["heuristic"], "naming_inconsistency")
         self.assertEqual(
             set(payload["suggestions"][0]["affected_paths"]),
-            {"knowledge/ai-frontier", "knowledge/ai/frontier"},
+            {"memory/knowledge/ai-frontier", "memory/knowledge/ai/frontier"},
         )
 
     def test_memory_suggest_structure_returns_no_suggestions_for_consistent_layout(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ai/SUMMARY.md": "# AI\n\n- [topic](topic.md)\n",
-                "knowledge/ai/topic.md": "# Topic\n",
+                "memory/knowledge/ai/SUMMARY.md": "# AI\n\n- [topic](topic.md)\n",
+                "memory/knowledge/ai/topic.md": "# Topic\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -2129,7 +2129,7 @@ See [alpha](../alpha.md).
         payload = json.loads(
             asyncio.run(
                 tools["memory_suggest_structure"](
-                    "knowledge/ai",
+                    "memory/knowledge/ai",
                     heuristics=["orphan_topics", "naming_inconsistency", "summary_drift"],
                 )
             )
@@ -2179,7 +2179,7 @@ See [alpha](../alpha.md).
 
     def test_memory_session_bootstrap_compacts_active_plans_and_review_items(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["meta/quick-reference.md"] = """# Quick Reference
+        seed["HOME.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2189,23 +2189,23 @@ See [alpha](../alpha.md).
 |---|---|---|
 | Aggregation trigger | 15 entries | Exploration |
 """
-        seed["meta/review-queue.md"] = """# Review Queue
+        seed["governance/review-queue.md"] = """# Review Queue
 
-### [2026-03-20] Review plans/a.md
+### [2026-03-20] Review memory/working/projects/a.md
 **Item ID:** review-a
 **Type:** proposed
-**File:** plans/a.md
+**File:** memory/working/projects/a.md
 **Priority:** high
 **Status:** pending
 
-### [2026-03-20] Review plans/b.md
+### [2026-03-20] Review memory/working/projects/b.md
 **Item ID:** review-b
 **Type:** proposed
-**File:** plans/b.md
+**File:** memory/working/projects/b.md
 **Priority:** normal
 **Status:** pending
 """
-        seed["plans/a.md"] = """---
+        seed["memory/working/projects/a.md"] = """---
 title: Plan A
 status: active
 trust: medium
@@ -2219,7 +2219,7 @@ next_action: Finish A
 Checklist:
 - [ ] Do A
 """
-        seed["plans/b.md"] = """---
+        seed["memory/working/projects/b.md"] = """---
 title: Plan B
 status: active
 trust: medium
@@ -2248,7 +2248,7 @@ Checklist:
 
     def test_memory_prepare_unverified_review_truncates_selected_files(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["meta/quick-reference.md"] = """# Quick Reference
+        seed["HOME.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2259,7 +2259,7 @@ Checklist:
 | Low-trust retirement threshold | 120 days | Exploration |
 | Medium-trust flagging threshold | 180 days | Exploration |
 """
-        seed["knowledge/_unverified/topic/a.md"] = """---
+        seed["memory/knowledge/_unverified/topic/a.md"] = """---
 created: 2026-01-01
 source: test
 trust: low
@@ -2269,7 +2269,7 @@ trust: low
 
 alpha beta gamma
 """
-        seed["knowledge/_unverified/topic/b.md"] = """---
+        seed["memory/knowledge/_unverified/topic/b.md"] = """---
 created: 2026-01-02
 source: test
 trust: low
@@ -2285,7 +2285,7 @@ delta epsilon zeta
         payload = json.loads(
             asyncio.run(
                 tools["memory_prepare_unverified_review"](
-                    folder_path="knowledge/_unverified",
+                    folder_path="memory/knowledge/_unverified",
                     max_files=1,
                     max_extract_words=10,
                 )
@@ -2298,7 +2298,7 @@ delta epsilon zeta
 
     def test_memory_prepare_unverified_review_paths_only_returns_full_path_list(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["meta/quick-reference.md"] = """# Quick Reference
+        seed["HOME.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2309,7 +2309,7 @@ delta epsilon zeta
 | Low-trust retirement threshold | 120 days | Exploration |
 | Medium-trust flagging threshold | 180 days | Exploration |
 """
-        seed["knowledge/_unverified/topic/a.md"] = """---
+        seed["memory/knowledge/_unverified/topic/a.md"] = """---
 created: 2026-01-01
 source: test
 trust: low
@@ -2317,7 +2317,7 @@ trust: low
 
 # A
 """
-        seed["knowledge/_unverified/topic/b.md"] = """---
+        seed["memory/knowledge/_unverified/topic/b.md"] = """---
 created: 2026-01-02
 source: test
 trust: low
@@ -2331,7 +2331,7 @@ trust: low
         payload = json.loads(
             asyncio.run(
                 tools["memory_prepare_unverified_review"](
-                    folder_path="knowledge/_unverified/topic",
+                    folder_path="memory/knowledge/_unverified/topic",
                     max_files=1,
                     max_extract_words=10,
                     paths_only=True,
@@ -2343,15 +2343,15 @@ trust: low
         self.assertEqual(
             payload["all_paths"],
             [
-                "knowledge/_unverified/topic/a.md",
-                "knowledge/_unverified/topic/b.md",
+                "memory/knowledge/_unverified/topic/a.md",
+                "memory/knowledge/_unverified/topic/b.md",
             ],
         )
         self.assertFalse(payload["response_budget"]["paths"]["truncated"])
 
     def test_memory_prepare_promotion_batch_returns_candidates_and_operation_hint(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["meta/quick-reference.md"] = """# Quick Reference
+        seed["HOME.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2362,7 +2362,7 @@ trust: low
 | Low-trust retirement threshold | 120 days | Exploration |
 | Medium-trust flagging threshold | 180 days | Exploration |
 """
-        seed["knowledge/_unverified/topic/a.md"] = """---
+        seed["memory/knowledge/_unverified/topic/a.md"] = """---
 created: 2026-01-01
 source: test
 trust: low
@@ -2370,7 +2370,7 @@ trust: low
 
 # A
 """
-        seed["knowledge/_unverified/topic/b.md"] = """---
+        seed["memory/knowledge/_unverified/topic/b.md"] = """---
 created: 2026-01-02
 source: test
 trust: low
@@ -2384,7 +2384,7 @@ trust: low
         payload = json.loads(
             asyncio.run(
                 tools["memory_prepare_promotion_batch"](
-                    folder_path="knowledge/_unverified/topic",
+                    folder_path="memory/knowledge/_unverified/topic",
                     max_files=1,
                 )
             )
@@ -2397,7 +2397,7 @@ trust: low
 
     def test_memory_prepare_promotion_batch_prefers_subtree_for_nested_folder(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["meta/quick-reference.md"] = """# Quick Reference
+        seed["HOME.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2408,7 +2408,7 @@ trust: low
 | Low-trust retirement threshold | 120 days | Exploration |
 | Medium-trust flagging threshold | 180 days | Exploration |
 """
-        seed["knowledge/_unverified/topic/sub/a.md"] = """---
+        seed["memory/knowledge/_unverified/topic/sub/a.md"] = """---
 created: 2026-01-01
 source: test
 trust: low
@@ -2416,7 +2416,7 @@ trust: low
 
 # A
 """
-        seed["knowledge/_unverified/topic/sub/b.md"] = """---
+        seed["memory/knowledge/_unverified/topic/sub/b.md"] = """---
 created: 2026-01-02
 source: test
 trust: low
@@ -2430,7 +2430,7 @@ trust: low
         payload = json.loads(
             asyncio.run(
                 tools["memory_prepare_promotion_batch"](
-                    folder_path="knowledge/_unverified/topic",
+                    folder_path="memory/knowledge/_unverified/topic",
                     max_files=2,
                 )
             )
@@ -2438,13 +2438,13 @@ trust: low
 
         self.assertEqual(payload["suggested_operation"], "memory_promote_knowledge_subtree")
         self.assertTrue(payload["folder_shape"]["has_nested_subdirectories"])
-        self.assertEqual(payload["suggested_target_folder"], "knowledge/topic")
+        self.assertEqual(payload["suggested_target_folder"], "memory/knowledge/topic")
         self.assertIn("dry_run=True", payload["workflow_hint"])
 
     def test_memory_prepare_periodic_review_compacts_deferred_targets(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -2469,17 +2469,17 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "meta/belief-diff-log.md": "# Belief Diff Log\n",
-                "meta/review-queue.md": """# Review Queue
+                "governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "governance/review-queue.md": """# Review Queue
 
-### [2026-03-20] Review plans/demo.md
+### [2026-03-20] Review memory/working/projects/demo.md
 **Item ID:** review-demo
 **Type:** governance
-**File:** plans/demo.md
+**File:** memory/working/projects/demo.md
 **Priority:** normal
 **Status:** pending
 """,
-                "knowledge/_unverified/topic/note.md": """---
+                "memory/knowledge/_unverified/topic/note.md": """---
 created: 2025-12-01
 source: test
 trust: low
@@ -2507,7 +2507,7 @@ trust: low
     def test_memory_search_context_lines_default_output_unchanged(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/test.md": """# Title
+                "memory/knowledge/test.md": """# Title
 alpha
 beta match
 gamma
@@ -2518,14 +2518,14 @@ gamma
 
         output = asyncio.run(tools["memory_search"](query="match", path="knowledge"))
 
-        self.assertIn("**knowledge/test.md**", output)
+        self.assertIn("**memory/knowledge/test.md**", output)
         self.assertIn("  3: beta match", output)
         self.assertNotIn("  2|", output)
 
     def test_memory_search_context_lines_include_surrounding_lines(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/test.md": """line 1
+                "memory/knowledge/test.md": """line 1
 line 2
 line 3 match
 line 4
@@ -2550,7 +2550,7 @@ line 5
         self.assertIn("  5| line 5", output)
 
     def test_memory_search_rejects_context_lines_over_limit(self) -> None:
-        repo_root = self._init_repo({"knowledge/test.md": "match\n"})
+        repo_root = self._init_repo({"memory/knowledge/test.md": "match\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
@@ -2565,7 +2565,7 @@ line 5
     def test_memory_search_context_lines_do_not_count_toward_max_results(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/test.md": """line 1
+                "memory/knowledge/test.md": """line 1
 line 2
 line 3 match
 line 4
@@ -2597,13 +2597,13 @@ line 7
     def test_memory_check_cross_references_reports_broken_links_and_summary_drift(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/linked.md": "# Linked\n",
-                "knowledge/topic/note.md": """# Note
+                "memory/knowledge/topic/linked.md": "# Linked\n",
+                "memory/knowledge/topic/note.md": """# Note
 See [linked](linked.md).
 See [missing](missing.md).
 """,
-                "knowledge/topic/orphan.md": "# Orphan\n",
-                "knowledge/topic/SUMMARY.md": """# Topic Summary
+                "memory/knowledge/topic/orphan.md": "# Orphan\n",
+                "memory/knowledge/topic/SUMMARY.md": """# Topic Summary
 
 - [note](note.md)
 - [missing](missing.md)
@@ -2613,7 +2613,7 @@ See [missing](missing.md).
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_check_cross_references"](path="knowledge/topic"))
+            asyncio.run(tools["memory_check_cross_references"](path="memory/knowledge/topic"))
         )
 
         self.assertEqual(payload["stats"]["files_scanned"], 4)
@@ -2621,16 +2621,16 @@ See [missing](missing.md).
         self.assertEqual(payload["stats"]["links_checked"], 4)
         self.assertIn(
             {
-                "file": "knowledge/topic/note.md",
+                "file": "memory/knowledge/topic/note.md",
                 "line": 3,
-                "target": "knowledge/topic/missing.md",
+                "target": "memory/knowledge/topic/missing.md",
                 "reason": "target not found",
             },
             payload["broken_links"],
         )
         self.assertIn(
             {
-                "summary": "knowledge/topic/SUMMARY.md",
+                "summary": "memory/knowledge/topic/SUMMARY.md",
                 "entry": "missing.md",
                 "reason": "target not found",
             },
@@ -2638,8 +2638,8 @@ See [missing](missing.md).
         )
         self.assertIn(
             {
-                "file": "knowledge/topic/orphan.md",
-                "folder_summary": "knowledge/topic/SUMMARY.md",
+                "file": "memory/knowledge/topic/orphan.md",
+                "folder_summary": "memory/knowledge/topic/SUMMARY.md",
                 "reason": "not mentioned in SUMMARY.md",
             },
             payload["orphaned_files"],
@@ -2648,8 +2648,8 @@ See [missing](missing.md).
     def test_memory_check_cross_references_can_skip_summary_checks(self) -> None:
         repo_root = self._init_repo(
             {
-                "plans/demo.md": "See [missing](missing.md).\n",
-                "plans/SUMMARY.md": "# Plans\n\n- [missing](missing.md)\n",
+                "memory/working/projects/demo.md": "See [missing](missing.md).\n",
+                "memory/working/projects/SUMMARY.md": "# Plans\n\n- [missing](missing.md)\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -2669,17 +2669,17 @@ See [missing](missing.md).
         self.assertEqual(len(payload["broken_links"]), 2)
 
     def test_memory_check_cross_references_rejects_oversized_scan(self) -> None:
-        files = {f"knowledge/bulk/file-{idx:03d}.md": f"# File {idx}\n" for idx in range(501)}
+        files = {f"memory/knowledge/bulk/file-{idx:03d}.md": f"# File {idx}\n" for idx in range(501)}
         repo_root = self._init_repo(files)
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
-            asyncio.run(tools["memory_check_cross_references"](path="knowledge/bulk"))
+            asyncio.run(tools["memory_check_cross_references"](path="memory/knowledge/bulk"))
 
     def test_memory_generate_summary_returns_standard_draft(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/alpha-note.md": """---
+                "memory/knowledge/topic/alpha-note.md": """---
 source: agent-generated
 trust: medium
 created: 2026-03-20
@@ -2691,7 +2691,7 @@ Alpha is the first concise summary paragraph.
 
 More detail follows here.
 """,
-                "knowledge/topic/beta-note.md": """---
+                "memory/knowledge/topic/beta-note.md": """---
 source: user-stated
 trust: high
 last_verified: 2026-03-21
@@ -2705,7 +2705,7 @@ Beta captures the second description block.
         )
         tools = self._create_tools(repo_root)
 
-        output = asyncio.run(tools["memory_generate_summary"](path="knowledge/topic"))
+        output = asyncio.run(tools["memory_generate_summary"](path="memory/knowledge/topic"))
 
         self.assertIn("<!-- Generated by memory_generate_summary on ", output)
         self.assertIn("# Topic -- Summary", output)
@@ -2721,13 +2721,13 @@ Beta captures the second description block.
     def test_memory_generate_summary_references_summarized_subfolders(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/root-note.md": "# Root Note\n\nRoot description.\n",
-                "knowledge/topic/subtopic/SUMMARY.md": "# Subtopic -- Summary\n",
+                "memory/knowledge/topic/root-note.md": "# Root Note\n\nRoot description.\n",
+                "memory/knowledge/topic/subtopic/SUMMARY.md": "# Subtopic -- Summary\n",
             }
         )
         tools = self._create_tools(repo_root)
 
-        output = asyncio.run(tools["memory_generate_summary"](path="knowledge/topic"))
+        output = asyncio.run(tools["memory_generate_summary"](path="memory/knowledge/topic"))
 
         self.assertIn("## Subfolders", output)
         self.assertIn("- **subtopic/** -- See [subtopic/SUMMARY.md](subtopic/SUMMARY.md)", output)
@@ -2735,7 +2735,7 @@ Beta captures the second description block.
     def test_memory_generate_summary_supports_detailed_style(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic/detail-note.md": """---
+                "memory/knowledge/topic/detail-note.md": """---
 source: agent-generated
 trust: medium
 created: 2026-03-20
@@ -2750,7 +2750,7 @@ Detailed descriptions should preserve the first paragraph.
         tools = self._create_tools(repo_root)
 
         output = asyncio.run(
-            tools["memory_generate_summary"](path="knowledge/topic", style="detailed")
+            tools["memory_generate_summary"](path="memory/knowledge/topic", style="detailed")
         )
 
         self.assertIn("Title: Detail Note.", output)
@@ -2759,21 +2759,21 @@ Detailed descriptions should preserve the first paragraph.
         )
 
     def test_memory_generate_summary_rejects_unknown_style(self) -> None:
-        repo_root = self._init_repo({"knowledge/topic/note.md": "# Note\n\nBody.\n"})
+        repo_root = self._init_repo({"memory/knowledge/topic/note.md": "# Note\n\nBody.\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
-            asyncio.run(tools["memory_generate_summary"](path="knowledge/topic", style="compact"))
+            asyncio.run(tools["memory_generate_summary"](path="memory/knowledge/topic", style="compact"))
 
     def test_memory_access_analytics_classifies_policy_buckets(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/ACCESS.jsonl": "\n".join(
+                "memory/knowledge/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "file": "knowledge/core.md",
+                                "file": "memory/knowledge/core.md",
                                 "task": "analysis",
                                 "helpfulness": 0.8,
                             }
@@ -2784,7 +2784,7 @@ Detailed descriptions should preserve the first paragraph.
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "file": "knowledge/retire.md",
+                                "file": "memory/knowledge/retire.md",
                                 "task": "analysis",
                                 "helpfulness": 0.2,
                             }
@@ -2795,7 +2795,7 @@ Detailed descriptions should preserve the first paragraph.
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "file": "knowledge/gem.md",
+                                "file": "memory/knowledge/gem.md",
                                 "task": "analysis",
                                 "helpfulness": 0.6,
                             }
@@ -2804,9 +2804,9 @@ Detailed descriptions should preserve the first paragraph.
                     ]
                 )
                 + "\n",
-                "knowledge/core.md": "# Core\n",
-                "knowledge/retire.md": "# Retire\n",
-                "knowledge/gem.md": "# Gem\n",
+                "memory/knowledge/core.md": "# Core\n",
+                "memory/knowledge/retire.md": "# Retire\n",
+                "memory/knowledge/gem.md": "# Gem\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -2816,30 +2816,30 @@ Detailed descriptions should preserve the first paragraph.
         self.assertEqual(payload["total_entries"], 11)
         self.assertEqual(payload["unique_files"], 3)
         self.assertIn(
-            {"file": "knowledge/core.md", "access_count": 5, "mean_helpfulness": 0.8},
+            {"file": "memory/knowledge/core.md", "access_count": 5, "mean_helpfulness": 0.8},
             payload["categories"]["core_memory"],
         )
         self.assertIn(
-            {"file": "knowledge/retire.md", "access_count": 4, "mean_helpfulness": 0.2},
+            {"file": "memory/knowledge/retire.md", "access_count": 4, "mean_helpfulness": 0.2},
             payload["categories"]["retirement_candidate"],
         )
         self.assertIn(
-            {"file": "knowledge/gem.md", "access_count": 2, "mean_helpfulness": 0.6},
+            {"file": "memory/knowledge/gem.md", "access_count": 2, "mean_helpfulness": 0.6},
             payload["categories"]["hidden_gem"],
         )
         self.assertIn(
             {
-                "file": "knowledge/core.md",
+                "file": "memory/knowledge/core.md",
                 "action": "enrich_cross_refs",
                 "reason": "Core memory: 5 accesses, 0.800 mean helpfulness",
             },
             payload["suggested_actions"],
         )
-        self.assertEqual(payload["top_accessed"][0], {"file": "knowledge/core.md", "count": 5})
-        self.assertEqual(payload["thresholds"]["policy_source"], "meta/curation-policy.md")
+        self.assertEqual(payload["top_accessed"][0], {"file": "memory/knowledge/core.md", "count": 5})
+        self.assertEqual(payload["thresholds"]["policy_source"], "governance/curation-policy.md")
 
     def test_memory_access_analytics_handles_empty_logs(self) -> None:
-        repo_root = self._init_repo({"knowledge/ACCESS.jsonl": ""})
+        repo_root = self._init_repo({"memory/knowledge/ACCESS.jsonl": ""})
         tools = self._create_tools(repo_root)
 
         payload = json.loads(asyncio.run(tools["memory_access_analytics"]()))
@@ -2853,7 +2853,7 @@ Detailed descriptions should preserve the first paragraph.
     def test_memory_diff_branch_reports_branch_divergence(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/base.md": "# Base\n",
+                "memory/knowledge/base.md": "# Base\n",
             }
         )
         subprocess.run(
@@ -2873,8 +2873,8 @@ Detailed descriptions should preserve the first paragraph.
         self._write_and_commit(
             repo_root,
             {
-                "knowledge/new-note.md": "# New\n",
-                "meta/policy-note.md": "# Policy\n",
+                "memory/knowledge/new-note.md": "# New\n",
+                "governance/policy-note.md": "# Policy\n",
                 "notes.txt": "plain text\n",
             },
             "feature change",
@@ -2893,7 +2893,7 @@ Detailed descriptions should preserve the first paragraph.
         self.assertEqual(payload["recent_commits"][0]["message"], "feature change")
 
     def test_memory_diff_branch_returns_clear_error_for_missing_base(self) -> None:
-        repo_root = self._init_repo({"knowledge/base.md": "# Base\n"})
+        repo_root = self._init_repo({"memory/knowledge/base.md": "# Base\n"})
         tools = self._create_tools(repo_root)
 
         payload = json.loads(asyncio.run(tools["memory_diff_branch"](base="missing-base")))
@@ -2925,7 +2925,7 @@ Detailed descriptions should preserve the first paragraph.
                 tools["memory_edit"](
                     path="agent-bootstrap.toml",
                     old_string="README.md",
-                    new_string="meta/quick-reference.md",
+                    new_string="HOME.md",
                 )
             )
 
@@ -2953,87 +2953,87 @@ Detailed descriptions should preserve the first paragraph.
             asyncio.run(
                 tools["memory_move"](
                     source="README.md",
-                    dest="knowledge/README.md",
+                    dest="memory/knowledge/README.md",
                 )
             )
 
     def test_memory_move_rejects_protected_identity_destination(self) -> None:
-        repo_root = self._init_repo_with_file("knowledge/note.md")
+        repo_root = self._init_repo_with_file("memory/knowledge/note.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
             asyncio.run(
                 tools["memory_move"](
-                    source="knowledge/note.md",
-                    dest="identity/note.md",
+                    source="memory/knowledge/note.md",
+                    dest="memory/users/note.md",
                 )
             )
 
     def test_memory_move_rejects_protected_meta_destination(self) -> None:
-        repo_root = self._init_repo_with_file("plans/note.md")
+        repo_root = self._init_repo_with_file("memory/working/projects/note.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
             asyncio.run(
                 tools["memory_move"](
-                    source="plans/note.md",
-                    dest="meta/note.md",
+                    source="memory/working/projects/note.md",
+                    dest="governance/note.md",
                 )
             )
 
     def test_memory_move_rejects_protected_skills_destination(self) -> None:
-        repo_root = self._init_repo_with_file("scratchpad/note.md")
+        repo_root = self._init_repo_with_file("memory/working/scratchpad/note.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
             asyncio.run(
                 tools["memory_move"](
-                    source="scratchpad/note.md",
-                    dest="skills/note.md",
+                    source="memory/working/scratchpad/note.md",
+                    dest="memory/skills/note.md",
                 )
             )
 
     def test_memory_move_rejects_protected_chats_destination(self) -> None:
-        repo_root = self._init_repo_with_file("knowledge/note.md")
+        repo_root = self._init_repo_with_file("memory/knowledge/note.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
             asyncio.run(
                 tools["memory_move"](
-                    source="knowledge/note.md",
-                    dest="chats/2026/03/19/chat-001/note.md",
+                    source="memory/knowledge/note.md",
+                    dest="memory/activity/2026/03/19/chat-001/note.md",
                 )
             )
 
     def test_memory_move_allows_knowledge_destination(self) -> None:
-        repo_root = self._init_repo_with_file("knowledge/old/note.md")
+        repo_root = self._init_repo_with_file("memory/knowledge/old/note.md")
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         asyncio.run(
             tools["memory_move"](
-                source="knowledge/old/note.md",
-                dest="knowledge/new/note.md",
+                source="memory/knowledge/old/note.md",
+                dest="memory/knowledge/new/note.md",
             )
         )
 
         self.assertTrue((repo_root / "knowledge" / "new" / "note.md").exists())
 
     def test_memory_delete_handles_dash_prefixed_filename(self) -> None:
-        repo_root = self._init_repo({"knowledge/-danger.md": "# Danger\n"})
+        repo_root = self._init_repo({"memory/knowledge/-danger.md": "# Danger\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
-        asyncio.run(tools["memory_delete"](path="knowledge/-danger.md"))
+        asyncio.run(tools["memory_delete"](path="memory/knowledge/-danger.md"))
 
         self.assertFalse((repo_root / "knowledge" / "-danger.md").exists())
 
     def test_memory_move_handles_dash_prefixed_filename(self) -> None:
-        repo_root = self._init_repo({"knowledge/-danger.md": "# Danger\n"})
+        repo_root = self._init_repo({"memory/knowledge/-danger.md": "# Danger\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         asyncio.run(
             tools["memory_move"](
-                source="knowledge/-danger.md",
-                dest="knowledge/archive/safe.md",
+                source="memory/knowledge/-danger.md",
+                dest="memory/knowledge/archive/safe.md",
             )
         )
 
@@ -3043,7 +3043,7 @@ Detailed descriptions should preserve the first paragraph.
     def test_memory_add_knowledge_file_requires_low_trust_and_session_id(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
+                "memory/knowledge/_unverified/SUMMARY.md": """# Unverified Knowledge
 
 <!-- section: django -->
 ### Django
@@ -3057,10 +3057,10 @@ Detailed descriptions should preserve the first paragraph.
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_add_knowledge_file"](
-                    path="knowledge/_unverified/django/test.md",
+                    path="memory/knowledge/_unverified/django/test.md",
                     content="# Test\n",
                     source="external-research",
-                    session_id="chats/2026/03/19/chat-001",
+                    session_id="memory/activity/2026/03/19/chat-001",
                     trust="high",
                 )
             )
@@ -3068,7 +3068,7 @@ Detailed descriptions should preserve the first paragraph.
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_add_knowledge_file"](
-                    path="knowledge/_unverified/django/test.md",
+                    path="memory/knowledge/_unverified/django/test.md",
                     content="# Test\n",
                     source="external-research",
                     session_id="chat-001",
@@ -3078,8 +3078,8 @@ Detailed descriptions should preserve the first paragraph.
     def test_memory_create_plan_rejects_noncanonical_session_id(self) -> None:
         repo_root = self._init_repo(
             {
-                "projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
-                "projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Example project.\n---\n\n# Project: Example\n",
+                "memory/working/projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
+                "memory/working/projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Example project.\n---\n\n# Project: Example\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -3100,8 +3100,8 @@ Detailed descriptions should preserve the first paragraph.
     def test_memory_create_plan_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(
             {
-                "projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
-                "projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Investigate regressions.\n---\n\n# Project: Example\n",
+                "memory/working/projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
+                "memory/working/projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Investigate regressions.\n---\n\n# Project: Example\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -3114,17 +3114,17 @@ Detailed descriptions should preserve the first paragraph.
                 description="Investigate regressions",
                 content="# Test Plan\n\n## Context\n",
                 next_action="Do the first thing",
-                session_id="chats/2026/03/19/chat-001",
+                session_id="memory/activity/2026/03/19/chat-001",
             )
         )
 
         plan_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "projects" / "example" / "plans" / "test-plan.md"
+            repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
         )
         project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
-            repo_root / "projects" / "example" / "SUMMARY.md"
+            repo_root / "memory" / "working" / "projects" / "example" / "SUMMARY.md"
         )
-        summary = (repo_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
 
         self.assertEqual(plan_frontmatter["title"], "Test Plan")
         self.assertEqual(project_frontmatter["active_plans"], 1)
@@ -3133,8 +3133,8 @@ Detailed descriptions should preserve the first paragraph.
     def test_memory_create_plan_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
-                "projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Preview the plan write.\n---\n\n# Project: Example\n",
+                "memory/working/projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
+                "memory/working/projects/example/SUMMARY.md": "---\nsource: agent-generated\norigin_session: manual\ncreated: 2026-03-21\ntrust: medium\ntype: project\nstatus: active\ncognitive_mode: exploration\nopen_questions: 0\nactive_plans: 0\nlast_activity: 2026-03-21\ncurrent_focus: Preview the plan write.\n---\n\n# Project: Example\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -3148,14 +3148,14 @@ Detailed descriptions should preserve the first paragraph.
                     description="Preview the plan write",
                     content="# Preview Plan\n",
                     next_action="Do the previewed thing",
-                    session_id="chats/2026/03/19/chat-001",
+                    session_id="memory/activity/2026/03/19/chat-001",
                     preview=True,
                 )
             )
         )
 
         self.assertFalse(
-            (repo_root / "projects" / "example" / "plans" / "preview-plan.md").exists()
+            (repo_root / "memory" / "working" / "projects" / "example" / "plans" / "preview-plan.md").exists()
         )
         self.assertEqual(preview["preview"]["mode"], "preview")
         self.assertEqual(
@@ -3172,12 +3172,12 @@ Detailed descriptions should preserve the first paragraph.
                     description="Preview the plan write",
                     content="# Preview Plan\n",
                     next_action="Do the previewed thing",
-                    session_id="chats/2026/03/19/chat-001",
+                    session_id="memory/activity/2026/03/19/chat-001",
                 )
             )
         )
 
-        self.assertTrue((repo_root / "projects" / "example" / "plans" / "preview-plan.md").exists())
+        self.assertTrue((repo_root / "memory" / "working" / "projects" / "example" / "plans" / "preview-plan.md").exists())
         self.assertEqual(applied["commit_message"], "[plan] Create preview-plan")
         self.assertEqual(applied["preview"]["mode"], "apply")
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
@@ -3185,7 +3185,7 @@ Detailed descriptions should preserve the first paragraph.
     def test_memory_promote_knowledge_preview_does_not_move_file_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/_unverified/django/note.md": """---
+                "memory/knowledge/_unverified/django/note.md": """---
 created: 2026-03-20
 source: test
 trust: low
@@ -3193,13 +3193,13 @@ trust: low
 
 # Note
 """,
-                "knowledge/_unverified/SUMMARY.md": """<!-- section: django -->
+                "memory/knowledge/_unverified/SUMMARY.md": """<!-- section: django -->
 ### Django
-- **[note.md](knowledge/_unverified/django/note.md)** — Note
+- **[note.md](memory/knowledge/_unverified/django/note.md)** — Note
 
 ---
 """,
-                "knowledge/SUMMARY.md": "# Knowledge\n\n---\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n\n---\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -3207,9 +3207,9 @@ trust: low
         preview = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge"](
-                    source_path="knowledge/_unverified/django/note.md",
+                    source_path="memory/knowledge/_unverified/django/note.md",
                     trust_level="medium",
-                    summary_entry="- **[note.md](knowledge/django/note.md)** — Note",
+                    summary_entry="- **[note.md](memory/knowledge/django/note.md)** — Note",
                     preview=True,
                 )
             )
@@ -3222,9 +3222,9 @@ trust: low
         applied = json.loads(
             asyncio.run(
                 tools["memory_promote_knowledge"](
-                    source_path="knowledge/_unverified/django/note.md",
+                    source_path="memory/knowledge/_unverified/django/note.md",
                     trust_level="medium",
-                    summary_entry="- **[note.md](knowledge/django/note.md)** — Note",
+                    summary_entry="- **[note.md](memory/knowledge/django/note.md)** — Note",
                 )
             )
         )
@@ -3237,10 +3237,10 @@ trust: low
             applied["commit_message"],
         )
 
-    def test_memory_update_identity_trait_rejects_non_slug_filename(self) -> None:
+    def test_memory_update_user_trait_rejects_non_slug_filename(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-17
@@ -3255,17 +3255,17 @@ trust: high
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
-                tools["memory_update_identity_trait"](
+                tools["memory_update_user_trait"](
                     file="../README",
                     key="tone",
                     value="direct",
                 )
             )
 
-    def test_memory_update_identity_trait_replaces_existing_body_section(self) -> None:
+    def test_memory_update_user_trait_replaces_existing_body_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-17
@@ -3287,7 +3287,7 @@ Structured.
         tools = self._create_tools(repo_root)
 
         asyncio.run(
-            tools["memory_update_identity_trait"](
+            tools["memory_update_user_trait"](
                 file="profile",
                 key="tone",
                 value="Even more direct.",
@@ -3295,16 +3295,16 @@ Structured.
             )
         )
 
-        updated = (repo_root / "identity" / "profile.md").read_text(encoding="utf-8")
+        updated = (repo_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
         self.assertIn("## tone\n\nEven more direct.", updated)
         self.assertNotIn("Even more direct.\n\nDirect and concise.", updated)
         self.assertNotIn("Direct and concise.", updated)
         self.assertIn("## workflow\n\nStructured.", updated)
 
-    def test_memory_update_identity_trait_preview_does_not_write_and_matches_apply(self) -> None:
+    def test_memory_update_user_trait_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-17
@@ -3323,7 +3323,7 @@ Direct and concise.
 
         preview = json.loads(
             asyncio.run(
-                tools["memory_update_identity_trait"](
+                tools["memory_update_user_trait"](
                     file="profile",
                     key="tone",
                     value="Even more direct.",
@@ -3334,12 +3334,12 @@ Direct and concise.
 
         self.assertIn(
             "Direct and concise.",
-            (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
+            (repo_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8"),
         )
 
         applied = json.loads(
             asyncio.run(
-                tools["memory_update_identity_trait"](
+                tools["memory_update_user_trait"](
                     file="profile",
                     key="tone",
                     value="Even more direct.",
@@ -3349,7 +3349,7 @@ Direct and concise.
 
         self.assertIn(
             "Even more direct.",
-            (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
+            (repo_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8"),
         )
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
         self.assertEqual(
@@ -3358,7 +3358,7 @@ Direct and concise.
         )
 
     def test_memory_record_chat_summary_rejects_noncanonical_session_id(self) -> None:
-        repo_root = self._init_repo({"chats/SUMMARY.md": "# Chats\n## Structure\n"})
+        repo_root = self._init_repo({"memory/activity/SUMMARY.md": "# Chats\n## Structure\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
@@ -3372,28 +3372,28 @@ Direct and concise.
     def test_memory_record_session_writes_summary_reflection_and_access_in_one_commit(self) -> None:
         repo_root = self._init_repo(
             {
-                "chats/SUMMARY.md": "# Chats\n## Structure\n",
-                "knowledge/topic.md": "# Topic\n",
-                "plans/demo.md": "# Demo\n",
+                "memory/activity/SUMMARY.md": "# Chats\n## Structure\n",
+                "memory/knowledge/topic.md": "# Topic\n",
+                "memory/working/projects/demo.md": "# Demo\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_record_session"](
-                session_id="chats/2026/03/20/chat-002",
+                session_id="memory/activity/2026/03/20/chat-002",
                 summary="# Session Summary\n\nDid the work.\n",
                 reflection="Observed a cleaner wrap-up path.",
                 key_topics="semantic-tools,wrapup",
                 access_entries=[
                     {
-                        "file": "knowledge/topic.md",
+                        "file": "memory/knowledge/topic.md",
                         "task": "session wrap-up",
                         "helpfulness": 0.8,
                         "note": "Relevant context for summary.",
                     },
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "task": "session wrap-up",
                         "helpfulness": 0.6,
                         "note": "Referenced current work.",
@@ -3404,12 +3404,12 @@ Direct and concise.
         payload = json.loads(raw)
 
         session_summary = (
-            repo_root / "chats" / "2026" / "03" / "20" / "chat-002" / "SUMMARY.md"
+            repo_root / "memory" / "activity" / "2026" / "03" / "20" / "chat-002" / "SUMMARY.md"
         ).read_text(encoding="utf-8")
         reflection = (
-            repo_root / "chats" / "2026" / "03" / "20" / "chat-002" / "reflection.md"
+            repo_root / "memory" / "activity" / "2026" / "03" / "20" / "chat-002" / "reflection.md"
         ).read_text(encoding="utf-8")
-        chats_summary = (repo_root / "chats" / "SUMMARY.md").read_text(encoding="utf-8")
+        chats_summary = (repo_root / "memory" / "activity" / "SUMMARY.md").read_text(encoding="utf-8")
         knowledge_access = [
             json.loads(line)
             for line in (repo_root / "knowledge" / "ACCESS.jsonl")
@@ -3419,7 +3419,7 @@ Direct and concise.
         ]
         plans_access = [
             json.loads(line)
-            for line in (repo_root / "plans" / "ACCESS.jsonl")
+            for line in (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl")
             .read_text(encoding="utf-8")
             .splitlines()
             if line.strip()
@@ -3433,47 +3433,47 @@ Direct and concise.
         ).stdout.strip()
 
         self.assertEqual(
-            payload["commit_message"], "[chat] Record session chats/2026/03/20/chat-002"
+            payload["commit_message"], "[chat] Record session memory/activity/2026/03/20/chat-002"
         )
-        self.assertEqual(payload["new_state"]["session_id"], "chats/2026/03/20/chat-002")
+        self.assertEqual(payload["new_state"]["session_id"], "memory/activity/2026/03/20/chat-002")
         self.assertIn("key_topics:", session_summary)
         self.assertIn("semantic-tools", session_summary)
         self.assertIn("## Session reflection\n\nObserved a cleaner wrap-up path.\n", reflection)
-        self.assertIn("chats/2026/03/20/chat-002/", chats_summary)
-        self.assertEqual(knowledge_access[0]["session_id"], "chats/2026/03/20/chat-002")
-        self.assertEqual(plans_access[0]["session_id"], "chats/2026/03/20/chat-002")
+        self.assertIn("memory/activity/2026/03/20/chat-002/", chats_summary)
+        self.assertEqual(knowledge_access[0]["session_id"], "memory/activity/2026/03/20/chat-002")
+        self.assertEqual(plans_access[0]["session_id"], "memory/activity/2026/03/20/chat-002")
         self.assertEqual(log_count, "2")
 
     def test_memory_append_scratchpad_accepts_dated_slug_and_creates_file(self) -> None:
-        repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Current\n"})
+        repo_root = self._init_repo({"memory/working/scratchpad/CURRENT.md": "# Current\n"})
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_append_scratchpad"](
-                target="scratchpad/2026-03-20-worklog.md",
+                target="memory/working/scratchpad/2026-03-20-worklog.md",
                 content="Initial note",
                 section="Findings",
             )
         )
         payload = json.loads(raw)
 
-        scratchpad = (repo_root / "scratchpad" / "2026-03-20-worklog.md").read_text(
+        scratchpad = (repo_root / "memory" / "working" / "scratchpad" / "2026-03-20-worklog.md").read_text(
             encoding="utf-8"
         )
         self.assertEqual(
             payload["new_state"]["target"],
-            "scratchpad/2026-03-20-worklog.md",
+            "memory/working/scratchpad/2026-03-20-worklog.md",
         )
         self.assertIn("## Findings\n\nInitial note\n", scratchpad)
 
     def test_memory_append_scratchpad_rejects_invalid_target_format(self) -> None:
-        repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Current\n"})
+        repo_root = self._init_repo({"memory/working/scratchpad/CURRENT.md": "# Current\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_append_scratchpad"](
-                    target="scratchpad/not valid.md",
+                    target="memory/working/scratchpad/not valid.md",
                     content="Invalid",
                 )
             )
@@ -3481,23 +3481,23 @@ Direct and concise.
     def test_memory_flag_for_review_returns_item_id_and_uses_canonical_format(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
-                "plans/demo.md": "# Demo\n",
+                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "memory/working/projects/demo.md": "# Demo\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_flag_for_review"](
-                path="plans/demo.md",
+                path="memory/working/projects/demo.md",
                 reason="Needs human review before promotion.",
                 priority="urgent",
             )
         )
         payload = json.loads(raw)
-        review_queue = (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8")
+        review_queue = (repo_root / "governance" / "review-queue.md").read_text(encoding="utf-8")
 
-        self.assertEqual(payload["new_state"]["flagged_path"], "plans/demo.md")
+        self.assertEqual(payload["new_state"]["flagged_path"], "memory/working/projects/demo.md")
         self.assertRegex(
             payload["new_state"]["item_id"],
             r"^\d{4}-\d{2}-\d{2}-review-plans-demo-md$",
@@ -3510,12 +3510,12 @@ Direct and concise.
     def test_memory_resolve_review_item_moves_entry_to_resolved_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/review-queue.md": """# Review Queue
+                "governance/review-queue.md": """# Review Queue
 
-### [2026-03-20] Review plans/demo.md
+### [2026-03-20] Review memory/working/projects/demo.md
 **Item ID:** 2026-03-20-review-plans-demo-md
 **Type:** proposed
-**File:** plans/demo.md
+**File:** memory/working/projects/demo.md
 **Priority:** normal
 **Reason:** Review it.
 **Status:** pending
@@ -3531,7 +3531,7 @@ Direct and concise.
             )
         )
         payload = json.loads(raw)
-        review_queue = (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8")
+        review_queue = (repo_root / "governance" / "review-queue.md").read_text(encoding="utf-8")
 
         self.assertEqual(payload["new_state"]["item_id"], "2026-03-20-review-plans-demo-md")
         self.assertEqual(
@@ -3549,12 +3549,12 @@ Direct and concise.
     def test_memory_resolve_review_item_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/review-queue.md": """# Review Queue
+                "governance/review-queue.md": """# Review Queue
 
-### [2026-03-20] Review plans/demo.md
+### [2026-03-20] Review memory/working/projects/demo.md
 **Item ID:** 2026-03-20-review-plans-demo-md
 **Type:** proposed
-**File:** plans/demo.md
+**File:** memory/working/projects/demo.md
 **Priority:** normal
 **Reason:** Review it.
 **Status:** pending
@@ -3575,7 +3575,7 @@ Direct and concise.
 
         self.assertIn(
             "**Status:** pending",
-            (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8"),
+            (repo_root / "governance" / "review-queue.md").read_text(encoding="utf-8"),
         )
 
         applied = json.loads(
@@ -3589,7 +3589,7 @@ Direct and concise.
 
         self.assertIn(
             "2026-03-20-review-plans-demo-md: Handled during maintenance.",
-            (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8"),
+            (repo_root / "governance" / "review-queue.md").read_text(encoding="utf-8"),
         )
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
         self.assertEqual(
@@ -3600,7 +3600,7 @@ Direct and concise.
     def test_memory_update_skill_upserts_existing_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "skills/session-start.md": """---
+                "memory/skills/session-start.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-16
@@ -3635,7 +3635,7 @@ Load compact context.
     def test_memory_update_skill_appends_existing_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "skills/session-sync.md": """---
+                "memory/skills/session-sync.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-16
@@ -3668,7 +3668,7 @@ Capture a short checkpoint.
     def test_memory_update_skill_replaces_existing_section(self) -> None:
         repo_root = self._init_repo(
             {
-                "skills/session-wrapup.md": """---
+                "memory/skills/session-wrapup.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-16
@@ -3700,7 +3700,7 @@ Old guidance.
         self.assertNotIn("Old guidance.", skill)
 
     def test_memory_update_skill_raises_for_missing_file_without_creation(self) -> None:
-        repo_root = self._init_repo({"skills/SUMMARY.md": "# Skills\n"})
+        repo_root = self._init_repo({"memory/skills/SUMMARY.md": "# Skills\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.NotFoundError):
@@ -3713,7 +3713,7 @@ Old guidance.
             )
 
     def test_memory_update_skill_can_create_missing_file(self) -> None:
-        repo_root = self._init_repo({"skills/SUMMARY.md": "# Skills\n"})
+        repo_root = self._init_repo({"memory/skills/SUMMARY.md": "# Skills\n"})
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
@@ -3724,7 +3724,7 @@ Old guidance.
                 create_if_missing=True,
                 source="agent-generated",
                 trust="medium",
-                origin_session="chats/2026/03/20/chat-001",
+                origin_session="memory/activity/2026/03/20/chat-001",
             )
         )
         payload = json.loads(raw)
@@ -3734,14 +3734,14 @@ Old guidance.
         self.assertEqual(payload["new_state"]["section"], "Steps")
         self.assertTrue(skill_path.exists())
         self.assertIn("source: agent-generated", skill)
-        self.assertIn("origin_session: chats/2026/03/20/chat-001", skill)
+        self.assertIn("origin_session: memory/activity/2026/03/20/chat-001", skill)
         self.assertIn("trust: medium", skill)
         self.assertIn("## Steps\n\nCreate the first guidance block.", skill)
 
     def test_memory_update_skill_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "skills/session-start.md": """---
+                "memory/skills/session-start.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-16
@@ -3795,93 +3795,93 @@ Load compact context.
     def test_memory_run_aggregation_dry_run_previews_without_writing_files(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic.md": "# Topic\n",
-                "plans/demo.md": "# Demo\n",
-                "skills/session-start.md": "# Session Start\n",
-                "knowledge/SUMMARY.md": "# Knowledge\n\n## Usage patterns\n\n_No access data yet._\n",
-                "plans/SUMMARY.md": "# Plans\n\n## Usage patterns\n\n_No access data yet._\n",
-                "skills/SUMMARY.md": "# Skills\n\n## Usage patterns\n\n_No access data yet._\n",
-                "knowledge/ACCESS.jsonl": "\n".join(
+                "memory/knowledge/topic.md": "# Topic\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/skills/session-start.md": "# Session Start\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n\n## Usage patterns\n\n_No access data yet._\n",
+                "memory/working/projects/SUMMARY.md": "# Plans\n\n## Usage patterns\n\n_No access data yet._\n",
+                "memory/skills/SUMMARY.md": "# Skills\n\n## Usage patterns\n\n_No access data yet._\n",
+                "memory/knowledge/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-18",
-                                "session_id": "chats/2026/03/18/chat-001",
-                                "file": "knowledge/topic.md",
+                                "session_id": "memory/activity/2026/03/18/chat-001",
+                                "file": "memory/knowledge/topic.md",
                                 "helpfulness": 0.8,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-19",
-                                "session_id": "chats/2026/03/19/chat-001",
-                                "file": "knowledge/topic.md",
+                                "session_id": "memory/activity/2026/03/19/chat-001",
+                                "file": "memory/knowledge/topic.md",
                                 "helpfulness": 0.8,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "session_id": "chats/2026/03/20/chat-001",
-                                "file": "knowledge/topic.md",
+                                "session_id": "memory/activity/2026/03/20/chat-001",
+                                "file": "memory/knowledge/topic.md",
                                 "helpfulness": 0.8,
                             }
                         ),
                     ]
                 )
                 + "\n",
-                "plans/ACCESS.jsonl": "\n".join(
+                "memory/working/projects/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-18",
-                                "session_id": "chats/2026/03/18/chat-001",
-                                "file": "plans/demo.md",
+                                "session_id": "memory/activity/2026/03/18/chat-001",
+                                "file": "memory/working/projects/demo.md",
                                 "helpfulness": 0.7,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-19",
-                                "session_id": "chats/2026/03/19/chat-001",
-                                "file": "plans/demo.md",
+                                "session_id": "memory/activity/2026/03/19/chat-001",
+                                "file": "memory/working/projects/demo.md",
                                 "helpfulness": 0.7,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "session_id": "chats/2026/03/20/chat-001",
-                                "file": "plans/demo.md",
+                                "session_id": "memory/activity/2026/03/20/chat-001",
+                                "file": "memory/working/projects/demo.md",
                                 "helpfulness": 0.7,
                             }
                         ),
                     ]
                 )
                 + "\n",
-                "skills/ACCESS.jsonl": "\n".join(
+                "memory/skills/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-18",
-                                "session_id": "chats/2026/03/18/chat-001",
-                                "file": "skills/session-start.md",
+                                "session_id": "memory/activity/2026/03/18/chat-001",
+                                "file": "memory/skills/session-start.md",
                                 "helpfulness": 0.9,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-19",
-                                "session_id": "chats/2026/03/19/chat-001",
-                                "file": "skills/session-start.md",
+                                "session_id": "memory/activity/2026/03/19/chat-001",
+                                "file": "memory/skills/session-start.md",
                                 "helpfulness": 0.9,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "session_id": "chats/2026/03/20/chat-001",
-                                "file": "skills/session-start.md",
+                                "session_id": "memory/activity/2026/03/20/chat-001",
+                                "file": "memory/skills/session-start.md",
                                 "helpfulness": 0.9,
                             }
                         ),
@@ -3903,16 +3903,16 @@ Load compact context.
         self.assertEqual(payload["new_state"]["session_groups_processed"], 3)
         self.assertEqual(
             payload["new_state"]["hot_access_targets"],
-            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl", "skills/ACCESS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS.jsonl", "memory/skills/ACCESS.jsonl"],
         )
         self.assertEqual(
             payload["new_state"]["summary_materialization_targets"],
-            ["knowledge/SUMMARY.md", "plans/SUMMARY.md", "skills/SUMMARY.md"],
+            ["memory/knowledge/SUMMARY.md", "memory/working/projects/SUMMARY.md", "memory/skills/SUMMARY.md"],
         )
         self.assertEqual(len(payload["new_state"]["clusters"]), 1)
         self.assertEqual(
             payload["new_state"]["clusters"][0]["files"],
-            ["knowledge/topic.md", "plans/demo.md", "skills/session-start.md"],
+            ["memory/knowledge/topic.md", "memory/working/projects/demo.md", "memory/skills/session-start.md"],
         )
         self.assertEqual(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8"),
@@ -3926,90 +3926,90 @@ Load compact context.
     def test_memory_run_aggregation_apply_updates_summaries_and_rotates_archives(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic.md": "# Topic\n",
-                "plans/demo.md": "# Demo\n",
-                "skills/session-start.md": "# Session Start\n",
-                "knowledge/SUMMARY.md": "# Knowledge\n\n## Usage patterns\n\n_No access data yet._\n",
-                "plans/SUMMARY.md": "# Plans\n\n## Usage patterns\n\n_No access data yet._\n",
-                "skills/SUMMARY.md": "# Skills\n\n## Usage patterns\n\n_No access data yet._\n",
-                "knowledge/ACCESS.jsonl": "\n".join(
+                "memory/knowledge/topic.md": "# Topic\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/skills/session-start.md": "# Session Start\n",
+                "memory/knowledge/SUMMARY.md": "# Knowledge\n\n## Usage patterns\n\n_No access data yet._\n",
+                "memory/working/projects/SUMMARY.md": "# Plans\n\n## Usage patterns\n\n_No access data yet._\n",
+                "memory/skills/SUMMARY.md": "# Skills\n\n## Usage patterns\n\n_No access data yet._\n",
+                "memory/knowledge/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-18",
-                                "session_id": "chats/2026/03/18/chat-001",
-                                "file": "knowledge/topic.md",
+                                "session_id": "memory/activity/2026/03/18/chat-001",
+                                "file": "memory/knowledge/topic.md",
                                 "helpfulness": 0.8,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-19",
-                                "file": "knowledge/topic.md",
+                                "file": "memory/knowledge/topic.md",
                                 "helpfulness": 0.8,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "session_id": "chats/2026/03/20/chat-001",
-                                "file": "knowledge/topic.md",
+                                "session_id": "memory/activity/2026/03/20/chat-001",
+                                "file": "memory/knowledge/topic.md",
                                 "helpfulness": 0.8,
                             }
                         ),
                     ]
                 )
                 + "\n",
-                "plans/ACCESS.jsonl": "\n".join(
+                "memory/working/projects/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-18",
-                                "session_id": "chats/2026/03/18/chat-001",
-                                "file": "plans/demo.md",
+                                "session_id": "memory/activity/2026/03/18/chat-001",
+                                "file": "memory/working/projects/demo.md",
                                 "helpfulness": 0.7,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-19",
-                                "file": "plans/demo.md",
+                                "file": "memory/working/projects/demo.md",
                                 "helpfulness": 0.7,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "session_id": "chats/2026/03/20/chat-001",
-                                "file": "plans/demo.md",
+                                "session_id": "memory/activity/2026/03/20/chat-001",
+                                "file": "memory/working/projects/demo.md",
                                 "helpfulness": 0.7,
                             }
                         ),
                     ]
                 )
                 + "\n",
-                "skills/ACCESS.jsonl": "\n".join(
+                "memory/skills/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
                                 "date": "2026-03-18",
-                                "session_id": "chats/2026/03/18/chat-001",
-                                "file": "skills/session-start.md",
+                                "session_id": "memory/activity/2026/03/18/chat-001",
+                                "file": "memory/skills/session-start.md",
                                 "helpfulness": 0.9,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-19",
-                                "file": "skills/session-start.md",
+                                "file": "memory/skills/session-start.md",
                                 "helpfulness": 0.9,
                             }
                         ),
                         json.dumps(
                             {
                                 "date": "2026-03-20",
-                                "session_id": "chats/2026/03/20/chat-001",
-                                "file": "skills/session-start.md",
+                                "session_id": "memory/activity/2026/03/20/chat-001",
+                                "file": "memory/skills/session-start.md",
                                 "helpfulness": 0.9,
                             }
                         ),
@@ -4024,7 +4024,7 @@ Load compact context.
         payload = json.loads(raw)
 
         knowledge_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
-        plans_summary = (repo_root / "plans" / "SUMMARY.md").read_text(encoding="utf-8")
+        plans_summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
         skills_summary = (repo_root / "skills" / "SUMMARY.md").read_text(encoding="utf-8")
         knowledge_archive = (repo_root / "knowledge" / "ACCESS.archive.2026-03.jsonl").read_text(
             encoding="utf-8"
@@ -4046,15 +4046,15 @@ Load compact context.
         self.assertEqual(payload["new_state"]["legacy_fallback_entries"], 3)
         self.assertEqual(
             payload["new_state"]["hot_access_reset_targets"],
-            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl", "skills/ACCESS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS.jsonl", "memory/skills/ACCESS.jsonl"],
         )
         self.assertIn(f"- Last aggregation: {date.today()}", knowledge_summary)
         self.assertIn(
-            "knowledge/topic.md + plans/demo.md + skills/session-start.md", knowledge_summary
+            "memory/knowledge/topic.md + memory/working/projects/demo.md + memory/skills/session-start.md", knowledge_summary
         )
         self.assertIn(f"- Last aggregation: {date.today()}", plans_summary)
         self.assertIn(f"- Last aggregation: {date.today()}", skills_summary)
-        self.assertIn('"file": "knowledge/topic.md"', knowledge_archive)
+        self.assertIn('"file": "memory/knowledge/topic.md"', knowledge_archive)
         self.assertEqual(knowledge_access, "")
         self.assertEqual(log_count, "2")
 
@@ -4063,38 +4063,38 @@ Load compact context.
     ) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": "# Profile\n",
-                "knowledge/lit/foo.md": "# Foo\n",
-                "knowledge/ACCESS.jsonl": json.dumps(
+                "memory/users/profile.md": "# Profile\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "date": "2026-03-20",
                         "task": "hot log entry",
                         "helpfulness": 0.8,
                         "note": "hot",
-                        "session_id": "chats/2026/03/20/chat-017",
+                        "session_id": "memory/activity/2026/03/20/chat-017",
                     }
                 )
                 + "\n",
-                "knowledge/ACCESS.archive.2026-03.jsonl": json.dumps(
+                "memory/knowledge/ACCESS.archive.2026-03.jsonl": json.dumps(
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "date": "2026-03-01",
                         "task": "archived entry",
                         "helpfulness": 0.2,
                         "note": "archived",
-                        "session_id": "chats/2026/03/01/chat-001",
+                        "session_id": "memory/activity/2026/03/01/chat-001",
                     }
                 )
                 + "\n",
-                "knowledge/ACCESS_SCANS.jsonl": json.dumps(
+                "memory/knowledge/ACCESS_SCANS.jsonl": json.dumps(
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "date": "2026-03-20",
                         "task": "scan entry",
                         "helpfulness": 0.1,
                         "note": "scan",
-                        "session_id": "chats/2026/03/20/chat-018",
+                        "session_id": "memory/activity/2026/03/20/chat-018",
                     }
                 )
                 + "\n",
@@ -4113,51 +4113,51 @@ Load compact context.
     # ------------------------------------------------------------------
 
     def test_memory_write_blocks_protected_identity_path(self) -> None:
-        repo_root = self._init_repo({"identity/profile.md": "# Profile\n"})
+        repo_root = self._init_repo({"memory/users/profile.md": "# Profile\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_write"](path="identity/profile.md", content="injected\n"))
+            asyncio.run(tools["memory_write"](path="memory/users/profile.md", content="injected\n"))
         self.assertEqual(
-            (repo_root / "identity" / "profile.md").read_text(encoding="utf-8"),
+            (repo_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8"),
             "# Profile\n",
         )
 
     def test_memory_write_blocks_protected_skills_path(self) -> None:
-        repo_root = self._init_repo({"skills/session-start.md": "# Skill\n"})
+        repo_root = self._init_repo({"memory/skills/session-start.md": "# Skill\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_write"](path="skills/session-start.md", content="injected\n"))
+            asyncio.run(tools["memory_write"](path="memory/skills/session-start.md", content="injected\n"))
 
     def test_memory_write_blocks_protected_meta_path(self) -> None:
-        repo_root = self._init_repo({"meta/curation-policy.md": "# Policy\n"})
+        repo_root = self._init_repo({"governance/curation-policy.md": "# Policy\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_write"](path="meta/curation-policy.md", content="injected\n"))
+            asyncio.run(tools["memory_write"](path="governance/curation-policy.md", content="injected\n"))
 
     def test_memory_edit_blocks_protected_identity_path(self) -> None:
-        repo_root = self._init_repo({"identity/profile.md": "# Profile\noriginal\n"})
+        repo_root = self._init_repo({"memory/users/profile.md": "# Profile\noriginal\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
             asyncio.run(
                 tools["memory_edit"](
-                    path="identity/profile.md",
+                    path="memory/users/profile.md",
                     old_string="original",
                     new_string="injected",
                 )
             )
         self.assertIn(
-            "original", (repo_root / "identity" / "profile.md").read_text(encoding="utf-8")
+            "original", (repo_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
         )
 
     def test_memory_commit_does_not_include_unrelated_pre_staged_changes(self) -> None:
         repo_root = self._init_repo(
             {
                 "README.md": "# Project\n",
-                "knowledge/README.md": "# Knowledge\n",
+                "memory/knowledge/README.md": "# Knowledge\n",
             }
         )
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
@@ -4173,7 +4173,7 @@ Load compact context.
 
         asyncio.run(
             tools["memory_write"](
-                path="knowledge/_unverified/test.md",
+                path="memory/knowledge/_unverified/test.md",
                 content="# Note\n",
             )
         )
@@ -4196,7 +4196,7 @@ Load compact context.
             text=True,
         ).stdout
 
-        self.assertIn("knowledge/_unverified/test.md", head_files)
+        self.assertIn("memory/knowledge/_unverified/test.md", head_files)
         self.assertNotIn("README.md", head_files)
         self.assertIn("README.md", still_staged)
         self.assertEqual(payload["publication"]["mode"], "porcelain")
@@ -4207,12 +4207,12 @@ Load compact context.
         self.assertEqual(payload["warnings"], [])
 
     def test_memory_commit_rejects_unstaged_changes_on_tracked_paths(self) -> None:
-        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        repo_root = self._init_repo({"memory/knowledge/README.md": "# Knowledge\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         asyncio.run(
             tools["memory_write"](
-                path="knowledge/_unverified/test.md",
+                path="memory/knowledge/_unverified/test.md",
                 content="# Staged version\n",
             )
         )
@@ -4237,7 +4237,7 @@ Load compact context.
         repo_root = self._init_repo(
             {
                 "README.md": "# Project\n",
-                "knowledge/README.md": "# Knowledge\n",
+                "memory/knowledge/README.md": "# Knowledge\n",
             }
         )
         _, tools, _, repo = self.server.create_mcp(
@@ -4256,7 +4256,7 @@ Load compact context.
 
         asyncio.run(
             tools["memory_write"](
-                path="knowledge/_unverified/test.md",
+                path="memory/knowledge/_unverified/test.md",
                 content="# Note\n",
             )
         )
@@ -4303,7 +4303,7 @@ Load compact context.
         ).stdout
 
         self.assertEqual(commit_attempts["count"], 1)
-        self.assertIn("knowledge/_unverified/test.md", head_files)
+        self.assertIn("memory/knowledge/_unverified/test.md", head_files)
         self.assertNotIn("README.md", head_files)
         self.assertIn("README.md", still_staged)
         self.assertEqual(payload["publication"]["mode"], "plumbing")
@@ -4314,7 +4314,7 @@ Load compact context.
         self.assertIn("degraded plumbing path", payload["warnings"][0])
 
     def test_memory_commit_blocks_when_single_writer_lock_is_held(self) -> None:
-        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        repo_root = self._init_repo({"memory/knowledge/README.md": "# Knowledge\n"})
         _, tools, _, repo = self.server.create_mcp(
             repo_root=repo_root,
             enable_raw_write_tools=True,
@@ -4322,7 +4322,7 @@ Load compact context.
 
         asyncio.run(
             tools["memory_write"](
-                path="knowledge/_unverified/test.md",
+                path="memory/knowledge/_unverified/test.md",
                 content="# Note\n",
             )
         )
@@ -4344,7 +4344,7 @@ Load compact context.
     def test_memory_update_plan_next_action_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(
             {
-                "projects/SUMMARY.md": """---
+                "memory/working/projects/SUMMARY.md": """---
 type: projects-navigator
 generated: 2026-03-21
 project_count: 1
@@ -4354,7 +4354,7 @@ project_count: 1
 
 _No active or ongoing projects._
 """,
-                "projects/example/SUMMARY.md": """---
+                "memory/working/projects/example/SUMMARY.md": """---
 source: agent-generated
 origin_session: manual
 created: 2026-03-21
@@ -4370,7 +4370,7 @@ current_focus: Example project.
 
 # Project: Example
 """,
-                "projects/example/plans/test-plan.md": """---
+                "memory/working/projects/example/plans/test-plan.md": """---
 source: agent-generated
 type: implementation-plan
 title: Test Plan
@@ -4404,16 +4404,16 @@ next_action: Original next action
             )
         )
 
-        summary = (repo_root / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
         self.assertIn("| example | active | exploration | 0 | Example project. |", summary)
 
     def test_memory_write_allows_knowledge_path(self) -> None:
-        """Sanity check: knowledge/ writes still work after the policy change."""
-        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        """Sanity check: memory/knowledge/ writes still work after the policy change."""
+        repo_root = self._init_repo({"memory/knowledge/README.md": "# Knowledge\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         asyncio.run(
-            tools["memory_write"](path="knowledge/_unverified/test/note.md", content="# Note\n")
+            tools["memory_write"](path="memory/knowledge/_unverified/test/note.md", content="# Note\n")
         )
         self.assertTrue((repo_root / "knowledge" / "_unverified" / "test" / "note.md").exists())
 
@@ -4422,7 +4422,7 @@ next_action: Original next action
     # ------------------------------------------------------------------
 
     def test_memory_write_rejects_oversized_content(self) -> None:
-        repo_root = self._init_repo({"knowledge/README.md": "# Knowledge\n"})
+        repo_root = self._init_repo({"memory/knowledge/README.md": "# Knowledge\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         import os
@@ -4434,7 +4434,7 @@ next_action: Original next action
             with self.assertRaises(self.errors.ValidationError) as ctx:
                 asyncio.run(
                     tools["memory_write"](
-                        path="knowledge/_unverified/test.md",
+                        path="memory/knowledge/_unverified/test.md",
                         content="This content is much longer than ten bytes.",
                     )
                 )
@@ -4447,7 +4447,7 @@ next_action: Original next action
 
     def test_memory_add_knowledge_file_rejects_oversized_content(self) -> None:
         repo_root = self._init_repo(
-            {"knowledge/_unverified/SUMMARY.md": "# Unverified\n\n<!-- section: test -->\n"}
+            {"memory/knowledge/_unverified/SUMMARY.md": "# Unverified\n\n<!-- section: test -->\n"}
         )
         tools = self._create_tools(repo_root)
 
@@ -4459,10 +4459,10 @@ next_action: Original next action
             with self.assertRaises(self.errors.ValidationError) as ctx:
                 asyncio.run(
                     tools["memory_add_knowledge_file"](
-                        path="knowledge/_unverified/test/note.md",
+                        path="memory/knowledge/_unverified/test/note.md",
                         content="This content is much longer than ten bytes.",
                         source="external-research",
-                        session_id="chats/2026/03/19/chat-001",
+                        session_id="memory/activity/2026/03/19/chat-001",
                     )
                 )
             self.assertIn("bytes", str(ctx.exception))
@@ -4479,23 +4479,23 @@ next_action: Original next action
     def test_memory_log_access_appends_valid_entry(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/literature/galatea.md": "# Galatea\n",
-                "knowledge/ACCESS.jsonl": "",
+                "memory/knowledge/literature/galatea.md": "# Galatea\n",
+                "memory/knowledge/ACCESS.jsonl": "",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/literature/galatea.md",
+                file="memory/knowledge/literature/galatea.md",
                 task="User asked about AI literature references",
                 helpfulness=0.8,
                 note="Core reference, shaped the response framing",
-                session_id="chats/2026/03/19/chat-001",
+                session_id="memory/activity/2026/03/19/chat-001",
             )
         )
         payload = json.loads(raw)
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS.jsonl")
 
         lines = [
             line
@@ -4506,37 +4506,37 @@ next_action: Original next action
         ]
         self.assertEqual(len(lines), 1)
         entry = json.loads(lines[0])
-        self.assertEqual(entry["file"], "knowledge/literature/galatea.md")
+        self.assertEqual(entry["file"], "memory/knowledge/literature/galatea.md")
         self.assertEqual(entry["helpfulness"], 0.8)
-        self.assertEqual(entry["session_id"], "chats/2026/03/19/chat-001")
+        self.assertEqual(entry["session_id"], "memory/activity/2026/03/19/chat-001")
         self.assertIn("task", entry)
         self.assertIn("note", entry)
         self.assertIn("date", entry)
 
     def test_memory_log_access_uses_unverified_access_jsonl(self) -> None:
-        repo_root = self._init_repo({"knowledge/_unverified/django/foo.md": "# Foo\n"})
+        repo_root = self._init_repo({"memory/knowledge/_unverified/django/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/_unverified/django/foo.md",
+                file="memory/knowledge/_unverified/django/foo.md",
                 task="Django query test",
                 helpfulness=0.3,
                 note="Near-miss — adjacent topic",
             )
         )
         payload = json.loads(raw)
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/_unverified/ACCESS.jsonl")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/_unverified/ACCESS.jsonl")
         self.assertTrue((repo_root / "knowledge" / "_unverified" / "ACCESS.jsonl").exists())
 
     def test_memory_log_access_rejects_invalid_helpfulness(self) -> None:
-        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        repo_root = self._init_repo({"memory/knowledge/lit/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_log_access"](
-                    file="knowledge/lit/foo.md",
+                    file="memory/knowledge/lit/foo.md",
                     task="test",
                     helpfulness=1.5,
                     note="out of range",
@@ -4544,13 +4544,13 @@ next_action: Original next action
             )
 
     def test_memory_log_access_rejects_noncanonical_session_id(self) -> None:
-        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        repo_root = self._init_repo({"memory/knowledge/lit/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_log_access"](
-                    file="knowledge/lit/foo.md",
+                    file="memory/knowledge/lit/foo.md",
                     task="test",
                     helpfulness=0.5,
                     note="bad session id",
@@ -4559,13 +4559,13 @@ next_action: Original next action
             )
 
     def test_memory_log_access_rejects_category_without_vocabulary(self) -> None:
-        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        repo_root = self._init_repo({"memory/knowledge/lit/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_log_access"](
-                    file="knowledge/lit/foo.md",
+                    file="memory/knowledge/lit/foo.md",
                     task="test",
                     helpfulness=0.5,
                     note="category should be blocked",
@@ -4576,15 +4576,15 @@ next_action: Original next action
     def test_memory_log_access_accepts_category_from_controlled_vocabulary(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "meta/task-categories.md": "# Task Categories\n\n- `react-performance`\n- `uncategorized`\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "governance/task-categories.md": "# Task Categories\n\n- `react-performance`\n- `uncategorized`\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/lit/foo.md",
+                file="memory/knowledge/lit/foo.md",
                 task="test",
                 helpfulness=0.5,
                 note="category should be accepted",
@@ -4596,21 +4596,21 @@ next_action: Original next action
         entry = json.loads(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS.jsonl")
         self.assertEqual(entry["category"], "react-performance")
 
     def test_memory_log_access_persists_mode_field(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "knowledge/ACCESS.jsonl": "",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/ACCESS.jsonl": "",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/lit/foo.md",
+                file="memory/knowledge/lit/foo.md",
                 task="test",
                 helpfulness=0.7,
                 note="mode should be persisted",
@@ -4622,14 +4622,14 @@ next_action: Original next action
         entry = json.loads(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS.jsonl")
         self.assertEqual(entry["mode"], "write")
 
     def test_memory_log_access_accepts_task_id_from_manifest_vocabulary(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "knowledge/ACCESS.jsonl": "",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/ACCESS.jsonl": "",
                 "HUMANS/tooling/agent-memory-capabilities.toml": (
                     '[access_logging]\ntask_ids = ["plan-review", "validation"]\n'
                 ),
@@ -4639,7 +4639,7 @@ next_action: Original next action
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/lit/foo.md",
+                file="memory/knowledge/lit/foo.md",
                 task="test",
                 helpfulness=0.7,
                 note="task id should be persisted",
@@ -4651,21 +4651,21 @@ next_action: Original next action
         entry = json.loads(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS.jsonl")
         self.assertEqual(entry["task_id"], "plan-review")
 
     def test_memory_log_access_routes_low_helpfulness_to_scans_sidecar(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "knowledge/ACCESS.jsonl": "",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/ACCESS.jsonl": "",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/lit/foo.md",
+                file="memory/knowledge/lit/foo.md",
                 task="plan sweep",
                 helpfulness=0.4,
                 note="below threshold should route to scans",
@@ -4674,24 +4674,24 @@ next_action: Original next action
         )
 
         payload = json.loads(raw)
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS_SCANS.jsonl")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS_SCANS.jsonl")
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
         self.assertEqual((repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8"), "")
 
         scan_entry = json.loads(
             (repo_root / "knowledge" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
         )
-        self.assertEqual(scan_entry["file"], "knowledge/lit/foo.md")
+        self.assertEqual(scan_entry["file"], "memory/knowledge/lit/foo.md")
         self.assertEqual(scan_entry["helpfulness"], 0.4)
 
     def test_memory_log_access_rejects_invalid_min_helpfulness(self) -> None:
-        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        repo_root = self._init_repo({"memory/knowledge/lit/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_log_access"](
-                    file="knowledge/lit/foo.md",
+                    file="memory/knowledge/lit/foo.md",
                     task="test",
                     helpfulness=0.7,
                     note="bad threshold",
@@ -4702,7 +4702,7 @@ next_action: Original next action
     def test_memory_log_access_rejects_task_id_outside_manifest_vocabulary(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
                 "HUMANS/tooling/agent-memory-capabilities.toml": (
                     '[access_logging]\ntask_ids = ["plan-review", "validation"]\n'
                 ),
@@ -4713,7 +4713,7 @@ next_action: Original next action
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_log_access"](
-                    file="knowledge/lit/foo.md",
+                    file="memory/knowledge/lit/foo.md",
                     task="test",
                     helpfulness=0.7,
                     note="task id should be rejected",
@@ -4724,18 +4724,18 @@ next_action: Original next action
     def test_memory_log_access_uses_environment_session_id_when_missing(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "knowledge/ACCESS.jsonl": "",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/ACCESS.jsonl": "",
             }
         )
         tools = self._create_tools(repo_root)
         original = os.environ.get("MEMORY_SESSION_ID")
 
         try:
-            os.environ["MEMORY_SESSION_ID"] = "chats/2026/03/20/chat-007"
+            os.environ["MEMORY_SESSION_ID"] = "memory/activity/2026/03/20/chat-007"
             raw = asyncio.run(
                 tools["memory_log_access"](
-                    file="knowledge/lit/foo.md",
+                    file="memory/knowledge/lit/foo.md",
                     task="test",
                     helpfulness=0.6,
                     note="session id should come from env",
@@ -4751,22 +4751,22 @@ next_action: Original next action
         entry = json.loads(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
-        self.assertEqual(entry["session_id"], "chats/2026/03/20/chat-007")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["session_id"], "memory/activity/2026/03/20/chat-007")
 
     def test_memory_log_access_uses_current_session_sentinel_when_missing(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "knowledge/ACCESS.jsonl": "",
-                "chats/CURRENT_SESSION": "chats/2026/03/20/chat-008\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/knowledge/ACCESS.jsonl": "",
+                "memory/activity/CURRENT_SESSION": "memory/activity/2026/03/20/chat-008\n",
             }
         )
         tools = self._create_tools(repo_root)
 
         raw = asyncio.run(
             tools["memory_log_access"](
-                file="knowledge/lit/foo.md",
+                file="memory/knowledge/lit/foo.md",
                 task="test",
                 helpfulness=0.6,
                 note="session id should come from sentinel",
@@ -4777,15 +4777,15 @@ next_action: Original next action
         entry = json.loads(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
-        self.assertEqual(payload["new_state"]["access_jsonl"], "knowledge/ACCESS.jsonl")
-        self.assertEqual(entry["session_id"], "chats/2026/03/20/chat-008")
+        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS.jsonl")
+        self.assertEqual(entry["session_id"], "memory/activity/2026/03/20/chat-008")
 
     def test_memory_log_access_batch_writes_multiple_entries_in_single_commit(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
-                "chats/CURRENT_SESSION": "chats/2026/03/20/chat-009\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/activity/CURRENT_SESSION": "memory/activity/2026/03/20/chat-009\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -4803,13 +4803,13 @@ next_action: Original next action
             tools["memory_log_access_batch"](
                 access_entries=[
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "task": "batch test",
                         "helpfulness": 0.8,
                         "note": "knowledge entry",
                     },
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "task": "batch test",
                         "helpfulness": 0.4,
                         "note": "plan entry",
@@ -4833,20 +4833,20 @@ next_action: Original next action
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_entry = json.loads(
-            (repo_root / "plans" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
 
         self.assertEqual(after_count - before_count, 1)
         self.assertEqual(payload["new_state"]["entry_count"], 2)
         self.assertEqual(
             sorted(payload["new_state"]["access_jsonls"]),
-            ["knowledge/ACCESS.jsonl", "plans/ACCESS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS.jsonl"],
         )
-        self.assertEqual(knowledge_entry["session_id"], "chats/2026/03/20/chat-009")
-        self.assertEqual(plan_entry["session_id"], "chats/2026/03/20/chat-009")
+        self.assertEqual(knowledge_entry["session_id"], "memory/activity/2026/03/20/chat-009")
+        self.assertEqual(plan_entry["session_id"], "memory/activity/2026/03/20/chat-009")
 
     def test_memory_log_access_batch_rejects_empty_entry_list(self) -> None:
-        repo_root = self._init_repo({"knowledge/lit/foo.md": "# Foo\n"})
+        repo_root = self._init_repo({"memory/knowledge/lit/foo.md": "# Foo\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
@@ -4855,9 +4855,9 @@ next_action: Original next action
     def test_memory_log_access_batch_routes_low_helpfulness_entries_to_scans_sidecar(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
-                "chats/CURRENT_SESSION": "chats/2026/03/20/chat-016\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/activity/CURRENT_SESSION": "memory/activity/2026/03/20/chat-016\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -4866,13 +4866,13 @@ next_action: Original next action
             tools["memory_log_access_batch"](
                 access_entries=[
                     {
-                        "file": "knowledge/lit/foo.md",
+                        "file": "memory/knowledge/lit/foo.md",
                         "task": "batch test",
                         "helpfulness": 0.9,
                         "note": "keep in hot log",
                     },
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "task": "batch test",
                         "helpfulness": 0.2,
                         "note": "route to scans",
@@ -4886,61 +4886,61 @@ next_action: Original next action
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
         self.assertEqual(
             sorted(payload["new_state"]["access_jsonls"]),
-            ["knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
         )
 
         knowledge_entry = json.loads(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_scan_entry = json.loads(
-            (repo_root / "plans" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
         )
 
-        self.assertEqual(knowledge_entry["session_id"], "chats/2026/03/20/chat-016")
-        self.assertEqual(plan_scan_entry["session_id"], "chats/2026/03/20/chat-016")
+        self.assertEqual(knowledge_entry["session_id"], "memory/activity/2026/03/20/chat-016")
+        self.assertEqual(plan_scan_entry["session_id"], "memory/activity/2026/03/20/chat-016")
         self.assertEqual(plan_scan_entry["helpfulness"], 0.2)
 
     def test_memory_get_maturity_signals_reports_write_sessions(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": "# Profile\n",
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
-                "knowledge/ACCESS.jsonl": "\n".join(
+                "memory/users/profile.md": "# Profile\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/knowledge/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
-                                "file": "knowledge/lit/foo.md",
+                                "file": "memory/knowledge/lit/foo.md",
                                 "date": "2026-03-20",
                                 "task": "read test",
                                 "helpfulness": 0.8,
                                 "note": "baseline read",
-                                "session_id": "chats/2026/03/20/chat-010",
+                                "session_id": "memory/activity/2026/03/20/chat-010",
                                 "mode": "read",
                             }
                         ),
                         json.dumps(
                             {
-                                "file": "knowledge/lit/foo.md",
+                                "file": "memory/knowledge/lit/foo.md",
                                 "date": "2026-03-20",
                                 "task": "write test",
                                 "helpfulness": 0.9,
                                 "note": "knowledge write",
-                                "session_id": "chats/2026/03/20/chat-011",
+                                "session_id": "memory/activity/2026/03/20/chat-011",
                                 "mode": "write",
                             }
                         ),
                     ]
                 )
                 + "\n",
-                "plans/ACCESS.jsonl": json.dumps(
+                "memory/working/projects/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "date": "2026-03-20",
                         "task": "plan update",
                         "helpfulness": 0.6,
                         "note": "plan updated",
-                        "session_id": "chats/2026/03/20/chat-012",
+                        "session_id": "memory/activity/2026/03/20/chat-012",
                         "mode": "update",
                     }
                 )
@@ -4960,44 +4960,44 @@ next_action: Original next action
     def test_memory_get_maturity_signals_groups_access_density_by_task_id(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": "# Profile\n",
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
-                "knowledge/ACCESS.jsonl": "\n".join(
+                "memory/users/profile.md": "# Profile\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/knowledge/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
-                                "file": "knowledge/lit/foo.md",
+                                "file": "memory/knowledge/lit/foo.md",
                                 "date": "2026-03-20",
                                 "task": "plan sweep",
                                 "helpfulness": 0.8,
                                 "note": "plan review",
-                                "session_id": "chats/2026/03/20/chat-013",
+                                "session_id": "memory/activity/2026/03/20/chat-013",
                                 "task_id": "plan-review",
                             }
                         ),
                         json.dumps(
                             {
-                                "file": "knowledge/lit/foo.md",
+                                "file": "memory/knowledge/lit/foo.md",
                                 "date": "2026-03-20",
                                 "task": "validation task",
                                 "helpfulness": 0.9,
                                 "note": "validation",
-                                "session_id": "chats/2026/03/20/chat-014",
+                                "session_id": "memory/activity/2026/03/20/chat-014",
                                 "task_id": "validation",
                             }
                         ),
                     ]
                 )
                 + "\n",
-                "plans/ACCESS.jsonl": json.dumps(
+                "memory/working/projects/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "date": "2026-03-20",
                         "task": "legacy task",
                         "helpfulness": 0.6,
                         "note": "no task id",
-                        "session_id": "chats/2026/03/20/chat-015",
+                        "session_id": "memory/activity/2026/03/20/chat-015",
                     }
                 )
                 + "\n",
@@ -5017,24 +5017,24 @@ next_action: Original next action
     ) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": "# Profile\n",
-                "knowledge/lit/foo.md": "# Foo\n",
-                "plans/demo.md": "# Demo\n",
-                "knowledge/ACCESS.jsonl": "\n".join(
+                "memory/users/profile.md": "# Profile\n",
+                "memory/knowledge/lit/foo.md": "# Foo\n",
+                "memory/working/projects/demo.md": "# Demo\n",
+                "memory/knowledge/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
-                                "file": "knowledge/lit/foo.md",
+                                "file": "memory/knowledge/lit/foo.md",
                                 "date": "2026-03-20",
                                 "task": "with session",
                                 "helpfulness": 0.8,
                                 "note": "session-backed",
-                                "session_id": "chats/2026/03/20/chat-019",
+                                "session_id": "memory/activity/2026/03/20/chat-019",
                             }
                         ),
                         json.dumps(
                             {
-                                "file": "knowledge/lit/foo.md",
+                                "file": "memory/knowledge/lit/foo.md",
                                 "date": "2026-03-20",
                                 "task_id": "plan-review",
                                 "task": "legacy sweep",
@@ -5045,11 +5045,11 @@ next_action: Original next action
                     ]
                 )
                 + "\n",
-                "plans/ACCESS.jsonl": "\n".join(
+                "memory/working/projects/ACCESS.jsonl": "\n".join(
                     [
                         json.dumps(
                             {
-                                "file": "plans/demo.md",
+                                "file": "memory/working/projects/demo.md",
                                 "date": "2026-03-20",
                                 "task_id": "plan-review",
                                 "task": "legacy sweep",
@@ -5059,7 +5059,7 @@ next_action: Original next action
                         ),
                         json.dumps(
                             {
-                                "file": "plans/demo.md",
+                                "file": "memory/working/projects/demo.md",
                                 "date": "2026-03-21",
                                 "task": "legacy planning",
                                 "helpfulness": 0.5,
@@ -5081,10 +5081,10 @@ next_action: Original next action
         self.assertIn("session_id coverage below 50%", payload["proxy_session_note"])
 
     def test_memory_revert_commit_preview_returns_confirmation_metadata(self) -> None:
-        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        repo_root = self._init_repo({"memory/working/projects/demo.md": "# Demo\n\nOriginal\n"})
         target_sha = self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\n\nUpdated\n"},
             "[plan] Update demo plan",
         )
         head_before = subprocess.run(
@@ -5115,19 +5115,19 @@ next_action: Original next action
         self.assertEqual(new_state["preview_token"], head_before)
         self.assertTrue(new_state["applies_cleanly"])
         self.assertEqual(new_state["conflict_details"], "")
-        self.assertIn("plans/demo.md", new_state["files_changed"])
+        self.assertIn("memory/working/projects/demo.md", new_state["files_changed"])
         self.assertEqual(payload["preview"]["mode"], "preview")
         self.assertEqual(
-            payload["preview"]["target_files"], [{"path": "plans/demo.md", "change": "revert"}]
+            payload["preview"]["target_files"], [{"path": "memory/working/projects/demo.md", "change": "revert"}]
         )
         self.assertEqual(payload["preview"]["commit_suggestion"]["message"], f"Revert {target_sha}")
         self.assertEqual(head_after, head_before)
 
     def test_memory_revert_commit_confirm_requires_preview_token(self) -> None:
-        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        repo_root = self._init_repo({"memory/working/projects/demo.md": "# Demo\n\nOriginal\n"})
         target_sha = self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\n\nUpdated\n"},
             "[plan] Update demo plan",
         )
         tools = self._create_tools(repo_root)
@@ -5136,10 +5136,10 @@ next_action: Original next action
             asyncio.run(tools["memory_revert_commit"](sha=target_sha, confirm=True))
 
     def test_memory_revert_commit_confirm_reverts_previewed_commit(self) -> None:
-        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        repo_root = self._init_repo({"memory/working/projects/demo.md": "# Demo\n\nOriginal\n"})
         target_sha = self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\n\nUpdated\n"},
             "[plan] Update demo plan",
         )
         tools = self._create_tools(repo_root)
@@ -5155,7 +5155,7 @@ next_action: Original next action
         )
         payload = json.loads(confirm_raw)
 
-        restored = (repo_root / "plans" / "demo.md").read_text(encoding="utf-8")
+        restored = (repo_root / "memory" / "working" / "projects" / "demo.md").read_text(encoding="utf-8")
         log_subject = subprocess.run(
             ["git", "log", "-1", "--pretty=%s"],
             cwd=repo_root,
@@ -5202,10 +5202,10 @@ next_action: Original next action
             )
 
     def test_memory_revert_commit_blocks_system_commit_outside_governance_scope(self) -> None:
-        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        repo_root = self._init_repo({"memory/working/projects/demo.md": "# Demo\n\nOriginal\n"})
         target_sha = self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\n\nUpdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\n\nUpdated\n"},
             "[system] Update demo plan",
         )
         tools = self._create_tools(repo_root)
@@ -5217,15 +5217,15 @@ next_action: Original next action
         self.assertIn("[system] commits may only touch governance files", preview["warnings"][0])
 
     def test_memory_revert_commit_preview_reports_conflict(self) -> None:
-        repo_root = self._init_repo({"plans/demo.md": "# Demo\n\nOriginal\n"})
+        repo_root = self._init_repo({"memory/working/projects/demo.md": "# Demo\n\nOriginal\n"})
         target_sha = self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\n\nFirst update\n"},
+            {"memory/working/projects/demo.md": "# Demo\n\nFirst update\n"},
             "[plan] Update demo plan",
         )
         self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\n\nSecond update\n"},
+            {"memory/working/projects/demo.md": "# Demo\n\nSecond update\n"},
             "[plan] Update demo plan again",
         )
         tools = self._create_tools(repo_root)
@@ -5281,13 +5281,13 @@ next_action: Original next action
         self.assertNotIn("Updated", restored)
 
     def test_memory_log_access_rejects_untracked_root(self) -> None:
-        repo_root = self._init_repo({"scratchpad/CURRENT.md": "# Scratch\n"})
+        repo_root = self._init_repo({"memory/working/scratchpad/CURRENT.md": "# Scratch\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_log_access"](
-                    file="scratchpad/CURRENT.md",
+                    file="memory/working/scratchpad/CURRENT.md",
                     task="test",
                     helpfulness=0.5,
                     note="scratchpad is not access-tracked",
@@ -5301,11 +5301,11 @@ next_action: Original next action
     def test_memory_audit_trust_flags_overdue_frontmatterless_file(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/legacy.md": "# Legacy\n",
+                "memory/knowledge/legacy.md": "# Legacy\n",
             },
             initial_commit_date="2025-01-01T00:00:00+00:00",
         )
@@ -5317,17 +5317,17 @@ next_action: Original next action
 
         self.assertEqual(payload["files_checked"], 1)
         self.assertEqual(len(payload["overdue_medium"]), 1)
-        self.assertEqual(payload["overdue_medium"][0]["path"], "knowledge/legacy.md")
+        self.assertEqual(payload["overdue_medium"][0]["path"], "memory/knowledge/legacy.md")
         self.assertTrue(payload["overdue_medium"][0]["implicit_trust"])
 
     def test_memory_audit_trust_skips_recent_frontmatterless_file_from_overdue(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/recent.md": "# Recent\n",
+                "memory/knowledge/recent.md": "# Recent\n",
             },
             initial_commit_date="2026-02-20T00:00:00+00:00",
         )
@@ -5346,11 +5346,11 @@ next_action: Original next action
     def test_memory_audit_trust_reports_approaching_bucket_before_upcoming_window(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/approaching.md": (
+                "memory/knowledge/approaching.md": (
                     "---\ntrust: medium\nlast_verified: 2025-10-30\n---\n\n# Approaching\n"
                 ),
             },
@@ -5366,18 +5366,18 @@ next_action: Original next action
         self.assertEqual(payload["upcoming_medium"], [])
         self.assertEqual(len(payload["approaching"]), 1)
         entry = payload["approaching"][0]
-        self.assertEqual(entry["path"], "knowledge/approaching.md")
+        self.assertEqual(entry["path"], "memory/knowledge/approaching.md")
         self.assertEqual(entry["trust"], "medium")
         self.assertEqual(entry["action_required"], "review")
 
     def test_memory_audit_trust_keeps_upcoming_items_out_of_approaching(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/upcoming.md": (
+                "memory/knowledge/upcoming.md": (
                     "---\ntrust: medium\nlast_verified: 2025-10-05\n---\n\n# Upcoming\n"
                 ),
             },
@@ -5392,16 +5392,16 @@ next_action: Original next action
         self.assertEqual(payload["overdue_medium"], [])
         self.assertEqual(payload["approaching"], [])
         self.assertEqual(len(payload["upcoming_medium"]), 1)
-        self.assertEqual(payload["upcoming_medium"][0]["path"], "knowledge/upcoming.md")
+        self.assertEqual(payload["upcoming_medium"][0]["path"], "memory/knowledge/upcoming.md")
 
     def test_memory_audit_trust_rejects_invalid_warn_pct(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/any.md": "# Any\n",
+                "memory/knowledge/any.md": "# Any\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -5412,11 +5412,11 @@ next_action: Original next action
     def test_memory_audit_trust_reports_untracked_frontmatterless_file_as_unevaluable(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/tracked.md": "# Tracked\n",
+                "memory/knowledge/tracked.md": "# Tracked\n",
             },
             initial_commit_date="2026-02-20T00:00:00+00:00",
         )
@@ -5429,7 +5429,7 @@ next_action: Original next action
 
         self.assertEqual(payload["files_checked"], 2)
         self.assertEqual(len(payload["unevaluable"]), 1)
-        self.assertEqual(payload["unevaluable"][0]["path"], "knowledge/draft.md")
+        self.assertEqual(payload["unevaluable"][0]["path"], "memory/knowledge/draft.md")
         self.assertEqual(
             payload["unevaluable"][0]["reason"],
             "untracked_without_frontmatter",
@@ -5442,12 +5442,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "meta/quick-reference.md"\n'
+                    'router = "HOME.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "meta/quick-reference.md": "# Quick Reference\n",
+                "HOME.md": "# Quick Reference\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -5461,21 +5461,21 @@ next_action: Original next action
     def test_memory_git_log_default_behavior_includes_recent_commits(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "# Quick Reference\n",
-                "identity/profile.md": "# Profile\n",
-                "plans/demo.md": "# Demo\n",
+                "HOME.md": "# Quick Reference\n",
+                "memory/users/profile.md": "# Profile\n",
+                "memory/working/projects/demo.md": "# Demo\n",
             },
             initial_commit_date="2026-03-01T00:00:00+00:00",
         )
         self._write_and_commit(
             repo_root,
-            {"identity/profile.md": "# Profile\nupdated\n"},
+            {"memory/users/profile.md": "# Profile\nupdated\n"},
             "update identity",
             commit_date="2026-03-10T00:00:00+00:00",
         )
         self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\nupdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\nupdated\n"},
             "update plan",
             commit_date="2026-03-18T00:00:00+00:00",
         )
@@ -5491,21 +5491,21 @@ next_action: Original next action
     def test_memory_git_log_filters_by_since_with_truncation_flag(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "# Quick Reference\n",
-                "identity/profile.md": "# Profile\n",
-                "plans/demo.md": "# Demo\n",
+                "HOME.md": "# Quick Reference\n",
+                "memory/users/profile.md": "# Profile\n",
+                "memory/working/projects/demo.md": "# Demo\n",
             },
             initial_commit_date="2026-03-01T00:00:00+00:00",
         )
         self._write_and_commit(
             repo_root,
-            {"identity/profile.md": "# Profile\nupdated\n"},
+            {"memory/users/profile.md": "# Profile\nupdated\n"},
             "update identity",
             commit_date="2026-03-10T00:00:00+00:00",
         )
         self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\nupdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\nupdated\n"},
             "update plan",
             commit_date="2026-03-18T00:00:00+00:00",
         )
@@ -5520,21 +5520,21 @@ next_action: Original next action
     def test_memory_git_log_filters_by_path_and_since(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "# Quick Reference\n",
-                "identity/profile.md": "# Profile\n",
-                "plans/demo.md": "# Demo\n",
+                "HOME.md": "# Quick Reference\n",
+                "memory/users/profile.md": "# Profile\n",
+                "memory/working/projects/demo.md": "# Demo\n",
             },
             initial_commit_date="2026-03-01T00:00:00+00:00",
         )
         self._write_and_commit(
             repo_root,
-            {"identity/profile.md": "# Profile\nupdated\n"},
+            {"memory/users/profile.md": "# Profile\nupdated\n"},
             "update identity",
             commit_date="2026-03-10T00:00:00+00:00",
         )
         self._write_and_commit(
             repo_root,
-            {"plans/demo.md": "# Demo\nupdated\n"},
+            {"memory/working/projects/demo.md": "# Demo\nupdated\n"},
             "update plan",
             commit_date="2026-03-18T00:00:00+00:00",
         )
@@ -5552,11 +5552,11 @@ next_action: Original next action
 
         self.assertEqual(len(payload), 1)
         self.assertEqual(payload[0]["message"], "update plan")
-        self.assertEqual(payload[0]["files_changed"], ["plans/demo.md"])
+        self.assertEqual(payload[0]["files_changed"], ["memory/working/projects/demo.md"])
         self.assertFalse(payload[0]["truncated"])
 
     def test_memory_git_log_rejects_invalid_since(self) -> None:
-        repo_root = self._init_repo({"meta/quick-reference.md": "# Quick Reference\n"})
+        repo_root = self._init_repo({"HOME.md": "# Quick Reference\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
@@ -5567,12 +5567,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "meta/quick-reference.md"\n'
+                    'router = "HOME.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     'host_repo_root = "./nested-host"\n'
                 ),
-                "meta/quick-reference.md": "# Quick Reference\n",
+                "HOME.md": "# Quick Reference\n",
             }
         )
         nested_host = repo_root / "nested-host"
@@ -5605,16 +5605,16 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "meta/quick-reference.md"\n'
+                    'router = "HOME.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/app.md": (
+                "memory/knowledge/app.md": (
                     "---\n"
                     "trust: medium\n"
                     "last_verified: 2026-03-01\n"
@@ -5629,12 +5629,12 @@ next_action: Original next action
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_check_knowledge_freshness"](paths="knowledge/app.md"))
+            asyncio.run(tools["memory_check_knowledge_freshness"](paths="memory/knowledge/app.md"))
         )
 
         self.assertEqual(payload["files_checked"], 1)
         report = payload["reports"][0]
-        self.assertEqual(report["path"], "knowledge/app.md")
+        self.assertEqual(report["path"], "memory/knowledge/app.md")
         self.assertEqual(report["status"], "stale")
         self.assertEqual(report["source_files"], ["src/app.py"])
         self.assertEqual(report["host_changes_since"], 1)
@@ -5644,8 +5644,8 @@ next_action: Original next action
     def test_memory_check_knowledge_freshness_returns_unknown_without_host_repo(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "# Quick Reference\n",
-                "knowledge/app.md": (
+                "HOME.md": "# Quick Reference\n",
+                "memory/knowledge/app.md": (
                     "---\n"
                     "trust: medium\n"
                     "last_verified: 2026-03-01\n"
@@ -5659,7 +5659,7 @@ next_action: Original next action
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_check_knowledge_freshness"](paths="knowledge/app.md"))
+            asyncio.run(tools["memory_check_knowledge_freshness"](paths="memory/knowledge/app.md"))
         )
 
         self.assertEqual(payload["files_checked"], 1)
@@ -5691,16 +5691,16 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "meta/quick-reference.md"\n'
+                    'router = "HOME.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/app.md": (
+                "memory/knowledge/app.md": (
                     "---\n"
                     "trust: medium\n"
                     "last_verified: 2026-03-01\n"
@@ -5722,7 +5722,7 @@ next_action: Original next action
         self.assertEqual(payload["approaching"], [])
         self.assertEqual(len(payload["upcoming_medium"]), 1)
         entry = payload["upcoming_medium"][0]
-        self.assertEqual(entry["path"], "knowledge/app.md")
+        self.assertEqual(entry["path"], "memory/knowledge/app.md")
         self.assertEqual(entry["freshness_status"], "stale")
         self.assertEqual(entry["host_changes_since"], 1)
         self.assertEqual(entry["action_required"], "reverify")
@@ -5743,16 +5743,16 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "meta/quick-reference.md"\n'
+                    'router = "HOME.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
-                "knowledge/legacy.md": (
+                "memory/knowledge/legacy.md": (
                     "---\n"
                     "trust: medium\n"
                     "last_verified: 2025-01-01\n"
@@ -5775,7 +5775,7 @@ next_action: Original next action
         self.assertEqual(payload["approaching"], [])
         self.assertEqual(len(payload["upcoming_medium"]), 1)
         entry = payload["upcoming_medium"][0]
-        self.assertEqual(entry["path"], "knowledge/legacy.md")
+        self.assertEqual(entry["path"], "memory/knowledge/legacy.md")
         self.assertEqual(entry["freshness_status"], "fresh")
         self.assertEqual(entry["host_changes_since"], 0)
         self.assertEqual(entry["action_required"], "review")
@@ -5783,25 +5783,25 @@ next_action: Original next action
     def test_memory_check_aggregation_triggers_reports_above_and_near_thresholds(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
-                "plans/ACCESS.jsonl": "".join(
+                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "memory/working/projects/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": f"plans/item-{idx}.md",
+                            "file": f"memory/working/projects/item-{idx}.md",
                             "date": "2026-03-19",
                             "task": "periodic review",
                             "helpfulness": 0.7,
                             "note": "useful",
-                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/19/chat-{idx:03d}",
                         }
                     )
                     + "\n"
                     for idx in range(15)
                 ),
-                "knowledge/ACCESS.jsonl": "".join(
+                "memory/knowledge/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": f"knowledge/topic-{idx}.md",
+                            "file": f"memory/knowledge/topic-{idx}.md",
                             "date": "2026-03-19",
                             "task": "research",
                             "helpfulness": 0.5,
@@ -5811,9 +5811,9 @@ next_action: Original next action
                     + "\n"
                     for idx in range(12)
                 ),
-                "identity/ACCESS.jsonl": json.dumps(
+                "memory/users/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "identity/profile.md",
+                        "file": "memory/users/profile.md",
                         "date": "2026-03-19",
                         "task": "profile lookup",
                         "helpfulness": 0.9,
@@ -5829,25 +5829,25 @@ next_action: Original next action
 
         self.assertEqual(payload["aggregation_trigger"], 15)
         self.assertEqual(payload["near_trigger_window"], 3)
-        self.assertEqual(payload["above_trigger"], ["plans/ACCESS.jsonl"])
-        self.assertEqual(payload["near_trigger"], ["knowledge/ACCESS.jsonl"])
+        self.assertEqual(payload["above_trigger"], ["memory/working/projects/ACCESS.jsonl"])
+        self.assertEqual(payload["near_trigger"], ["memory/knowledge/ACCESS.jsonl"])
 
         reports = {item["access_file"]: item for item in payload["reports"]}
-        self.assertEqual(reports["plans/ACCESS.jsonl"]["status"], "above")
-        self.assertEqual(reports["plans/ACCESS.jsonl"]["remaining_to_trigger"], 0)
-        self.assertEqual(reports["knowledge/ACCESS.jsonl"]["status"], "near")
-        self.assertEqual(reports["knowledge/ACCESS.jsonl"]["remaining_to_trigger"], 3)
-        self.assertEqual(reports["identity/ACCESS.jsonl"]["status"], "below")
+        self.assertEqual(reports["memory/working/projects/ACCESS.jsonl"]["status"], "above")
+        self.assertEqual(reports["memory/working/projects/ACCESS.jsonl"]["remaining_to_trigger"], 0)
+        self.assertEqual(reports["memory/knowledge/ACCESS.jsonl"]["status"], "near")
+        self.assertEqual(reports["memory/knowledge/ACCESS.jsonl"]["remaining_to_trigger"], 3)
+        self.assertEqual(reports["memory/users/ACCESS.jsonl"]["status"], "below")
 
     def test_memory_check_aggregation_triggers_ignores_invalid_jsonl_lines(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
-                "plans/ACCESS.jsonl": (
+                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "memory/working/projects/ACCESS.jsonl": (
                     "not-json\n"
                     + json.dumps(
                         {
-                            "file": "plans/demo.md",
+                            "file": "memory/working/projects/demo.md",
                             "date": "2026-03-19",
                             "task": "planning",
                             "helpfulness": 0.6,
@@ -5870,11 +5870,11 @@ next_action: Original next action
     def test_memory_check_aggregation_triggers_ignores_meta_access_logs(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
-                "meta/ACCESS.jsonl": "".join(
+                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "governance/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": f"meta/note-{idx}.md",
+                            "file": f"governance/note-{idx}.md",
                             "date": "2026-03-19",
                             "task": "governance lookup",
                             "helpfulness": 0.8,
@@ -5884,9 +5884,9 @@ next_action: Original next action
                     + "\n"
                     for idx in range(20)
                 ),
-                "plans/ACCESS.jsonl": json.dumps(
+                "memory/working/projects/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "plans/demo.md",
+                        "file": "memory/working/projects/demo.md",
                         "date": "2026-03-19",
                         "task": "planning",
                         "helpfulness": 0.6,
@@ -5902,7 +5902,7 @@ next_action: Original next action
 
         self.assertEqual(payload["files_checked"], 1)
         self.assertEqual(
-            [item["access_file"] for item in payload["reports"]], ["plans/ACCESS.jsonl"]
+            [item["access_file"] for item in payload["reports"]], ["memory/working/projects/ACCESS.jsonl"]
         )
         self.assertEqual(payload["above_trigger"], [])
         self.assertEqual(payload["near_trigger"], [])
@@ -5910,15 +5910,15 @@ next_action: Original next action
     def test_memory_session_health_check_reports_due_aggregation(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-03-19\n"
                 ),
-                "plans/ACCESS.jsonl": "".join(
+                "memory/working/projects/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": f"plans/item-{idx}.md",
+                            "file": f"memory/working/projects/item-{idx}.md",
                             "date": "2026-03-19",
                             "task": "planning",
                             "helpfulness": 0.7,
@@ -5928,7 +5928,7 @@ next_action: Original next action
                     + "\n"
                     for idx in range(15)
                 ),
-                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -5938,7 +5938,7 @@ next_action: Original next action
         self.assertEqual(payload["aggregation_threshold"], 15)
         self.assertEqual(
             payload["aggregation_due"],
-            [{"folder": "plans/", "entries": 15, "threshold": 15, "overdue": True}],
+            [{"folder": "memory/working/projects/", "entries": 15, "threshold": 15, "overdue": True}],
         )
         self.assertEqual(payload["review_queue_pending"], 0)
         self.assertFalse(payload["periodic_review_due"])
@@ -5946,12 +5946,12 @@ next_action: Original next action
     def test_memory_session_health_check_reports_periodic_review_overdue(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-01-01\n"
                 ),
-                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -5965,12 +5965,12 @@ next_action: Original next action
     def test_memory_session_health_check_counts_only_pending_review_queue_items(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": (
+                "HOME.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-03-19\n"
                 ),
-                "meta/review-queue.md": """# Review Queue
+                "governance/review-queue.md": """# Review Queue
 
 ## Format
 
@@ -6001,17 +6001,17 @@ next_action: Original next action
     def test_memory_aggregate_access_reports_high_low_and_clusters(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
-                "plans/ACCESS.jsonl": "".join(
+                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "memory/working/projects/ACCESS.jsonl": "".join(
                     [
                         json.dumps(
                             {
-                                "file": "plans/high-value.md",
+                                "file": "memory/working/projects/high-value.md",
                                 "date": "2026-03-19",
                                 "task": "planning",
                                 "helpfulness": 0.9,
                                 "note": "core plan",
-                                "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                                "session_id": f"memory/activity/2026/03/19/chat-{idx:03d}",
                             }
                         )
                         + "\n"
@@ -6020,27 +6020,27 @@ next_action: Original next action
                     + [
                         json.dumps(
                             {
-                                "file": "plans/low-value.md",
+                                "file": "memory/working/projects/low-value.md",
                                 "date": "2026-03-19",
                                 "task": "planning",
                                 "helpfulness": 0.2,
                                 "note": "noise",
-                                "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                                "session_id": f"memory/activity/2026/03/19/chat-{idx:03d}",
                             }
                         )
                         + "\n"
                         for idx in range(3)
                     ]
                 ),
-                "knowledge/ACCESS.jsonl": "".join(
+                "memory/knowledge/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "knowledge/topic-a.md",
+                            "file": "memory/knowledge/topic-a.md",
                             "date": "2026-03-19",
                             "task": "planning",
                             "helpfulness": 0.8,
                             "note": "paired context",
-                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/19/chat-{idx:03d}",
                         }
                     )
                     + "\n"
@@ -6054,45 +6054,45 @@ next_action: Original next action
 
         self.assertEqual(payload["entries_considered"], 11)
         self.assertEqual(payload["files_considered"], 3)
-        self.assertEqual(payload["high_value_files"][0]["file"], "plans/high-value.md")
-        self.assertEqual(payload["low_value_files"][0]["file"], "plans/low-value.md")
+        self.assertEqual(payload["high_value_files"][0]["file"], "memory/working/projects/high-value.md")
+        self.assertEqual(payload["low_value_files"][0]["file"], "memory/working/projects/low-value.md")
         self.assertEqual(
             payload["co_retrieval_clusters"][0]["files"],
-            ["knowledge/topic-a.md", "plans/high-value.md"],
+            ["memory/knowledge/topic-a.md", "memory/working/projects/high-value.md"],
         )
-        self.assertIn("plans/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
-        self.assertIn("knowledge/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
+        self.assertIn("memory/working/projects/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
+        self.assertIn("memory/knowledge/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
         self.assertEqual(
             payload["proposed_outputs"]["review_queue_candidates"][0]["file"],
-            "plans/low-value.md",
+            "memory/working/projects/low-value.md",
         )
 
     def test_memory_aggregate_access_ignores_meta_access_logs(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
-                "meta/ACCESS.jsonl": "".join(
+                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "governance/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": f"meta/note-{idx}.md",
+                            "file": f"governance/note-{idx}.md",
                             "date": "2026-03-19",
                             "task": "governance lookup",
                             "helpfulness": 0.1,
                             "note": "ignored",
-                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/19/chat-{idx:03d}",
                         }
                     )
                     + "\n"
                     for idx in range(3)
                 ),
-                "plans/ACCESS.jsonl": json.dumps(
+                "memory/working/projects/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "plans/kept.md",
+                        "file": "memory/working/projects/kept.md",
                         "date": "2026-03-19",
                         "task": "planning",
                         "helpfulness": 0.8,
                         "note": "counted",
-                        "session_id": "chats/2026/03/19/chat-001",
+                        "session_id": "memory/activity/2026/03/19/chat-001",
                     }
                 )
                 + "\n",
@@ -6111,36 +6111,36 @@ next_action: Original next action
     def test_memory_aggregate_access_filters_by_folder_date_and_helpfulness(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": "| Aggregation trigger | 15 entries | Exploration |\n",
-                "plans/ACCESS.jsonl": "".join(
+                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "memory/working/projects/ACCESS.jsonl": "".join(
                     [
                         json.dumps(
                             {
-                                "file": "plans/in-range.md",
+                                "file": "memory/working/projects/in-range.md",
                                 "date": "2026-03-10",
                                 "task": "planning",
                                 "helpfulness": 0.75,
                                 "note": "keep",
-                                "session_id": "chats/2026/03/10/chat-001",
+                                "session_id": "memory/activity/2026/03/10/chat-001",
                             }
                         )
                         + "\n",
                         json.dumps(
                             {
-                                "file": "plans/too-old.md",
+                                "file": "memory/working/projects/too-old.md",
                                 "date": "2026-02-01",
                                 "task": "planning",
                                 "helpfulness": 0.9,
                                 "note": "old",
-                                "session_id": "chats/2026/02/01/chat-001",
+                                "session_id": "memory/activity/2026/02/01/chat-001",
                             }
                         )
                         + "\n",
                     ]
                 ),
-                "knowledge/ACCESS.jsonl": json.dumps(
+                "memory/knowledge/ACCESS.jsonl": json.dumps(
                     {
-                        "file": "knowledge/out-of-folder.md",
+                        "file": "memory/knowledge/out-of-folder.md",
                         "date": "2026-03-10",
                         "task": "research",
                         "helpfulness": 0.8,
@@ -6165,14 +6165,14 @@ next_action: Original next action
 
         self.assertEqual(payload["entries_considered"], 1)
         self.assertEqual(payload["files_considered"], 1)
-        self.assertEqual(payload["file_summaries"][0]["file"], "plans/in-range.md")
+        self.assertEqual(payload["file_summaries"][0]["file"], "memory/working/projects/in-range.md")
         self.assertEqual(payload["filters"]["folder"], "plans")
         self.assertEqual(payload["filters"]["start_date"], "2026-03-01")
 
     def test_memory_run_periodic_review_recommends_stage_transition(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6182,9 +6182,9 @@ next_action: Original next action
 
 | Aggregation trigger | 15 entries | Exploration |
 """,
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
-origin_session: chats/2026/01/01/chat-001
+origin_session: memory/activity/2026/01/01/chat-001
 created: 2026-01-01
 last_verified: 2026-01-01
 trust: high
@@ -6192,9 +6192,9 @@ trust: high
 
 Alex profile.
 """,
-                "plans/alpha.md": """---
+                "memory/working/projects/alpha.md": """---
 source: agent-generated
-origin_session: chats/2026/03/01/chat-001
+origin_session: memory/activity/2026/03/01/chat-001
 created: 2026-03-01
 last_verified: 2026-03-01
 trust: high
@@ -6202,9 +6202,9 @@ trust: high
 
 Alpha.
 """,
-                "plans/beta.md": """---
+                "memory/working/projects/beta.md": """---
 source: agent-generated
-origin_session: chats/2026/03/01/chat-002
+origin_session: memory/activity/2026/03/01/chat-002
 created: 2026-03-01
 last_verified: 2026-03-01
 trust: high
@@ -6212,9 +6212,9 @@ trust: high
 
 Beta.
 """,
-                "knowledge/topic-a.md": """---
+                "memory/knowledge/topic-a.md": """---
 source: external-research
-origin_session: chats/2026/03/01/chat-003
+origin_session: memory/activity/2026/03/01/chat-003
 created: 2026-03-01
 last_verified: 2026-03-05
 trust: high
@@ -6222,9 +6222,9 @@ trust: high
 
 Topic A.
 """,
-                "knowledge/topic-b.md": """---
+                "memory/knowledge/topic-b.md": """---
 source: external-research
-origin_session: chats/2026/03/01/chat-004
+origin_session: memory/activity/2026/03/01/chat-004
 created: 2026-03-01
 last_verified: 2026-03-05
 trust: medium
@@ -6232,9 +6232,9 @@ trust: medium
 
 Topic B.
 """,
-                "knowledge/topic-c.md": """---
+                "memory/knowledge/topic-c.md": """---
 source: external-research
-origin_session: chats/2026/03/01/chat-005
+origin_session: memory/activity/2026/03/01/chat-005
 created: 2026-03-01
 last_verified: 2026-03-05
 trust: medium
@@ -6242,9 +6242,9 @@ trust: medium
 
 Topic C.
 """,
-                "knowledge/topic-d.md": """---
+                "memory/knowledge/topic-d.md": """---
 source: external-research
-origin_session: chats/2026/03/01/chat-006
+origin_session: memory/activity/2026/03/01/chat-006
 created: 2026-03-01
 last_verified: 2026-03-05
 trust: medium
@@ -6252,9 +6252,9 @@ trust: medium
 
 Topic D.
 """,
-                "skills/session-start.md": """---
+                "memory/skills/session-start.md": """---
 source: skill-discovery
-origin_session: chats/2026/03/01/chat-007
+origin_session: memory/activity/2026/03/01/chat-007
 created: 2026-03-01
 last_verified: 2026-03-05
 trust: medium
@@ -6262,9 +6262,9 @@ trust: medium
 
 Skill start.
 """,
-                "skills/session-sync.md": """---
+                "memory/skills/session-sync.md": """---
 source: skill-discovery
-origin_session: chats/2026/03/01/chat-008
+origin_session: memory/activity/2026/03/01/chat-008
 created: 2026-03-01
 last_verified: 2026-03-05
 trust: medium
@@ -6272,31 +6272,31 @@ trust: medium
 
 Skill sync.
 """,
-                "plans/ACCESS.jsonl": "".join(
+                "memory/working/projects/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "plans/alpha.md" if idx % 2 == 0 else "knowledge/topic-a.md",
+                            "file": "memory/working/projects/alpha.md" if idx % 2 == 0 else "memory/knowledge/topic-a.md",
                             "date": f"2026-03-{(idx % 20) + 1:02d}",
                             "task": "periodic review",
                             "helpfulness": 0.65,
                             "note": "useful",
-                            "session_id": f"chats/2026/03/{(idx % 20) + 1:02d}/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/{(idx % 20) + 1:02d}/chat-{idx:03d}",
                         }
                     )
                     + "\n"
                     for idx in range(30)
                 ),
-                "knowledge/ACCESS.jsonl": "".join(
+                "memory/knowledge/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "knowledge/topic-b.md"
+                            "file": "memory/knowledge/topic-b.md"
                             if idx % 2 == 0
-                            else "knowledge/topic-c.md",
+                            else "memory/knowledge/topic-c.md",
                             "date": f"2026-03-{(idx % 20) + 1:02d}",
                             "task": "research",
                             "helpfulness": 0.62,
                             "note": "relevant",
-                            "session_id": f"chats/2026/03/{(idx % 20) + 1:02d}/chat-k{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/{(idx % 20) + 1:02d}/chat-k{idx:03d}",
                         }
                     )
                     + "\n"
@@ -6315,14 +6315,14 @@ Skill sync.
         self.assertEqual(maturity["recommended_stage"], "Calibration")
         self.assertTrue(maturity["transition_recommended"])
         self.assertIn(
-            "meta/quick-reference.md",
+            "HOME.md",
             payload["proposed_outputs"]["deferred_write_targets"],
         )
 
     def test_memory_run_periodic_review_collects_review_findings(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6333,12 +6333,12 @@ Skill sync.
 | Low-trust retirement threshold | 120 days | Exploration |
 | Aggregation trigger | 15 entries | Exploration |
 """,
-                "meta/review-queue.md": """# Review Queue
+                "governance/review-queue.md": """# Review Queue
 
 ### [2026-03-20] Security: Review dormant file spike
 **Type:** security
 **Trigger:** Sudden access spike on a dormant file.
-**File:** knowledge/_unverified/old-note.md
+**File:** memory/knowledge/_unverified/old-note.md
 **Recommended action:** Investigate access pattern
 **Status:** pending
 
@@ -6347,9 +6347,9 @@ Skill sync.
 **Description:** Aggregate stale plans ACCESS log.
 **Status:** pending
 """,
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
-origin_session: chats/2026/01/01/chat-001
+origin_session: memory/activity/2026/01/01/chat-001
 created: 2026-01-01
 last_verified: 2026-01-01
 trust: high
@@ -6357,80 +6357,80 @@ trust: high
 
 Stable profile.
 """,
-                "knowledge/current.md": """---
+                "memory/knowledge/current.md": """---
 source: external-research
-origin_session: chats/2026/03/20/chat-001
+origin_session: memory/activity/2026/03/20/chat-001
 created: 2026-03-20
 trust: medium
 ---
 
 Current note.
 """,
-                "knowledge/conflicted.md": """---
+                "memory/knowledge/conflicted.md": """---
 source: agent-inferred
-origin_session: chats/2026/03/20/chat-001
+origin_session: memory/activity/2026/03/20/chat-001
 created: 2026-03-20
 trust: medium
 ---
 
 [CONFLICT] Preference uncertain.
 """,
-                "knowledge/_unverified/old-note.md": """---
+                "memory/knowledge/_unverified/old-note.md": """---
 source: external-research
-origin_session: chats/2025/10/01/chat-001
+origin_session: memory/activity/2025/10/01/chat-001
 created: 2025-10-01
 trust: low
 ---
 
 Old note.
 """,
-                "plans/low-value.md": """---
+                "memory/working/projects/low-value.md": """---
 source: agent-generated
-origin_session: chats/2026/03/20/chat-010
+origin_session: memory/activity/2026/03/20/chat-010
 created: 2026-03-20
 trust: medium
 ---
 
 Low value plan.
 """,
-                "knowledge/topic-a.md": """---
+                "memory/knowledge/topic-a.md": """---
 source: external-research
-origin_session: chats/2026/03/20/chat-011
+origin_session: memory/activity/2026/03/20/chat-011
 created: 2026-03-20
 trust: medium
 ---
 
 Topic A.
 """,
-                "plans/ACCESS.jsonl": "".join(
+                "memory/working/projects/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "plans/low-value.md",
+                            "file": "memory/working/projects/low-value.md",
                             "date": "2026-03-20",
                             "task": "maintenance",
                             "helpfulness": 0.2,
                             "note": "noise",
-                            "session_id": f"chats/2026/03/20/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/20/chat-{idx:03d}",
                         }
                     )
                     + "\n"
                     for idx in range(3)
                 ),
-                "knowledge/ACCESS.jsonl": "".join(
+                "memory/knowledge/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "knowledge/topic-a.md",
+                            "file": "memory/knowledge/topic-a.md",
                             "date": "2026-03-20",
                             "task": "maintenance",
                             "helpfulness": 0.8,
                             "note": "pair",
-                            "session_id": f"chats/2026/03/20/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/20/chat-{idx:03d}",
                         }
                     )
                     + "\n"
                     for idx in range(3)
                 ),
-                "chats/2026/03/20/chat-001/reflection.md": "## Session reflection\n\nRecurring maintenance theme.\n",
+                "memory/activity/2026/03/20/chat-001/reflection.md": "## Session reflection\n\nRecurring maintenance theme.\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6443,21 +6443,21 @@ Topic A.
         self.assertEqual(ordered["unverified_content"]["overdue_count"], 1)
         self.assertEqual(
             ordered["unverified_content"]["overdue_files"][0]["path"],
-            "knowledge/_unverified/old-note.md",
+            "memory/knowledge/_unverified/old-note.md",
         )
-        self.assertEqual(ordered["conflict_resolution"]["files"], ["knowledge/conflicted.md"])
+        self.assertEqual(ordered["conflict_resolution"]["files"], ["memory/knowledge/conflicted.md"])
         self.assertEqual(ordered["unhelpful_memory"]["count"], 1)
         self.assertEqual(
             ordered["emergent_categorization"]["clusters"][0]["files"],
-            ["knowledge/topic-a.md", "plans/low-value.md"],
+            ["memory/knowledge/topic-a.md", "memory/working/projects/low-value.md"],
         )
         self.assertEqual(ordered["session_reflection_themes"]["reflection_count"], 1)
-        self.assertIn("meta/review-queue.md", payload["proposed_outputs"]["deferred_write_targets"])
+        self.assertIn("governance/review-queue.md", payload["proposed_outputs"]["deferred_write_targets"])
 
     def test_memory_run_periodic_review_handles_missing_session_ids_on_same_date(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6468,20 +6468,20 @@ Topic A.
 | Low-trust retirement threshold | 120 days | Exploration |
 | Aggregation trigger | 15 entries | Exploration |
 """,
-                "knowledge/_unverified/topic.md": """---
+                "memory/knowledge/_unverified/topic.md": """---
 source: external-research
-origin_session: chats/2026/03/01/chat-001
+origin_session: memory/activity/2026/03/01/chat-001
 created: 2026-03-01
 trust: low
 ---
 
 Topic.
 """,
-                "knowledge/ACCESS.jsonl": "".join(
+                "memory/knowledge/ACCESS.jsonl": "".join(
                     [
                         json.dumps(
                             {
-                                "file": "knowledge/_unverified/topic.md",
+                                "file": "memory/knowledge/_unverified/topic.md",
                                 "date": "2026-03-20",
                                 "task": "maintenance",
                                 "helpfulness": 0.4,
@@ -6491,12 +6491,12 @@ Topic.
                         + "\n",
                         json.dumps(
                             {
-                                "file": "knowledge/_unverified/topic.md",
+                                "file": "memory/knowledge/_unverified/topic.md",
                                 "date": "2026-03-20",
                                 "task": "maintenance",
                                 "helpfulness": 0.5,
                                 "note": "has session id",
-                                "session_id": "chats/2026/03/20/chat-002",
+                                "session_id": "memory/activity/2026/03/20/chat-002",
                             }
                         )
                         + "\n",
@@ -6514,24 +6514,24 @@ Topic.
     def test_memory_get_file_provenance_returns_frontmatter_access_and_history(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic.md": """---
+                "memory/knowledge/topic.md": """---
 source: external-research
-origin_session: chats/2026/03/19/chat-001
+origin_session: memory/activity/2026/03/19/chat-001
 created: 2026-03-19
 trust: low
 ---
 
 Initial note.
 """,
-                "knowledge/ACCESS.jsonl": "".join(
+                "memory/knowledge/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "knowledge/topic.md",
+                            "file": "memory/knowledge/topic.md",
                             "date": "2026-03-19",
                             "task": "research",
                             "helpfulness": 0.8,
                             "note": "relevant",
-                            "session_id": f"chats/2026/03/19/chat-{idx:03d}",
+                            "session_id": f"memory/activity/2026/03/19/chat-{idx:03d}",
                         }
                     )
                     + "\n"
@@ -6543,9 +6543,9 @@ Initial note.
         self._write_and_commit(
             repo_root,
             {
-                "knowledge/topic.md": """---
+                "memory/knowledge/topic.md": """---
 source: external-research
-origin_session: chats/2026/03/19/chat-001
+origin_session: memory/activity/2026/03/19/chat-001
 created: 2026-03-19
 trust: low
 ---
@@ -6558,10 +6558,10 @@ Updated note.
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_get_file_provenance"](path="knowledge/topic.md"))
+            asyncio.run(tools["memory_get_file_provenance"](path="memory/knowledge/topic.md"))
         )
 
-        self.assertEqual(payload["path"], "knowledge/topic.md")
+        self.assertEqual(payload["path"], "memory/knowledge/topic.md")
         self.assertEqual(payload["frontmatter"]["source"], "external-research")
         self.assertTrue(payload["requires_provenance_pause"])
         self.assertEqual(payload["access_summary"]["entry_count"], 3)
@@ -6576,17 +6576,17 @@ Updated note.
     def test_memory_get_file_provenance_surfaces_optional_lineage_fields(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic.md": """---
+                "memory/knowledge/topic.md": """---
 source: agent-generated
 created: 2026-03-20
 trust: medium
 origin_commit: abc123def456
 produced_by: memory_generate_summary
 verified_by:
-  - knowledge/sources/paper-a.md
-  - knowledge/sources/paper-b.md
+  - memory/knowledge/sources/paper-a.md
+  - memory/knowledge/sources/paper-b.md
 inputs:
-  - chats/2026/03/20/chat-001/summary.md
+  - memory/activity/2026/03/20/chat-001/summary.md
 related_sources:
   - docs/spec.md
 verified_against_commit: fedcba654321
@@ -6599,26 +6599,26 @@ Structured provenance note.
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_get_file_provenance"](path="knowledge/topic.md"))
+            asyncio.run(tools["memory_get_file_provenance"](path="memory/knowledge/topic.md"))
         )
 
         self.assertEqual(payload["provenance_fields"]["origin_commit"], "abc123def456")
         self.assertEqual(payload["provenance_fields"]["produced_by"], "memory_generate_summary")
         self.assertEqual(
             payload["provenance_fields"]["verified_by"],
-            ["knowledge/sources/paper-a.md", "knowledge/sources/paper-b.md"],
+            ["memory/knowledge/sources/paper-a.md", "memory/knowledge/sources/paper-b.md"],
         )
         self.assertEqual(
             payload["provenance_fields"]["inputs"],
-            ["chats/2026/03/20/chat-001/summary.md"],
+            ["memory/activity/2026/03/20/chat-001/summary.md"],
         )
         self.assertEqual(payload["provenance_fields"]["related_sources"], ["docs/spec.md"])
-        self.assertIn("Origin commit recorded for knowledge/topic.md.", payload["lineage_summary"])
+        self.assertIn("Origin commit recorded for memory/knowledge/topic.md.", payload["lineage_summary"])
 
     def test_memory_extract_file_returns_outline_sections_and_frontmatter(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic.md": """---
+                "memory/knowledge/topic.md": """---
 title: Extract Me
 source: external-research
 created: 2026-03-20
@@ -6645,7 +6645,7 @@ Closing notes.
         payload = json.loads(
             asyncio.run(
                 tools["memory_extract_file"](
-                    path="knowledge/topic.md",
+                    path="memory/knowledge/topic.md",
                     section_headings="Usage",
                     max_sections=2,
                     preview_chars=80,
@@ -6664,7 +6664,7 @@ Closing notes.
     def test_memory_extract_file_handles_plain_markdown_without_frontmatter(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/plain.md": "# Plain Heading\n\nAlpha paragraph.\n\n## Details\n\nBeta paragraph.\n",
+                "memory/knowledge/plain.md": "# Plain Heading\n\nAlpha paragraph.\n\n## Details\n\nBeta paragraph.\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6672,7 +6672,7 @@ Closing notes.
         payload = json.loads(
             asyncio.run(
                 tools["memory_extract_file"](
-                    path="knowledge/plain.md",
+                    path="memory/knowledge/plain.md",
                     max_sections=2,
                     preview_chars=40,
                 )
@@ -6687,9 +6687,9 @@ Closing notes.
     def test_memory_inspect_commit_returns_scope_and_prefix_metadata(self) -> None:
         repo_root = self._init_repo(
             {
-                "knowledge/topic.md": """---
+                "memory/knowledge/topic.md": """---
 source: external-research
-origin_session: chats/2026/03/19/chat-001
+origin_session: memory/activity/2026/03/19/chat-001
 created: 2026-03-19
 trust: low
 ---
@@ -6701,7 +6701,7 @@ Initial note.
         )
         commit_sha = self._write_and_commit(
             repo_root,
-            {"knowledge/topic.md": "updated\n"},
+            {"memory/knowledge/topic.md": "updated\n"},
             "[knowledge] rewrite topic",
         )
         tools = self._create_tools(repo_root)
@@ -6718,7 +6718,7 @@ Initial note.
     def test_memory_record_periodic_review_updates_meta_outputs(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6743,8 +6743,8 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "meta/belief-diff-log.md": "# Belief Diff Log\n",
-                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6759,16 +6759,16 @@ _Last assessed: 2026-03-01 — Exploration retained_
                 review_queue_entries=(
                     "### [2026-03-19] Aggregate plans access log\n"
                     "**Type:** proposed\n"
-                    "**Description:** Aggregate plans/ACCESS.jsonl.\n"
+                    "**Description:** Aggregate memory/working/projects/ACCESS.jsonl.\n"
                     "**Status:** pending\n"
                 ),
             )
         )
         payload = json.loads(raw)
 
-        quick_reference = (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8")
-        belief_diff = (repo_root / "meta" / "belief-diff-log.md").read_text(encoding="utf-8")
-        review_queue = (repo_root / "meta" / "review-queue.md").read_text(encoding="utf-8")
+        quick_reference = (repo_root / "HOME.md").read_text(encoding="utf-8")
+        belief_diff = (repo_root / "governance" / "belief-diff-log.md").read_text(encoding="utf-8")
+        review_queue = (repo_root / "governance" / "review-queue.md").read_text(encoding="utf-8")
 
         self.assertIn("**Date:** 2026-03-19", quick_reference)
         self.assertIn(
@@ -6785,7 +6785,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
     def test_memory_record_periodic_review_updates_stage_thresholds(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6810,8 +6810,8 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "meta/belief-diff-log.md": "# Belief Diff Log\n",
-                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6827,7 +6827,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
             )
         )
 
-        quick_reference = (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8")
+        quick_reference = (repo_root / "HOME.md").read_text(encoding="utf-8")
         self.assertIn("## Current active stage: Calibration", quick_reference)
         self.assertIn(
             "| Aggregation trigger | 20 entries | Calibration |",
@@ -6842,7 +6842,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
     def test_memory_record_periodic_review_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "meta/quick-reference.md": """# Quick Reference
+                "HOME.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6867,12 +6867,12 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "meta/belief-diff-log.md": "# Belief Diff Log\n",
-                "meta/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
-        quick_reference_before = (repo_root / "meta" / "quick-reference.md").read_text(
+        quick_reference_before = (repo_root / "HOME.md").read_text(
             encoding="utf-8"
         )
 
@@ -6889,7 +6889,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
         )
 
         self.assertEqual(
-            (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8"),
+            (repo_root / "HOME.md").read_text(encoding="utf-8"),
             quick_reference_before,
         )
         self.assertEqual(preview["preview"]["mode"], "preview")
@@ -6907,7 +6907,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
         self.assertIn(
             "**Date:** 2026-03-19",
-            (repo_root / "meta" / "quick-reference.md").read_text(encoding="utf-8"),
+            (repo_root / "HOME.md").read_text(encoding="utf-8"),
         )
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
         self.assertEqual(
@@ -6919,10 +6919,10 @@ _Last assessed: 2026-03-01 — Exploration retained_
     # P1: Identity churn alarm + memory_reset_session_state
     # ------------------------------------------------------------------
 
-    def test_memory_update_identity_trait_churn_alarm_fires_at_limit(self) -> None:
+    def test_memory_update_user_trait_churn_alarm_fires_at_limit(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-17
@@ -6938,7 +6938,7 @@ trust: high
         # Make 5 successful updates (at the limit)
         for i in range(5):
             asyncio.run(
-                tools["memory_update_identity_trait"](
+                tools["memory_update_user_trait"](
                     file="profile",
                     key=f"trait_{i}",
                     value=f"value_{i}",
@@ -6948,7 +6948,7 @@ trust: high
         # The 6th update should raise the churn alarm
         with self.assertRaises(self.errors.ValidationError) as ctx:
             asyncio.run(
-                tools["memory_update_identity_trait"](
+                tools["memory_update_user_trait"](
                     file="profile",
                     key="trait_6",
                     value="value_6",
@@ -6959,7 +6959,7 @@ trust: high
     def test_memory_reset_session_state_clears_churn_counter(self) -> None:
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-17
@@ -6975,7 +6975,7 @@ trust: high
         # Exhaust the counter
         for i in range(5):
             asyncio.run(
-                tools["memory_update_identity_trait"](
+                tools["memory_update_user_trait"](
                     file="profile",
                     key=f"trait_{i}",
                     value=f"value_{i}",
@@ -6989,7 +6989,7 @@ trust: high
 
         # Should now succeed
         asyncio.run(
-            tools["memory_update_identity_trait"](
+            tools["memory_update_user_trait"](
                 file="profile",
                 key="trait_after_reset",
                 value="allowed",
@@ -7000,7 +7000,7 @@ trust: high
         """Two separate create_mcp() calls must have independent counters."""
         repo_root = self._init_repo(
             {
-                "identity/profile.md": """---
+                "memory/users/profile.md": """---
 source: user-stated
 origin_session: manual
 created: 2026-03-17
@@ -7018,12 +7018,12 @@ trust: high
         # Exhaust counter on instance A
         for i in range(5):
             asyncio.run(
-                tools_a["memory_update_identity_trait"](file="profile", key=f"a_{i}", value=f"v{i}")
+                tools_a["memory_update_user_trait"](file="profile", key=f"a_{i}", value=f"v{i}")
             )
 
         # Instance B counter is independent — should not be affected
         asyncio.run(
-            tools_b["memory_update_identity_trait"](file="profile", key="b_0", value="independent")
+            tools_b["memory_update_user_trait"](file="profile", key="b_0", value="independent")
         )
 
     # ------------------------------------------------------------------
@@ -7032,11 +7032,11 @@ trust: high
 
     def test_memory_write_rejects_stale_version_token(self) -> None:
         """Read a file, modify it out-of-band, then attempt a write with the old token."""
-        repo_root = self._init_repo({"knowledge/test.md": "# Original\n"})
+        repo_root = self._init_repo({"memory/knowledge/test.md": "# Original\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         # Get the current token
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/test.md")))
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/knowledge/test.md")))
         old_token = read_payload["version_token"]
 
         # Modify the file directly (bypassing the MCP layer)
@@ -7048,7 +7048,7 @@ trust: high
         with self.assertRaises(self.errors.ConflictError):
             asyncio.run(
                 tools["memory_write"](
-                    path="knowledge/test.md",
+                    path="memory/knowledge/test.md",
                     content="# New content\n",
                     version_token=old_token,
                 )
@@ -7056,10 +7056,10 @@ trust: high
 
     def test_memory_edit_rejects_stale_version_token(self) -> None:
         """Read a file, modify it out-of-band, then attempt an edit with the old token."""
-        repo_root = self._init_repo({"knowledge/test.md": "# Hello\n\nSome text.\n"})
+        repo_root = self._init_repo({"memory/knowledge/test.md": "# Hello\n\nSome text.\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="knowledge/test.md")))
+        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/knowledge/test.md")))
         old_token = read_payload["version_token"]
 
         # Modify the file directly
@@ -7071,7 +7071,7 @@ trust: high
         with self.assertRaises(self.errors.ConflictError):
             asyncio.run(
                 tools["memory_edit"](
-                    path="knowledge/test.md",
+                    path="memory/knowledge/test.md",
                     old_string="Some text.",
                     new_string="Replaced text.",
                     version_token=old_token,

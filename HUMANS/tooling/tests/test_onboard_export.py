@@ -36,9 +36,9 @@ def write(path: Path, content: str) -> None:
 def build_repo(root: Path) -> None:
     write(root / "README.md", "# README\n")
     write(root / "meta" / "placeholder.md", "# Meta\n")
-    write(root / "identity" / "SUMMARY.md", "# Identity Summary\n")
+    write(root / "memory" / "users" / "SUMMARY.md", "# Identity Summary\n")
     write(
-        root / "chats" / "SUMMARY.md",
+        root / "memory" / "activity" / "SUMMARY.md",
         textwrap.dedent(
             """\
             # Chats Summary
@@ -99,7 +99,7 @@ class OnboardExportTests(unittest.TestCase):
             export = textwrap.dedent(
                 """\
                 ---
-                session_id: chats/2026/03/12/chat-001
+                session_id: core/memory/activity/2026/03/12/chat-001
                 session_date: 2026-03-12
                 ---
 
@@ -125,8 +125,8 @@ class OnboardExportTests(unittest.TestCase):
             result = self.run_script(root, export, "--dry-run")
             stdout = result.stdout
 
-            self.assertIn("--- chats/2026/03/12/chat-001/transcript.md ---", stdout)
-            self.assertIn("--- chats/2026/03/12/chat-001/SUMMARY.md ---", stdout)
+            self.assertIn("--- core/memory/activity/2026/03/12/chat-001/transcript.md ---", stdout)
+            self.assertIn("--- core/memory/activity/2026/03/12/chat-001/SUMMARY.md ---", stdout)
             self.assertIn("User profile created via onboarding export on 2026-03-12.", stdout)
             self.assertIn("User: Hello", stdout)
             self.assertIn("Agent: Hi there", stdout)
@@ -138,7 +138,7 @@ class OnboardExportTests(unittest.TestCase):
             export = textwrap.dedent(
                 """\
                 ---
-                session_id: chats/2026/03/12/chat-001
+                session_id: core/memory/activity/2026/03/12/chat-001
                 session_date: 2026-03-12
                 ---
 
@@ -165,19 +165,19 @@ class OnboardExportTests(unittest.TestCase):
 
             self.run_script(root, export)
 
-            profile = (root / "identity" / "profile.md").read_text(encoding="utf-8")
+            profile = (root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
             transcript = (
-                root / "chats" / "2026" / "03" / "12" / "chat-001" / "transcript.md"
+                root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "transcript.md"
             ).read_text(encoding="utf-8")
-            summary = (root / "chats" / "2026" / "03" / "12" / "chat-001" / "SUMMARY.md").read_text(
+            summary = (root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "SUMMARY.md").read_text(
                 encoding="utf-8"
             )
             reflection = (
-                root / "chats" / "2026" / "03" / "12" / "chat-001" / "reflection.md"
+                root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "reflection.md"
             ).read_text(encoding="utf-8")
-            chats_summary = (root / "chats" / "SUMMARY.md").read_text(encoding="utf-8")
+            chats_summary = (root / "memory" / "activity" / "SUMMARY.md").read_text(encoding="utf-8")
 
-            self.assertIn("origin_session: chats/2026/03/12/chat-001", profile)
+            self.assertIn("origin_session: core/memory/activity/2026/03/12/chat-001", profile)
             self.assertIn("created: 2026-03-12", profile)
             self.assertEqual(transcript.strip(), "User: Hello\nAgent: Hi there")
             self.assertTrue(summary.startswith("# Session Summary — Onboarding"))
@@ -209,7 +209,7 @@ class OnboardExportTests(unittest.TestCase):
             result = self.run_script(root, export, "--dry-run")
             stdout = result.stdout
             today = date.today()
-            expected_chat_dir = f"chats/{today:%Y/%m/%d}/chat-001"
+            expected_chat_dir = f"core/memory/activity/{today:%Y/%m/%d}/chat-001"
 
             self.assertIn("[warn] Legacy onboarding export detected", stdout)
             self.assertIn(expected_chat_dir, stdout)
@@ -262,7 +262,7 @@ class OnboardExportTests(unittest.TestCase):
             export = textwrap.dedent(
                 """\
                 ---
-                session_id: chats/2026/03/12/chat-001
+                session_id: core/memory/activity/2026/03/12/chat-001
                 session_date: 2026-03-12
                 ---
 
@@ -313,9 +313,9 @@ class OnboardExportTests(unittest.TestCase):
                 text=True,
             ).stdout.splitlines()
 
-            self.assertIn("identity/profile.md", head_files)
-            self.assertIn("identity/SUMMARY.md", head_files)
-            self.assertIn("chats/2026/03/12/chat-001/SUMMARY.md", head_files)
+            self.assertIn("core/memory/users/profile.md", head_files)
+            self.assertIn("core/memory/users/SUMMARY.md", head_files)
+            self.assertIn("core/memory/activity/2026/03/12/chat-001/SUMMARY.md", head_files)
             self.assertNotIn("notes.txt", head_files)
             self.assertIn("notes.txt", staged_files)
 

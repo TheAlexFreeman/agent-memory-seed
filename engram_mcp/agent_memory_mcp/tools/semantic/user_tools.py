@@ -1,4 +1,4 @@
-"""Identity-oriented semantic tools."""
+"""User-oriented semantic tools."""
 
 from __future__ import annotations
 
@@ -55,19 +55,19 @@ def register_tools(
     get_repo,
     session_state: SessionState,
 ) -> dict[str, object]:
-    """Register identity-oriented semantic tools."""
+    """Register user-oriented semantic tools."""
 
     @mcp.tool(
-        name="memory_update_identity_trait",
+        name="memory_update_user_trait",
         annotations=_tool_annotations(
-            title="Update Identity Trait",
+            title="Update User Trait",
             readOnlyHint=False,
             destructiveHint=False,
             idempotentHint=False,
             openWorldHint=False,
         ),
     )
-    async def memory_update_identity_trait(
+    async def memory_update_user_trait(
         file: str,
         key: str,
         value: str,
@@ -75,7 +75,7 @@ def register_tools(
         version_token: str | None = None,
         preview: bool = False,
     ) -> str:
-        """Update a named field in an identity file."""
+        """Update a named field in a user file."""
         from ...errors import ValidationError
         from ...frontmatter_utils import read_with_frontmatter, today_str, write_with_frontmatter
         from ...models import MemoryWriteResult
@@ -87,15 +87,15 @@ def register_tools(
 
         if get_identity_updates(session_state) >= get_identity_churn_limit():
             raise ValidationError(
-                f"Identity churn alarm: {get_identity_churn_limit()} trait updates this session — "
+                f"User churn alarm: {get_identity_churn_limit()} trait updates this session — "
                 "call memory_reset_session_state to acknowledge and reset the counter, "
                 "or restart the MCP server."
             )
 
         file = validate_slug(file, field_name="file")
-        rel_path, abs_path = resolve_repo_path(repo, f"identity/{file}.md")
+        rel_path, abs_path = resolve_repo_path(repo, f"memory/users/{file}.md")
         if not abs_path.exists():
-            raise ValidationError(f"Identity file not found: {rel_path}")
+            raise ValidationError(f"User file not found: {rel_path}")
 
         repo.check_version_token(rel_path, version_token)
 
@@ -123,7 +123,7 @@ def register_tools(
 
             fm_dict["last_verified"] = today_str()
 
-        commit_msg = f"[identity] Update {key} in identity/{file}.md"
+        commit_msg = f"[user] Update {key} in memory/users/{file}.md"
         predicted_updates = get_identity_updates(session_state) + 1
         new_state = {
             "key": key,
@@ -133,12 +133,12 @@ def register_tools(
         preview_payload = build_governed_preview(
             mode="preview" if preview else "apply",
             change_class="proposed",
-            summary=f"Update identity trait {key} in identity/{file}.md.",
-            reasoning="Identity updates are proposed durable-memory writes and are rate-limited by the churn alarm.",
+            summary=f"Update user trait {key} in memory/users/{file}.md.",
+            reasoning="User updates are proposed durable-memory writes and are rate-limited by the churn alarm.",
             target_files=[preview_target(rel_path, "update")],
             invariant_effects=[
-                "Updates the requested identity trait using the selected merge mode.",
-                "Refreshes last_verified in the identity file.",
+                "Updates the requested user trait using the selected merge mode.",
+                "Refreshes last_verified in the user file.",
                 "Consumes one identity update from the current session budget on apply.",
             ],
             commit_message=commit_msg,
@@ -169,7 +169,7 @@ def register_tools(
         )
         return result.to_json()
 
-    return {"memory_update_identity_trait": memory_update_identity_trait}
+    return {"memory_update_user_trait": memory_update_user_trait}
 
 
 __all__ = ["register_tools"]

@@ -79,7 +79,7 @@ semantic_extensions = [
   "memory_archive_knowledge",
   "memory_append_scratchpad",
   "memory_update_skill",
-  "memory_update_identity_trait",
+  "memory_update_user_trait",
   "memory_record_session",
   "memory_run_aggregation",
   "memory_record_chat_summary",
@@ -340,7 +340,7 @@ approval = "explicit_user_approval"
 user_awareness = "required_before_write"
 ui_affordance = "block_until_approved"
 read_only_behavior = "defer_and_report_blocked"
-notes = "Protected-target writes such as README.md, most meta/ files, and skills/ changes."
+notes = "Protected-target writes such as README.md, most governance/ files, and memory/skills/ changes."
 
 [raw_fallback_policy]
 policy = "inherit_operation_change_class"
@@ -521,9 +521,9 @@ preview_support = true
 preview_mode = "preview"
 preview_argument = "preview"
 
-[desktop_operations.update_identity_trait]
+[desktop_operations.update_user_trait]
 status = "implemented"
-tool = "memory_update_identity_trait"
+tool = "memory_update_user_trait"
 tier = "semantic"
 operation_group = "identity"
 change_class = "proposed"
@@ -623,15 +623,15 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
 writes = [
-  "projects/{project_id}/plans/{plan_id}.md",
-  "projects/{project_id}/SUMMARY.md",
-  "projects/SUMMARY.md",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/SUMMARY.md",
 ]
 owns_frontmatter = [
-  "projects/{project_id}/plans/{plan_id}.md",
-  "projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
 ]
-owns_summaries = ["projects/SUMMARY.md"]
+owns_summaries = ["memory/working/projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["plan_path", "status"]
@@ -645,15 +645,15 @@ change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
 writes = [
-  "projects/{project_id}/plans/{plan_id}.md",
-  "projects/{project_id}/SUMMARY.md",
-  "projects/SUMMARY.md",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/SUMMARY.md",
 ]
 owns_frontmatter = [
-  "projects/{project_id}/plans/{plan_id}.md",
-  "projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
 ]
-owns_summaries = ["projects/SUMMARY.md"]
+owns_summaries = ["memory/working/projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["next_action", "phase_progress", "plan_progress", "status"]
@@ -672,15 +672,15 @@ change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
 writes = [
-  "projects/{project_id}/plans/{plan_id}.md",
-  "projects/{project_id}/SUMMARY.md",
-  "projects/SUMMARY.md",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/SUMMARY.md",
 ]
 owns_frontmatter = [
-  "projects/{project_id}/plans/{plan_id}.md",
-  "projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
 ]
-owns_summaries = ["projects/SUMMARY.md"]
+owns_summaries = ["memory/working/projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["next_action"]
@@ -694,11 +694,11 @@ change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
-  "knowledge/_unverified/**/{file}.md",
-  "knowledge/_unverified/SUMMARY.md",
+  "memory/knowledge/_unverified/**/{file}.md",
+  "memory/knowledge/_unverified/SUMMARY.md",
 ]
-owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
-owns_summaries = ["knowledge/_unverified/SUMMARY.md"]
+owns_frontmatter = ["memory/knowledge/_unverified/**/{file}.md"]
+owns_summaries = ["memory/knowledge/_unverified/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["version_token"]
@@ -715,13 +715,16 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
-  "knowledge/_unverified/**/{file}.md",
-  "knowledge/**/{file}.md",
-  "knowledge/_unverified/SUMMARY.md",
-  "knowledge/SUMMARY.md",
+  "memory/knowledge/_unverified/**/{file}.md",
+  "memory/knowledge/**/{file}.md",
+  "memory/knowledge/_unverified/SUMMARY.md",
+  "memory/knowledge/SUMMARY.md",
 ]
-owns_frontmatter = ["knowledge/**/{file}.md"]
-owns_summaries = ["knowledge/_unverified/SUMMARY.md", "knowledge/SUMMARY.md"]
+owns_frontmatter = ["memory/knowledge/**/{file}.md"]
+owns_summaries = [
+  "memory/knowledge/_unverified/SUMMARY.md",
+  "memory/knowledge/SUMMARY.md",
+]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["new_path", "trust"]
@@ -740,13 +743,16 @@ change_class = "proposed"
 commit_model = "auto_commit"
 commit_category_hint = "curation"
 writes = [
-  "knowledge/_unverified/**/{file}.md",
-  "knowledge/**/{file}.md",
-  "knowledge/_unverified/SUMMARY.md",
-  "knowledge/SUMMARY.md",
+  "memory/knowledge/_unverified/**/{file}.md",
+  "memory/knowledge/**/{file}.md",
+  "memory/knowledge/_unverified/SUMMARY.md",
+  "memory/knowledge/SUMMARY.md",
 ]
-owns_frontmatter = ["knowledge/**/{file}.md"]
-owns_summaries = ["knowledge/_unverified/SUMMARY.md", "knowledge/SUMMARY.md"]
+owns_frontmatter = ["memory/knowledge/**/{file}.md"]
+owns_summaries = [
+  "memory/knowledge/_unverified/SUMMARY.md",
+  "memory/knowledge/SUMMARY.md",
+]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = [
@@ -769,14 +775,20 @@ preview_argument = "dry_run"
 commit_model = "auto_commit"
 commit_category_hint = "curation"
 writes = [
-  "knowledge/**/{path}",
-  "plans/**/{file}.md",
-  "identity/**/{file}.md",
-  "skills/**/{file}.md",
-  "meta/**/{file}.md",
+  "memory/knowledge/**/{path}",
+  "memory/working/projects/**/{file}.md",
+  "memory/users/**/{file}.md",
+  "memory/skills/**/{file}.md",
+  "governance/**/{file}.md",
 ]
-owns_frontmatter = ["knowledge/**/{path}.md", "plans/**/{file}.md"]
-owns_summaries = ["knowledge/SUMMARY.md", "knowledge/**/SUMMARY.md"]
+owns_frontmatter = [
+  "memory/knowledge/**/{path}.md",
+  "memory/working/projects/**/{file}.md",
+]
+owns_summaries = [
+  "memory/knowledge/SUMMARY.md",
+  "memory/knowledge/**/SUMMARY.md",
+]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = [
@@ -800,13 +812,16 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
-  "knowledge/**/{file}.md",
-  "knowledge/_unverified/**/{file}.md",
-  "knowledge/SUMMARY.md",
-  "knowledge/_unverified/SUMMARY.md",
+  "memory/knowledge/**/{file}.md",
+  "memory/knowledge/_unverified/**/{file}.md",
+  "memory/knowledge/SUMMARY.md",
+  "memory/knowledge/_unverified/SUMMARY.md",
 ]
-owns_frontmatter = ["knowledge/_unverified/**/{file}.md"]
-owns_summaries = ["knowledge/SUMMARY.md", "knowledge/_unverified/SUMMARY.md"]
+owns_frontmatter = ["memory/knowledge/_unverified/**/{file}.md"]
+owns_summaries = [
+  "memory/knowledge/SUMMARY.md",
+  "memory/knowledge/_unverified/SUMMARY.md",
+]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["new_path", "trust"]
@@ -828,12 +843,12 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "knowledge"
 writes = [
-  "knowledge/**/{file}.md",
-  "knowledge/_archive/**/{file}.md",
-  "knowledge/SUMMARY.md",
+  "memory/knowledge/**/{file}.md",
+  "memory/knowledge/_archive/**/{file}.md",
+  "memory/knowledge/SUMMARY.md",
 ]
-owns_frontmatter = ["knowledge/_archive/**/{file}.md"]
-owns_summaries = ["knowledge/SUMMARY.md"]
+owns_frontmatter = ["memory/knowledge/_archive/**/{file}.md"]
+owns_summaries = ["memory/knowledge/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["archive_path"]
@@ -851,7 +866,11 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "scratchpad"
-writes = ["scratchpad/USER.md", "scratchpad/CURRENT.md", "scratchpad/{slug}.md"]
+writes = [
+  "memory/working/scratchpad/USER.md",
+  "memory/working/scratchpad/CURRENT.md",
+  "memory/working/scratchpad/{slug}.md",
+]
 owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
@@ -869,8 +888,8 @@ preview_mode = "preview"
 preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "skill"
-writes = ["skills/{file}.md"]
-owns_frontmatter = ["skills/{file}.md"]
+writes = ["memory/skills/{file}.md"]
+owns_frontmatter = ["memory/skills/{file}.md"]
 owns_summaries = []
 owns_access_logs = []
 owns_review_queue = []
@@ -883,7 +902,7 @@ error_kinds = [
   "StagingError",
 ]
 
-[operations.memory_update_identity_trait]
+[operations.memory_update_user_trait]
 group = "identity"
 tier = "semantic"
 change_class = "proposed"
@@ -892,8 +911,8 @@ preview_mode = "preview"
 preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "identity"
-writes = ["identity/{file}.md"]
-owns_frontmatter = ["identity/{file}.md"]
+writes = ["memory/users/{file}.md"]
+owns_frontmatter = ["memory/users/{file}.md"]
 owns_summaries = []
 owns_access_logs = []
 owns_review_queue = []
@@ -907,9 +926,12 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "chat"
-writes = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md", "chats/SUMMARY.md"]
-owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
-owns_summaries = ["chats/SUMMARY.md"]
+writes = [
+  "memory/activity/YYYY/MM/DD/chat-NNN/SUMMARY.md",
+  "memory/activity/SUMMARY.md",
+]
+owns_frontmatter = ["memory/activity/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
+owns_summaries = ["memory/activity/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
 result_fields = ["session_id"]
@@ -924,13 +946,13 @@ change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "chat"
 writes = [
-  "chats/YYYY/MM/DD/chat-NNN/SUMMARY.md",
-  "chats/YYYY/MM/DD/chat-NNN/reflection.md",
-  "chats/SUMMARY.md",
+  "memory/activity/YYYY/MM/DD/chat-NNN/SUMMARY.md",
+  "memory/activity/YYYY/MM/DD/chat-NNN/reflection.md",
+  "memory/activity/SUMMARY.md",
   "{folder}/ACCESS.jsonl",
 ]
-owns_frontmatter = ["chats/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
-owns_summaries = ["chats/SUMMARY.md"]
+owns_frontmatter = ["memory/activity/YYYY/MM/DD/chat-NNN/SUMMARY.md"]
+owns_summaries = ["memory/activity/SUMMARY.md"]
 owns_access_logs = ["{folder}/ACCESS.jsonl"]
 owns_review_queue = []
 result_fields = ["session_id"]
@@ -975,11 +997,11 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "curation"
-writes = ["meta/review-queue.md"]
+writes = ["governance/review-queue.md"]
 owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
-owns_review_queue = ["meta/review-queue.md"]
+owns_review_queue = ["governance/review-queue.md"]
 result_fields = ["flagged_path", "priority", "item_id"]
 fallback_tools = ["memory_edit", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
@@ -993,11 +1015,11 @@ preview_mode = "preview"
 preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "curation"
-writes = ["meta/review-queue.md"]
+writes = ["governance/review-queue.md"]
 owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
-owns_review_queue = ["meta/review-queue.md"]
+owns_review_queue = ["governance/review-queue.md"]
 result_fields = ["item_id"]
 fallback_tools = ["memory_edit", "memory_commit"]
 error_kinds = [
@@ -1021,7 +1043,7 @@ owns_review_queue = []
 result_fields = ["access_jsonl", "entry_count", "scan_entry_count"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Accepts optional session_id, optional mode (`read`, `write`, `update`, `create`), optional task_id from access_logging.task_ids, and optional min_helpfulness. When min_helpfulness is set, below-threshold entries are routed to {folder}/ACCESS_SCANS.jsonl instead of the hot ACCESS.jsonl. When session_id is omitted, the runtime first checks MEMORY_SESSION_ID and then chats/CURRENT_SESSION; any resolved value must be a canonical session path."
+notes = "Accepts optional session_id, optional mode (`read`, `write`, `update`, `create`), optional task_id from access_logging.task_ids, and optional min_helpfulness. When min_helpfulness is set, below-threshold entries are routed to {folder}/ACCESS_SCANS.jsonl instead of the hot ACCESS.jsonl. When session_id is omitted, the runtime first checks MEMORY_SESSION_ID and then memory/activity/CURRENT_SESSION; any resolved value must be a canonical session path."
 
 [operations.memory_log_access_batch]
 group = "chat"
@@ -1037,7 +1059,7 @@ owns_review_queue = []
 result_fields = ["access_jsonls", "entry_count", "scan_entry_count"]
 fallback_tools = ["memory_write", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
-notes = "Batches multiple ACCESS entries into one auto-commit. Each entry may carry an optional mode (`read`, `write`, `update`, `create`) and optional task_id from access_logging.task_ids; the call may also set an optional min_helpfulness threshold that routes below-threshold entries to {folder}/ACCESS_SCANS.jsonl. Uses the same optional session_id injection contract as memory_log_access via MEMORY_SESSION_ID, then chats/CURRENT_SESSION."
+notes = "Batches multiple ACCESS entries into one auto-commit. Each entry may carry an optional mode (`read`, `write`, `update`, `create`) and optional task_id from access_logging.task_ids; the call may also set an optional min_helpfulness threshold that routes below-threshold entries to {folder}/ACCESS_SCANS.jsonl. Uses the same optional session_id injection contract as memory_log_access via MEMORY_SESSION_ID, then memory/activity/CURRENT_SESSION."
 
 [operations.memory_record_reflection]
 group = "chat"
@@ -1045,7 +1067,7 @@ tier = "semantic"
 change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "chat"
-writes = ["chats/YYYY/MM/DD/chat-NNN/reflection.md"]
+writes = ["memory/activity/YYYY/MM/DD/chat-NNN/reflection.md"]
 owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
@@ -1065,14 +1087,14 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "system"
 writes = [
-  "meta/quick-reference.md",
-  "meta/belief-diff-log.md",
-  "meta/review-queue.md",
+  "HOME.md",
+  "governance/belief-diff-log.md",
+  "governance/review-queue.md",
 ]
 owns_frontmatter = []
 owns_summaries = []
 owns_access_logs = []
-owns_review_queue = ["meta/review-queue.md"]
+owns_review_queue = ["governance/review-queue.md"]
 result_fields = [
   "review_date",
   "active_stage",

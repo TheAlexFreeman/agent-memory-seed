@@ -41,7 +41,7 @@ class MemoryMCPTests(unittest.TestCase):
         output = asyncio.run(self.module.memory_list_folder(path="."))
 
         self.assertNotIn("HUMANS/", output)
-        self.assertIn("identity/", output)
+        self.assertIn("memory/users/", output)
 
     def test_root_listing_can_include_humans(self) -> None:
         output = asyncio.run(self.module.memory_list_folder(path=".", include_humans=True))
@@ -81,10 +81,10 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertIn("version_token", output)
 
     def test_read_file_returns_structured_payload(self) -> None:
-        raw = asyncio.run(self.module.memory_read_file(path="meta/quick-reference.md"))
+        raw = asyncio.run(self.module.memory_read_file(path="HOME.md"))
         payload = json.loads(raw)
 
-        self.assertEqual(payload["path"], "meta/quick-reference.md")
+        self.assertEqual(payload["path"], "HOME.md")
         self.assertTrue(payload["inline"])
         self.assertGreater(payload["size_bytes"], 0)
         self.assertIn("version_token", payload)
@@ -190,7 +190,7 @@ class MemoryMCPTests(unittest.TestCase):
             prompt_names = [str(prompt.name) for prompt in prompts]
             review_prompt = await self.module.mcp.get_prompt(
                 "memory_prepare_unverified_review_prompt",
-                {"folder_path": "knowledge/_unverified", "max_files": 2, "max_extract_words": 20},
+                {"folder_path": "memory/knowledge/_unverified", "max_files": 2, "max_extract_words": 20},
             )
             wrap_up_prompt = await self.module.mcp.get_prompt(
                 "memory_session_wrap_up_prompt",

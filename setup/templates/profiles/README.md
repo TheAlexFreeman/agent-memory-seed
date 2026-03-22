@@ -1,6 +1,6 @@
 # Starter Profile Templates
 
-These templates are installed by `setup/setup.sh --profile <name>` or by the `setup/setup.html` wizard. Each one pre-fills `identity/profile.md` with common traits for a given role, tagged `[template]` so the onboarding skill knows to confirm them with the user.
+These templates are installed by `setup/setup.sh --profile <name>` or by the `setup/setup.html` wizard. Each one pre-fills `core/memory/users/profile.md` with common traits for a given role, tagged `[template]` so the onboarding skill knows to confirm them with the user.
 
 ## Existing templates
 

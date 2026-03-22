@@ -73,17 +73,17 @@ The memory system's documentation serves two audiences with fundamentally differ
 
 This tension is not a problem to solve once — it is a permanent design constraint that every file in the system must navigate. The strategies that have emerged:
 
-**Role classification.** Every file in `meta/` falls into one of three roles: *always-load after entry* (read once the agent reaches the live router — must be lean and non-redundant), *on-demand* (loaded only when a specific operation requires it — can be more detailed), or *human-only* (never loaded by agents — can be as expansive as needed). The context loading manifest in `meta/quick-reference.md` makes these roles explicit.
+**Role classification.** Every file in `core/governance/` falls into one of three roles: *always-load after entry* (read once the agent reaches the live router — must be lean and non-redundant), *on-demand* (loaded only when a specific operation requires it — can be more detailed), or *human-only* (never loaded by agents — can be as expansive as needed). The context loading manifest in `core/HOME.md` makes these roles explicit.
 
-- *Always-load after entry:* `quick-reference.md`. The architectural starting point is `README.md`; once the agent reaches `meta/quick-reference.md`, that file carries the live operational weight of a normal session and must stay lean.
+- *Always-load after entry:* `HOME.md`. The architectural starting point is `README.md`; once the agent reaches `core/HOME.md`, that file carries the live operational weight of a normal session and must stay lean.
 - *On-demand:* `session-checklists.md`, `curation-policy.md`, `update-guidelines.md` (loaded on full bootstrap), `curation-algorithms.md` (loaded during aggregation or stage transitions), `deferred-action-template.md` (loaded on first read-only session), `system-maturity.md` (loaded during periodic review).
 - *Human-only:* `HUMANS/docs/GLOSSARY.md`. Every term it defines is already introduced in context by the governance file that establishes it. It exists for humans browsing the repo, not for agents building context.
 
-**Denormalized lookup files.** `meta/quick-reference.md` is a deliberately denormalized document: it duplicates threshold values, decision guides, and operational parameters from across the governance layer into a single file the agent reads every session. The normative justification for each value lives in the source files (curation-policy, system-maturity), but the agent never needs to load those files just to look up a threshold. This is the database-design principle of trading storage redundancy for read performance, applied to context windows.
+**Denormalized lookup files.** `core/HOME.md` is a deliberately denormalized document: it duplicates threshold values, decision guides, and operational parameters from across the governance layer into a single file the agent reads every session. The normative justification for each value lives in the source files (curation-policy, system-maturity), but the agent never needs to load those files just to look up a threshold. This is the database-design principle of trading storage redundancy for read performance, applied to context windows.
 
-**Skip annotations.** When a governance file restates information that already exists in quick-reference.md (trust-level behaviors, decay thresholds, anomaly signals), it includes a one-line annotation: *"If you've already loaded quick-reference.md, skip this section."* This preserves readability for humans browsing the file while giving agents an explicit exit ramp from redundant content.
+**Skip annotations.** When a governance file restates information that already exists in HOME.md (trust-level behaviors, decay thresholds, anomaly signals), it includes a one-line annotation: *"If you've already loaded quick-reference.md, skip this section."* This preserves readability for humans browsing the file while giving agents an explicit exit ramp from redundant content.
 
-**Checklist-skill separation.** Session checklists (`meta/session-checklists.md`) are self-sufficient for normal operation — they include inline quality criteria and anti-patterns. The full skill files (`skills/session-start.md`, `skills/session-wrapup.md`) are on-demand references for first bootstrap or uncertainty. This avoids loading ~950 words of skill files every session when a ~600-word checklist covers the same ground.
+**Checklist-skill separation.** Session checklists (`core/governance/session-checklists.md`) are self-sufficient for normal operation — they include inline quality criteria and anti-patterns. The full skill files (`core/memory/skills/session-start.md`, `core/memory/skills/session-wrapup.md`) are on-demand references for first bootstrap or uncertainty. This avoids loading ~950 words of skill files every session when a ~600-word checklist covers the same ground.
 
 ### Principles for dual-audience friendliness
 
@@ -161,7 +161,7 @@ Beyond technical work, the system can serve as a general-purpose persistent AI a
 
 **1. Automated validation in CI.** The existing `validate_memory_repo.py` script could run as a GitHub Actions workflow or pre-commit hook, catching frontmatter errors, ACCESS.jsonl format issues, and governance inconsistencies before they're committed. This is the natural next step from the current optional-validation approach.
 
-**2. Automated belief-diff generation.** The `meta/belief-diff-log.md` protocol is currently manual. A scheduled script (or a GitHub Action on a 30-day cron) could generate the belief diff automatically, making drift detection passive rather than requiring agent initiative.
+**2. Automated belief-diff generation.** The `core/governance/belief-diff-log.md` protocol is currently manual. A scheduled script (or a GitHub Action on a 30-day cron) could generate the belief diff automatically, making drift detection passive rather than requiring agent initiative.
 
 **3. Import/export tooling.** Beyond `onboard-export.sh`, the system needs tools for:
 - Exporting a complete memory snapshot (for backup or migration).
@@ -247,7 +247,7 @@ The MCP layer already serves as a first-class tool-facing interface, while thin 
 ### Data integrations
 
 **Obsidian sync.** Many knowledge workers already maintain Obsidian vaults. A bidirectional sync tool could:
-- Import relevant Obsidian notes into `knowledge/` (with `source: external-research`, landing in `_unverified/`).
+- Import relevant Obsidian notes into `core/memory/knowledge/` (with `source: external-research`, landing in `_unverified/`).
 - Export knowledge files back to Obsidian for the user's personal reference.
 - Map Obsidian's tag system to the memory repo's emergent categorization.
 

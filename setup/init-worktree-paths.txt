@@ -11,5 +11,6 @@ pyproject.toml
 engram_mcp/__init__.py
 engram_mcp/agent_memory_mcp
 engram_mcp/memory_mcp.py
-meta
-skills
+core/governance
+core/HOME.md
+core/memory/skills
