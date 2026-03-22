@@ -1,8 +1,8 @@
 # Engram: The Expert System
 
-## A Semantics-First Ecology of Protocols for LLM Agent Context Management
+## A Semantics-First Collaborative Framework for Cognitive Context Management
 
-Engram is a model-portable, human-legible, version-controlled, adaptive, self-organizing memory layer for AI agents. It seeks to be a collaborative framework that leverages the complementary cognitive strengths of LLMs and human beings.
+Engram is a model-portable, human-legible, version-controlled, adaptive, self-organizing memory layer for AI agents. It's more than a memory store — it's an ecology of protocols designed to learn from its own usage patterns in a transparent and robust way.
 
 **Setting up for the first time?** → See [HUMANS/docs/QUICKSTART.md](HUMANS/docs/QUICKSTART.md)
 **Need the fundamentals first?** → See [HUMANS/docs/CORE.md](HUMANS/docs/CORE.md)
