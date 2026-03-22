@@ -255,7 +255,7 @@ required = true
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "core/governance/integrity-checklist.md"
+path = "core/governance/session-checklists.md"
 role = "integrity-audit"
 required = true
 cost = "medium"

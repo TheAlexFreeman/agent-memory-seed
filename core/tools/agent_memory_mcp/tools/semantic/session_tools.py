@@ -103,11 +103,9 @@ def _resolve_live_router_rel(root: Path) -> str:
         return "core/INIT.md"
     if (root / "core" / "HOME.md").exists():
         return "core/HOME.md"
-    if (root / "core" / "governance" / "quick-reference.md").exists():
-        return "core/governance/quick-reference.md"
     if (root / "HOME.md").exists():
         return "HOME.md"
-    return "meta/quick-reference.md"
+    return "core/INIT.md"
 
 
 def _access_jsonl_for(rel_path: str) -> str | None:

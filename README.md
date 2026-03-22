@@ -77,10 +77,8 @@ For the complete mapping of which files to load per session type, see `core/INIT
 │   │   ├── belief-diff-log.md    ← Periodic audit log tracking content drift.
 │   │   ├── system-maturity.md    ← Developmental stage tracking and adaptive thresholds.
 │   │   ├── first-run.md          ← Streamlined first-session flow for agents.
-│   │   ├── session-checklists.md ← On-demand session start/end runbooks.
+│   │   ├── session-checklists.md ← Session runbooks + periodic integrity audit.
 │   │   ├── scratchpad-guidelines.md ← On-demand governance for scratchpad use.
-│   │   ├── integrity-checklist.md ← Advisory audit checklist.
-│   │   ├── deferred-action-template.md ← Worked example for read-only session output.
 │   │   ├── (task-groups.md       ← Created at Calibration stage.)
 │   │   └── (task-categories.md   ← Created at Consolidation stage.)
 │   │

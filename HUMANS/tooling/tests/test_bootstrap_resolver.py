@@ -44,7 +44,7 @@ def build_repo(
         "core/governance/system-maturity.md",
         "core/governance/belief-diff-log.md",
         "core/governance/review-queue.md",
-        "core/governance/integrity-checklist.md",
+        "core/governance/session-checklists.md",
         "core/memory/users/SUMMARY.md",
         "core/memory/activity/SUMMARY.md",
         "core/memory/working/projects/SUMMARY.md",

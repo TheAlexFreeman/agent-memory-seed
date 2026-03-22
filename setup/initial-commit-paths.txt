@@ -18,10 +18,7 @@ core/_archive.zip
 core/governance/belief-diff-log.md
 core/governance/curation-algorithms.md
 core/governance/curation-policy.md
-core/governance/deferred-action-template.md
 core/governance/first-run.md
-core/governance/integrity-checklist.md
-core/governance/quick-reference.md
 core/governance/review-queue.md
 core/governance/scratchpad-guidelines.md
 core/governance/session-checklists.md

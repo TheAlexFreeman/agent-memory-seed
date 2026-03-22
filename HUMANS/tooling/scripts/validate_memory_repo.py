@@ -135,7 +135,7 @@ EXPECTED_PERIODIC_REVIEW_STEP_PATHS = EXPECTED_FULL_BOOTSTRAP_STEP_PATHS + (
     "core/governance/system-maturity.md",
     "core/governance/belief-diff-log.md",
     "core/governance/review-queue.md",
-    "core/governance/integrity-checklist.md",
+    "core/governance/session-checklists.md",
 )
 DEPLOYED_WORKTREE_FULL_BOOTSTRAP_STEP_PATHS = tuple(
     path for path in EXPECTED_FULL_BOOTSTRAP_STEP_PATHS if path != "CHANGELOG.md"

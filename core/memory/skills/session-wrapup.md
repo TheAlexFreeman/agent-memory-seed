@@ -54,7 +54,7 @@ If write access is unavailable, produce a deferred-action summary listing:
 - All file writes (summaries, reflections, knowledge updates) that should be applied.
 - All review-queue items.
 
-Present this using the format in `core/governance/update-guidelines.md` § "How to communicate deferred actions". If this is your first read-only session, load `core/governance/deferred-action-template.md` for a worked example. (`HUMANS/tooling/scripts/onboard-export.sh` is for first-session onboarding only; it does not apply here.)
+Present this using the format in `core/governance/update-guidelines.md` § "How to communicate deferred actions". If this is your first read-only session, also review the worked example in `core/governance/update-guidelines.md` § "Worked example" for the output format. (`HUMANS/tooling/scripts/onboard-export.sh` is for first-session onboarding only; it does not apply here.)
 
 ### 5. Sign off
 

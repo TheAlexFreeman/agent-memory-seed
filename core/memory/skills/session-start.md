@@ -35,7 +35,7 @@ Skip this skill on the very first session — use `core/governance/first-run.md`
 
 ### 3. Check write access (silent)
 
-- If running on a read-only platform, note this and prepare to produce deferred actions at session end per `core/governance/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `core/governance/deferred-action-template.md` for the output format.
+- If running on a read-only platform, note this and prepare to produce deferred actions at session end per `core/governance/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also review the worked example in `core/governance/update-guidelines.md` § "Worked example" for the output format.
 
 ### 4. Greet with continuity (interactive)
 

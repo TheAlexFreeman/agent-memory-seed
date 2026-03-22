@@ -55,7 +55,7 @@ def _tool_annotations(**kwargs: object) -> Any:
     return cast(Any, kwargs)
 
 
-# Trust decay thresholds (days) — defaults; runtime reads from quick-reference.md
+# Trust decay thresholds (days) — defaults; runtime reads from core/INIT.md
 _DEFAULT_LOW_THRESHOLD = 120
 _DEFAULT_MEDIUM_THRESHOLD = 180
 _IGNORED_NAMES = frozenset(
@@ -115,7 +115,6 @@ def _resolve_live_router_path(repo_root: Path) -> Path:
         repo_root / "core" / "INIT.md",
         repo_root / "core" / "HOME.md",
         repo_root / "HOME.md",
-        repo_root / "meta" / "quick-reference.md",
     ):
         if candidate.exists():
             return candidate

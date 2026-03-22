@@ -227,7 +227,6 @@ def build_minimal_repo(root: Path) -> None:
     )
     write(root / "core" / "governance" / "system-maturity.md", "# System maturity\n")
     write(root / "core" / "governance" / "belief-diff-log.md", "# Belief diff log\n")
-    write(root / "core" / "governance" / "integrity-checklist.md", "# Integrity checklist\n")
 
     write(root / "core" / "memory" / "users" / "ACCESS.jsonl", "")
     write(root / "core" / "memory" / "knowledge" / "ACCESS.jsonl", "")
