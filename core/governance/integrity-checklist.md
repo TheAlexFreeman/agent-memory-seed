@@ -10,4 +10,6 @@ Advisory checklist for humans or agents to run periodically (e.g. during or befo
 
 4. **System-change architecture fit** — For recent edits to `core/governance/`, `README.md`, `core/memory/skills/`, setup flows, or validator contracts, confirm the operating contract is still consistent across docs and tooling, the user-facing workflow remains understandable and low-friction, and the compact returning path plus context-budget guidance have not regressed. Flag duplicated rules, confusing approval flows, or new mandatory reads without clear benefit.
 
+5. **HUMANS/docs alignment** — Verify that `HUMANS/docs/CORE.md`, `HUMANS/docs/DESIGN.md`, and other human-facing documentation still reflect the current governance rules, directory layout, and operational contracts. Flag any descriptions that have drifted from the live system.
+
 This checklist is advisory. The repository owner decides whether and how often to run it; the agent may run it as part of periodic review and report findings without automatically applying changes.
