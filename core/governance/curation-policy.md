@@ -34,7 +34,7 @@ Memories that are stale, contradicted, or consistently unhelpful are: **Demoted*
 
 ## Access-driven curation
 
-ACCESS-driven curation applies to the retrievable memory namespaces under `core/memory/` (`users/`, `knowledge/`, `skills/`, `working/projects/`, and `activity/`). `core/governance/` is the governance layer and is not part of the ACCESS lifecycle for now.
+ACCESS-driven curation applies to the access-tracked memory namespaces (listed in `core/HOME.md`). `core/governance/` is the governance layer and is not part of the ACCESS lifecycle for now.
 
 The ACCESS.jsonl feedback loop is the primary curation signal:
 

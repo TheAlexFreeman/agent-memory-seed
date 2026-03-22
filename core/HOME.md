@@ -40,6 +40,8 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 
 ### Compact returning notes
 
+**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/working/projects/`, and `core/memory/activity/`. `core/governance/` is **not** part of the ACCESS lifecycle.
+
 - Run metadata-first maintenance probes before loading extra governance files.
 - Load `core/governance/review-queue.md` only when it has real entries or the user asks.
 - Count non-empty lines in `ACCESS.jsonl` files for access-tracked namespaces before loading heavier governance docs.
