@@ -283,7 +283,9 @@ class SetupFlowTests(unittest.TestCase):
             ).stdout.strip()
             self.assertEqual("agent-memory", branch_name)
 
-            profile_text = (worktree_root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
+            profile_text = (worktree_root / "memory" / "users" / "profile.md").read_text(
+                encoding="utf-8"
+            )
             projects_summary = (worktree_root / "projects" / "SUMMARY.md").read_text(
                 encoding="utf-8"
             )

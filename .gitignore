@@ -26,6 +26,9 @@ __pycache__/
 
 # Windows reserved name (accidental creation)
 nul
+# Setuptools build files
+*.egg-info/
+=*
 
 # Do not ignore ACCESS.jsonl files — they are part of the system
 # Do not ignore any .md files — they are the system

@@ -659,7 +659,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             memory_root = Path(tempdir) / "memory"
             host_root.mkdir(parents=True, exist_ok=True)
             build_worktree_repo(host_root, memory_root)
-            add_host_repo_root(memory_root / "agent-bootstrap.toml", memory_root / "core" / "memory" / "knowledge")
+            add_host_repo_root(
+                memory_root / "agent-bootstrap.toml", memory_root / "core" / "memory" / "knowledge"
+            )
 
             result = validator.validate_repo(memory_root)
             self.assertTrue(
@@ -823,9 +825,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertIn("status", report)
         self.assertIn("total_tokens", report)
         self.assertIn("files", report)
-        self.assertTrue(
-            any(entry["path"] == "core/HOME.md" for entry in report["files"])
-        )
+        self.assertTrue(any(entry["path"] == "core/HOME.md" for entry in report["files"]))
         self.assertEqual(
             report["budget_limit"],
             validator.COMPACT_RETURNING_BUDGET,
@@ -900,7 +900,10 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
 
             self.assertFalse(
-                any(warning.startswith("CoverageGap: core/memory/skills/") for warning in result.warnings)
+                any(
+                    warning.startswith("CoverageGap: core/memory/skills/")
+                    for warning in result.warnings
+                )
             )
 
     def test_invalid_source_fails(self) -> None:
@@ -1441,7 +1444,13 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "core" / "memory" / "knowledge" / "_unverified" / "system-notes" / "incident.md",
+                root
+                / "core"
+                / "memory"
+                / "knowledge"
+                / "_unverified"
+                / "system-notes"
+                / "incident.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1471,7 +1480,12 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "core" / "memory" / "knowledge" / "_unverified" / "brainstorm-pwr-protocol.md",
+                root
+                / "core"
+                / "memory"
+                / "knowledge"
+                / "_unverified"
+                / "brainstorm-pwr-protocol.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1673,7 +1687,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             "For normal returning sessions, follow the compact returning manifest in `core/HOME.md`",
             text,
         )
-        self.assertIn("core/memory/working/projects/SUMMARY.md` as the primary orientation surface", text)
+        self.assertIn(
+            "core/memory/working/projects/SUMMARY.md` as the primary orientation surface", text
+        )
         self.assertIn(
             "Load `core/governance/session-checklists.md` only when you want more detail",
             text,
