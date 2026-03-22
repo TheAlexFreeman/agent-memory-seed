@@ -221,6 +221,33 @@ python HUMANS/tooling/scripts/validate_memory_repo.py
 
 This optional check validates frontmatter, ACCESS.jsonl structure, and runtime-guidance consistency. The repository still works even if you never run it.
 
+### Optional pre-commit setup
+
+If you want local checks to run automatically before each commit:
+
+```bash
+python -m pip install -e ".[dev]"
+pre-commit install
+```
+
+This repo's [.pre-commit-config.yaml](../../.pre-commit-config.yaml) runs:
+
+- `python -m ruff check HUMANS/tooling/scripts/ HUMANS/tooling/tests/ core/tools/`
+- `python -m ruff format --check HUMANS/tooling/scripts/ HUMANS/tooling/tests/ core/tools/`
+- `python HUMANS/tooling/scripts/validate_memory_repo.py`
+
+Recommended branch workflow:
+
+- Run `pre-commit run --all-files` before pushing a branch.
+- Run it again before opening a pull request if you have made additional changes.
+- GitHub Actions uses the same `python -m pre_commit run --all-files` gate before running the broader test suite.
+
+To run the same checks manually across the whole repo:
+
+```bash
+pre-commit run --all-files
+```
+
 ---
 
 ## FAQ

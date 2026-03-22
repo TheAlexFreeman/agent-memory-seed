@@ -25,6 +25,7 @@ server = ["mcp>=1.0", "python-frontmatter>=1.1", "PyYAML>=6.0"]
 
 # Install with: pip install -e ".[dev]"
 dev = [
+    "pre-commit>=3.7",
     "pytest>=8.0",
     "ruff>=0.4",
     "mcp>=1.0",

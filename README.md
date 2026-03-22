@@ -28,6 +28,34 @@ When reviewing or modifying the memory system itself — governance rules, routi
 
 Agents proposing or evaluating system-level changes should explain the impact on all three dimensions and call out explicit tradeoffs when one improves at another's expense.
 
+## Contributor tooling
+
+For a consistent cross-platform editing and validation loop, this repo standardizes on Ruff for Python formatting and linting and includes a repo-local pre-commit configuration.
+
+Recommended setup:
+
+```bash
+python -m pip install -e ".[dev]"
+pre-commit install
+```
+
+Available hooks:
+
+- `ruff check` for Python linting
+- `ruff format --check` for Python formatting enforcement
+- `validate_memory_repo.py` for memory-structure and frontmatter validation
+
+Branch workflow:
+
+- Run `pre-commit run --all-files` before pushing a branch or opening a pull request.
+- Treat `python -m pre_commit run --all-files` as the local equivalent of the main CI quality gate.
+
+To validate the full repo on demand before committing:
+
+```bash
+pre-commit run --all-files
+```
+
 ## How to orient yourself
 
 1. **Start here for the architecture and current startup contract.** This file explains how the system is organized and where live routing authority lives.

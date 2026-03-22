@@ -2259,8 +2259,12 @@ See [alpha](../alpha.md).
 **Priority:** normal
 **Status:** pending
 """
-                seed["memory/working/projects/a/plans/plan-a.yaml"] = "id: plan-a\nproject: a\ncreated: 2026-03-20\norigin_session: memory/activity/2026/03/20/chat-001\nstatus: active\npurpose:\n  summary: Plan A\n  context: Finish A\n  questions: []\nwork:\n  phases:\n    - id: phase-a\n      title: Do A\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/a/notes/do-a.md\n          action: create\n          description: Finish A.\nreview: null\n"
-                seed["memory/working/projects/b/plans/plan-b.yaml"] = "id: plan-b\nproject: b\ncreated: 2026-03-20\norigin_session: memory/activity/2026/03/20/chat-001\nstatus: active\npurpose:\n  summary: Plan B\n  context: Finish B\n  questions: []\nwork:\n  phases:\n    - id: phase-b\n      title: Do B\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/b/notes/do-b.md\n          action: create\n          description: Finish B.\nreview: null\n"
+        seed["memory/working/projects/a/plans/plan-a.yaml"] = (
+            "id: plan-a\nproject: a\ncreated: 2026-03-20\norigin_session: memory/activity/2026/03/20/chat-001\nstatus: active\npurpose:\n  summary: Plan A\n  context: Finish A\n  questions: []\nwork:\n  phases:\n    - id: phase-a\n      title: Do A\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/a/notes/do-a.md\n          action: create\n          description: Finish A.\nreview: null\n"
+        )
+        seed["memory/working/projects/b/plans/plan-b.yaml"] = (
+            "id: plan-b\nproject: b\ncreated: 2026-03-20\norigin_session: memory/activity/2026/03/20/chat-001\nstatus: active\npurpose:\n  summary: Plan B\n  context: Finish B\n  questions: []\nwork:\n  phases:\n    - id: phase-b\n      title: Do B\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/b/notes/do-b.md\n          action: create\n          description: Finish B.\nreview: null\n"
+        )
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
