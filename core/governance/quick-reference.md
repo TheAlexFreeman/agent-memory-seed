@@ -2,7 +2,7 @@
 
 This file is retained as a compatibility pointer for older workflows and search hits.
 
-Use `core/HOME.md` as the live routing authority for:
+Use `core/INIT.md` as the live routing authority for:
 
 - session routing
 - active thresholds
@@ -30,4 +30,4 @@ Current content namespaces:
 - `core/memory/working/`
 - `core/memory/activity/`
 
-If a platform or old prompt opens this file first, immediately switch to `core/HOME.md` and continue from there.
+If a platform or old prompt opens this file first, immediately switch to `core/INIT.md` and continue from there.

@@ -92,7 +92,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
 
 
 def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
-    """Try to read low/medium trust thresholds from HOME.md."""
+    """Try to read low/medium trust thresholds from core/INIT.md (or legacy HOME.md)."""
     qr_path = _resolve_live_router_path(repo_root)
     if not qr_path.exists():
         return _DEFAULT_LOW_THRESHOLD, _DEFAULT_MEDIUM_THRESHOLD
@@ -112,13 +112,14 @@ def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
 def _resolve_live_router_path(repo_root: Path) -> Path:
     """Return the current live router path, falling back to legacy locations."""
     for candidate in (
+        repo_root / "core" / "INIT.md",
         repo_root / "core" / "HOME.md",
         repo_root / "HOME.md",
         repo_root / "meta" / "quick-reference.md",
     ):
         if candidate.exists():
             return candidate
-    return repo_root / "core" / "HOME.md"
+    return repo_root / "core" / "INIT.md"
 
 
 def _resolve_governance_path(repo_root: Path, relative_path: str) -> Path:
@@ -531,7 +532,7 @@ def _path_policy_state(root: Path, rel_path: str | None) -> dict[str, Any]:
         "Inform only" in curation_policy_text and "never instruct" in curation_policy_text.lower()
     )
 
-    if normalized in {"HOME.md", "README.md", "CHANGELOG.md"} or (
+    if normalized in {"INIT.md", "HOME.md", "README.md", "CHANGELOG.md"} or (
         normalized.startswith("governance/") and meta_protected
     ):
         protected_surface = True

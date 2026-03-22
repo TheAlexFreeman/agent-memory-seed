@@ -1724,11 +1724,11 @@ declared_gaps = []
 
     def test_memory_get_policy_state_flags_protected_meta_surface(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["core/HOME.md"] = "# Home\n"
+        seed["core/INIT.md"] = "# Init\n"
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
-        payload = json.loads(asyncio.run(tools["memory_get_policy_state"](path="HOME.md")))
+        payload = json.loads(asyncio.run(tools["memory_get_policy_state"](path="INIT.md")))
 
         self.assertEqual(payload["change_class"], "protected")
         self.assertTrue(payload["path_policy"]["protected_surface"])
@@ -2221,7 +2221,7 @@ See [alpha](../alpha.md).
 
     def test_memory_session_bootstrap_compacts_active_plans_and_review_items(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["HOME.md"] = """# Quick Reference
+        seed["core/INIT.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2290,7 +2290,7 @@ Checklist:
 
     def test_memory_prepare_unverified_review_truncates_selected_files(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["HOME.md"] = """# Quick Reference
+        seed["core/INIT.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2340,7 +2340,7 @@ delta epsilon zeta
 
     def test_memory_prepare_unverified_review_paths_only_returns_full_path_list(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["HOME.md"] = """# Quick Reference
+        seed["core/INIT.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2393,7 +2393,7 @@ trust: low
 
     def test_memory_prepare_promotion_batch_returns_candidates_and_operation_hint(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["HOME.md"] = """# Quick Reference
+        seed["core/INIT.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2439,7 +2439,7 @@ trust: low
 
     def test_memory_prepare_promotion_batch_prefers_subtree_for_nested_folder(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["HOME.md"] = """# Quick Reference
+        seed["core/INIT.md"] = """# Quick Reference
 
 ## Last periodic review
 
@@ -2486,7 +2486,7 @@ trust: low
     def test_memory_prepare_periodic_review_compacts_deferred_targets(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/INIT.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -2973,7 +2973,7 @@ Detailed descriptions should preserve the first paragraph.
                 tools["memory_edit"](
                     path="agent-bootstrap.toml",
                     old_string="README.md",
-                    new_string="HOME.md",
+                    new_string="core/INIT.md",
                 )
             )
 
@@ -5409,7 +5409,7 @@ next_action: Original next action
     def test_memory_audit_trust_flags_overdue_frontmatterless_file(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5431,7 +5431,7 @@ next_action: Original next action
     def test_memory_audit_trust_skips_recent_frontmatterless_file_from_overdue(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5454,7 +5454,7 @@ next_action: Original next action
     def test_memory_audit_trust_reports_approaching_bucket_before_upcoming_window(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5481,7 +5481,7 @@ next_action: Original next action
     def test_memory_audit_trust_keeps_upcoming_items_out_of_approaching(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5505,7 +5505,7 @@ next_action: Original next action
     def test_memory_audit_trust_rejects_invalid_warn_pct(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5520,7 +5520,7 @@ next_action: Original next action
     def test_memory_audit_trust_reports_untracked_frontmatterless_file_as_unevaluable(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5550,12 +5550,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "HOME.md"\n'
+                    'router = "core/INIT.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "HOME.md": "# Quick Reference\n",
+                "core/INIT.md": "# Quick Reference\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -5569,7 +5569,7 @@ next_action: Original next action
     def test_memory_git_log_default_behavior_includes_recent_commits(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "# Quick Reference\n",
+                "core/INIT.md": "# Quick Reference\n",
                 "memory/users/profile.md": "# Profile\n",
                 "memory/working/projects/demo.md": "# Demo\n",
             },
@@ -5599,7 +5599,7 @@ next_action: Original next action
     def test_memory_git_log_filters_by_since_with_truncation_flag(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "# Quick Reference\n",
+                "core/INIT.md": "# Quick Reference\n",
                 "memory/users/profile.md": "# Profile\n",
                 "memory/working/projects/demo.md": "# Demo\n",
             },
@@ -5628,7 +5628,7 @@ next_action: Original next action
     def test_memory_git_log_filters_by_path_and_since(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "# Quick Reference\n",
+                "core/INIT.md": "# Quick Reference\n",
                 "memory/users/profile.md": "# Profile\n",
                 "memory/working/projects/demo.md": "# Demo\n",
             },
@@ -5664,7 +5664,7 @@ next_action: Original next action
         self.assertFalse(payload[0]["truncated"])
 
     def test_memory_git_log_rejects_invalid_since(self) -> None:
-        repo_root = self._init_repo({"HOME.md": "# Quick Reference\n"})
+        repo_root = self._init_repo({"core/INIT.md": "# Quick Reference\n"})
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
@@ -5675,12 +5675,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "HOME.md"\n'
+                    'router = "core/INIT.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     'host_repo_root = "./nested-host"\n'
                 ),
-                "HOME.md": "# Quick Reference\n",
+                "core/INIT.md": "# Quick Reference\n",
             }
         )
         nested_host = repo_root / "nested-host"
@@ -5713,12 +5713,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "HOME.md"\n'
+                    'router = "core/INIT.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5752,7 +5752,7 @@ next_action: Original next action
     def test_memory_check_knowledge_freshness_returns_unknown_without_host_repo(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "# Quick Reference\n",
+                "core/INIT.md": "# Quick Reference\n",
                 "memory/knowledge/app.md": (
                     "---\n"
                     "trust: medium\n"
@@ -5799,12 +5799,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "HOME.md"\n'
+                    'router = "core/INIT.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5851,12 +5851,12 @@ next_action: Original next action
             {
                 "agent-bootstrap.toml": (
                     "version = 1\n"
-                    'router = "HOME.md"\n'
+                    'router = "core/INIT.md"\n'
                     'default_mode = "returning"\n'
                     'adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]\n'
                     f'host_repo_root = "{host_root.as_posix()}"\n'
                 ),
-                "HOME.md": (
+                "core/INIT.md": (
                     "Low-trust retirement threshold | 120-day\n"
                     "Medium-trust flagging threshold | 180-day\n"
                 ),
@@ -5891,7 +5891,7 @@ next_action: Original next action
     def test_memory_check_aggregation_triggers_reports_above_and_near_thresholds(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "core/INIT.md": "| Aggregation trigger | 15 entries | Exploration |\n",
                 "memory/working/projects/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
@@ -5950,7 +5950,7 @@ next_action: Original next action
     def test_memory_check_aggregation_triggers_ignores_invalid_jsonl_lines(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "core/INIT.md": "| Aggregation trigger | 15 entries | Exploration |\n",
                 "memory/working/projects/ACCESS.jsonl": (
                     "not-json\n"
                     + json.dumps(
@@ -5978,7 +5978,7 @@ next_action: Original next action
     def test_memory_check_aggregation_triggers_ignores_meta_access_logs(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "core/INIT.md": "| Aggregation trigger | 15 entries | Exploration |\n",
                 "governance/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
@@ -6019,7 +6019,7 @@ next_action: Original next action
     def test_memory_session_health_check_reports_due_aggregation(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/INIT.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-03-19\n"
@@ -6062,7 +6062,7 @@ next_action: Original next action
     def test_memory_session_health_check_reports_periodic_review_overdue(self) -> None:
         repo_root = self._init_repo(
             {
-                "core/HOME.md": (
+                "core/INIT.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-01-01\n"
@@ -6081,7 +6081,7 @@ next_action: Original next action
     def test_memory_session_health_check_counts_only_pending_review_queue_items(self) -> None:
         repo_root = self._init_repo(
             {
-                "core/HOME.md": (
+                "core/INIT.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-03-19\n"
@@ -6117,7 +6117,7 @@ next_action: Original next action
     def test_memory_aggregate_access_reports_high_low_and_clusters(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "core/INIT.md": "| Aggregation trigger | 15 entries | Exploration |\n",
                 "memory/working/projects/ACCESS.jsonl": "".join(
                     [
                         json.dumps(
@@ -6195,7 +6195,7 @@ next_action: Original next action
     def test_memory_aggregate_access_ignores_meta_access_logs(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "core/INIT.md": "| Aggregation trigger | 15 entries | Exploration |\n",
                 "governance/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
@@ -6236,7 +6236,7 @@ next_action: Original next action
     def test_memory_aggregate_access_filters_by_folder_date_and_helpfulness(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": "| Aggregation trigger | 15 entries | Exploration |\n",
+                "core/INIT.md": "| Aggregation trigger | 15 entries | Exploration |\n",
                 "memory/working/projects/ACCESS.jsonl": "".join(
                     [
                         json.dumps(
@@ -6299,7 +6299,7 @@ next_action: Original next action
     def test_memory_run_periodic_review_recommends_stage_transition(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/INIT.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6444,14 +6444,14 @@ Skill sync.
         self.assertEqual(maturity["recommended_stage"], "Calibration")
         self.assertTrue(maturity["transition_recommended"])
         self.assertIn(
-            "HOME.md",
+            "core/INIT.md",
             payload["proposed_outputs"]["deferred_write_targets"],
         )
 
     def test_memory_run_periodic_review_collects_review_findings(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/INIT.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6590,7 +6590,7 @@ Topic A.
     def test_memory_run_periodic_review_handles_missing_session_ids_on_same_date(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/INIT.md": """# Quick Reference
 
 ## Current active stage: Exploration
 
@@ -6853,7 +6853,7 @@ Initial note.
     def test_memory_record_periodic_review_updates_meta_outputs(self) -> None:
         repo_root = self._init_repo(
             {
-                "core/HOME.md": """# Home
+                "core/INIT.md": """# Home
 
 ## Current active stage: Exploration
 
@@ -6901,7 +6901,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
         )
         payload = json.loads(raw)
 
-        quick_reference = (repo_root / "core" / "HOME.md").read_text(encoding="utf-8")
+        quick_reference = (repo_root / "core" / "INIT.md").read_text(encoding="utf-8")
         belief_diff = (repo_root / "core" / "governance" / "belief-diff-log.md").read_text(
             encoding="utf-8"
         )
@@ -6924,7 +6924,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
     def test_memory_record_periodic_review_updates_stage_thresholds(self) -> None:
         repo_root = self._init_repo(
             {
-                "core/HOME.md": """# Home
+                "core/INIT.md": """# Home
 
 ## Current active stage: Exploration
 
@@ -6966,7 +6966,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
             )
         )
 
-        quick_reference = (repo_root / "core" / "HOME.md").read_text(encoding="utf-8")
+        quick_reference = (repo_root / "core" / "INIT.md").read_text(encoding="utf-8")
         self.assertIn("## Current active stage: Calibration", quick_reference)
         self.assertIn(
             "| Aggregation trigger | 20 entries | Calibration |",
@@ -6981,7 +6981,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
     def test_memory_record_periodic_review_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "core/HOME.md": """# Home
+                "core/INIT.md": """# Home
 
 ## Current active stage: Exploration
 
@@ -7011,7 +7011,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
             }
         )
         tools = self._create_tools(repo_root)
-        quick_reference_before = (repo_root / "core" / "HOME.md").read_text(encoding="utf-8")
+        quick_reference_before = (repo_root / "core" / "INIT.md").read_text(encoding="utf-8")
 
         preview = json.loads(
             asyncio.run(
@@ -7026,7 +7026,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
         )
 
         self.assertEqual(
-            (repo_root / "core" / "HOME.md").read_text(encoding="utf-8"),
+            (repo_root / "core" / "INIT.md").read_text(encoding="utf-8"),
             quick_reference_before,
         )
         self.assertEqual(preview["preview"]["mode"], "preview")
@@ -7044,7 +7044,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
         self.assertIn(
             "**Date:** 2026-03-19",
-            (repo_root / "core" / "HOME.md").read_text(encoding="utf-8"),
+            (repo_root / "core" / "INIT.md").read_text(encoding="utf-8"),
         )
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
         self.assertEqual(

@@ -1,6 +1,6 @@
 # Curation Algorithms
 
-**Load this file only when running ACCESS.jsonl aggregation or a stage transition.** It is not needed during normal sessions. For active thresholds and the current task similarity method, see `core/HOME.md`.
+**Load this file only when running ACCESS.jsonl aggregation or a stage transition.** It is not needed during normal sessions. For active thresholds and the current task similarity method, see `core/INIT.md`.
 
 This document contains the full algorithmic specifications for task similarity detection, cluster identification, and category vocabulary emergence. These algorithms progress through three phases aligned with the system's maturity stages.
 
@@ -100,7 +100,7 @@ At the Calibration → Consolidation transition, the agent backfills `category` 
 | Calibration   | 3 sessions | Same threshold, but finer task-group scoping reduces false positives |
 | Consolidation | 4 sessions | Higher bar appropriate for cleaner category-based signal             |
 
-The active threshold is recorded in `core/HOME.md`.
+The active threshold is recorded in `core/INIT.md`.
 
 ## Aggregation runbook
 
@@ -108,8 +108,8 @@ Concrete steps for running ACCESS.jsonl aggregation. This procedure applies at a
 
 ### Prerequisites
 
-- At least one `ACCESS.jsonl` file has reached the active aggregation trigger (see `core/HOME.md`).
-- You have loaded this file and `core/HOME.md`.
+- At least one `ACCESS.jsonl` file has reached the active aggregation trigger (see `core/INIT.md`).
+- You have loaded this file and `core/INIT.md`.
 
 ### Procedure
 
@@ -128,4 +128,4 @@ Concrete steps for running ACCESS.jsonl aggregation. This procedure applies at a
 ### Post-aggregation
 
 - If aggregation revealed files needing retirement, add entries to `core/governance/review-queue.md`.
-- If a maturity stage transition is indicated, follow the transition procedure in `core/governance/system-maturity.md` and update `core/HOME.md`.
+- If a maturity stage transition is indicated, follow the transition procedure in `core/governance/system-maturity.md` and update `core/INIT.md`.

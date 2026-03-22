@@ -107,7 +107,7 @@ EXPECTED_BOOTSTRAP_PREFER_SUMMARIES = {
     "automation": True,
 }
 EXPECTED_RETURNING_STEP_PATHS = (
-    "core/HOME.md",
+    "core/INIT.md",
     "core/memory/working/projects/SUMMARY.md",
     "core/memory/users/SUMMARY.md",
     "core/memory/activity/SUMMARY.md",
@@ -116,12 +116,12 @@ EXPECTED_RETURNING_STEP_PATHS = (
 )
 EXPECTED_FIRST_RUN_STEP_PATHS = (
     "README.md",
-    "core/HOME.md",
+    "core/INIT.md",
     "core/governance/first-run.md",
 )
 EXPECTED_FULL_BOOTSTRAP_STEP_PATHS = (
     "README.md",
-    "core/HOME.md",
+    "core/INIT.md",
     "core/memory/working/projects/SUMMARY.md",
     "core/memory/users/SUMMARY.md",
     "core/memory/activity/SUMMARY.md",
@@ -144,7 +144,7 @@ DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS = tuple(
     path for path in EXPECTED_PERIODIC_REVIEW_STEP_PATHS if path != "CHANGELOG.md"
 )
 EXPECTED_AUTOMATION_STEP_PATHS = (
-    "core/HOME.md",
+    "core/INIT.md",
     "core/memory/working/scratchpad/USER.md",
     "core/memory/working/scratchpad/CURRENT.md",
     "core/memory/working/projects/SUMMARY.md",
@@ -180,7 +180,7 @@ EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
 }
 COMPACT_RETURNING_BUDGET = EXPECTED_BOOTSTRAP_TOKEN_BUDGETS["returning"]
 COMPACT_RETURNING_TARGETS = {
-    "core/HOME.md": 2600,
+    "core/INIT.md": 2600,
     "core/memory/users/SUMMARY.md": 450,
     "core/memory/activity/SUMMARY.md": 750,
     "core/memory/working/projects/SUMMARY.md": 1700,
@@ -260,7 +260,7 @@ ALLOWED_TASK_READINESS_FAILURE_MODES = {
 RUNTIME_GUIDANCE_FILES = (
     Path("README.md"),
     Path("HUMANS/docs/QUICKSTART.md"),
-    Path("core/HOME.md"),
+    Path("core/INIT.md"),
     Path("core/governance/curation-policy.md"),
     Path("core/governance/update-guidelines.md"),
     Path("core/governance/session-checklists.md"),
@@ -291,15 +291,15 @@ LEGACY_MCP_ENTRYPOINT = Path("HUMANS/tooling/scripts/memory_mcp.py")
 LEGACY_MCP_RUNTIME_DIR_V2 = Path("engram_mcp")
 LEGACY_MCP_ENTRYPOINT_V2 = Path("engram_mcp/memory_mcp.py")
 
-PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules."
-PROMPT_ROUTE_LINE = "Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path."
+PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules."
+PROMPT_ROUTE_LINE = "Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path."
 PROMPT_MCP_LINE = "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-LIVE_CONFIG_LINE = "core/HOME.md is the live runtime config; do not use hardcoded thresholds."
-ADAPTER_ROUTING_PHRASE = "Start with `README.md` for the architectural contract, then continue to `core/HOME.md` for live routing and thresholds"
+LIVE_CONFIG_LINE = "core/INIT.md is the live runtime config; do not use hardcoded thresholds."
+ADAPTER_ROUTING_PHRASE = "Start with `README.md` for the architectural contract, then continue to `core/INIT.md` for live routing and thresholds"
 ADAPTER_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes"
 README_START_PHRASE = "Start new sessions from this `README.md` unless a platform or tool opens a more specific surface for you."
 README_ARCHITECTURE_PHRASE = (
-    "continue to `core/HOME.md` for live routing, active thresholds, and maintenance triggers"
+    "continue to `core/INIT.md` for live routing, active thresholds, and maintenance triggers"
 )
 MCP_PREFERENCE_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 QUICK_REFERENCE_ROUTER_PHRASE = "Use this file as the live operational router once you reach it:"
@@ -312,12 +312,12 @@ SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available
 SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load on demand"
 SETUP_GUIDANCE_REQUIRED_PATTERNS = (
-    r"live routing (?:in|from)\s+`?core/HOME\.md`?",
+    r"live routing (?:in|from)\s+`?core/INIT\.md`?",
 )
 SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
 SESSION_START_SKILL_PATH = Path("core/memory/skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
-    "compact returning manifest in `core/HOME.md`",
+    "compact returning manifest in `core/INIT.md`",
     "Load `core/governance/session-checklists.md` only when you want more detail",
     "If `core/governance/review-queue.md` still contains only its placeholder, skip it.",
     "Load it only when there are real pending items or the user asks about them.",
@@ -1160,8 +1160,8 @@ def validate_agent_bootstrap_manifest(root: Path, result: ValidationResult) -> N
         result.error(f"{path}: version must be 1, got {version!r}")
 
     router = manifest.get("router")
-    if router != "core/HOME.md":
-        result.error(f"{path}: router must be 'core/HOME.md', got {router!r}")
+    if router != "core/INIT.md":
+        result.error(f"{path}: router must be 'core/INIT.md', got {router!r}")
     elif not (root / router).exists():
         result.error(f"{path}: router target {router!r} does not exist")
 
@@ -1497,7 +1497,7 @@ def validate_task_readiness_manifest(root: Path, result: ValidationResult) -> No
 
 
 def validate_quick_reference(root: Path, result: ValidationResult) -> None:
-    path = root / "core" / "HOME.md"
+    path = root / "core" / "INIT.md"
     text = read_text(path, result)
     if text is None:
         return
@@ -1649,8 +1649,8 @@ def validate_adapter_routing(root: Path, result: ValidationResult) -> None:
         text = read_text(path, result)
         if text is None:
             continue
-        if "core/HOME.md" not in text:
-            result.error(f"{path}: must point agents to core/HOME.md")
+        if "core/INIT.md" not in text:
+            result.error(f"{path}: must point agents to core/INIT.md")
         if ADAPTER_ROUTING_PHRASE not in text:
             result.error(f"{path}: missing adapter routing phrase {ADAPTER_ROUTING_PHRASE!r}")
         if ADAPTER_MCP_PHRASE not in text:
@@ -1727,7 +1727,7 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
                 f"{root / 'core' / 'governance' / 'session-checklists.md'}: missing on-demand guidance"
             )
 
-    # MCP preference is centralized in core/HOME.md (checked in validate_quick_reference);
+    # MCP preference is centralized in core/INIT.md (checked in validate_quick_reference);
     # individual files no longer need their own copy.
 
     session_start = root / SESSION_START_SKILL_PATH

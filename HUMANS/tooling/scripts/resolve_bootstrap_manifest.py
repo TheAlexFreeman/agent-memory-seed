@@ -783,19 +783,26 @@ def resolve_startup(
     active_override: str | None = user_override
     if user_override == "full_bootstrap":
         full_bootstrap = True
+        mode_source = "user_override"
     elif user_override == "compact_only":
         requested_mode = "returning"
+        mode_source = "user_override"
 
     manifest = read_manifest(repo_root)
-    mode, mode_source = detect_mode(
-        repo_root,
-        manifest,
-        requested_mode=requested_mode,
-        automation=automation,
-        periodic_review=periodic_review,
-        fresh_instantiation=fresh_instantiation,
-        full_bootstrap=full_bootstrap,
-    )
+    if user_override == "full_bootstrap":
+        mode = "full_bootstrap"
+    elif user_override == "compact_only":
+        mode = "returning"
+    else:
+        mode, mode_source = detect_mode(
+            repo_root,
+            manifest,
+            requested_mode=requested_mode,
+            automation=automation,
+            periodic_review=periodic_review,
+            fresh_instantiation=fresh_instantiation,
+            full_bootstrap=full_bootstrap,
+        )
 
     if mode not in EXPECTED_MODES:
         raise ValueError(f"Unsupported mode {mode!r}")

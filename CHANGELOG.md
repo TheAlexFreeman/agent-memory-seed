@@ -16,6 +16,20 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-03-21] Router file renamed: core/HOME.md → core/INIT.md
+
+**Changed:**
+
+- **Router file renamed.** `core/HOME.md` → `core/INIT.md` to better reflect its role as session initialization and routing authority.
+- **Documentation and tooling updated.** All references to `core/HOME.md` across README, AGENTS.md, CLAUDE.md, .cursorrules, agent-bootstrap.toml, governance docs, HUMANS/docs, setup scripts, validator, capabilities manifest, and Python tools/tests updated to `core/INIT.md`.
+- **Legacy fallback retained.** Session tools and read tools still resolve `core/HOME.md` and root `HOME.md` as fallbacks for backward compatibility.
+
+**Reasoning:** "INIT" more clearly signals the file's purpose as the session initialization and live-routing entry point.
+
+**Approved by:** user
+
+---
+
 ## [2026-07-24] MCP server relocated to core/tools/
 
 **Changed:**

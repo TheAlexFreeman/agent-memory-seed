@@ -1087,7 +1087,7 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "system"
 writes = [
-  "HOME.md",
+  "INIT.md",
   "governance/belief-diff-log.md",
   "governance/review-queue.md",
 ]

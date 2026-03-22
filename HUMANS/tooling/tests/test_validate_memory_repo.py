@@ -45,10 +45,10 @@ SESSION_SYNC_SKILL_MCP_LINE = validator.SESSION_SYNC_SKILL_MCP_PHRASE
 SESSION_WRAPUP_SKILL_MCP_LINE = validator.SESSION_WRAPUP_SKILL_MCP_PHRASE
 README_START_LINE = validator.README_START_PHRASE
 README_ARCHITECTURE_LINE = validator.README_ARCHITECTURE_PHRASE
-SETUP_GUIDANCE_LINE = "live routing in `core/HOME.md`"
+SETUP_GUIDANCE_LINE = "live routing in `core/INIT.md`"
 
 
-VALID_QUICK_REFERENCE = (REPO_ROOT / "core" / "HOME.md").read_text(encoding="utf-8")
+VALID_QUICK_REFERENCE = (REPO_ROOT / "core" / "INIT.md").read_text(encoding="utf-8")
 
 VALID_BOOTSTRAP_MANIFEST = (REPO_ROOT / "agent-bootstrap.toml").read_text(encoding="utf-8")
 
@@ -185,7 +185,7 @@ def build_minimal_repo(root: Path) -> None:
             | Session mode | Typical token cost | When |
             | --- | --- | --- |
             | First-run onboarding bootstrap | ~15,000–20,000 | Fresh model instantiation on a blank or template-backed repo |
-            | Returning compact session | ~3,000–7,000 | Normal day-to-day use via the compact returning manifest in `core/HOME.md` |
+            | Returning compact session | ~3,000–7,000 | Normal day-to-day use via the compact returning manifest in `core/INIT.md` |
             | Full bootstrap / periodic review | ~18,000–25,000 | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
             """
         ),
@@ -201,14 +201,14 @@ def build_minimal_repo(root: Path) -> None:
         ),
     )
 
-    write(root / "core" / "HOME.md", VALID_QUICK_REFERENCE)
+    write(root / "core" / "INIT.md", VALID_QUICK_REFERENCE)
     write(
         root / "core" / "governance" / "first-run.md",
         "# First run\n",
     )
     write(
         root / "core" / "governance" / "curation-policy.md",
-        "# Curation Policy\nUse `core/HOME.md` for live thresholds.\n",
+        "# Curation Policy\nUse `core/INIT.md` for live thresholds.\n",
     )
     write(
         root / "core" / "governance" / "update-guidelines.md",
@@ -218,7 +218,7 @@ def build_minimal_repo(root: Path) -> None:
         root / "core" / "governance" / "session-checklists.md",
         (
             "# Session checklists\n"
-            "Load on demand when you need more detail than the compact manifest in `core/HOME.md`.\n\n"
+            "Load on demand when you need more detail than the compact manifest in `core/INIT.md`.\n\n"
         ),
     )
     write(
@@ -628,7 +628,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             write(
                 root / "agent-bootstrap.toml",
                 VALID_BOOTSTRAP_MANIFEST.replace(
-                    'router = "core/HOME.md"',
+                    'router = "core/INIT.md"',
                     'router = "README.md"',
                     1,
                 ),
@@ -636,7 +636,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
             result = validator.validate_repo(root)
             self.assertTrue(
-                any("router must be 'core/HOME.md'" in error for error in result.errors)
+                any("router must be 'core/INIT.md'" in error for error in result.errors)
             )
 
     def test_bootstrap_manifest_with_wrong_returning_order_fails(self) -> None:
@@ -875,7 +875,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         self.assertIn("status", report)
         self.assertIn("total_tokens", report)
         self.assertIn("files", report)
-        self.assertTrue(any(entry["path"] == "core/HOME.md" for entry in report["files"]))
+        self.assertTrue(any(entry["path"] == "core/INIT.md" for entry in report["files"]))
         self.assertEqual(
             report["budget_limit"],
             validator.COMPACT_RETURNING_BUDGET,
@@ -1298,9 +1298,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     trust: high
                     ---
 
-                    For normal returning sessions, follow the compact returning manifest in `core/HOME.md`. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
+                    For normal returning sessions, follow the compact returning manifest in `core/INIT.md`. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
 
-                    Run at the beginning of returning sessions after the compact returning manifest in `core/HOME.md` has oriented the agent.
+                    Run at the beginning of returning sessions after the compact returning manifest in `core/INIT.md` has oriented the agent.
 
                     - Use metadata-first maintenance checks. If `core/governance/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them.
                     """
@@ -1739,7 +1739,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             REPO_ROOT / ".cursorrules",
         ):
             text = path.read_text(encoding="utf-8")
-            self.assertIn("core/HOME.md", text)
+            self.assertIn("core/INIT.md", text)
             self.assertIn(ADAPTER_ROUTING_LINE, text)
             self.assertNotIn("follow the bootstrap sequence and rules in README.md", text)
 
@@ -1775,7 +1775,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
 
         self.assertIn(
-            "For normal returning sessions, follow the compact returning manifest in `core/HOME.md`",
+            "For normal returning sessions, follow the compact returning manifest in `core/INIT.md`",
             text,
         )
         self.assertIn(
@@ -1834,7 +1834,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
 
     def test_compact_manifest_excludes_readme_and_session_checklists(self) -> None:
-        quick_reference = (REPO_ROOT / "core" / "HOME.md").read_text(encoding="utf-8")
+        quick_reference = (REPO_ROOT / "core" / "INIT.md").read_text(encoding="utf-8")
         compact_row = validator.extract_manifest_row(quick_reference, "Compact returning")
 
         assert compact_row is not None
@@ -1857,7 +1857,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         for path in (
             REPO_ROOT / "README.md",
             REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md",
-            REPO_ROOT / "core" / "HOME.md",
+            REPO_ROOT / "core" / "INIT.md",
         ):
             text = path.read_text(encoding="utf-8")
             for phrase in required_phrases:
@@ -1865,7 +1865,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
     def test_seed_compact_context_budget_fits_published_upper_bound(self) -> None:
         compact_paths = [
-            REPO_ROOT / "core" / "HOME.md",
+            REPO_ROOT / "core" / "INIT.md",
             REPO_ROOT / "core" / "memory" / "users" / "SUMMARY.md",
             REPO_ROOT / "core" / "memory" / "working" / "projects" / "SUMMARY.md",
             REPO_ROOT / "core" / "memory" / "working" / "scratchpad" / "USER.md",

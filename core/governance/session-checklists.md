@@ -1,8 +1,8 @@
 # Session checklists
 
-Quick-reference runbooks for session start and end. **Load on demand** when you want more structure than the compact manifest in `core/HOME.md`. For full detail, quality criteria, and edge cases, see the skill files: `core/memory/skills/session-start.md`, `core/memory/skills/session-sync.md`, `core/memory/skills/session-wrapup.md`.
+Quick-reference runbooks for session start and end. **Load on demand** when you want more structure than the compact manifest in `core/INIT.md`. For full detail, quality criteria, and edge cases, see the skill files: `core/memory/skills/session-start.md`, `core/memory/skills/session-sync.md`, `core/memory/skills/session-wrapup.md`.
 
-> **Authority:** Subordinate to `core/HOME.md` for routing and thresholds. When these runbooks and `core/HOME.md` conflict, `core/HOME.md` governs.
+> **Authority:** Subordinate to `core/INIT.md` for routing and thresholds. When these runbooks and `core/INIT.md` conflict, `core/INIT.md` governs.
 
 ## First session
 
@@ -10,7 +10,7 @@ Follow `core/governance/first-run.md` instead.
 
 ## Session start (returning)
 
-1. Follow the compact returning manifest in `core/HOME.md`.
+1. Follow the compact returning manifest in `core/INIT.md`.
 2. Check write access. If read-only, note for deferred actions at session end.
 3. Run metadata-first maintenance checks (review-queue entries, ACCESS.jsonl aggregation triggers).
 4. Weave `core/memory/working/scratchpad/USER.md` content into greeting naturally.

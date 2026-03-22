@@ -157,8 +157,8 @@ button {
 </head>
 <body>
 <main>
-<!-- Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules. -->
-<!-- Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path. -->
+<!-- Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules. -->
+<!-- Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path. -->
 <h1>Agent Memory System &#8212; Starter File Generator</h1>
 <p class="subtitle">Generate local starter files for your memory repo in three steps. Everything runs in your browser &#8212; nothing is sent anywhere, and git remote setup stays manual.</p>
 
@@ -413,11 +413,11 @@ button {
   var CHATGPT_INSTRUCTIONS = [
     'I have a persistent memory system stored as a git repository.',
     '',
-    'Start with `core/HOME.md` and follow its routing and context-loading rules.',
-    'Use the compact returning manifest for normal sessions. If `core/HOME.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.',
+    'Start with `core/INIT.md` and follow its routing and context-loading rules.',
+    'Use the compact returning manifest for normal sessions. If `core/INIT.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.',
     '',
     'Key rules:',
-    '- core/HOME.md is the live runtime config; do not use hardcoded thresholds.',
+    '- core/INIT.md is the live runtime config; do not use hardcoded thresholds.',
     '- If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.',
     '- The default repo-local runtime is semantic/governed MCP, and raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`.',
     '- If this platform cannot directly read or write repo files, do not claim that ACCESS logging or governed writes happened; defer them and report exactly what should be recorded.',
@@ -437,11 +437,11 @@ button {
     'core/memory/working/projects/ (multi-session roadmaps), core/memory/activity/ (conversation history), and core/governance/',
     '(governance rules).',
     '',
-    'Start with `core/HOME.md` and follow its routing and context-loading rules.',
-    'Use the compact returning manifest for normal sessions. If `core/HOME.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.',
+    'Start with `core/INIT.md` and follow its routing and context-loading rules.',
+    'Use the compact returning manifest for normal sessions. If `core/INIT.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.',
     '',
     'Key rules:',
-    '- core/HOME.md is the live runtime config; do not use hardcoded thresholds.',
+    '- core/INIT.md is the live runtime config; do not use hardcoded thresholds.',
     '- If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.',
     '- The default repo-local runtime is semantic/governed MCP, and raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`.',
     '- If this platform cannot directly read or write repo files, do not claim that ACCESS logging or governed writes happened; defer them and report exactly what should be recorded.',
@@ -673,10 +673,10 @@ button {
       addStep('Open the repo folder in Cursor and start a conversation.');
     } else if (selectedPlatform === 'chatgpt') {
       addStep('Paste the contents of chatgpt-instructions.txt into ChatGPT \u2192 Settings \u2192 Personalization \u2192 Custom Instructions.');
-      addStep('Start a conversation and share `core/HOME.md` plus whatever files it routes the agent to load.');
+      addStep('Start a conversation and share `core/INIT.md` plus whatever files it routes the agent to load.');
     } else if (selectedPlatform === 'generic') {
       addStep('Copy the contents of system-prompt.txt into your AI platform\u2019s system prompt.');
-      addStep('Start a conversation and share `core/HOME.md` plus whatever files it routes the agent to load.');
+      addStep('Start a conversation and share `core/INIT.md` plus whatever files it routes the agent to load.');
     } else {
       addStep('See HUMANS/docs/QUICKSTART.md for platform-specific instructions.');
     }

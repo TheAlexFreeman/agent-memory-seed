@@ -98,7 +98,9 @@ def _resolve_governance_rel(root: Path, relative_path: str) -> str:
 
 
 def _resolve_live_router_rel(root: Path) -> str:
-    """Prefer current core/HOME.md but keep legacy fallback support."""
+    """Prefer core/INIT.md, fall back to legacy core/HOME.md or root HOME.md."""
+    if (root / "core" / "INIT.md").exists():
+        return "core/INIT.md"
     if (root / "core" / "HOME.md").exists():
         return "core/HOME.md"
     if (root / "core" / "governance" / "quick-reference.md").exists():
@@ -1655,7 +1657,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         )
         if updated_quick_reference is None:
             raise ValidationError(
-                "Could not locate the 'Last periodic review' date block in HOME.md"
+                "Could not locate the 'Last periodic review' date block in the live router (core/INIT.md or core/HOME.md)"
             )
 
         current_stage_match = re.search(
@@ -1699,7 +1701,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             reasoning="Periodic-review recording is a protected governance write because it edits authoritative meta surfaces.",
             target_files=[preview_target(path, "update") for path in files_changed],
             invariant_effects=[
-                "Updates the last periodic review date and active-stage assessment in HOME.md.",
+                "Updates the last periodic review date and active-stage assessment in the live router (core/INIT.md or core/HOME.md).",
                 "Appends the belief-diff entry and any queued follow-up review items in one governed commit.",
             ],
             commit_message=commit_msg,

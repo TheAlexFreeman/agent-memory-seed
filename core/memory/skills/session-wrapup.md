@@ -44,7 +44,7 @@ If this session produced significant new knowledge, identity changes, or skill r
 
 ### 3. Check for system maintenance
 
-- If any ACCESS.jsonl has hit the aggregation trigger (see `core/HOME.md`), load `core/governance/curation-algorithms.md` and run aggregation now, or flag it for the next session start.
+- If any ACCESS.jsonl has hit the aggregation trigger (see `core/INIT.md`), load `core/governance/curation-algorithms.md` and run aggregation now, or flag it for the next session start.
 - If periodic review is overdue, add a reminder to `core/governance/review-queue.md`.
 
 ### 4. Produce deferred actions (if read-only)

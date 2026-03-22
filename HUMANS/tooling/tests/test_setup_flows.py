@@ -366,11 +366,11 @@ class SetupFlowTests(unittest.TestCase):
             host_cursor = (host_root / ".cursorrules").read_text(encoding="utf-8")
             worktree_agents = (worktree_root / "AGENTS.md").read_text(encoding="utf-8")
 
-            self.assertIn(".agent-memory/core/HOME.md", host_agents)
+            self.assertIn(".agent-memory/core/INIT.md", host_agents)
             self.assertIn(".codex/config.toml", host_agents)
             self.assertIn("agent-memory", host_agents)
-            self.assertIn(".agent-memory/core/HOME.md", host_claude)
-            self.assertIn(".agent-memory/core/HOME.md", host_cursor)
+            self.assertIn(".agent-memory/core/INIT.md", host_claude)
+            self.assertIn(".agent-memory/core/INIT.md", host_cursor)
             self.assertNotEqual(worktree_agents, host_agents)
 
     def test_init_worktree_end_to_end_validation_passes(self) -> None:

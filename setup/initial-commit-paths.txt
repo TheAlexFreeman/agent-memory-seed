@@ -27,7 +27,7 @@ core/governance/scratchpad-guidelines.md
 core/governance/session-checklists.md
 core/governance/system-maturity.md
 core/governance/update-guidelines.md
-core/HOME.md
+core/INIT.md
 core/INIT.md
 core/memory/activity/2026/03/18/chat-001/SUMMARY.md
 core/memory/activity/SUMMARY.md

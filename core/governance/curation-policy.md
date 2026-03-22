@@ -26,7 +26,7 @@ Through repeated access, user validation, or explicit approval, provisional memo
 
 ### 4. Maintenance
 
-Confirmed memories are periodically reviewed for staleness. Triggers for review: a file has not been accessed within the active staleness trigger window (see `core/HOME.md`; check `ACCESS.jsonl` or `ACCESS.archive.jsonl` for last access), the user contradicts information in the file, or a related file has been significantly updated creating potential inconsistency.
+Confirmed memories are periodically reviewed for staleness. Triggers for review: a file has not been accessed within the active staleness trigger window (see `core/INIT.md`; check `ACCESS.jsonl` or `ACCESS.archive.jsonl` for last access), the user contradicts information in the file, or a related file has been significantly updated creating potential inconsistency.
 
 ### 5. Retirement
 
@@ -34,7 +34,7 @@ Memories that are stale, contradicted, or consistently unhelpful are: **Demoted*
 
 ## Access-driven curation
 
-ACCESS-driven curation applies to the access-tracked memory namespaces (listed in `core/HOME.md`). `core/governance/` is the governance layer and is not part of the ACCESS lifecycle for now.
+ACCESS-driven curation applies to the access-tracked memory namespaces (listed in `core/INIT.md`). `core/governance/` is the governance layer and is not part of the ACCESS lifecycle for now.
 
 The ACCESS.jsonl feedback loop is the primary curation signal:
 
@@ -81,7 +81,7 @@ When a file is consistently low-value (3+ retrievals, mean helpfulness ≤ 0.3):
 
 ## Trust-weighted retrieval
 
-_Active thresholds and decision guides are in `core/HOME.md`. If you've already loaded that file this session, skip to "General retrieval rules" below._
+_Active thresholds and decision guides are in `core/INIT.md`. If you've already loaded that file this session, skip to "General retrieval rules" below._
 
 Every content file carries a `trust` level in its YAML frontmatter (see `core/governance/update-guidelines.md` for the full schema):
 
@@ -139,7 +139,7 @@ Users may legitimately expand contracts (e.g., authorizing `core/memory/users/` 
 
 ## Temporal decay
 
-_Active decay thresholds are in `core/HOME.md` § "Decision guide: trust decay". If you've already loaded that file, skip this section._
+_Active decay thresholds are in `core/INIT.md` § "Decision guide: trust decay". If you've already loaded that file, skip this section._
 
 ### Freshness vs. confidence
 
@@ -154,7 +154,7 @@ Trust and relevance decay over time. For decay calculations, use `last_verified`
 
 ## Access anomaly detection
 
-_Active anomaly thresholds are in `core/HOME.md` § "Decision guide: anomaly detection". If you've already loaded that file, skip to "Response to anomalies" below._
+_Active anomaly thresholds are in `core/INIT.md` § "Decision guide: anomaly detection". If you've already loaded that file, skip to "Response to anomalies" below._
 
 ### Anomaly signals
 
@@ -206,7 +206,7 @@ When the system reviews or modifies itself, three architectural considerations a
 
 ### Governance evaluation protocol
 
-During periodic review: (1) **Threshold effectiveness** — are decay thresholds causing premature archival? Check re-retrieval of archived files. (2) **Signal quality** — are anomaly signals producing useful flags or mostly false positives? Check resolved/false-positive ratio in `core/governance/review-queue.md`. (3) **Consistency** — do `README.md`, `core/HOME.md`, `core/governance/update-guidelines.md`, related templates/checklists, validators, and generated prompts still agree on the operating contract? (4) **User-friendliness** — are setup, approval, and maintenance flows still understandable and low-friction for the user? (5) **Context efficiency** — does the current design still protect the compact returning path, metadata-first checks, and reasonable context budgets? (6) **Missing coverage** — are there failure modes no existing rule addresses?
+During periodic review: (1) **Threshold effectiveness** — are decay thresholds causing premature archival? Check re-retrieval of archived files. (2) **Signal quality** — are anomaly signals producing useful flags or mostly false positives? Check resolved/false-positive ratio in `core/governance/review-queue.md`. (3) **Consistency** — do `README.md`, `core/INIT.md`, `core/governance/update-guidelines.md`, related templates/checklists, validators, and generated prompts still agree on the operating contract? (4) **User-friendliness** — are setup, approval, and maintenance flows still understandable and low-friction for the user? (5) **Context efficiency** — does the current design still protect the compact returning path, metadata-first checks, and reasonable context budgets? (6) **Missing coverage** — are there failure modes no existing rule addresses?
 
 ### Proposing governance changes
 
@@ -214,4 +214,4 @@ When the agent identifies a governance issue with evidence: write the proposal i
 
 ## Maturity-adaptive thresholds
 
-The thresholds in this policy are reference values. Active thresholds always live in `core/HOME.md`. During periodic review, the agent uses `core/governance/system-maturity.md` to assess the system and choose the next parameter set, then copies the selected values into `core/HOME.md`.
+The thresholds in this policy are reference values. Active thresholds always live in `core/INIT.md`. During periodic review, the agent uses `core/governance/system-maturity.md` to assess the system and choose the next parameter set, then copies the selected values into `core/INIT.md`.

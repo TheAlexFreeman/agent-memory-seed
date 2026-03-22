@@ -8,11 +8,11 @@ trust: high
 
 # Session Start
 
-**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `core/HOME.md`, using `core/memory/working/projects/SUMMARY.md` as the primary orientation surface unless the route points somewhere more specific. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
+**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `core/INIT.md`, using `core/memory/working/projects/SUMMARY.md` as the primary orientation surface unless the route points somewhere more specific. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
 
 ## When to use this skill
 
-Run at the beginning of returning sessions after the compact returning manifest in `core/HOME.md` has oriented the agent. This skill expands that compact path into a detailed workflow.
+Run at the beginning of returning sessions after the compact returning manifest in `core/INIT.md` has oriented the agent. This skill expands that compact path into a detailed workflow.
 
 Skip this skill on the very first session — use `core/governance/first-run.md` and the onboarding skill instead.
 
@@ -31,7 +31,7 @@ Skip this skill on the very first session — use `core/governance/first-run.md`
 - If `memory_session_health_check()` reports pending review-queue items, load `core/governance/review-queue.md` only when you need the actual entries or the user asks about them.
 - If `memory_session_health_check()` reports one or more folders in `aggregation_due`, flag them for session-end handling. At wrap-up, preview the compaction with `memory_run_aggregation(dry_run=True)` before deciding whether to apply summary/archive updates.
 - If `memory_session_health_check()` reports `periodic_review_due: true`, note that during the greeting.
-- Manual fallback when the MCP tool is unavailable: use metadata-first maintenance checks. If `core/governance/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them. Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `core/HOME.md`). If so, flag it for session-end handling. Check `core/HOME.md` for the last periodic review date. If overdue, note it.
+- Manual fallback when the MCP tool is unavailable: use metadata-first maintenance checks. If `core/governance/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them. Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `core/INIT.md`). If so, flag it for session-end handling. Check `core/INIT.md` for the last periodic review date. If overdue, note it.
 
 ### 3. Check write access (silent)
 

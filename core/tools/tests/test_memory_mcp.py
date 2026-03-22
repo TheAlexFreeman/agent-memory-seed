@@ -81,15 +81,15 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertIn("version_token", output)
 
     def test_read_file_returns_structured_payload(self) -> None:
-        raw = asyncio.run(self.module.memory_read_file(path="HOME.md"))
+        raw = asyncio.run(self.module.memory_read_file(path="INIT.md"))
         payload = json.loads(raw)
 
-        self.assertEqual(payload["path"], "HOME.md")
+        self.assertEqual(payload["path"], "INIT.md")
         self.assertTrue(payload["inline"])
         self.assertGreater(payload["size_bytes"], 0)
         self.assertIn("version_token", payload)
         self.assertIsNone(payload["frontmatter"])
-        self.assertIn("# Home", payload["content"])
+        self.assertIn("# Session Init", payload["content"])
         self.assertNotIn("temp_file", payload)
 
     def test_get_capabilities_returns_structured_payload(self) -> None:
@@ -150,7 +150,7 @@ class MemoryMCPTests(unittest.TestCase):
                     await session.initialize()
                     result = await session.call_tool(
                         "memory_read_file",
-                        {"path": "HOME.md"},
+                        {"path": "INIT.md"},
                     )
                     text_block = cast(Any, result.content[0])
                     return cast(dict[str, object], json.loads(text_block.text))
@@ -158,7 +158,7 @@ class MemoryMCPTests(unittest.TestCase):
         payload = anyio.run(run_call)
 
         self.assertTrue(cast(bool, payload["inline"]))
-        self.assertIn("# Home", cast(str, payload["content"]))
+        self.assertIn("# Session Init", cast(str, payload["content"]))
         self.assertIn("version_token", payload)
 
     def test_native_resources_enumerate_and_read(self) -> None:

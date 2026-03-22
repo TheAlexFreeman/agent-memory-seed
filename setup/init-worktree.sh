@@ -656,7 +656,7 @@ write_host_adapter_files() {
     local worktree_path_display="$2"
     local branch_name="$3"
     local config_hint="$4"
-    local quick_reference_path="$worktree_path_display/core/HOME.md"
+    local quick_reference_path="$worktree_path_display/core/INIT.md"
 
     cat > "$host_root/AGENTS.md" <<EOF
 # Agent Memory System

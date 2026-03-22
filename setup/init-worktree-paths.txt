@@ -12,5 +12,5 @@ core/tools/__init__.py
 core/tools/agent_memory_mcp
 core/tools/memory_mcp.py
 core/governance
-core/HOME.md
+core/INIT.md
 core/memory/skills

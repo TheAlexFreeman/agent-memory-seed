@@ -15,9 +15,9 @@ Activate this skill on the **first session only** — when no date-organized cha
 1. `core/memory/users/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
 2. `core/memory/users/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but has not yet been confirmed through onboarding).
 
-If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Return to `core/HOME.md` and follow its routing instead.
+If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Return to `core/INIT.md` and follow its routing instead.
 
-Before using this skill, the agent should already have been routed here from `core/HOME.md`, reviewed the relevant change-control and read-only sections of `core/governance/update-guidelines.md`, and checked write access per the first-run flow in `core/governance/first-run.md`.
+Before using this skill, the agent should already have been routed here from `core/INIT.md`, reviewed the relevant change-control and read-only sections of `core/governance/update-guidelines.md`, and checked write access per the first-run flow in `core/governance/first-run.md`.
 
 ## Steps
 

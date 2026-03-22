@@ -1,5 +1,5 @@
 version = 1
-router = "core/HOME.md"
+router = "core/INIT.md"
 default_mode = "returning"
 adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]
 # Optional in deployed worktree mode. When set, points at the host codebase root
@@ -27,7 +27,7 @@ required = true
 cost = "medium"
 
 [[modes.first_run.steps]]
-path = "core/HOME.md"
+path = "core/INIT.md"
 role = "router"
 required = true
 cost = "light"
@@ -48,7 +48,7 @@ maintenance_probes = [
 on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/SUMMARY.md", "core/memory/skills/SUMMARY.md"]
 
 [[modes.returning.steps]]
-path = "core/HOME.md"
+path = "core/INIT.md"
 role = "router"
 required = true
 cost = "light"
@@ -103,7 +103,7 @@ required = true
 cost = "medium"
 
 [[modes.full_bootstrap.steps]]
-path = "core/HOME.md"
+path = "core/INIT.md"
 role = "router"
 required = true
 cost = "light"
@@ -176,7 +176,7 @@ required = true
 cost = "medium"
 
 [[modes.periodic_review.steps]]
-path = "core/HOME.md"
+path = "core/INIT.md"
 role = "router"
 required = true
 cost = "light"
@@ -267,7 +267,7 @@ maintenance_probes = [
 on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/SUMMARY.md", "core/memory/skills/SUMMARY.md"]
 
 [[modes.automation.steps]]
-path = "core/HOME.md"
+path = "core/INIT.md"
 role = "router"
 required = true
 cost = "light"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules.
-# Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path.
+# Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules.
+# Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path.
 
 # Agent Memory System — Post-clone setup script
 # Personalizes the template repo for a new user.
@@ -357,7 +357,7 @@ print_platform_instructions() {
             echo "  cwd:     $REPO_ROOT_NATIVE"
             echo ""
             echo "Codex will prefer the local agent-memory MCP tools when available, while"
-            echo "the repo instructions still route startup through core/HOME.md."
+            echo "the repo instructions still route startup through core/INIT.md."
             ;;
         claude-code)
             echo "=== Claude Code Setup ==="
@@ -367,7 +367,7 @@ print_platform_instructions() {
             echo ""
             echo "  cd $(pwd) && claude"
             echo ""
-            echo "Claude Code will read CLAUDE.md, which points it to the live routing in core/HOME.md."
+            echo "Claude Code will read CLAUDE.md, which points it to the live routing in core/INIT.md."
             echo "From there it will run onboarding only if this is a fresh system."
             ;;
         cursor)
@@ -377,7 +377,7 @@ print_platform_instructions() {
             echo "To start your first session:"
             echo ""
             echo "  1. Open this folder in Cursor."
-            echo "  2. Start a conversation — the agent will follow the live routing in core/HOME.md and run onboarding only if needed."
+            echo "  2. Start a conversation — the agent will follow the live routing in core/INIT.md and run onboarding only if needed."
             ;;
         chatgpt)
             echo "=== ChatGPT Setup ==="
@@ -386,11 +386,11 @@ print_platform_instructions() {
             cat > chatgpt-instructions.txt << 'CHATGPT_EOF'
 I have a persistent memory system stored as a git repository.
 
-Start with `core/HOME.md` and follow its routing and context-loading rules.
-Use the compact returning manifest for normal sessions. If `core/HOME.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
+Start with `core/INIT.md` and follow its routing and context-loading rules.
+Use the compact returning manifest for normal sessions. If `core/INIT.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
 
 Key rules:
-- core/HOME.md is the live runtime config; do not use hardcoded thresholds.
+- core/INIT.md is the live runtime config; do not use hardcoded thresholds.
 - If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 - The default repo-local runtime is semantic/governed MCP, and raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`.
 - If this platform cannot directly read or write repo files, do not claim that ACCESS logging or governed writes happened; defer them and report exactly what should be recorded.
@@ -419,11 +419,11 @@ CHATGPT_EOF
             cat > system-prompt.txt << 'GENERIC_EOF'
 You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: core/memory/users/ (who the user is), core/memory/knowledge/ (what they know), core/memory/skills/ (how to perform tasks), core/memory/working/projects/ (multi-session roadmaps), core/memory/activity/ (conversation history), and core/governance/ (governance rules).
 
-Start with `core/HOME.md` and follow its routing and context-loading rules.
-Use the compact returning manifest for normal sessions. If `core/HOME.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
+Start with `core/INIT.md` and follow its routing and context-loading rules.
+Use the compact returning manifest for normal sessions. If `core/INIT.md` routes you to first-run or full bootstrap, read `README.md` and follow the referenced docs.
 
 Key rules:
-- core/HOME.md is the live runtime config; do not use hardcoded thresholds.
+- core/INIT.md is the live runtime config; do not use hardcoded thresholds.
 - If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 - The default repo-local runtime is semantic/governed MCP, and raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`.
 - If this platform cannot directly read or write repo files, do not claim that ACCESS logging or governed writes happened; defer them and report exactly what should be recorded.
@@ -444,7 +444,7 @@ GENERIC_EOF
             echo "=== Next Steps ==="
             echo ""
             echo "  1. See HUMANS/docs/QUICKSTART.md for platform-specific setup instructions."
-            echo "  2. Start a session with your AI — it will follow the live routing in core/HOME.md and ask onboarding questions if needed."
+            echo "  2. Start a session with your AI — it will follow the live routing in core/INIT.md and ask onboarding questions if needed."
             echo "  3. Your memory system grows from there."
             ;;
     esac

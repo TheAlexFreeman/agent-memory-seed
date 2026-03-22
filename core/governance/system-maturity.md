@@ -1,6 +1,6 @@
 # System Maturity
 
-This document tracks the memory system's developmental stage and defines candidate parameter sets for each stage. The core insight: a young system should bias toward exploration (capturing aggressively, retiring slowly), while a mature system should bias toward order (capturing selectively, retiring confidently). This file is a reference for maturity assessment and parameter selection during periodic review; `core/HOME.md` is the live runtime source for active thresholds.
+This document tracks the memory system's developmental stage and defines candidate parameter sets for each stage. The core insight: a young system should bias toward exploration (capturing aggressively, retiring slowly), while a mature system should bias toward order (capturing selectively, retiring confidently). This file is a reference for maturity assessment and parameter selection during periodic review; `core/INIT.md` is the live runtime source for active thresholds.
 
 ## Maturity signals
 
@@ -70,7 +70,7 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 ## Current stage assessment
 
-_Not yet assessed._ The first assessment triggers at the earlier of: (a) the system reaching 5 sessions, or (b) the first periodic review. Until then, Exploration defaults apply (as recorded in `core/HOME.md`). Record each assessment below with the date and signal values.
+_Not yet assessed._ The first assessment triggers at the earlier of: (a) the system reaching 5 sessions, or (b) the first periodic review. Until then, Exploration defaults apply (as recorded in `core/INIT.md`). Record each assessment below with the date and signal values.
 
 ### Assessment log
 

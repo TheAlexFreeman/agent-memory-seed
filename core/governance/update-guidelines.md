@@ -79,7 +79,7 @@ Files that predate this schema should have frontmatter added during the next per
 
 When the agent is reviewing or modifying the memory system itself — governance docs, routing manifests, bootstrap/setup flows, validation rules, or other protected architecture — the proposal must address three fundamental considerations:
 
-- **Consistency.** `README.md`, `core/HOME.md`, `core/governance/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
+- **Consistency.** `README.md`, `core/INIT.md`, `core/governance/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
 - **User-friendliness.** Preserve progressive disclosure, comprehensible approval steps, readable setup copy, and maintenance workflows that a normal user can actually follow.
 - **Context efficiency.** Preserve the compact returning manifest, prefer metadata-first checks and on-demand loads, and justify any added bootstrap or periodic-review overhead.
 
@@ -87,11 +87,11 @@ For system-level changes, the change summary is incomplete unless it explains th
 
 ## Preferred memory tool surface
 
-MCP preference rule: see `core/HOME.md` § "MCP preference."
+MCP preference rule: see `core/INIT.md` § "MCP preference."
 
 This preference affects the interface, not the authority chain:
 
-- `core/HOME.md`, `README.md`, and the folder summaries still govern what to load and why.
+- `core/INIT.md`, `README.md`, and the folder summaries still govern what to load and why.
 - MCP preference does not bypass trust-weighted retrieval, instruction containment, or protected-change approvals.
 - Raw file edits remain the fallback for operations the MCP surface does not yet cover.
 
@@ -239,19 +239,19 @@ The agent should still run periodic reviews when the 30-day threshold is reached
 
 ## Periodic review
 
-During any session, if the agent notices it has been more than 30 days since the date in `core/HOME.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` CHANGELOG entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
+During any session, if the agent notices it has been more than 30 days since the date in `core/INIT.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` CHANGELOG entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
 
 1. **Security flags.** Are there any security flags (type: `security`) in `core/governance/review-queue.md`? Resolve or escalate before proceeding.
 2. **Unverified content.** Files in `core/memory/knowledge/_unverified/` awaiting promotion or retirement? Check against active low-trust threshold.
 3. **Conflict resolution.** Any `[CONFLICT]` tags unresolved in user-profile or knowledge files?
 4. **Review queue.** Non-security entries in `core/governance/review-queue.md` awaiting approval?
 5. **Unhelpful memory.** Files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with knowledge amplification protocol.
-6. **Maturity assessment.** Assess developmental stage using `core/governance/system-maturity.md`. If changed, log transition and update `core/HOME.md`.
+6. **Maturity assessment.** Assess developmental stage using `core/governance/system-maturity.md`. If changed, log transition and update `core/INIT.md`.
 7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `core/governance/curation-policy.md` § "Governance feedback".
 8. **Folder structure.** Does it still make sense given actual usage?
 9. **Emergent categorization.** Cross-folder retrieval clusters? See `core/governance/curation-policy.md` § "Emergent categorization." (Most expensive step — do last.)
 10. **Session reflection themes.** Review recent reflection notes for recurring patterns. Address through summary updates or review-queue proposals.
-11. **Update last review date** in `core/HOME.md`.
+11. **Update last review date** in `core/INIT.md`.
 
 This review should be lightweight — a quick summary and any recommendations, not a full audit.
 
@@ -265,4 +265,4 @@ Protected changes should use GPG-signed commits (`git commit -S`) when the envir
 
 ## Model portability
 
-When switching models: no repository changes needed, the new model starts with `core/HOME.md` and follows its routing, limitations should be noted in `core/governance/review-queue.md`, and model transitions recorded in CHANGELOG.md as system events.
+When switching models: no repository changes needed, the new model starts with `core/INIT.md` and follows its routing, limitations should be noted in `core/governance/review-queue.md`, and model transitions recorded in CHANGELOG.md as system events.

@@ -54,7 +54,7 @@ The system accepts that tradeoff because transparency and portability are more i
 
 ### 2. Routing is separate from reference material
 
-The live operational router is [core/HOME.md](../../core/HOME.md).
+The live operational router is [core/INIT.md](../../core/INIT.md).
 
 That file tells an agent what to load for the current kind of session. It is intentionally compact because most sessions do not need the full governance stack.
 

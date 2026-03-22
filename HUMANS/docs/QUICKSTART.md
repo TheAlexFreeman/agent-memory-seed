@@ -72,9 +72,9 @@ If you want a human-readable explanation of the repo-local MCP layer itself, rea
 Open a conversation with your AI in the repo directory. The agent will:
 
 1. Read `README.md` for the architecture and startup contract.
-2. Continue to `core/HOME.md` for live routing and thresholds.
+2. Continue to `core/INIT.md` for live routing and thresholds.
 3. Detect that this is a fresh system (blank-slate or template-backed onboarding, with no recorded chat history yet).
-4. Continue to `core/governance/first-run.md` only if `core/HOME.md` routes the session into first-run bootstrap, then run the onboarding skill.
+4. Continue to `core/governance/first-run.md` only if `core/INIT.md` routes the session into first-run bootstrap, then run the onboarding skill.
 5. Propose an initial profile, ask you to confirm it, then write to `core/memory/users/` and record the session.
 
 From session two onward, the agent will use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless the router points somewhere more specific.
@@ -93,7 +93,7 @@ To use it:
 2. Ensure the project is trusted so project-scoped `.codex/config.toml` is applied.
 3. Restart or reopen the repo if Codex was already open.
 
-Codex will then prefer the repo-local semantic agent-memory MCP surface by default. Raw fallback tools are available only when the runtime explicitly enables `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`. `README.md` remains the architectural starting point; `core/HOME.md` still provides live routing once the session starts.
+Codex will then prefer the repo-local semantic agent-memory MCP surface by default. Raw fallback tools are available only when the runtime explicitly enables `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`. `README.md` remains the architectural starting point; `core/INIT.md` still provides live routing once the session starts.
 
 ### Claude Code
 
@@ -104,11 +104,11 @@ cd my-memory
 claude
 ```
 
-Claude Code will read `CLAUDE.md`, which directs it to the live routing in `core/HOME.md`.
+Claude Code will read `CLAUDE.md`, which directs it to the live routing in `core/INIT.md`.
 
 ### Cursor
 
-**Already configured.** The repo includes a `.cursorrules` file that Cursor reads automatically. Open the repo folder in Cursor and start a conversation — the agent will follow the live routing in `core/HOME.md`.
+**Already configured.** The repo includes a `.cursorrules` file that Cursor reads automatically. Open the repo folder in Cursor and start a conversation — the agent will follow the live routing in `core/INIT.md`.
 
 ### ChatGPT (Custom Instructions)
 
@@ -117,11 +117,11 @@ Copy the following into your ChatGPT custom instructions (Settings → Personali
 ```
 I have a persistent memory system stored as a git repository.
 
-Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules.
-Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path.
+Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules.
+Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path.
 
 Key rules:
-- core/HOME.md is the live runtime config; do not use hardcoded thresholds.
+- core/INIT.md is the live runtime config; do not use hardcoded thresholds.
 - If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 - The default repo-local runtime is semantic/governed MCP, and raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`.
 - If this platform cannot directly read or write repo files, do not claim that ACCESS logging or governed writes happened; defer them and report exactly what should be recorded.
@@ -143,11 +143,11 @@ Use this preamble in your system prompt or session initialization:
 ```
 You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: memory/users/ (who the user is), memory/knowledge/ (what they know), memory/skills/ (how to perform tasks), memory/working/projects/ (multi-session plans and roadmaps), memory/activity/ (conversation history), and governance/ (governance rules and context loading guide).
 
-Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules.
-Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path.
+Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules.
+Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path.
 
 Key rules:
-- core/HOME.md is the live runtime config; do not use hardcoded thresholds.
+- core/INIT.md is the live runtime config; do not use hardcoded thresholds.
 - If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 - The default repo-local runtime is semantic/governed MCP, and raw fallback is opt-in via `MEMORY_ENABLE_RAW_WRITE_TOOLS=1`.
 - If this platform cannot directly read or write repo files, do not claim that ACCESS logging or governed writes happened; defer them and report exactly what should be recorded.
@@ -184,7 +184,7 @@ Use `--dry-run` to preview what would be written without making changes.
 The memory system is model-agnostic. To switch:
 
 1. Set up the new platform using the instructions above.
-2. The new model follows the live routing from `core/HOME.md` — no repo changes needed.
+2. The new model follows the live routing from `core/INIT.md` — no repo changes needed.
 3. The CHANGELOG.md should record model transitions as system events.
 
 All accumulated knowledge, skills, and identity information transfers automatically because it's stored in files, not in any model's context.
@@ -206,7 +206,7 @@ The repo has five main areas:
 
 Each content folder has a `SUMMARY.md` (the agent's entry point) and an `ACCESS.jsonl` (retrieval tracking log). The agent reads summaries to decide what to retrieve, logs what it retrieves, and periodically aggregates those logs to improve future retrieval.
 
-The `core/governance/` folder includes a **context loading manifest** (`core/HOME.md`) that tells the agent exactly which files to load for each type of session — keeping token costs low while ensuring the right governance docs are available when needed. Some governance files (like `core/governance/curation-algorithms.md`) are loaded on-demand only during specific operations, not every session.
+The `core/governance/` folder includes a **context loading manifest** (`core/INIT.md`) that tells the agent exactly which files to load for each type of session — keeping token costs low while ensuring the right governance docs are available when needed. Some governance files (like `core/governance/curation-algorithms.md`) are loaded on-demand only during specific operations, not every session.
 
 For the full architecture, read [README.md](../../README.md). For governance details, see the files in `core/governance/`. For the design philosophy, product vision, and future directions, see [DESIGN.md](DESIGN.md).
 For the MCP contract, tool surface, and runtime boundary, see [MCP.md](MCP.md).
@@ -244,10 +244,10 @@ The repo itself is free — it's just files. The cost is in the tokens your AI m
 | Session mode                     | Typical token cost | When                                                                                                      |
 | -------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
 | First-run onboarding bootstrap   | ~15,000–20,000     | Fresh model instantiation on a blank or template-backed repo                                              |
-| Returning compact session        | ~3,000–7,000       | Normal day-to-day use via the compact returning manifest in `core/HOME.md`                     |
+| Returning compact session        | ~3,000–7,000       | Normal day-to-day use via the compact returning manifest in `core/INIT.md`                     |
 | Full bootstrap / periodic review | ~18,000–25,000     | Fresh model on a returning system, or sessions that reopen the full governance stack and review artifacts |
 
-The system uses a context loading manifest (`core/HOME.md`) to ensure agents load only the files they need for each session type — governance files that are only relevant during aggregation or periodic review are not loaded during normal sessions.
+The system uses a context loading manifest (`core/INIT.md`) to ensure agents load only the files they need for each session type — governance files that are only relevant during aggregation or periodic review are not loaded during normal sessions.
 
 **Is my data private?**
 
@@ -259,4 +259,4 @@ Absolutely. It's your repo. Edit any file, commit, and the agent will see the ch
 
 **What if my model has a small context window?**
 
-The system degrades gracefully. The context loading manifest in `core/HOME.md` guides agents to load the minimum files needed for each session type. The summary hierarchy means the agent can get useful context from summaries without loading full files. Models with very small windows (< 8K tokens) may struggle with the initial bootstrap but can still function once oriented.
+The system degrades gracefully. The context loading manifest in `core/INIT.md` guides agents to load the minimum files needed for each session type. The summary hierarchy means the agent can get useful context from summaries without loading full files. Models with very small windows (< 8K tokens) may struggle with the initial bootstrap but can still function once oriented.
