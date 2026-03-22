@@ -15,6 +15,7 @@ _SESSION_ID_RE = re.compile(r"^memory/activity/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
 KNOWN_COMMIT_PREFIXES: frozenset[str] = frozenset(
     {
         "[knowledge]",
+        "[plan]",
         "[project]",
         "[skill]",
         "[user]",

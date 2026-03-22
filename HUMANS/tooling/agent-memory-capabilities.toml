@@ -305,6 +305,11 @@ summary_materialization_targets = "Summary Materialization Targets"
 hot_access_targets = "Hot ACCESS Targets"
 hot_access_reset_targets = "Hot ACCESS Reset Targets"
 archive_targets = "Archive Targets"
+source = "Source Path"
+dest = "Destination Path"
+moved_count = "Moved Files"
+refs_updated = "References Updated"
+files_to_move = "Files To Move"
 
 [shared_result]
 fields = [

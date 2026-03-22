@@ -83,11 +83,17 @@ class GitRepo:
         self.root = Path(result.stdout.strip()).resolve()
         self.git_dir = Path(git_dir_result.stdout.strip()).resolve()
         # Content prefix: when set, all content-relative paths are resolved
-        # under root / content_prefix (e.g., root / "core").  Tool-facing
-        # methods accept and return content-relative paths; git operations
-        # use full repo-relative paths internally.
-        self.content_prefix = content_prefix
-        self.content_root: Path = (self.root / content_prefix) if content_prefix else self.root
+        # under root / content_prefix (e.g., root / "core"). For older test
+        # fixtures and legacy layouts that do not include that folder, fall
+        # back to the repository root so tool-facing paths remain usable.
+        normalized_prefix = content_prefix.strip("/")
+        prefixed_root = (self.root / normalized_prefix) if normalized_prefix else self.root
+        if normalized_prefix and prefixed_root.is_dir():
+            self.content_prefix = normalized_prefix
+            self.content_root = prefixed_root
+        else:
+            self.content_prefix = ""
+            self.content_root = self.root
 
     # ------------------------------------------------------------------
     # Path translation (content-relative <-> git-relative)
@@ -362,12 +368,18 @@ class GitRepo:
     ) -> GitPublicationResult:
         parent_sha = self.current_head()
         cmd = ["git", "commit", "-m", message]
+        preserved_paths: list[str] = []
         if allow_empty:
             cmd.append("--allow-empty")
         if paths:
             deduped_paths = list(dict.fromkeys(paths))
+            preserved_paths = [
+                path for path in self._staged_paths_git() if path not in set(deduped_paths)
+            ]
             cmd += ["--only", "--", *deduped_paths]
         self._run(cmd)
+        if preserved_paths:
+            self._run(["git", "add", "--", *preserved_paths])
         sha_result = self._run(["git", "rev-parse", "HEAD"])
         return GitPublicationResult(
             sha=sha_result.stdout.strip(),

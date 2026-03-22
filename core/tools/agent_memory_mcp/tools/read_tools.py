@@ -35,7 +35,7 @@ import sys
 import tempfile
 from datetime import date, datetime, timedelta
 from importlib import import_module
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any, cast
 
 from ..path_policy import KNOWN_COMMIT_PREFIXES  # noqa: F401 — re-exported for callers
@@ -113,6 +113,7 @@ def _resolve_live_router_path(repo_root: Path) -> Path:
     """Return the current live router path, falling back to legacy locations."""
     for candidate in (
         repo_root / "core" / "INIT.md",
+        repo_root / "INIT.md",
         repo_root / "core" / "HOME.md",
         repo_root / "HOME.md",
     ):
@@ -153,6 +154,56 @@ def _resolve_memory_subpath(root: Path, current_rel: str, legacy_rel: str) -> Pa
     return root / current_rel
 
 
+def _normalize_access_folder_prefixes(raw_folder: str) -> tuple[str, ...]:
+    """Map ACCESS folder filters to current and legacy content prefixes."""
+    normalized = raw_folder.replace("\\", "/").strip().rstrip("/")
+    if not normalized:
+        return ()
+
+    alias_map = {
+        "knowledge": ("memory/knowledge", "knowledge"),
+        "plans": ("memory/working/projects", "plans"),
+        "identity": ("memory/users", "identity"),
+        "skills": ("memory/skills", "skills"),
+    }
+    return alias_map.get(normalized, (normalized,))
+
+
+def _resolve_category_prefixes(raw_category: str) -> tuple[str, ...]:
+    """Map category names to current and legacy content directories."""
+    normalized = raw_category.replace("\\", "/").strip().rstrip("/")
+    if not normalized:
+        return ()
+
+    alias_map = {
+        "knowledge": ("memory/knowledge", "knowledge"),
+        "plans": ("memory/working/projects", "plans"),
+        "identity": ("memory/users", "identity"),
+        "skills": ("memory/skills", "skills"),
+    }
+    return alias_map.get(normalized, (normalized,))
+
+
+def _content_folder_for_file(file_path: str) -> str:
+    """Return the governed folder containing a file path."""
+    parent = PurePosixPath(file_path).parent.as_posix()
+    return "" if parent == "." else parent
+
+
+def _is_access_log_in_scope(rel_path: PurePosixPath) -> bool:
+    """Return True when an ACCESS log belongs to governed content, not meta/governance."""
+    normalized = rel_path.as_posix()
+    return normalized.startswith(
+        (
+            "memory/",
+            "knowledge/",
+            "plans/",
+            "identity/",
+            "skills/",
+        )
+    )
+
+
 def _resolve_humans_root(root: Path) -> Path:
     """Return the human-facing tree, supporting both repo-rooted and content-rooted layouts."""
     for candidate in (root / _HUMANS_DIRNAME, root.parent / _HUMANS_DIRNAME):
@@ -176,7 +227,22 @@ def _resolve_visible_path(root: Path, raw_path: str) -> Path:
         humans_root = _resolve_humans_root(root)
         remainder = parts[1:]
         return (humans_root.joinpath(*remainder) if remainder else humans_root).resolve()
-    return (root / rel_path).resolve()
+
+    direct_path = (root / rel_path).resolve()
+    if direct_path.exists() or not parts:
+        return direct_path
+
+    alias_prefixes = _resolve_category_prefixes(parts[0])
+    if alias_prefixes and alias_prefixes != (parts[0],):
+        remainder = parts[1:]
+        for prefix in alias_prefixes:
+            candidate = (root / Path(prefix).joinpath(*remainder)).resolve()
+            if candidate.exists():
+                return candidate
+        primary = alias_prefixes[0]
+        return (root / Path(primary).joinpath(*remainder)).resolve()
+
+    return direct_path
 
 
 def _display_rel_path(path: Path, root: Path) -> str:
@@ -197,7 +263,6 @@ def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
         tool_sets.get("semantic_extensions") if isinstance(tool_sets, dict) else []
     )
     declared_gaps = tool_sets.get("declared_gaps") if isinstance(tool_sets, dict) else []
-
     read_tools = read_support if isinstance(read_support, list) else []
     raw_tools = raw_fallback if isinstance(raw_fallback, list) else []
     semantic_tools = semantic_extensions if isinstance(semantic_extensions, list) else []
@@ -968,6 +1033,8 @@ def _iter_live_access_files(root: Path) -> list[Path]:
             continue
         if rel.parts and rel.parts[0] == "meta":
             continue
+        if not _is_access_log_in_scope(PurePosixPath(rel.as_posix())):
+            continue
         access_files.append(access_file)
     return sorted(access_files)
 
@@ -1007,7 +1074,35 @@ def _normalize_git_log_path_filter(path_filter: str) -> str:
         raise ValidationError("path_filter must be a repo-relative path or glob")
     if re.match(r"^[A-Za-z]:[/\\]", normalized):
         raise ValidationError("path_filter must be a repo-relative path or glob")
+    top_level, _, remainder = normalized.partition("/")
+    category_prefixes = _resolve_category_prefixes(top_level)
+    if category_prefixes and category_prefixes != (top_level,):
+        primary_prefix = category_prefixes[0]
+        normalized = f"{primary_prefix}/{remainder}" if remainder else primary_prefix
     return normalized
+
+
+def _visible_top_level_category(path: str) -> str:
+    normalized = path.replace("\\", "/").strip().lstrip("/")
+    if normalized.startswith("core/"):
+        normalized = normalized[len("core/") :]
+    if normalized.startswith(("memory/knowledge/", "knowledge/")):
+        return "knowledge"
+    if normalized.startswith(("memory/working/projects/", "plans/")):
+        return "plans"
+    if normalized.startswith(("memory/users/", "identity/")):
+        return "identity"
+    if normalized.startswith(("memory/skills/", "skills/")):
+        return "skills"
+    if normalized.startswith("memory/activity/"):
+        return "chats"
+    if normalized.startswith("memory/working/scratchpad/"):
+        return "scratchpad"
+    if normalized.startswith(("governance/", "meta/", "HUMANS/")):
+        return "meta"
+    if normalized.startswith(("tools/", "core/tools/")):
+        return "tools"
+    return normalized.split("/", 1)[0] if "/" in normalized else normalized or "other"
 
 
 def _load_access_entries(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -1057,6 +1152,8 @@ def _iter_access_history_files(root: Path) -> list[Path]:
             continue
         if rel.parts and rel.parts[0] == "meta":
             continue
+        if not _is_access_log_in_scope(PurePosixPath(rel.as_posix())):
+            continue
         if access_file.name == "ACCESS.jsonl" or re.match(
             r"ACCESS\.archive\.\d{4}-\d{2}\.jsonl$",
             access_file.name,
@@ -1084,14 +1181,12 @@ def _load_access_history_entries(root: Path) -> list[dict[str, Any]]:
 
 
 def _list_tracked_markdown_files(root: Path, scope: str) -> list[Path]:
+    git_root = root if (root / ".git").exists() else root.parent
     cmd = ["git", "ls-files"]
-    normalized_scope = scope.strip().replace("\\", "/")
-    if normalized_scope not in {"", "."}:
-        cmd += ["--", normalized_scope]
 
     result = subprocess.run(
         cmd,
-        cwd=str(root),
+        cwd=str(git_root),
         capture_output=True,
         text=True,
         stdin=subprocess.DEVNULL,
@@ -1101,13 +1196,23 @@ def _list_tracked_markdown_files(root: Path, scope: str) -> list[Path]:
         stderr = result.stderr.strip() or "git ls-files failed"
         raise RuntimeError(stderr)
 
+    normalized_scope = scope.strip().replace("\\", "/")
+    scope_path = _resolve_visible_path(root, normalized_scope or ".")
     tracked_files: list[Path] = []
     for raw_path in result.stdout.splitlines():
-        rel_path = raw_path.strip().replace("\\", "/")
-        if not rel_path.lower().endswith(".md"):
+        git_rel_path = raw_path.strip().replace("\\", "/")
+        if not git_rel_path.lower().endswith(".md"):
             continue
-        abs_path = (root / rel_path).resolve()
+        visible_rel_path = git_rel_path
+        if git_root != root and git_rel_path.startswith(f"{root.name}/"):
+            visible_rel_path = git_rel_path[len(root.name) + 1 :]
+
+        abs_path = _resolve_visible_path(root, visible_rel_path)
         if abs_path.exists() and abs_path.is_file():
+            try:
+                abs_path.relative_to(scope_path)
+            except ValueError:
+                continue
             tracked_files.append(abs_path)
     return sorted(set(tracked_files))
 
@@ -1314,18 +1419,21 @@ def _filter_access_entries(
     """Filter ACCESS entries by folder, file prefix, date range, and helpfulness."""
     start = _parse_iso_date(start_date) if start_date else None
     end = _parse_iso_date(end_date) if end_date else None
+    folder_prefixes = _normalize_access_folder_prefixes(folder) if folder else ()
 
     filtered: list[dict[str, Any]] = []
     for entry in entries:
         access_file = str(entry.get("_access_file", ""))
         file_path = str(entry.get("file", ""))
 
-        if folder:
-            normalized_folder = folder.rstrip("/")
-            if not access_file.startswith(f"{normalized_folder}/") and access_file != (
-                f"{normalized_folder}/ACCESS.jsonl"
-            ):
-                continue
+        if folder_prefixes and not any(
+            file_path == prefix
+            or file_path.startswith(f"{prefix}/")
+            or access_file == f"{prefix}/ACCESS.jsonl"
+            or access_file.startswith(f"{prefix}/")
+            for prefix in folder_prefixes
+        ):
+            continue
         if file_prefix and not file_path.startswith(file_prefix):
             continue
 
@@ -1366,7 +1474,7 @@ def _summarize_access_by_file(entries: list[dict[str, Any]]) -> list[dict[str, A
             file_path,
             {
                 "file": file_path,
-                "folder": file_path.split("/", 1)[0],
+                "folder": _content_folder_for_file(file_path),
                 "entry_count": 0,
                 "helpfulness_values": [],
                 "session_ids": set(),
@@ -1444,7 +1552,13 @@ def _detect_co_retrieval_clusters(entries: list[dict[str, Any]]) -> list[dict[st
     for (left, right), sessions in pair_counts.items():
         if len(sessions) < 3:
             continue
-        folders = sorted({left.split("/", 1)[0], right.split("/", 1)[0]})
+        folders = sorted(
+            {
+                folder
+                for folder in (_content_folder_for_file(left), _content_folder_for_file(right))
+                if folder
+            }
+        )
         clusters.append(
             {
                 "files": [left, right],
@@ -2123,6 +2237,7 @@ def _build_access_summary_for_file(
 def _git_file_history(repo: Any, rel_path: str, limit: int = 10) -> list[dict[str, str]]:
     """Return recent commit history for a single file."""
     safe_limit = min(max(limit, 1), 20)
+    git_rel_path = repo._to_git_path(rel_path) if hasattr(repo, "_to_git_path") else rel_path
     result = repo._run(
         [
             "git",
@@ -2131,7 +2246,7 @@ def _git_file_history(repo: Any, rel_path: str, limit: int = 10) -> list[dict[st
             "--follow",
             "--format=%H%x1f%s%x1f%aI%x1f%an%x1f%ae",
             "--",
-            rel_path,
+            git_rel_path,
         ],
         check=False,
     )
@@ -2264,8 +2379,12 @@ def _is_humans_path(path: Path, root: Path) -> bool:
 
 def _resolve_host_repo(root: Path) -> Path | None:
     """Return the configured host repo root from agent-bootstrap.toml, if any."""
-    bootstrap_path = root / "agent-bootstrap.toml"
-    if not bootstrap_path.exists():
+    bootstrap_path = None
+    for candidate in (root / "agent-bootstrap.toml", root.parent / "agent-bootstrap.toml"):
+        if candidate.exists():
+            bootstrap_path = candidate
+            break
+    if bootstrap_path is None:
         return None
 
     match = re.search(
@@ -2278,7 +2397,7 @@ def _resolve_host_repo(root: Path) -> Path | None:
 
     candidate = Path(match.group("path")).expanduser()
     if not candidate.is_absolute():
-        candidate = (root / candidate).resolve()
+        candidate = (bootstrap_path.parent / candidate).resolve()
     return candidate.resolve()
 
 
@@ -3297,7 +3416,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         requested_path = path.strip().replace("\\", "/")
         if requested_path:
-            scope_path = (root / requested_path).resolve()
+            scope_path = _resolve_visible_path(root, requested_path)
             try:
                 scope_path.relative_to(root)
             except ValueError as exc:
@@ -3377,7 +3496,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
         requested_path = folder_path.strip().replace("\\", "/")
         if requested_path:
-            scope_path = (root / requested_path).resolve()
+            scope_path = _resolve_visible_path(root, requested_path)
             try:
                 scope_path.relative_to(root)
             except ValueError as exc:
@@ -3434,7 +3553,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         root = get_root()
         requested_path = path.strip() or "."
-        scope_path = (root / requested_path).resolve()
+        scope_path = _resolve_visible_path(root, requested_path)
         try:
             scope_path.relative_to(root)
         except ValueError as exc:
@@ -3682,8 +3801,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError("top_n must be >= 1")
 
         root = get_root()
-        folder_filters = _split_csv_or_lines(folders) if folders else []
-        for folder in folder_filters:
+        raw_folder_filters = _split_csv_or_lines(folders) if folders else []
+        folder_filters: list[str] = []
+        for folder in raw_folder_filters:
             normalized = folder.replace("\\", "/").strip().rstrip("/")
             if not normalized:
                 raise ValidationError("folders must contain non-empty repo-relative paths")
@@ -3691,6 +3811,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 raise ValidationError("folders must contain repo-relative paths")
             if re.match(r"^[A-Za-z]:[/\\]", normalized):
                 raise ValidationError("folders must contain repo-relative paths")
+            folder_filters.extend(_normalize_access_folder_prefixes(normalized))
 
         end_date = date.today()
         start_date = end_date - timedelta(days=window_days - 1)
@@ -3974,8 +4095,28 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 continue
             status = parts[0]
             rel_path = parts[-1]
-            top_level = rel_path.split("/", 1)[0] if "/" in rel_path else "other"
-            category = top_level if top_level in by_category else "other"
+            visible_path = rel_path
+            if root.name and rel_path.startswith(f"{root.name}/"):
+                visible_path = rel_path[len(root.name) + 1 :]
+
+            if visible_path.startswith(("memory/knowledge/", "knowledge/")):
+                category = "knowledge"
+            elif visible_path.startswith(("memory/working/projects/", "plans/")):
+                category = "plans"
+            elif visible_path.startswith(("memory/users/", "identity/")):
+                category = "identity"
+            elif visible_path.startswith(("memory/skills/", "skills/")):
+                category = "skills"
+            elif visible_path.startswith("memory/activity/"):
+                category = "chats"
+            elif visible_path.startswith("memory/working/scratchpad/"):
+                category = "scratchpad"
+            elif visible_path.startswith(("governance/", "meta/", "HUMANS/")):
+                category = "meta"
+            elif visible_path.startswith(("tools/", "core/tools/")):
+                category = "tools"
+            else:
+                category = "other"
             if status.startswith("A"):
                 bucket = "added"
             elif status.startswith("D"):
@@ -5096,7 +5237,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         commit = repo.inspect_commit(sha)
         metadata = _commit_metadata(repo, str(commit["sha"]))
         files_changed = [str(path) for path in cast(list[object], commit["files_changed"])]
-        top_levels = sorted({path.split("/", 1)[0] for path in files_changed if path})
+        top_levels = sorted({_visible_top_level_category(path) for path in files_changed if path})
         message = str(commit["message"])
 
         payload = {
@@ -5202,101 +5343,104 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         untracked_files = set(repo.diff_status()["untracked"])
 
         for cat in categories:
-            cat_path = root / cat
-            if not cat_path.is_dir():
-                continue
-            for md_file in cat_path.rglob("*.md"):
-                if not md_file.is_file():
+            for category_prefix in _resolve_category_prefixes(cat):
+                cat_path = root / category_prefix
+                if not cat_path.is_dir():
                     continue
-                try:
-                    fm_dict, _ = read_with_frontmatter(md_file)
-                except Exception:
-                    continue
-
-                rel = md_file.relative_to(root).as_posix()
-                trust = fm_dict.get("trust")
-                implicit_medium = False
-                if trust in ("low", "medium", "high"):
-                    pass
-                elif fm_dict:
-                    continue
-                else:
-                    trust = "medium"
-                    implicit_medium = True
-
-                files_checked += 1
-                eff_date = _effective_date(fm_dict)
-                if eff_date is None and implicit_medium:
-                    if rel in untracked_files:
-                        unevaluable.append(
-                            {
-                                "path": rel,
-                                "trust": trust,
-                                "reason": "untracked_without_frontmatter",
-                                "implicit_trust": True,
-                            }
-                        )
+                for md_file in cat_path.rglob("*.md"):
+                    if not md_file.is_file():
                         continue
-                    eff_date = repo.first_tracked_author_date(rel)
-                if eff_date is None:
+                    try:
+                        fm_dict, _ = read_with_frontmatter(md_file)
+                    except Exception:
+                        continue
+
+                    rel = md_file.relative_to(root).as_posix()
+                    trust = fm_dict.get("trust")
+                    implicit_medium = False
+                    if trust in ("low", "medium", "high"):
+                        pass
+                    elif fm_dict:
+                        continue
+                    else:
+                        trust = "medium"
+                        implicit_medium = True
+
+                    files_checked += 1
+                    eff_date = _effective_date(fm_dict)
+                    if eff_date is None and implicit_medium:
+                        if rel in untracked_files:
+                            unevaluable.append(
+                                {
+                                    "path": rel,
+                                    "trust": trust,
+                                    "reason": "untracked_without_frontmatter",
+                                    "implicit_trust": True,
+                                }
+                            )
+                            continue
+                        eff_date = repo.first_tracked_author_date(rel)
+                    if eff_date is None:
+                        if implicit_medium:
+                            unevaluable.append(
+                                {
+                                    "path": rel,
+                                    "trust": trust,
+                                    "reason": "missing_effective_date",
+                                    "implicit_trust": True,
+                                }
+                            )
+                        continue
+
+                    days = (today - eff_date).days
+
+                    entry = {
+                        "path": rel,
+                        "trust": trust,
+                        "effective_date": str(eff_date),
+                        "days_since_verified": days,
+                    }
                     if implicit_medium:
-                        unevaluable.append(
-                            {
-                                "path": rel,
-                                "trust": trust,
-                                "reason": "missing_effective_date",
-                                "implicit_trust": True,
-                            }
+                        entry["implicit_trust"] = True
+
+                    freshness_report = None
+                    freshness_status = "unknown"
+                    if host_repo is not None:
+                        freshness_report = _build_knowledge_freshness_report(
+                            root, repo, rel, md_file
                         )
-                    continue
+                        freshness_status = str(freshness_report["status"])
+                        for key in (
+                            "current_head",
+                            "verified_against_commit",
+                            "host_changes_since",
+                            "source_files",
+                        ):
+                            if freshness_report.get(key) is not None:
+                                entry[key] = freshness_report[key]
+                        entry["freshness_status"] = freshness_status
 
-                days = (today - eff_date).days
-
-                entry = {
-                    "path": rel,
-                    "trust": trust,
-                    "effective_date": str(eff_date),
-                    "days_since_verified": days,
-                }
-                if implicit_medium:
-                    entry["implicit_trust"] = True
-
-                freshness_report = None
-                freshness_status = "unknown"
-                if host_repo is not None:
-                    freshness_report = _build_knowledge_freshness_report(root, repo, rel, md_file)
-                    freshness_status = str(freshness_report["status"])
-                    for key in (
-                        "current_head",
-                        "verified_against_commit",
-                        "host_changes_since",
-                        "source_files",
-                    ):
-                        if freshness_report.get(key) is not None:
-                            entry[key] = freshness_report[key]
-                    entry["freshness_status"] = freshness_status
-
-                if trust == "low":
-                    threshold = low_threshold
-                    warn = low_warn
-                    approaching_warn = threshold * warn_pct
-                    entry["days_until_threshold"] = max(0, threshold - days)
-                    if days >= threshold:
-                        if freshness_status == "fresh":
+                    if trust == "low":
+                        threshold = low_threshold
+                        warn = low_warn
+                        approaching_warn = threshold * warn_pct
+                        entry["days_until_threshold"] = max(0, threshold - days)
+                        if days >= threshold:
+                            if freshness_status == "fresh":
+                                entry["action_required"] = "review"
+                                upcoming_low.append(entry)
+                            else:
+                                entry["action_required"] = "archive"
+                                overdue_low.append(entry)
+                        elif days >= warn or freshness_status == "stale":
                             entry["action_required"] = "review"
                             upcoming_low.append(entry)
-                        else:
-                            entry["action_required"] = "archive"
-                            overdue_low.append(entry)
-                    elif days >= warn or freshness_status == "stale":
-                        entry["action_required"] = "review"
-                        upcoming_low.append(entry)
-                    elif days >= approaching_warn:
-                        entry["action_required"] = "review"
-                        approaching.append(entry)
-                elif trust == "medium":
-                    threshold = medium_threshold
-                    warn = medium_warn
+                        elif days >= approaching_warn:
+                            entry["action_required"] = "review"
+                            approaching.append(entry)
+                    elif trust == "medium":
+                        threshold = medium_threshold
+                        warn = medium_warn
                     approaching_warn = threshold * warn_pct
                     entry["days_until_threshold"] = max(0, threshold - days)
                     if days >= threshold:

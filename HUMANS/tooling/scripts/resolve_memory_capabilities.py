@@ -434,6 +434,7 @@ def resolve_capabilities(repo_root: Path, *, include_runtime: bool = True) -> di
         "commit_message",
         "new_state",
         "warnings",
+        "preview",
     ]:
         errors.append(
             f"{MANIFEST_PATH}: shared_result.fields must match the MemoryWriteResult contract"
