@@ -89,7 +89,7 @@ class MemoryMCPTests(unittest.TestCase):
         self.assertGreater(payload["size_bytes"], 0)
         self.assertIn("version_token", payload)
         self.assertIsNone(payload["frontmatter"])
-        self.assertIn("Quick Reference", payload["content"])
+        self.assertIn("# Home", payload["content"])
         self.assertNotIn("temp_file", payload)
 
     def test_get_capabilities_returns_structured_payload(self) -> None:

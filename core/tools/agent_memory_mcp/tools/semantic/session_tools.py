@@ -89,6 +89,23 @@ _PERIODIC_REVIEW_STAGE_SETTINGS: dict[str, dict[str, str | int]] = {
 }
 
 
+def _resolve_governance_rel(root: Path, relative_path: str) -> str:
+    """Prefer current core/governance paths but keep legacy fallback support."""
+    current = f"core/governance/{relative_path}"
+    if (root / current).exists():
+        return current
+    return f"governance/{relative_path}"
+
+
+def _resolve_live_router_rel(root: Path) -> str:
+    """Prefer current core/HOME.md but keep legacy fallback support."""
+    if (root / "core" / "HOME.md").exists():
+        return "core/HOME.md"
+    if (root / "HOME.md").exists():
+        return "HOME.md"
+    return "meta/quick-reference.md"
+
+
 def _access_jsonl_for(rel_path: str) -> str | None:
     # Special case: knowledge/_unverified gets its own ACCESS.jsonl
     if (
@@ -1010,7 +1027,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if priority not in ("normal", "urgent"):
             raise ValidationError(f"priority must be 'normal' or 'urgent': {priority}")
 
-        review_queue_rel = "governance/review-queue.md"
+        review_queue_rel = _resolve_governance_rel(root, "review-queue.md")
         abs_queue = root / review_queue_rel
         if not abs_queue.exists():
             raise ValidationError(f"Review queue not found: {review_queue_rel}")
@@ -1081,7 +1098,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         root = get_root()
 
         item_id = validate_slug(item_id, field_name="item_id")
-        review_queue_rel = "governance/review-queue.md"
+        review_queue_rel = _resolve_governance_rel(root, "review-queue.md")
         abs_queue = root / review_queue_rel
         if not abs_queue.exists():
             raise NotFoundError(f"Review queue not found: {review_queue_rel}")
@@ -1615,9 +1632,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "active_stage must be one of Exploration, Calibration, Consolidation"
             )
 
-        quick_reference_rel = "HOME.md"
-        belief_diff_rel = "governance/belief-diff-log.md"
-        review_queue_rel = "governance/review-queue.md"
+        quick_reference_rel = _resolve_live_router_rel(root)
+        belief_diff_rel = _resolve_governance_rel(root, "belief-diff-log.md")
+        review_queue_rel = _resolve_governance_rel(root, "review-queue.md")
 
         abs_quick_reference = root / quick_reference_rel
         abs_belief_diff = root / belief_diff_rel

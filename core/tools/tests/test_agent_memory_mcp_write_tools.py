@@ -1724,7 +1724,7 @@ declared_gaps = []
 
     def test_memory_get_policy_state_flags_protected_meta_surface(self) -> None:
         seed = self._policy_contract_seed_files()
-        seed["HOME.md"] = "# Quick Reference\n"
+        seed["core/HOME.md"] = "# Home\n"
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
@@ -6062,12 +6062,12 @@ next_action: Original next action
     def test_memory_session_health_check_reports_periodic_review_overdue(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/HOME.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-01-01\n"
                 ),
-                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "core/governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6081,12 +6081,12 @@ next_action: Original next action
     def test_memory_session_health_check_counts_only_pending_review_queue_items(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": (
+                "core/HOME.md": (
                     "| Aggregation trigger | 15 entries | Exploration |\n\n"
                     "## Last periodic review\n\n"
                     "**Date:** 2026-03-19\n"
                 ),
-                "governance/review-queue.md": """# Review Queue
+                "core/governance/review-queue.md": """# Review Queue
 
 ## Format
 
@@ -6853,7 +6853,7 @@ Initial note.
     def test_memory_record_periodic_review_updates_meta_outputs(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/HOME.md": """# Home
 
 ## Current active stage: Exploration
 
@@ -6878,8 +6878,8 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "governance/belief-diff-log.md": "# Belief Diff Log\n",
-                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "core/governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "core/governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6901,9 +6901,13 @@ _Last assessed: 2026-03-01 — Exploration retained_
         )
         payload = json.loads(raw)
 
-        quick_reference = (repo_root / "HOME.md").read_text(encoding="utf-8")
-        belief_diff = (repo_root / "governance" / "belief-diff-log.md").read_text(encoding="utf-8")
-        review_queue = (repo_root / "governance" / "review-queue.md").read_text(encoding="utf-8")
+        quick_reference = (repo_root / "core" / "HOME.md").read_text(encoding="utf-8")
+        belief_diff = (repo_root / "core" / "governance" / "belief-diff-log.md").read_text(
+            encoding="utf-8"
+        )
+        review_queue = (repo_root / "core" / "governance" / "review-queue.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn("**Date:** 2026-03-19", quick_reference)
         self.assertIn(
@@ -6920,7 +6924,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
     def test_memory_record_periodic_review_updates_stage_thresholds(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/HOME.md": """# Home
 
 ## Current active stage: Exploration
 
@@ -6945,8 +6949,8 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "governance/belief-diff-log.md": "# Belief Diff Log\n",
-                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "core/governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "core/governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
@@ -6962,7 +6966,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
             )
         )
 
-        quick_reference = (repo_root / "HOME.md").read_text(encoding="utf-8")
+        quick_reference = (repo_root / "core" / "HOME.md").read_text(encoding="utf-8")
         self.assertIn("## Current active stage: Calibration", quick_reference)
         self.assertIn(
             "| Aggregation trigger | 20 entries | Calibration |",
@@ -6977,7 +6981,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
     def test_memory_record_periodic_review_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
-                "HOME.md": """# Quick Reference
+                "core/HOME.md": """# Home
 
 ## Current active stage: Exploration
 
@@ -7002,12 +7006,12 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
 **Method:** Session co-occurrence
 """,
-                "governance/belief-diff-log.md": "# Belief Diff Log\n",
-                "governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
+                "core/governance/belief-diff-log.md": "# Belief Diff Log\n",
+                "core/governance/review-queue.md": "# Review Queue\n\n_No pending items._\n",
             }
         )
         tools = self._create_tools(repo_root)
-        quick_reference_before = (repo_root / "HOME.md").read_text(encoding="utf-8")
+        quick_reference_before = (repo_root / "core" / "HOME.md").read_text(encoding="utf-8")
 
         preview = json.loads(
             asyncio.run(
@@ -7022,7 +7026,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
         )
 
         self.assertEqual(
-            (repo_root / "HOME.md").read_text(encoding="utf-8"),
+            (repo_root / "core" / "HOME.md").read_text(encoding="utf-8"),
             quick_reference_before,
         )
         self.assertEqual(preview["preview"]["mode"], "preview")
@@ -7040,7 +7044,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
 
         self.assertIn(
             "**Date:** 2026-03-19",
-            (repo_root / "HOME.md").read_text(encoding="utf-8"),
+            (repo_root / "core" / "HOME.md").read_text(encoding="utf-8"),
         )
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
         self.assertEqual(

@@ -93,7 +93,7 @@ except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 fallback
 
 def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
     """Try to read low/medium trust thresholds from HOME.md."""
-    qr_path = repo_root / "HOME.md"
+    qr_path = _resolve_live_router_path(repo_root)
     if not qr_path.exists():
         return _DEFAULT_LOW_THRESHOLD, _DEFAULT_MEDIUM_THRESHOLD
     text = qr_path.read_text(encoding="utf-8")
@@ -107,6 +107,42 @@ def _parse_trust_thresholds(repo_root: Path) -> tuple[int, int]:
     if medium_m:
         medium = int(medium_m.group(1))
     return low, medium
+
+
+def _resolve_live_router_path(repo_root: Path) -> Path:
+    """Return the current live router path, falling back to legacy locations."""
+    for candidate in (
+        repo_root / "core" / "HOME.md",
+        repo_root / "HOME.md",
+        repo_root / "meta" / "quick-reference.md",
+    ):
+        if candidate.exists():
+            return candidate
+    return repo_root / "core" / "HOME.md"
+
+
+def _resolve_governance_path(repo_root: Path, relative_path: str) -> Path:
+    """Return a governance file path, preferring the current layout."""
+    normalized = relative_path.replace("\\", "/").lstrip("/")
+    legacy_name = normalized.split("/", 1)[-1]
+    for candidate in (
+        repo_root / "governance" / legacy_name,
+        repo_root / "meta" / legacy_name,
+    ):
+        if candidate.exists():
+            return candidate
+    return repo_root / "governance" / legacy_name
+
+
+def _resolve_capabilities_manifest_path(root: Path) -> Path:
+    """Return the capabilities manifest path for content-rooted or repo-rooted layouts."""
+    for candidate in (
+        root / _CAPABILITIES_MANIFEST_PATH,
+        root.parent / _CAPABILITIES_MANIFEST_PATH,
+    ):
+        if candidate.exists():
+            return candidate
+    return root / _CAPABILITIES_MANIFEST_PATH
 
 
 def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -172,7 +208,7 @@ def _capability_manifest_error_payload(root: Path, message: str, raw: str | None
 
 
 def _load_capabilities_manifest(root: Path) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
-    manifest_path = root / _CAPABILITIES_MANIFEST_PATH
+    manifest_path = _resolve_capabilities_manifest_path(root)
     try:
         raw_manifest = manifest_path.read_text(encoding="utf-8")
     except OSError as exc:
@@ -406,8 +442,8 @@ def _resolve_operation_entry(
 def _path_policy_state(root: Path, rel_path: str | None) -> dict[str, Any]:
     update_guidelines_text = ""
     curation_policy_text = ""
-    update_guidelines_path = root / "meta" / "update-guidelines.md"
-    curation_policy_path = root / "meta" / "curation-policy.md"
+    update_guidelines_path = _resolve_governance_path(root, "update-guidelines.md")
+    curation_policy_path = _resolve_governance_path(root, "curation-policy.md")
     if update_guidelines_path.exists():
         update_guidelines_text = update_guidelines_path.read_text(encoding="utf-8")
     if curation_policy_path.exists():
@@ -447,7 +483,7 @@ def _path_policy_state(root: Path, rel_path: str | None) -> dict[str, Any]:
         "Inform only" in curation_policy_text and "never instruct" in curation_policy_text.lower()
     )
 
-    if normalized in {"README.md", "CHANGELOG.md"} or (
+    if normalized in {"HOME.md", "README.md", "CHANGELOG.md"} or (
         normalized.startswith("governance/") and meta_protected
     ):
         protected_surface = True
@@ -633,8 +669,8 @@ def _build_policy_state_payload(
         "path_policy": path_state,
         "policy_sources": [
             _CAPABILITIES_MANIFEST_PATH.as_posix(),
-            "governance/update-guidelines.md",
-            "governance/curation-policy.md",
+            _resolve_governance_path(root, "update-guidelines.md").relative_to(root).as_posix(),
+            _resolve_governance_path(root, "curation-policy.md").relative_to(root).as_posix(),
         ],
         "warnings": warnings,
     }
@@ -841,8 +877,8 @@ def _review_expiry_threshold_days(
 
 
 def _parse_aggregation_trigger(repo_root: Path) -> int:
-    """Read the active ACCESS aggregation trigger from meta/quick-reference.md."""
-    qr_path = repo_root / "meta" / "quick-reference.md"
+    """Read the active ACCESS aggregation trigger from the live router file."""
+    qr_path = _resolve_live_router_path(repo_root)
     if not qr_path.exists():
         return _DEFAULT_AGGREGATION_TRIGGER
 
@@ -1379,8 +1415,8 @@ def _detect_co_retrieval_clusters(entries: list[dict[str, Any]]) -> list[dict[st
 
 
 def _parse_last_periodic_review(repo_root: Path) -> date | None:
-    """Read the last periodic review date from meta/quick-reference.md."""
-    qr_path = repo_root / "meta" / "quick-reference.md"
+    """Read the last periodic review date from the live router file."""
+    qr_path = _resolve_live_router_path(repo_root)
     if not qr_path.exists():
         return None
 
@@ -1392,8 +1428,8 @@ def _parse_last_periodic_review(repo_root: Path) -> date | None:
 
 
 def _parse_periodic_review_window(repo_root: Path) -> int:
-    """Read the periodic-review cadence from meta/quick-reference.md when present."""
-    qr_path = repo_root / "meta" / "quick-reference.md"
+    """Read the periodic-review cadence from the live router file when present."""
+    qr_path = _resolve_live_router_path(repo_root)
     if not qr_path.exists():
         return _PERIODIC_REVIEW_DAYS
 
@@ -1407,8 +1443,8 @@ def _parse_periodic_review_window(repo_root: Path) -> int:
 
 
 def _parse_current_stage(repo_root: Path) -> str:
-    """Read the active maturity stage from meta/quick-reference.md."""
-    qr_path = repo_root / "meta" / "quick-reference.md"
+    """Read the active maturity stage from the live router file."""
+    qr_path = _resolve_live_router_path(repo_root)
     if not qr_path.exists():
         return "Exploration"
 
@@ -1678,7 +1714,7 @@ def _assess_maturity_stage(signals: dict[str, Any], current_stage: str) -> dict[
 
 def _parse_review_queue_entries(root: Path) -> list[dict[str, str]]:
     """Parse review-queue markdown entries into structured metadata."""
-    queue_path = root / "meta" / "review-queue.md"
+    queue_path = _resolve_governance_path(root, "review-queue.md")
     if not queue_path.exists():
         return []
 

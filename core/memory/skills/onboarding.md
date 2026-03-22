@@ -10,14 +10,14 @@ trust: high
 
 ## When to use this skill
 
-Activate this skill on the **first session only** — when no date-organized chat folders exist in `chats/`, AND either:
+Activate this skill on the **first session only** — when no date-organized chat folders exist in `core/memory/activity/`, AND either:
 
-1. `identity/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
-2. `identity/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but has not yet been confirmed through onboarding).
+1. `core/memory/users/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR
+2. `core/memory/users/` contains a file with `source: template` in its frontmatter (a starter profile was installed by `setup.sh --profile` but has not yet been confirmed through onboarding).
 
-If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Return to `meta/quick-reference.md` and follow its routing instead.
+If neither condition matches — a confirmed user portrait exists, or chat history is present — the system has already been onboarded. Return to `core/HOME.md` and follow its routing instead.
 
-Before using this skill, the agent should already have been routed here from `meta/quick-reference.md`, reviewed the relevant change-control and read-only sections of `meta/update-guidelines.md`, and checked write access per the first-run flow in `meta/first-run.md`.
+Before using this skill, the agent should already have been routed here from `core/HOME.md`, reviewed the relevant change-control and read-only sections of `core/governance/update-guidelines.md`, and checked write access per the first-run flow in `core/governance/first-run.md`.
 
 When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during onboarding; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 
@@ -25,7 +25,7 @@ When local agent-memory MCP tools are available, prefer them for memory reads, s
 
 ### 0. Check for a starter profile template
 
-If `identity/` contains a file with `source: template` in its YAML frontmatter (placed there by `setup.sh --profile`), the user chose a starter profile during setup. In this case:
+If `core/memory/users/` contains a file with `source: template` in its YAML frontmatter (placed there by `setup.sh --profile`), the user chose a starter profile during setup. In this case:
 
 1. Read the template file.
 2. Present the pre-filled traits to the user: "I see you started with the [role] template. Let me walk through these to see what fits."
@@ -84,29 +84,29 @@ This catches important context that structured questions miss. Don't skip it —
 
 Based on the conversation:
 
-1. Draft one or more proposed files in `identity/` capturing the discovered traits. Use the frontmatter schema:
+1. Draft one or more proposed files in `core/memory/users/` capturing the discovered traits. Use the frontmatter schema:
    ```yaml
    ---
    source: user-stated
-   origin_session: chats/YYYY/MM/DD/chat-001
+   origin_session: core/memory/activity/YYYY/MM/DD/chat-001
    created: YYYY-MM-DD
    last_verified: YYYY-MM-DD
    trust: high
    ---
    ```
 2. Tag each trait with `[observed]` confidence when the user stated it directly.
-3. Present the proposed portrait to the user and state that saving to `identity/` is a proposed-tier change that requires explicit confirmation.
+3. Present the proposed portrait to the user and state that saving to `core/memory/users/` is a proposed-tier change that requires explicit confirmation.
 4. If the user requests edits, revise the proposal and ask for confirmation again.
-5. Only after explicit in-chat confirmation may you create the `identity/` files and update `identity/SUMMARY.md`.
-6. That explicit confirmation counts as the required approval for the first identity-file creation during onboarding.
-7. If write access is unavailable, do not attempt the write. Instead, produce the confirmed profile using the **onboarding export format** (see `HUMANS/tooling/onboard-export-template.md`): output a single markdown document with top-level YAML frontmatter for `session_id` and `session_date`, followed by `## Identity Profile`, `## Session Transcript`, `## Session Summary`, and `## Session Reflection` sections. Use the canonical session path form (`chats/YYYY/MM/DD/chat-001`) for `session_id`. Tell the user to save this output to a file and run `bash HUMANS/tooling/scripts/onboard-export.sh <file>` to import it into the repo. This replaces the generic deferred-action format for onboarding specifically, since the export script preserves the first session's metadata, transcript, and chat artifacts while handling the repo writes and commit.
-8. If the session ends without confirmation, do not write to `identity/`.
+5. Only after explicit in-chat confirmation may you create the `core/memory/users/` files and update `core/memory/users/SUMMARY.md`.
+6. That explicit confirmation counts as the required approval for the first user-profile file creation during onboarding.
+7. If write access is unavailable, do not attempt the write. Instead, produce the confirmed profile using the **onboarding export format** (see `HUMANS/tooling/onboard-export-template.md`): output a single markdown document with top-level YAML frontmatter for `session_id` and `session_date`, followed by `## Identity Profile`, `## Session Transcript`, `## Session Summary`, and `## Session Reflection` sections. Use the canonical session path form (`core/memory/activity/YYYY/MM/DD/chat-001`) for `session_id`. Tell the user to save this output to a file and run `bash HUMANS/tooling/scripts/onboard-export.sh <file>` to import it into the repo. This replaces the generic deferred-action format for onboarding specifically, since the export script preserves the first session's metadata, transcript, and chat artifacts while handling the repo writes and commit.
+8. If the session ends without confirmation, do not write to `core/memory/users/`.
 
 ### 7. Record the session
 
 Log this conversation following the standard chat archival structure:
 
-- Create the appropriate `chats/YYYY/MM/DD/chat-001/` folder.
+- Create the appropriate `core/memory/activity/YYYY/MM/DD/chat-001/` folder.
 - Write `transcript.md`, `SUMMARY.md`, and `reflection.md`.
 - Append access notes to the relevant ACCESS.jsonl files for any content files you read. Include `session_id` whenever the chat folder is known.
 - If read-only, keep chat archival in the onboarding export produced in step 6 — do not produce a separate deferred-action summary. The export format already covers session transcript, summary, and reflection.
@@ -117,7 +117,7 @@ Log this conversation following the standard chat archival structure:
 - The user should feel accurately represented — not a caricature or a list of demographics, but a useful working portrait.
 - Communication preferences should be specific enough to measurably change agent behavior in the next session.
 - No trait should be invented or inferred beyond what the user actually said. If something is ambiguous, note it as `[tentative]` rather than guessing.
-- No `identity/` write should occur before explicit user confirmation.
+- No `core/memory/users/` write should occur before explicit user confirmation.
 
 ## Anti-patterns
 
@@ -130,8 +130,8 @@ Log this conversation following the standard chat archival structure:
 
 This skill is designed for one-time use. After successful onboarding:
 
-1. Propose archiving this file to `skills/_archive/onboarding.md`.
-2. Update `skills/SUMMARY.md` to reflect the archival.
+1. Propose archiving this file to `core/memory/skills/_archive/onboarding.md`.
+2. Update `core/memory/skills/SUMMARY.md` to reflect the archival.
 3. Log the archival in `CHANGELOG.md` as a `[curation]` entry.
 
 The skill remains available in git history if the user ever wants to re-run onboarding (e.g., after a major life or role change).
