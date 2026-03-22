@@ -116,6 +116,7 @@ For the complete mapping of which files to load per session type, see `core/INIT
 │   │   ├── review-queue.md       ← Pending suggestions for system modifications.
 │   │   ├── belief-diff-log.md    ← Periodic audit log tracking content drift.
 │   │   ├── system-maturity.md    ← Developmental stage tracking and adaptive thresholds.
+│   │   ├── maturity-roadmap.md   ← Forward-looking governance improvements and phase roadmap.
 │   │   ├── first-run.md          ← Streamlined first-session flow for agents.
 │   │   ├── session-checklists.md ← Session runbooks + periodic integrity audit.
 │   │   ├── scratchpad-guidelines.md ← On-demand governance for scratchpad use.
