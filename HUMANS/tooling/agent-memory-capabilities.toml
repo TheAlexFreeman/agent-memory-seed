@@ -68,9 +68,9 @@ raw_fallback = [
   "memory_commit",
 ]
 semantic_extensions = [
-  "memory_plan_create",
-  "memory_plan_execute",
-  "memory_plan_review",
+  "memory_create_plan",
+  "memory_mark_plan_item_complete",
+  "memory_update_plan_next_action",
   "memory_add_knowledge_file",
   "memory_reorganize_path",
   "memory_promote_knowledge_batch",
@@ -136,8 +136,8 @@ minimum_read_tools = [
   "memory_validate",
 ]
 minimum_semantic_tools = [
-  "memory_plan_create",
-  "memory_plan_execute",
+  "memory_create_plan",
+  "memory_mark_plan_item_complete",
   "memory_add_knowledge_file",
 ]
 read_only_runtime_allowed = true
@@ -442,7 +442,7 @@ recovery = "Treat as idempotent no-op and refresh caller state if needed."
 
 [desktop_operations.create_plan]
 status = "implemented"
-tool = "memory_plan_create"
+tool = "memory_create_plan"
 tier = "semantic"
 operation_group = "plan"
 change_class = "proposed"
@@ -450,26 +450,19 @@ preview_support = true
 preview_mode = "preview"
 preview_argument = "preview"
 
-[desktop_operations.execute_plan]
+[desktop_operations.mark_plan_item_complete]
 status = "implemented"
-tool = "memory_plan_execute"
+tool = "memory_mark_plan_item_complete"
 tier = "semantic"
 operation_group = "plan"
-change_class = "proposed"
-notes = "May escalate to protected at runtime when a phase targets non-memory paths."
-preview_support = true
-preview_mode = "preview"
-preview_argument = "preview"
+change_class = "automatic"
 
-[desktop_operations.review_plan]
+[desktop_operations.update_plan_next_action]
 status = "implemented"
-tool = "memory_plan_review"
+tool = "memory_update_plan_next_action"
 tier = "semantic"
 operation_group = "plan"
-change_class = "proposed"
-preview_support = true
-preview_mode = "preview"
-preview_argument = "preview"
+change_class = "automatic"
 
 [desktop_operations.add_knowledge_file]
 status = "implemented"
@@ -625,7 +618,7 @@ preview_support = true
 preview_mode = "confirm_flow"
 preview_argument = "confirm"
 
-[operations.memory_plan_create]
+[operations.memory_create_plan]
 group = "plan"
 tier = "semantic"
 change_class = "proposed"
@@ -635,74 +628,69 @@ preview_argument = "preview"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
 writes = [
-  "memory/working/projects/{project_id}/plans/{plan_id}.yaml",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
   "memory/working/projects/{project_id}/SUMMARY.md",
   "memory/working/projects/SUMMARY.md",
-  "memory/working/projects/{project_id}/operations.jsonl",
 ]
 owns_frontmatter = [
-  "memory/working/projects/{project_id}/plans/{plan_id}.yaml",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
   "memory/working/projects/{project_id}/SUMMARY.md",
 ]
 owns_summaries = ["memory/working/projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
-result_fields = ["status", "plan_path", "next_action"]
+result_fields = ["plan_path", "status"]
 fallback_tools = ["memory_write", "memory_update_frontmatter", "memory_commit"]
 error_kinds = ["ValidationError", "StagingError"]
 
-[operations.memory_plan_execute]
+[operations.memory_mark_plan_item_complete]
 group = "plan"
 tier = "semantic"
-change_class = "proposed"
+change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
-preview_support = true
-preview_mode = "preview"
-preview_argument = "preview"
 writes = [
-  "memory/working/projects/{project_id}/plans/{plan_id}.yaml",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
   "memory/working/projects/{project_id}/SUMMARY.md",
   "memory/working/projects/SUMMARY.md",
-  "memory/working/projects/{project_id}/operations.jsonl",
 ]
 owns_frontmatter = [
-  "memory/working/projects/{project_id}/plans/{plan_id}.yaml",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
   "memory/working/projects/{project_id}/SUMMARY.md",
 ]
 owns_summaries = ["memory/working/projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
-result_fields = ["plan_status", "phase_id", "next_action", "plan_progress"]
-fallback_tools = ["memory_write", "memory_commit"]
+result_fields = ["next_action", "phase_progress", "plan_progress", "status"]
+fallback_tools = ["memory_edit", "memory_update_frontmatter", "memory_commit"]
 error_kinds = [
-  "AlreadyDoneError",
+  "ConflictError",
   "NotFoundError",
   "ValidationError",
   "StagingError",
 ]
 
-[operations.memory_plan_review]
+[operations.memory_update_plan_next_action]
 group = "plan"
 tier = "semantic"
-change_class = "proposed"
+change_class = "automatic"
 commit_model = "auto_commit"
 commit_category_hint = "plan"
-preview_support = true
-preview_mode = "preview"
-preview_argument = "preview"
 writes = [
-  "memory/working/projects/OUT/{project_id}/{plan_id}/**",
-  "memory/working/projects/OUT/SUMMARY.md",
-  "memory/working/projects/{project_id}/operations.jsonl",
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
+  "memory/working/projects/SUMMARY.md",
 ]
-owns_frontmatter = []
-owns_summaries = ["memory/working/projects/OUT/SUMMARY.md"]
+owns_frontmatter = [
+  "memory/working/projects/{project_id}/plans/{plan_id}.md",
+  "memory/working/projects/{project_id}/SUMMARY.md",
+]
+owns_summaries = ["memory/working/projects/SUMMARY.md"]
 owns_access_logs = []
 owns_review_queue = []
-result_fields = ["outbox_root", "exported_artifacts"]
-fallback_tools = ["memory_write", "memory_commit"]
-error_kinds = ["NotFoundError", "ValidationError", "StagingError"]
+result_fields = ["next_action"]
+fallback_tools = ["memory_update_frontmatter", "memory_commit"]
+error_kinds = ["ConflictError", "NotFoundError", "StagingError"]
 
 [operations.memory_add_knowledge_file]
 group = "knowledge"

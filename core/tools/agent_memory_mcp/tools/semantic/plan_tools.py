@@ -2,32 +2,11 @@
 
 from __future__ import annotations
 
-import json
-import shutil
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from ...path_policy import validate_session_id, validate_slug
-from ...plan_utils import (
-    PlanDocument,
-    PlanPurpose,
-    append_operations_log,
-    build_review_from_input,
-    coerce_phase_inputs,
-    exportable_artifacts,
-    load_plan,
-    next_action,
-    outbox_summary_path,
-    phase_change_class,
-    phase_payload,
-    plan_progress,
-    plan_title,
-    project_outbox_root,
-    project_plan_path,
-    resolve_phase,
-    save_plan,
-    unresolved_blockers,
-)
 from ...preview_contract import build_governed_preview, preview_target
 
 if TYPE_CHECKING:
@@ -36,6 +15,16 @@ if TYPE_CHECKING:
 
 def _tool_annotations(**kwargs: object) -> Any:
     return cast(Any, kwargs)
+
+
+def _legacy_plan_path(plan_id: str) -> str:
+    return f"memory/working/projects/{validate_slug(plan_id, field_name='plan_id')}.md"
+
+
+def _project_plan_path(project_id: str, plan_id: str) -> str:
+    project_slug = validate_slug(project_id, field_name="project_id")
+    plan_slug = validate_slug(plan_id, field_name="plan_id")
+    return f"memory/working/projects/{project_slug}/plans/{plan_slug}.md"
 
 
 def _project_summary_path(project_id: str) -> str:
@@ -50,7 +39,7 @@ def _find_project_plan_matches(root: Path, plan_id: str) -> list[tuple[str, str]
         return []
 
     matches: list[tuple[str, str]] = []
-    for abs_path in sorted(projects_root.glob(f"*/plans/{plan_slug}.yaml")):
+    for abs_path in sorted(projects_root.glob(f"*/plans/{plan_slug}.md")):
         project_id = abs_path.parents[1].name
         matches.append((abs_path.relative_to(root).as_posix(), project_id))
     return matches
@@ -60,15 +49,12 @@ def _resolve_existing_plan_path(
     root: Path,
     plan_id: str,
     project_id: str | None,
-) -> tuple[str, str]:
-    from ...errors import NotFoundError, ValidationError
+) -> tuple[str, str | None]:
+    from ...errors import ValidationError
 
     if project_id is not None:
         project_slug = validate_slug(project_id, field_name="project_id")
-        plan_path = project_plan_path(project_slug, plan_id)
-        if not (root / plan_path).exists():
-            raise NotFoundError(f"Plan not found: {plan_path}")
-        return plan_path, project_slug
+        return _project_plan_path(project_slug, plan_id), project_slug
 
     project_matches = _find_project_plan_matches(root, plan_id)
     if len(project_matches) == 1:
@@ -78,28 +64,38 @@ def _resolve_existing_plan_path(
         raise ValidationError(
             f"Plan '{plan_id}' exists in multiple projects ({match_ids}); specify project_id."
         )
-    raise NotFoundError(f"Plan not found: {plan_id}")
+
+    return _legacy_plan_path(plan_id), None
 
 
-def _resolve_new_plan_path(root: Path, plan_id: str, project_id: str) -> tuple[str, str]:
+def _resolve_new_plan_path(
+    root: Path,
+    plan_id: str,
+    project_id: str | None,
+) -> tuple[str, str | None]:
     from ...errors import NotFoundError, ValidationError
+
+    if project_id is None:
+        if (root / "memory" / "working" / "projects" / "SUMMARY.md").exists():
+            return _legacy_plan_path(plan_id), None
+        raise ValidationError("project_id is required when creating a project-scoped plan.")
 
     project_slug = validate_slug(project_id, field_name="project_id")
     project_summary = root / _project_summary_path(project_slug)
     if not project_summary.exists():
         raise NotFoundError(f"Project not found: memory/working/projects/{project_slug}")
-
-    plan_path = project_plan_path(project_slug, plan_id)
-    if (root / plan_path).exists():
-        raise ValidationError(f"Plan already exists: {plan_path}")
-    return plan_path, project_slug
+    return _project_plan_path(project_slug, plan_id), project_slug
 
 
-def _sync_project_navigation(root: Path, repo, project_id: str, files_changed: list[str]) -> None:
+def _sync_project_navigation(
+    root: Path,
+    repo,
+    project_id: str,
+    files_changed: list[str],
+) -> None:
     from ...frontmatter_utils import (
         collect_project_entries,
         count_active_project_plans,
-        count_project_plans,
         read_with_frontmatter,
         render_projects_navigator,
         today_str,
@@ -111,7 +107,6 @@ def _sync_project_navigation(root: Path, repo, project_id: str, files_changed: l
     if abs_project_summary.exists():
         project_fm, project_body = read_with_frontmatter(abs_project_summary)
         project_fm["active_plans"] = count_active_project_plans(root, project_id)
-        project_fm["plans"] = count_project_plans(root, project_id)
         project_fm["last_activity"] = today_str()
         write_with_frontmatter(abs_project_summary, project_fm, project_body)
         repo.add(project_summary_path)
@@ -128,243 +123,75 @@ def _sync_project_navigation(root: Path, repo, project_id: str, files_changed: l
             files_changed.append(navigator_path)
 
 
-def _create_preview(
-    *,
-    mode: str,
-    change_class: str,
-    summary: str,
-    reasoning: str,
-    target_files: list[tuple[str, str]],
-    invariant_effects: list[str],
-    commit_message: str,
-    resulting_state: dict[str, Any],
-    warnings: list[str],
-) -> dict[str, Any]:
-    return build_governed_preview(
-        mode=mode,
-        change_class=change_class,
-        summary=summary,
-        reasoning=reasoning,
-        target_files=[preview_target(path, action) for path, action in target_files],
-        invariant_effects=invariant_effects,
-        commit_message=commit_message,
-        resulting_state=resulting_state,
-        warnings=warnings,
-    )
+def _plan_summary_title(fm_dict: dict[str, object], body: str, plan_id: str) -> str:
+    """Resolve a human-readable plan title for the plans SUMMARY."""
+    title = fm_dict.get("title")
+    if isinstance(title, str) and title.strip():
+        return title.strip()
 
+    heading_match = re.search(r"(?m)^#\s+(.+?)\s*$", body)
+    if heading_match is not None:
+        return heading_match.group(1).strip()
 
-def _append_plan_log(
-    root: Path,
-    repo,
-    project_id: str,
-    files_changed: list[str],
-    *,
-    session_id: str | None,
-    action: str,
-    plan_id: str,
-    phase_id: str | None = None,
-    commit: str | None = None,
-    detail: str = "",
-) -> None:
-    log_path, _ = append_operations_log(
-        root,
-        project_id,
-        session_id=session_id,
-        action=action,
-        plan_id=plan_id,
-        phase_id=phase_id,
-        commit=commit,
-        detail=detail,
-    )
-    repo.add(log_path)
-    if log_path not in files_changed:
-        files_changed.append(log_path)
-
-
-def _render_outbox_summary(existing: str, project_id: str, plan_id: str, artifacts: list[str]) -> str:
-    heading = f"## {project_id}"
-    lines = existing.splitlines()
-    entry_lines = [
-        f"### {plan_id}",
-        f"- Exported artifacts: {len(artifacts)}",
-        f"- Outbox folder: memory/working/projects/OUT/{project_id}/{plan_id}",
-    ]
-    entry_lines.extend(f"- Artifact: {artifact}" for artifact in artifacts)
-
-    if heading not in existing:
-        updated = existing.rstrip() + "\n\n" + heading + "\n\n" + "\n".join(entry_lines) + "\n"
-        return updated
-
-    section_start = lines.index(heading)
-    next_heading = len(lines)
-    for index in range(section_start + 1, len(lines)):
-        if lines[index].startswith("## "):
-            next_heading = index
-            break
-    section = lines[section_start:next_heading]
-    filtered: list[str] = []
-    skip = False
-    for line in section:
-        if line == f"### {plan_id}":
-            skip = True
-            continue
-        if skip and line.startswith("### "):
-            skip = False
-        if not skip:
-            filtered.append(line)
-    replacement = filtered + ([""] if filtered and filtered[-1] else []) + entry_lines
-    merged = lines[:section_start] + replacement + lines[next_heading:]
-    return "\n".join(merged).rstrip() + "\n"
+    return plan_id
 
 
 def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
-    """Register YAML plan semantic tools."""
+    """Register plan-oriented semantic tools."""
 
     @mcp.tool(
-        name="memory_plan_create",
+        name="memory_mark_plan_item_complete",
         annotations=_tool_annotations(
-            title="Create Structured Plan",
+            title="Mark Plan Item Complete",
             readOnlyHint=False,
             destructiveHint=False,
             idempotentHint=False,
             openWorldHint=False,
         ),
     )
-    async def memory_plan_create(
+    async def memory_mark_plan_item_complete(
         plan_id: str,
-        project_id: str,
-        purpose_summary: str,
-        purpose_context: str,
-        phases: list[dict[str, Any]],
-        session_id: str,
-        questions: list[str] | None = None,
-        status: str = "active",
-        preview: bool = False,
-    ) -> str:
-        """Create a structured YAML plan file inside a project."""
-        from ...errors import ValidationError
-        from ...frontmatter_utils import today_str
-        from ...models import MemoryWriteResult
-
-        repo = get_repo()
-        root = get_root()
-        warnings: list[str] = []
-
-        validate_session_id(session_id)
-        if status not in {"draft", "active"}:
-            raise ValidationError("memory_plan_create status must be 'draft' or 'active'")
-
-        plan_path, resolved_project_id = _resolve_new_plan_path(root, plan_id, project_id)
-        plan = PlanDocument(
-            id=plan_id,
-            project=resolved_project_id,
-            created=today_str(),
-            origin_session=session_id,
-            status=status,
-            purpose=PlanPurpose(
-                summary=purpose_summary,
-                context=purpose_context,
-                questions=list(questions or []),
-            ),
-            phases=coerce_phase_inputs(phases),
-            review=None,
-        )
-
-        files_changed = [
-            plan_path,
-            _project_summary_path(resolved_project_id),
-            "memory/working/projects/SUMMARY.md",
-            f"memory/working/projects/{resolved_project_id}/operations.jsonl",
-        ]
-        new_state = {
-            "plan_path": plan_path,
-            "project_id": resolved_project_id,
-            "status": plan.status,
-            "phase_count": len(plan.phases),
-            "next_action": next_action(plan),
-        }
-        commit_msg = f"[plan] Create {plan_id}"
-        preview_payload = _create_preview(
-            mode="preview" if preview else "apply",
-            change_class="proposed",
-            summary=f"Create YAML plan {plan_id} in project {resolved_project_id}.",
-            reasoning=(
-                "Structured YAML plans are the governed execution surface for multi-phase work, "
-                "so creation also refreshes project routing metadata and initializes operations logging."
-            ),
-            target_files=[
-                (plan_path, "create"),
-                (_project_summary_path(resolved_project_id), "update"),
-                ("memory/working/projects/SUMMARY.md", "update"),
-                (f"memory/working/projects/{resolved_project_id}/operations.jsonl", "append"),
-            ],
-            invariant_effects=[
-                "Creates a machine-validated YAML plan with structured purpose, phases, and change specs.",
-                "Refreshes project routing counters so active plan navigation stays accurate.",
-                "Initializes a project-scoped operations log entry for plan creation.",
-            ],
-            commit_message=commit_msg,
-            resulting_state=new_state,
-            warnings=warnings,
-        )
-        if preview:
-            return MemoryWriteResult(
-                files_changed=files_changed,
-                commit_sha=None,
-                commit_message=None,
-                new_state=new_state,
-                warnings=warnings,
-                preview=preview_payload,
-            ).to_json()
-
-        abs_plan = repo.abs_path(plan_path)
-        save_plan(abs_plan, plan, root)
-        repo.add(plan_path)
-        _append_plan_log(
-            root,
-            repo,
-            resolved_project_id,
-            files_changed,
-            session_id=session_id,
-            action="plan-created",
-            plan_id=plan.id,
-            detail=plan_title(plan),
-        )
-        _sync_project_navigation(root, repo, resolved_project_id, files_changed)
-
-        commit_result = repo.commit(commit_msg)
-        return MemoryWriteResult.from_commit(
-            files_changed=files_changed,
-            commit_result=commit_result,
-            commit_message=commit_msg,
-            new_state=new_state,
-            warnings=warnings,
-            preview=preview_payload,
-        ).to_json()
-
-    @mcp.tool(
-        name="memory_plan_execute",
-        annotations=_tool_annotations(
-            title="Execute Structured Plan",
-            readOnlyHint=False,
-            destructiveHint=False,
-            idempotentHint=False,
-            openWorldHint=False,
-        ),
-    )
-    async def memory_plan_execute(
-        plan_id: str,
+        phase_index: int,
+        item_index: int,
         project_id: str | None = None,
-        phase_id: str | None = None,
-        action: str = "inspect",
-        session_id: str | None = None,
-        commit_sha: str | None = None,
-        review: dict[str, Any] | None = None,
-        preview: bool = False,
+        version_token: str | None = None,
     ) -> str:
-        """Inspect, start, block, or complete a structured plan phase."""
-        from ...errors import AlreadyDoneError, ValidationError
-        from ...frontmatter_utils import today_str
+        """Mark a plan checklist item ☐→☑ and keep all invariants in sync.
+
+        Invariants maintained (all atomically committed):
+          1. ☐ → ☑ for the target item in the plan file
+          2. Phase counter updated: N/M → (N+1)/M; phase → ☑ if all done
+          3. next_action frontmatter updated to first remaining unchecked item;
+                 status → 'complete' if all phases done
+          4. last_verified updated to today
+          5. Progress log table gets a new row
+           6. Project routing metadata is refreshed
+
+        Args:
+                plan_id:       Plan identifier without .md extension
+                                           (e.g. 'react-stack-research').
+                phase_index:   0-based phase number.
+                item_index:    0-based item number within the phase.
+                project_id:    Optional project slug for project-scoped plans.
+                version_token: Optional version token for the plan file.
+
+        Returns:
+                MemoryWriteResult JSON with new_state:
+                  next_action    (str|null)  Description of next unchecked item
+                  phase_progress [done,total]
+                  plan_progress  [done,total]
+                  status         (str)       'active' or 'complete'
+        """
+        from ...errors import NotFoundError
+        from ...frontmatter_utils import (
+            add_progress_log_row,
+            build_plan_summary_block,
+            mark_plan_item_complete,
+            parse_plan_items,
+            read_with_frontmatter,
+            replace_begin_end_block,
+            today_str,
+        )
         from ...models import MemoryWriteResult
 
         repo = get_repo()
@@ -373,441 +200,355 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         plan_path, resolved_project_id = _resolve_existing_plan_path(root, plan_id, project_id)
         abs_plan = repo.abs_path(plan_path)
-        plan = load_plan(abs_plan, root)
-        phase = resolve_phase(plan, phase_id)
-        blockers = unresolved_blockers(plan, phase, root)
-        payload = phase_payload(plan, phase, root)
-        payload["unresolved_blockers"] = blockers
+        if not abs_plan.exists():
+            raise NotFoundError(f"Plan not found: {plan_path}")
 
-        if action == "inspect":
-            return json.dumps(payload, indent=2)
+        repo.check_version_token(plan_path, version_token)
 
-        if action not in {"start", "complete"}:
-            raise ValidationError("action must be one of: inspect, start, complete")
-        if session_id is None:
-            raise ValidationError("session_id is required for start and complete actions")
-        validate_session_id(session_id)
+        content = abs_plan.read_text(encoding="utf-8")
 
-        change_class = phase_change_class(phase)
-        files_changed = [
-            plan_path,
-            _project_summary_path(resolved_project_id),
-            "memory/working/projects/SUMMARY.md",
-            f"memory/working/projects/{resolved_project_id}/operations.jsonl",
-        ]
+        new_content, stats = mark_plan_item_complete(content, phase_index, item_index)
 
-        if action == "start" and blockers:
-            plan.status = "blocked"
-            if phase.status == "pending":
-                phase.status = "blocked"
-            commit_msg = f"[plan] Block {plan.id}:{phase.id}"
-            blocked_state = {
-                "plan_status": plan.status,
-                "phase_status": phase.status,
-                "phase_id": phase.id,
-                "blocked_by": blockers,
-                "next_action": next_action(plan),
-            }
-            preview_payload = _create_preview(
-                mode="preview" if preview else "apply",
-                change_class=change_class,
-                summary=f"Mark plan {plan.id} blocked on phase {phase.id} until blockers resolve.",
-                reasoning=(
-                    "The execute flow records blocker state inside the plan so future sessions and "
-                    "summaries can see why work paused."
-                ),
-                target_files=[
-                    (plan_path, "update"),
-                    (_project_summary_path(resolved_project_id), "update"),
-                    ("memory/working/projects/SUMMARY.md", "update"),
-                    (f"memory/working/projects/{resolved_project_id}/operations.jsonl", "append"),
-                ],
-                invariant_effects=[
-                    "Transitions the plan into blocked status when a phase cannot legally start.",
-                    "Records the blocker event in the project operations log.",
-                ],
-                commit_message=commit_msg,
-                resulting_state=blocked_state,
-                warnings=warnings,
-            )
-            if preview:
-                return MemoryWriteResult(
-                    files_changed=files_changed,
-                    commit_sha=None,
-                    commit_message=None,
-                    new_state=blocked_state,
-                    warnings=warnings,
-                    preview=preview_payload,
-                ).to_json()
+        phases = parse_plan_items(content)
+        item_text = phases[phase_index]["items"][item_index]["text"]
+        fn_match = re.search(r"[\w./_-]+\.(?:md|py|ts|js)\b", item_text)
+        item_filename = fn_match.group(0).split("/")[-1] if fn_match else item_text[:40]
 
-            save_plan(abs_plan, plan, root)
-            repo.add(plan_path)
-            _append_plan_log(
-                root,
-                repo,
-                resolved_project_id,
-                files_changed,
-                session_id=session_id,
-                action="phase-blocked",
-                plan_id=plan.id,
-                phase_id=phase.id,
-                detail=f"Blocked by {len(blockers)} dependency references",
-            )
-            _sync_project_navigation(root, repo, resolved_project_id, files_changed)
-            commit_result = repo.commit(commit_msg)
-            return MemoryWriteResult.from_commit(
-                files_changed=files_changed,
-                commit_result=commit_result,
-                commit_message=commit_msg,
-                new_state=blocked_state,
-                warnings=warnings,
-                preview=preview_payload,
-            ).to_json()
+        plan_done, plan_total = stats["plan_progress"]
 
-        if action == "start":
-            if phase.status == "completed":
-                raise AlreadyDoneError(f"Phase '{phase.id}' is already complete")
-            if phase.status == "in-progress":
-                raise AlreadyDoneError(f"Phase '{phase.id}' is already in progress")
-            plan.status = "active"
-            phase.status = "in-progress"
-            commit_msg = f"[plan] Start {plan.id}:{phase.id}"
-            start_state = {
-                "plan_status": plan.status,
-                "phase_status": phase.status,
-                "phase_id": phase.id,
-                "next_action": phase.title,
-                "change_class": change_class,
-            }
-            preview_payload = _create_preview(
-                mode="preview" if preview else "apply",
-                change_class=change_class,
-                summary=f"Start phase {phase.id} in plan {plan.id}.",
-                reasoning=(
-                    "Starting a phase records the active execution context so later writes and summaries "
-                    "can tie file mutations back to the plan that authorized them."
-                ),
-                target_files=[
-                    (plan_path, "update"),
-                    (_project_summary_path(resolved_project_id), "update"),
-                    ("memory/working/projects/SUMMARY.md", "update"),
-                    (f"memory/working/projects/{resolved_project_id}/operations.jsonl", "append"),
-                ],
-                invariant_effects=[
-                    "Transitions the selected phase to in-progress after blocker validation succeeds.",
-                    "Records the phase-start event in the project operations log.",
-                ],
-                commit_message=commit_msg,
-                resulting_state=start_state,
-                warnings=warnings,
-            )
-            if preview:
-                return MemoryWriteResult(
-                    files_changed=files_changed,
-                    commit_sha=None,
-                    commit_message=None,
-                    new_state=start_state,
-                    warnings=warnings,
-                    preview=preview_payload,
-                ).to_json()
+        action_desc = f"Completed {item_filename} ({plan_id} {plan_done}/{plan_total})"
+        new_content = add_progress_log_row(new_content, action_desc)
 
-            save_plan(abs_plan, plan, root)
-            repo.add(plan_path)
-            _append_plan_log(
-                root,
-                repo,
-                resolved_project_id,
-                files_changed,
-                session_id=session_id,
-                action="phase-started",
-                plan_id=plan.id,
-                phase_id=phase.id,
-                detail=phase.title,
-            )
-            _sync_project_navigation(root, repo, resolved_project_id, files_changed)
-            commit_result = repo.commit(commit_msg)
-            return MemoryWriteResult.from_commit(
-                files_changed=files_changed,
-                commit_result=commit_result,
-                commit_message=commit_msg,
-                new_state=start_state,
-                warnings=warnings,
-                preview=preview_payload,
-            ).to_json()
-
-        if not commit_sha or not commit_sha.strip():
-            raise ValidationError("commit_sha is required when completing a phase")
-        if blockers:
-            raise ValidationError(
-                f"Phase '{phase.id}' is blocked by unresolved dependencies: "
-                + ", ".join(entry["reference"] for entry in blockers)
-            )
-        if phase.status == "completed":
-            raise AlreadyDoneError(f"Phase '{phase.id}' is already complete")
-
-        phase.status = "completed"
-        phase.commit = commit_sha.strip()
-        done, total = plan_progress(plan)
-        all_done = done == total
-        if all_done:
-            plan.status = "completed"
-            if review is not None:
-                plan.review = build_review_from_input(review, today_str(), session_id)
-            else:
-                warnings.append(
-                    "Final phase completed without a supplied review; wrote a placeholder purpose assessment."
-                )
-                plan.review = build_review_from_input(
-                    {
-                        "outcome": "completed",
-                        "purpose_assessment": "Execution completed; a detailed purpose assessment still needs to be written.",
-                        "unresolved": [],
-                        "follow_up": None,
-                    },
-                    today_str(),
-                    session_id,
-                )
-        else:
-            plan.status = "active"
-
-        commit_msg = f"[plan] Complete {plan.id}:{phase.id}"
-        completion_state: dict[str, Any] = {
-            "plan_status": plan.status,
-            "phase_status": phase.status,
-            "phase_id": phase.id,
-            "phase_commit": phase.commit,
-            "plan_progress": [done, total],
-            "next_action": next_action(plan),
-            "review_written": plan.review is not None,
+        all_complete = stats["all_complete"]
+        fm_updates = {
+            "next_action": stats["next_action"],
+            "last_verified": today_str(),
         }
-        preview_payload = _create_preview(
-            mode="preview" if preview else "apply",
-            change_class=change_class,
-            summary=f"Complete phase {phase.id} in plan {plan.id} and record commit metadata.",
-            reasoning=(
-                "Phase completion seals the plan state machine by attaching the implementation commit, "
-                "advancing progress, and closing the plan when all phases are done."
-            ),
-            target_files=[
-                (plan_path, "update"),
-                (_project_summary_path(resolved_project_id), "update"),
-                ("memory/working/projects/SUMMARY.md", "update"),
-                (f"memory/working/projects/{resolved_project_id}/operations.jsonl", "append"),
-            ],
-            invariant_effects=[
-                "Marks the phase complete and stores the commit SHA that produced the work.",
-                "Transitions the plan to completed and populates review data when the last phase finishes.",
-                "Logs the phase-complete event and, when applicable, the plan-complete event.",
-            ],
-            commit_message=commit_msg,
-            resulting_state=completion_state,
-            warnings=warnings,
-        )
-        if preview:
-            return MemoryWriteResult(
-                files_changed=files_changed,
-                commit_sha=None,
-                commit_message=None,
-                new_state=completion_state,
-                warnings=warnings,
-                preview=preview_payload,
-            ).to_json()
+        if all_complete:
+            fm_updates["status"] = "complete"
 
-        save_plan(abs_plan, plan, root)
+        import frontmatter as fmlib  # type: ignore[import-untyped]
+
+        post = fmlib.loads(new_content)
+        for key, value in fm_updates.items():
+            if value is None:
+                post.metadata.pop(key, None)
+            else:
+                post.metadata[key] = value
+        final_content = fmlib.dumps(post)
+
+        abs_plan.write_text(final_content, encoding="utf-8")
         repo.add(plan_path)
-        _append_plan_log(
-            root,
-            repo,
-            resolved_project_id,
-            files_changed,
-            session_id=session_id,
-            action="phase-completed",
-            plan_id=plan.id,
-            phase_id=phase.id,
-            commit=phase.commit,
-            detail=phase.title,
-        )
-        if all_done:
-            _append_plan_log(
-                root,
-                repo,
-                resolved_project_id,
-                files_changed,
-                session_id=session_id,
-                action="plan-completed",
-                plan_id=plan.id,
-                commit=phase.commit,
-                detail=plan_title(plan),
-            )
-        _sync_project_navigation(root, repo, resolved_project_id, files_changed)
+
+        files_changed = [plan_path]
+        if resolved_project_id is not None:
+            _sync_project_navigation(root, repo, resolved_project_id, files_changed)
+        else:
+            summary_path = "memory/working/projects/SUMMARY.md"
+            abs_summary = root / summary_path
+            if abs_summary.exists():
+                summary_content = abs_summary.read_text(encoding="utf-8")
+                fm_dict, body = read_with_frontmatter(abs_plan)
+                trust = fm_dict.get("trust", "medium")
+                status_str = "complete" if all_complete else "active"
+                summary_title = _plan_summary_title(fm_dict, body, plan_id)
+                new_block = build_plan_summary_block(
+                    plan_id=plan_id,
+                    title=summary_title,
+                    status=status_str,
+                    trust=trust,
+                    next_action=stats["next_action"],
+                    plan_progress=(plan_done, plan_total),
+                )
+                updated_summary = replace_begin_end_block(summary_content, plan_id, new_block)
+                if updated_summary is None:
+                    warnings.append(
+                        f"BEGIN/END anchor for '{plan_id}' not found in {summary_path}. "
+                        "Summary not updated — add anchors manually."
+                    )
+                else:
+                    abs_summary.write_text(updated_summary, encoding="utf-8")
+                    repo.add(summary_path)
+                    files_changed.append(summary_path)
+
+        commit_msg = f"[plan] Mark {item_filename} complete ({plan_id} {plan_done}/{plan_total})"
         commit_result = repo.commit(commit_msg)
-        return MemoryWriteResult.from_commit(
+
+        new_state = {
+            "next_action": stats["next_action"],
+            "phase_progress": stats["phase_progress"],
+            "plan_progress": stats["plan_progress"],
+            "status": "complete" if all_complete else "active",
+        }
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
-            new_state=completion_state,
+            new_state=new_state,
             warnings=warnings,
-            preview=preview_payload,
-        ).to_json()
+        )
+        return result.to_json()
 
     @mcp.tool(
-        name="memory_plan_review",
+        name="memory_create_plan",
         annotations=_tool_annotations(
-            title="Review Completed Plan Outputs",
+            title="Create Research Plan",
             readOnlyHint=False,
             destructiveHint=False,
             idempotentHint=False,
             openWorldHint=False,
         ),
     )
-    async def memory_plan_review(
-        project_id: str,
-        plan_id: str | None = None,
-        artifact_paths: list[str] | None = None,
-        session_id: str | None = None,
+    async def memory_create_plan(
+        plan_id: str,
+        title: str,
+        description: str,
+        content: str,
+        next_action: str,
+        session_id: str,
+        project_id: str | None = None,
+        plan_type: str = "research-plan",
         preview: bool = False,
     ) -> str:
-        """Scan completed plans or export selected completed-plan artifacts to the outbox."""
+        """Create a new plan file and register it in project routing."""
         from ...errors import ValidationError
+        from ...frontmatter_utils import append_plan_to_summary, build_plan_summary_block, today_str
         from ...models import MemoryWriteResult
 
         repo = get_repo()
         root = get_root()
-        project_slug = validate_slug(project_id, field_name="project_id")
+        warnings: list[str] = []
 
-        project_plans_dir = root / "memory" / "working" / "projects" / project_slug / "plans"
-        if plan_id is None:
-            completed: list[dict[str, Any]] = []
-            if project_plans_dir.is_dir():
-                for plan_file in sorted(project_plans_dir.glob("*.yaml")):
-                    plan = load_plan(plan_file, root)
-                    if plan.status != "completed":
-                        continue
-                    completed.append(
-                        {
-                            "plan_id": plan.id,
-                            "title": plan_title(plan),
-                            "status": plan.status,
-                            "exportable_artifacts": exportable_artifacts(root, plan),
-                            "outbox_root": project_outbox_root(project_slug, plan.id),
-                        }
-                    )
-            return json.dumps(
-                {
-                    "project_id": project_slug,
-                    "completed_plans": completed,
-                    "outbox_summary": outbox_summary_path(),
-                },
-                indent=2,
-            )
-
-        if session_id is None:
-            raise ValidationError("session_id is required when exporting reviewed artifacts")
         validate_session_id(session_id)
-
-        plan_path, resolved_project_id = _resolve_existing_plan_path(root, plan_id, project_slug)
+        plan_path, resolved_project_id = _resolve_new_plan_path(root, plan_id, project_id)
         abs_plan = repo.abs_path(plan_path)
-        plan = load_plan(abs_plan, root)
-        if plan.status != "completed":
-            raise ValidationError(f"Plan '{plan.id}' must be completed before review/export")
-
-        candidates = exportable_artifacts(root, plan)
-        selected = list(dict.fromkeys(artifact_paths or candidates))
-        if not selected:
-            raise ValidationError(f"Plan '{plan.id}' has no exportable artifacts")
-        if any(path not in candidates for path in selected):
-            invalid = [path for path in selected if path not in candidates]
+        if abs_plan.exists():
             raise ValidationError(
-                "artifact_paths must be a subset of the plan's existing outputs: " + ", ".join(invalid)
+                f"Plan already exists: {plan_path}. "
+                "Use memory_write to overwrite, or choose a different plan_id."
             )
 
-        out_root = project_outbox_root(resolved_project_id, plan.id)
-        outbox_summary = outbox_summary_path()
-        files_changed = [
-            outbox_summary,
-            f"memory/working/projects/{resolved_project_id}/operations.jsonl",
-        ]
-        export_targets: list[tuple[str, str]] = []
-        for artifact in selected:
-            dest = f"{out_root}/artifacts/{artifact}"
-            export_targets.append((dest, "create"))
-            files_changed.append(dest)
-
-        new_state = {
-            "plan_id": plan.id,
-            "project_id": resolved_project_id,
-            "outbox_root": out_root,
-            "exported_artifacts": selected,
+        today = today_str()
+        fm_dict: dict[str, object] = {
+            "source": "agent-generated",
+            "type": plan_type,
+            "title": title,
+            "created": today,
+            "last_verified": today,
+            "trust": "medium",
+            "status": "active",
+            "next_action": next_action,
+            "origin_session": session_id,
         }
-        commit_msg = f"[plan] Review exports for {plan.id}"
-        preview_payload = _create_preview(
+
+        import frontmatter as fmlib  # type: ignore[import-untyped]
+
+        post = fmlib.Post(content, **fm_dict)
+        files_changed = [plan_path]
+
+        summary_path = "memory/working/projects/SUMMARY.md"
+        abs_summary = root / summary_path
+        updated_summary: str | None = None
+        if resolved_project_id is not None:
+            project_summary_path = _project_summary_path(resolved_project_id)
+            if (root / project_summary_path).exists():
+                files_changed.append(project_summary_path)
+            if (root / "memory" / "working" / "projects" / "SUMMARY.md").exists():
+                files_changed.append("memory/working/projects/SUMMARY.md")
+        elif abs_summary.exists():
+            summary_content = abs_summary.read_text(encoding="utf-8")
+            new_block = build_plan_summary_block(
+                plan_id=plan_id,
+                title=title,
+                status="active",
+                trust="medium",
+                next_action=next_action,
+                plan_progress=(0, 0),
+                description=description,
+            )
+            updated_summary = append_plan_to_summary(summary_content, new_block)
+            files_changed.append(summary_path)
+        else:
+            warnings.append(f"{summary_path} not found — plan entry not added to index.")
+
+        commit_msg = f"[plan] Create {plan_id}"
+        new_state = {
+            "plan_path": plan_path,
+            "project_id": resolved_project_id,
+            "status": "active",
+        }
+        preview_payload = build_governed_preview(
             mode="preview" if preview else "apply",
             change_class="proposed",
-            summary=f"Export reviewed outputs from completed plan {plan.id} to the project outbox.",
-            reasoning=(
-                "Plan review promotes selected completed artifacts into the OUT workflow so human review "
-                "and downstream reuse can happen without scanning the project tree manually."
+            summary=(
+                f"Create plan {plan_id} inside project {resolved_project_id}."
+                if resolved_project_id is not None
+                else f"Create plan {plan_id} and register it in the plans index."
             ),
-            target_files=export_targets
-            + [
-                (outbox_summary, "update"),
-                (f"memory/working/projects/{resolved_project_id}/operations.jsonl", "append"),
+            reasoning=(
+                "Plan creation is a proposed durable-memory write because it adds a new active roadmap entry and refreshes project routing surfaces."
+                if resolved_project_id is not None
+                else "Plan creation is a proposed durable-memory write because it adds a new active roadmap entry."
+            ),
+            target_files=[
+                preview_target(plan_path, "create"),
+                *(
+                    [preview_target(_project_summary_path(resolved_project_id), "update")]
+                    if resolved_project_id is not None
+                    and (root / _project_summary_path(resolved_project_id)).exists()
+                    else []
+                ),
+                *(
+                    [preview_target("memory/working/projects/SUMMARY.md", "update")]
+                    if resolved_project_id is not None
+                    and (root / "memory" / "working" / "projects" / "SUMMARY.md").exists()
+                    else []
+                ),
+                *(
+                    [preview_target(summary_path, "update")]
+                    if resolved_project_id is None and abs_summary.exists()
+                    else []
+                ),
             ],
             invariant_effects=[
-                "Copies selected completed-plan artifacts into the project outbox.",
-                "Refreshes the OUT summary so exported work is discoverable.",
-                "Logs the export event in the project operations log.",
+                "Creates a governed plan file with standard frontmatter and active status.",
+                *(
+                    [
+                        "Updates the project summary and regenerates memory/working/projects/SUMMARY.md."
+                    ]
+                    if resolved_project_id is not None
+                    else ["Updates the plans index SUMMARY when it exists."]
+                ),
             ],
             commit_message=commit_msg,
             resulting_state=new_state,
-            warnings=[],
+            warnings=warnings,
         )
         if preview:
-            return MemoryWriteResult(
+            result = MemoryWriteResult(
                 files_changed=files_changed,
                 commit_sha=None,
                 commit_message=None,
                 new_state=new_state,
-                warnings=[],
+                warnings=warnings,
                 preview=preview_payload,
-            ).to_json()
+            )
+            return result.to_json()
 
-        for artifact in selected:
-            source_abs = root / artifact
-            dest_rel = f"{out_root}/artifacts/{artifact}"
-            dest_abs = root / dest_rel
-            dest_abs.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_abs, dest_abs)
-            repo.add(dest_rel)
+        abs_plan.parent.mkdir(parents=True, exist_ok=True)
+        abs_plan.write_text(fmlib.dumps(post), encoding="utf-8")
+        repo.add(plan_path)
 
-        abs_summary = root / outbox_summary
-        existing_summary = (
-            abs_summary.read_text(encoding="utf-8") if abs_summary.exists() else "# Projects Outbox\n"
-        )
-        updated_summary = _render_outbox_summary(existing_summary, resolved_project_id, plan.id, selected)
-        abs_summary.parent.mkdir(parents=True, exist_ok=True)
-        abs_summary.write_text(updated_summary, encoding="utf-8")
-        repo.add(outbox_summary)
+        if resolved_project_id is not None:
+            _sync_project_navigation(root, repo, resolved_project_id, files_changed)
+        elif abs_summary.exists() and updated_summary is not None:
+            abs_summary.write_text(updated_summary, encoding="utf-8")
+            repo.add(summary_path)
 
-        _append_plan_log(
-            root,
-            repo,
-            resolved_project_id,
-            files_changed,
-            session_id=session_id,
-            action="plan-exported",
-            plan_id=plan.id,
-            detail=f"Exported {len(selected)} artifacts to OUT",
-        )
         commit_result = repo.commit(commit_msg)
-        return MemoryWriteResult.from_commit(
+
+        result = MemoryWriteResult.from_commit(
             files_changed=files_changed,
             commit_result=commit_result,
             commit_message=commit_msg,
             new_state=new_state,
-            warnings=[],
+            warnings=warnings,
             preview=preview_payload,
-        ).to_json()
+        )
+        return result.to_json()
+
+    @mcp.tool(
+        name="memory_update_plan_next_action",
+        annotations=_tool_annotations(
+            title="Update Plan Next Action",
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    )
+    async def memory_update_plan_next_action(
+        plan_id: str,
+        next_action: str,
+        project_id: str | None = None,
+        version_token: str | None = None,
+    ) -> str:
+        """Update only next_action and last_verified in a plan's frontmatter."""
+        from ...errors import NotFoundError
+        from ...frontmatter_utils import (
+            build_plan_summary_block,
+            parse_plan_items,
+            read_with_frontmatter,
+            replace_begin_end_block,
+            today_str,
+        )
+        from ...models import MemoryWriteResult
+
+        repo = get_repo()
+        root = get_root()
+        warnings: list[str] = []
+
+        plan_path, resolved_project_id = _resolve_existing_plan_path(root, plan_id, project_id)
+        abs_plan = repo.abs_path(plan_path)
+        if not abs_plan.exists():
+            raise NotFoundError(f"Plan not found: {plan_path}")
+
+        repo.check_version_token(plan_path, version_token)
+
+        import frontmatter as fmlib  # type: ignore[import-untyped]
+
+        text = abs_plan.read_text(encoding="utf-8")
+        post = fmlib.loads(text)
+        post.metadata["next_action"] = next_action
+        post.metadata["last_verified"] = today_str()
+        abs_plan.write_text(fmlib.dumps(post), encoding="utf-8")
+        repo.add(plan_path)
+
+        files_changed = [plan_path]
+
+        if resolved_project_id is not None:
+            _sync_project_navigation(root, repo, resolved_project_id, files_changed)
+        else:
+            summary_path = "memory/working/projects/SUMMARY.md"
+            abs_summary = root / summary_path
+            if abs_summary.exists():
+                summary_content = abs_summary.read_text(encoding="utf-8")
+                content = abs_plan.read_text(encoding="utf-8")
+                phases = parse_plan_items(content)
+                plan_done = sum(1 for ph in phases for it in ph["items"] if it["done"])
+                plan_total = sum(ph["total"] for ph in phases)
+                fm_dict, body = read_with_frontmatter(abs_plan)
+                summary_title = _plan_summary_title(fm_dict, body, plan_id)
+
+                new_block = build_plan_summary_block(
+                    plan_id=plan_id,
+                    title=summary_title,
+                    status=fm_dict.get("status", "active"),
+                    trust=fm_dict.get("trust", "medium"),
+                    next_action=next_action,
+                    plan_progress=(plan_done, plan_total),
+                )
+                updated = replace_begin_end_block(summary_content, plan_id, new_block)
+                if updated is None:
+                    warnings.append(
+                        f"BEGIN/END anchor for '{plan_id}' not found in {summary_path}."
+                    )
+                else:
+                    abs_summary.write_text(updated, encoding="utf-8")
+                    repo.add(summary_path)
+                    files_changed.append(summary_path)
+
+        commit_msg = f"[plan] Update next-action for {plan_id}"
+        commit_result = repo.commit(commit_msg)
+
+        result = MemoryWriteResult.from_commit(
+            files_changed=files_changed,
+            commit_result=commit_result,
+            commit_message=commit_msg,
+            new_state={"next_action": next_action},
+            warnings=warnings,
+        )
+        return result.to_json()
 
     @mcp.tool(
         name="memory_list_plans",
@@ -823,37 +564,52 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         status: str | None = None,
         project_id: str | None = None,
     ) -> str:
-        """List YAML plans with phase-level progress and next actions."""
+        """List all plans with optional status filtering across project and legacy scopes."""
         import json as _json
 
-        root = get_root()
-        plans: list[dict[str, Any]] = []
-        projects_root = root / "memory" / "working" / "projects"
-        if not projects_root.is_dir():
-            return _json.dumps(plans, indent=2)
+        from ...frontmatter_utils import read_with_frontmatter
 
-        project_glob = (
-            f"{validate_slug(project_id, field_name='project_id')}/plans/*.yaml"
-            if project_id is not None
-            else "*/plans/*.yaml"
-        )
-        for plan_file in sorted(projects_root.glob(project_glob)):
-            if not plan_file.is_file():
+        root = get_root()
+        plans = []
+
+        plan_files: list[tuple[Path, str | None]] = []
+        projects_root = root / "memory" / "working" / "projects"
+        if projects_root.is_dir():
+            project_glob = (
+                f"{validate_slug(project_id, field_name='project_id')}/plans/*.md"
+                if project_id is not None
+                else "*/plans/*.md"
+            )
+            for plan_file in sorted(projects_root.glob(project_glob)):
+                if plan_file.is_file():
+                    plan_files.append((plan_file, plan_file.parents[1].name))
+
+        legacy_plans_dir = root / "memory" / "working" / "projects"
+        if project_id is None and legacy_plans_dir.is_dir():
+            for plan_file in sorted(legacy_plans_dir.glob("*.md")):
+                if plan_file.name == "SUMMARY.md":
+                    continue
+                plan_files.append((plan_file, None))
+
+        for plan_file, resolved_project_id in plan_files:
+            try:
+                fm, _ = read_with_frontmatter(plan_file)
+            except Exception:
+                fm = {}
+            plan_id = plan_file.stem
+            plan_status = fm.get("status", "unknown")
+            if status is not None and plan_status != status:
                 continue
-            plan = load_plan(plan_file, root)
-            if status is not None and plan.status != status:
-                continue
-            done, total = plan_progress(plan)
             plans.append(
                 {
-                    "plan_id": plan.id,
-                    "project_id": plan.project,
+                    "plan_id": plan_id,
+                    "project_id": resolved_project_id,
                     "path": plan_file.relative_to(root).as_posix(),
-                    "title": plan_title(plan),
-                    "status": plan.status,
-                    "next_action": next_action(plan),
-                    "created": plan.created,
-                    "phase_progress": {"done": done, "total": total},
+                    "status": plan_status,
+                    "trust": fm.get("trust", "unknown"),
+                    "next_action": fm.get("next_action", ""),
+                    "created": str(fm.get("created", "")),
+                    "last_verified": str(fm.get("last_verified", "")),
                 }
             )
 
@@ -861,9 +617,9 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         return _json.dumps(plans, indent=2)
 
     return {
-        "memory_plan_create": memory_plan_create,
-        "memory_plan_execute": memory_plan_execute,
-        "memory_plan_review": memory_plan_review,
+        "memory_mark_plan_item_complete": memory_mark_plan_item_complete,
+        "memory_create_plan": memory_create_plan,
+        "memory_update_plan_next_action": memory_update_plan_next_action,
         "memory_list_plans": memory_list_plans,
     }
 

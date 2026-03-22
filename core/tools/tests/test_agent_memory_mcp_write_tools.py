@@ -13,8 +13,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, ClassVar, Coroutine, cast
 
-import yaml  # type: ignore[import-untyped]
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ToolCallable = Callable[..., Coroutine[Any, Any, str]]
 
@@ -150,7 +148,7 @@ kind = \"agent-memory-capabilities\"
 [tool_sets]
 read_support = [\"memory_get_capabilities\", \"memory_get_policy_state\", \"memory_route_intent\"]
 raw_fallback = [\"memory_write\"]
-semantic_extensions = [\"memory_plan_create\", \"memory_plan_execute\", \"memory_promote_knowledge\", \"memory_update_skill\", \"memory_log_access\"]
+semantic_extensions = [\"memory_create_plan\", \"memory_promote_knowledge\", \"memory_update_skill\", \"memory_log_access\"]
 declared_gaps = []
 
 [change_classes.automatic]
@@ -185,17 +183,7 @@ result = \"return_deferred_action_summary\"
 
 [desktop_operations.create_plan]
 status = \"implemented\"
-tool = \"memory_plan_create\"
-tier = \"semantic\"
-operation_group = \"plan\"
-change_class = \"proposed\"
-preview_support = true
-preview_mode = "preview"
-preview_argument = "preview"
-
-[desktop_operations.execute_plan]
-status = \"implemented\"
-tool = \"memory_plan_execute\"
+tool = \"memory_create_plan\"
 tier = \"semantic\"
 operation_group = \"plan\"
 change_class = \"proposed\"
@@ -508,7 +496,7 @@ Philosophy of mind studies consciousness intentionality and representation.
 
         self.assertTrue((repo_root / "memory" / "working" / "scratchpad" / "delete-me.md").exists())
 
-    def test_memory_plan_execute_completes_phase_and_updates_navigation(self) -> None:
+    def test_mark_plan_item_complete_updates_frontmatter_and_summary(self) -> None:
         repo_root = self._init_repo(
             {
                 "memory/working/projects/SUMMARY.md": """---
@@ -537,32 +525,43 @@ current_focus: Ship the first project milestone.
 
 # Project: Example
 """,
-                                "memory/working/projects/example/plans/test-plan.yaml": "id: test-plan\nproject: example\ncreated: 2026-03-17\norigin_session: memory/activity/2026/03/17/chat-001\nstatus: active\npurpose:\n  summary: Test plan\n  context: Validate structured plan execution.\n  questions: []\nwork:\n  phases:\n    - id: phase-a\n      title: Do first step\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/example/notes/first.md\n          action: create\n          description: Create the first artifact.\n    - id: phase-b\n      title: Do second step\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/example/notes/second.md\n          action: create\n          description: Create the second artifact.\nreview: null\n",
+                "memory/working/projects/example/plans/test-plan.md": """---
+source: agent-generated
+type: implementation-plan
+created: 2026-03-17
+last_verified: 2026-03-17
+trust: medium
+status: active
+next_action: Do first step
+---
+
+# Test Plan
+
+### Phase 1 — Build core flow · ☐ 0/2 complete
+
+1. ☐ Do first step
+2. ☐ Do second step
+
+## Progress log
+
+| Date | Action |
+|---|---|
+""",
             }
         )
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         raw = asyncio.run(
-            tools["memory_plan_execute"](
+            tools["memory_mark_plan_item_complete"](
                 plan_id="test-plan",
                 project_id="example",
-                phase_id="phase-a",
-                action="complete",
-                session_id="memory/activity/2026/03/19/chat-001",
-                commit_sha="abc1234",
+                phase_index=0,
+                item_index=0,
             )
         )
         payload = json.loads(raw)
-        plan_body = yaml.safe_load(
-            (
-                repo_root
-                / "memory"
-                / "working"
-                / "projects"
-                / "example"
-                / "plans"
-                / "test-plan.yaml"
-            ).read_text(encoding="utf-8")
+        frontmatter, body = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
         )
         project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
             repo_root / "memory" / "working" / "projects" / "example" / "SUMMARY.md"
@@ -572,10 +571,12 @@ current_focus: Ship the first project milestone.
         )
 
         self.assertEqual(payload["new_state"]["next_action"], "Do second step")
+        self.assertEqual(payload["new_state"]["phase_progress"], [1, 2])
         self.assertEqual(payload["new_state"]["plan_progress"], [1, 2])
-        self.assertEqual(plan_body["work"]["phases"][0]["status"], "completed")
-        self.assertEqual(plan_body["work"]["phases"][0]["commit"], "abc1234")
+        self.assertEqual(frontmatter["next_action"], "Do second step")
+        self.assertEqual(str(frontmatter["last_verified"]), str(date.today()))
         self.assertEqual(project_frontmatter["active_plans"], 1)
+        self.assertIn("1. ☑ Do first step", body)
         self.assertIn(
             "| example | active | exploration | 0 | Ship the first project milestone. |", summary
         )
@@ -1363,7 +1364,7 @@ trust: high
 
         self.assertTrue((repo_root / "memory" / "users" / "profile.md").exists())
 
-    def test_memory_plan_execute_blocks_phase_with_unresolved_dependency(self) -> None:
+    def test_update_plan_next_action_rejects_stale_version_token(self) -> None:
         repo_root = self._init_repo(
             {
                 "memory/working/projects/SUMMARY.md": """---
@@ -1392,43 +1393,66 @@ current_focus: Example project.
 
 # Project: Example
 """,
-                                "memory/working/projects/example/plans/test-plan.yaml": "id: test-plan\nproject: example\ncreated: 2026-03-17\norigin_session: memory/activity/2026/03/17/chat-001\nstatus: active\npurpose:\n  summary: Blocked plan\n  context: Validate blocker enforcement.\n  questions: []\nwork:\n  phases:\n    - id: phase-a\n      title: Finish prerequisite\n      status: pending\n      commit: null\n      blockers: []\n      changes:\n        - path: memory/working/projects/example/notes/first.md\n          action: create\n          description: Create the first artifact.\n    - id: phase-b\n      title: Do dependent step\n      status: pending\n      commit: null\n      blockers:\n        - phase-a\n      changes:\n        - path: memory/working/projects/example/notes/second.md\n          action: create\n          description: Create the second artifact.\nreview: null\n",
+                "memory/working/projects/example/plans/test-plan.md": """---
+source: agent-generated
+type: implementation-plan
+created: 2026-03-17
+last_verified: 2026-03-17
+trust: medium
+status: active
+next_action: Original next action
+---
+
+# Test Plan
+
+### Phase 1 — Build core flow · ☐ 0/1 complete
+
+1. ☐ Original next action
+
+## Progress log
+
+| Date | Action |
+|---|---|
+""",
             }
         )
         tools = self._create_tools(repo_root)
-        payload = json.loads(
+        read_payload = json.loads(
             asyncio.run(
-                tools["memory_plan_execute"](
-                    plan_id="test-plan",
-                    project_id="example",
-                    phase_id="phase-b",
-                    action="start",
-                    session_id="memory/activity/2026/03/19/chat-001",
-                )
+                tools["memory_read_file"](path="memory/working/projects/example/plans/test-plan.md")
             )
         )
-        plan_body = yaml.safe_load(
-            (
-                repo_root
-                / "memory"
-                / "working"
-                / "projects"
-                / "example"
-                / "plans"
-                / "test-plan.yaml"
-            ).read_text(encoding="utf-8")
+        old_token = read_payload["version_token"]
+
+        plan_path = (
+            repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
+        )
+        plan_path.write_text(
+            plan_path.read_text(encoding="utf-8").replace(
+                "Original next action",
+                "Someone else changed this plan",
+                1,
+            ),
+            encoding="utf-8",
         )
 
-        self.assertEqual(payload["new_state"]["plan_status"], "blocked")
-        self.assertEqual(plan_body["status"], "blocked")
-        self.assertEqual(plan_body["work"]["phases"][1]["status"], "blocked")
+        with self.assertRaises(self.errors.ConflictError):
+            asyncio.run(
+                tools["memory_update_plan_next_action"](
+                    plan_id="test-plan",
+                    project_id="example",
+                    next_action="Fresh next action",
+                    version_token=old_token,
+                )
+            )
+
     def test_raw_write_tools_are_disabled_by_default(self) -> None:
         repo_root = self._init_repo_with_file("memory/working/projects/delete-me.md")
         tools = self._create_tools(repo_root)
 
         self.assertNotIn("memory_delete", tools)
         self.assertNotIn("memory_move", tools)
-        self.assertIn("memory_plan_execute", tools)
+        self.assertIn("memory_mark_plan_item_complete", tools)
 
     def test_raw_write_tools_can_be_enabled_explicitly(self) -> None:
         repo_root = self._init_repo_with_file("memory/working/projects/delete-me.md")
@@ -1704,7 +1728,7 @@ capabilities = 1
 [tool_sets]
 read_support = [\"memory_get_capabilities\", \"memory_read_file\"]
 raw_fallback = [\"memory_write\"]
-semantic_extensions = [\"memory_plan_create\"]
+semantic_extensions = [\"memory_create_plan\"]
 declared_gaps = []
 """,
             }
@@ -1741,7 +1765,7 @@ declared_gaps = []
         payload = json.loads(asyncio.run(tools["memory_get_policy_state"](operation="create_plan")))
 
         self.assertEqual(payload["operation"], "create_plan")
-        self.assertEqual(payload["tool"], "memory_plan_create")
+        self.assertEqual(payload["tool"], "memory_create_plan")
         self.assertEqual(payload["change_class"], "proposed")
         self.assertTrue(payload["approval_required"])
         self.assertTrue(payload["preview_required"])
@@ -3149,7 +3173,7 @@ Detailed descriptions should preserve the first paragraph.
                 )
             )
 
-    def test_memory_plan_create_rejects_noncanonical_session_id(self) -> None:
+    def test_memory_create_plan_rejects_noncanonical_session_id(self) -> None:
         repo_root = self._init_repo(
             {
                 "memory/working/projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
@@ -3160,17 +3184,18 @@ Detailed descriptions should preserve the first paragraph.
 
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
-                tools["memory_plan_create"](
+                tools["memory_create_plan"](
                     plan_id="test-plan",
                     project_id="example",
-                    purpose_summary="Test",
-                    purpose_context="desc",
-                    phases=[],
+                    title="Test",
+                    description="desc",
+                    content="# Plan\n",
+                    next_action="Do it",
                     session_id="chat-001",
                 )
             )
 
-    def test_memory_plan_create_updates_project_navigation(self) -> None:
+    def test_memory_create_plan_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(
             {
                 "memory/working/projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
@@ -3180,40 +3205,19 @@ Detailed descriptions should preserve the first paragraph.
         tools = self._create_tools(repo_root)
 
         asyncio.run(
-            tools["memory_plan_create"](
+            tools["memory_create_plan"](
                 plan_id="test-plan",
                 project_id="example",
-                purpose_summary="Test Plan",
-                purpose_context="Investigate regressions",
-                phases=[
-                    {
-                        "id": "phase-a",
-                        "title": "Do the first thing",
-                        "status": "pending",
-                        "blockers": [],
-                        "changes": [
-                            {
-                                "path": "memory/working/projects/example/notes/first.md",
-                                "action": "create",
-                                "description": "Create the first artifact.",
-                            }
-                        ],
-                    }
-                ],
+                title="Test Plan",
+                description="Investigate regressions",
+                content="# Test Plan\n\n## Context\n",
+                next_action="Do the first thing",
                 session_id="memory/activity/2026/03/19/chat-001",
             )
         )
 
-        plan_body = yaml.safe_load(
-            (
-                repo_root
-                / "memory"
-                / "working"
-                / "projects"
-                / "example"
-                / "plans"
-                / "test-plan.yaml"
-            ).read_text(encoding="utf-8")
+        plan_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
+            repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
         )
         project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
             repo_root / "memory" / "working" / "projects" / "example" / "SUMMARY.md"
@@ -3222,12 +3226,11 @@ Detailed descriptions should preserve the first paragraph.
             encoding="utf-8"
         )
 
-        self.assertEqual(plan_body["purpose"]["summary"], "Test Plan")
+        self.assertEqual(plan_frontmatter["title"], "Test Plan")
         self.assertEqual(project_frontmatter["active_plans"], 1)
-        self.assertEqual(project_frontmatter["plans"], 1)
         self.assertIn("| example | active | exploration | 0 | Investigate regressions. |", summary)
 
-    def test_memory_plan_create_preview_does_not_write_and_matches_apply(self) -> None:
+    def test_memory_create_plan_preview_does_not_write_and_matches_apply(self) -> None:
         repo_root = self._init_repo(
             {
                 "memory/working/projects/SUMMARY.md": "---\ntype: projects-navigator\ngenerated: 2026-03-21\nproject_count: 1\n---\n\n# Projects\n\n_No active or ongoing projects._\n",
@@ -3238,26 +3241,13 @@ Detailed descriptions should preserve the first paragraph.
 
         preview = json.loads(
             asyncio.run(
-                tools["memory_plan_create"](
+                tools["memory_create_plan"](
                     plan_id="preview-plan",
                     project_id="example",
-                    purpose_summary="Preview Plan",
-                    purpose_context="Preview the plan write",
-                    phases=[
-                        {
-                            "id": "phase-a",
-                            "title": "Do the previewed thing",
-                            "status": "pending",
-                            "blockers": [],
-                            "changes": [
-                                {
-                                    "path": "memory/working/projects/example/notes/preview.md",
-                                    "action": "create",
-                                    "description": "Create the previewed artifact.",
-                                }
-                            ],
-                        }
-                    ],
+                    title="Preview Plan",
+                    description="Preview the plan write",
+                    content="# Preview Plan\n",
+                    next_action="Do the previewed thing",
                     session_id="memory/activity/2026/03/19/chat-001",
                     preview=True,
                 )
@@ -3272,7 +3262,7 @@ Detailed descriptions should preserve the first paragraph.
                 / "projects"
                 / "example"
                 / "plans"
-                / "preview-plan.yaml"
+                / "preview-plan.md"
             ).exists()
         )
         self.assertEqual(preview["preview"]["mode"], "preview")
@@ -3283,26 +3273,13 @@ Detailed descriptions should preserve the first paragraph.
 
         applied = json.loads(
             asyncio.run(
-                tools["memory_plan_create"](
+                tools["memory_create_plan"](
                     plan_id="preview-plan",
                     project_id="example",
-                    purpose_summary="Preview Plan",
-                    purpose_context="Preview the plan write",
-                    phases=[
-                        {
-                            "id": "phase-a",
-                            "title": "Do the previewed thing",
-                            "status": "pending",
-                            "blockers": [],
-                            "changes": [
-                                {
-                                    "path": "memory/working/projects/example/notes/preview.md",
-                                    "action": "create",
-                                    "description": "Create the previewed artifact.",
-                                }
-                            ],
-                        }
-                    ],
+                    title="Preview Plan",
+                    description="Preview the plan write",
+                    content="# Preview Plan\n",
+                    next_action="Do the previewed thing",
                     session_id="memory/activity/2026/03/19/chat-001",
                 )
             )
@@ -3316,7 +3293,7 @@ Detailed descriptions should preserve the first paragraph.
                 / "projects"
                 / "example"
                 / "plans"
-                / "preview-plan.yaml"
+                / "preview-plan.md"
             ).exists()
         )
         self.assertEqual(applied["commit_message"], "[plan] Create preview-plan")
@@ -4530,80 +4507,73 @@ Load compact context.
 
         self.assertIn("Another writer is already publishing changes", str(ctx.exception))
 
-    def test_memory_plan_review_exports_completed_artifacts(self) -> None:
+    def test_memory_update_plan_next_action_uses_human_title_in_summary(self) -> None:
         repo_root = self._init_repo(
             {
-                "memory/working/projects/OUT/SUMMARY.md": "# Projects Outbox\n\n## Recently added\n\n_No outbox artifacts yet._\n\n## By project\n\n_No project artifacts published yet._\n",
-                "memory/working/projects/example/plans/test-plan.yaml": """id: test-plan
-project: example
-created: 2026-03-17
-origin_session: memory/activity/2026/03/17/chat-001
-status: completed
-purpose:
-  summary: Test plan
-  context: Validate plan review.
-  questions: []
-work:
-  phases:
-    - id: phase-a
-      title: Ship artifact
-      status: completed
-      commit: abc1234
-      blockers: []
-      changes:
-        - path: memory/working/projects/example/artifacts/output.md
-          action: create
-          description: Create the reviewed artifact.
-review:
-  completed: 2026-03-18
-  completed_session: memory/activity/2026/03/18/chat-001
-  outcome: completed
-  purpose_assessment: Delivered the initial artifact.
-  unresolved: []
-  follow_up: null
+                "memory/working/projects/SUMMARY.md": """---
+type: projects-navigator
+generated: 2026-03-21
+project_count: 1
+---
+
+# Projects
+
+_No active or ongoing projects._
 """,
-                "memory/working/projects/example/artifacts/output.md": "# Output\n",
+                "memory/working/projects/example/SUMMARY.md": """---
+source: agent-generated
+origin_session: manual
+created: 2026-03-21
+trust: medium
+type: project
+status: active
+cognitive_mode: exploration
+open_questions: 0
+active_plans: 1
+last_activity: 2026-03-21
+current_focus: Example project.
+---
+
+# Project: Example
+""",
+                "memory/working/projects/example/plans/test-plan.md": """---
+source: agent-generated
+type: implementation-plan
+title: Test Plan
+created: 2026-03-17
+last_verified: 2026-03-17
+trust: medium
+status: active
+next_action: Original next action
+---
+
+# Test Plan
+
+### Phase 1 — Build core flow · ☐ 0/1 complete
+
+1. ☐ Original next action
+
+## Progress log
+
+| Date | Action |
+|---|---|
+""",
             }
         )
         tools = self._create_tools(repo_root)
 
-        payload = json.loads(
-            asyncio.run(
-                tools["memory_plan_review"](
-                    project_id="example",
-                    plan_id="test-plan",
-                    session_id="memory/activity/2026/03/19/chat-001",
-                )
+        asyncio.run(
+            tools["memory_update_plan_next_action"](
+                plan_id="test-plan",
+                project_id="example",
+                next_action="Fresh next action",
             )
         )
 
-        summary = (repo_root / "memory" / "working" / "projects" / "OUT" / "SUMMARY.md").read_text(
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(
             encoding="utf-8"
         )
-        exported = (
-            repo_root
-            / "memory"
-            / "working"
-            / "projects"
-            / "OUT"
-            / "example"
-            / "test-plan"
-            / "artifacts"
-            / "memory"
-            / "working"
-            / "projects"
-            / "example"
-            / "artifacts"
-            / "output.md"
-        )
-
-        self.assertEqual(
-            payload["new_state"]["outbox_root"],
-            "memory/working/projects/OUT/example/test-plan",
-        )
-        self.assertTrue(exported.exists())
-        self.assertIn("## example", summary)
-        self.assertIn("### test-plan", summary)
+        self.assertIn("| example | active | exploration | 0 | Example project. |", summary)
 
     def test_memory_write_allows_knowledge_path(self) -> None:
         """Sanity check: memory/knowledge/ writes still work after the policy change."""

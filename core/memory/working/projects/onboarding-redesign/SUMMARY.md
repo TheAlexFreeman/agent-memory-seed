@@ -8,8 +8,7 @@ status: active
 cognitive_mode: crystallization
 open_questions: 5
 active_plans: 1
-plans: 1
-last_activity: 2026-03-22
+last_activity: 2026-03-21
 current_focus: "Replace the scripted onboarding flow with collaborative project-based onboarding."
 ---
 

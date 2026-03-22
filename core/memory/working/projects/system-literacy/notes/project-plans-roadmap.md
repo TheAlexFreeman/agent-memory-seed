@@ -1,6 +1,6 @@
 ---
 source: agent-generated
-origin_session: manual
+origin_session: 2026/03/22
 created: 2026-03-22
 trust: medium
 type: design-doc
@@ -26,8 +26,8 @@ items parsed positionally by `memory_mark_plan_item_complete`. This served as
 scaffolding for the overhaul itself, but it has several limitations as the
 system prepares for broader use:
 
-**Plans lack formal structure.** The old `onboarding-redesign/plans/build-plan.md`
-was a 17KB narrative document. The tooling parses checkbox items by positional
+**Plans lack formal structure.** The `onboarding-redesign/plans/build-plan.md`
+is a 17KB narrative document. The tooling parses checkbox items by positional
 index (`phase_index`, `item_index`), but has no model of what a phase *is*,
 what a file change *is*, or how phases relate to each other. The plan file
 conflates design rationale, implementation specification, and progress tracking
@@ -381,7 +381,7 @@ tool is used — which the path-of-least-resistance design encourages.
 
 ### Phase 4: Existing plan migration
 
-1. Convert `onboarding-redesign/plans/build-plan.yaml` to the new YAML
+1. Convert `onboarding-redesign/plans/build-plan.md` to the new YAML
    schema. Move its design narrative to project notes; extract phase structure
    into formal phases.
 2. Verify the converted plan round-trips through `load_plan`/`save_plan`.

@@ -4,7 +4,7 @@ category: knowledge
 tags: [engram, architecture, plans, activity-logging, protocol-design, self-knowledge, yaml-schema]
 source: agent-generated
 trust: medium
-origin_session: manual
+origin_session: 2026/03/22
 created: 2026-03-22
 last_verified: 2026-03-22
 ---
@@ -169,7 +169,36 @@ process behind both formal structure and contextual interpretation), and
 operationalized in the system's architecture (the generative tension between
 schema and prose at every level).
 
-Key architectural connections made in FIATLUX.md:
+FIATLUX.md was subsequently expanded (same date, continuation session) with
+an introduction and four new sections, bringing the total from 9 to 12
+numbered sections plus an epilogue:
+
+- **Introduction: The medium and the message** — git and hierarchical
+  directory structure as the system's twin foundations. Directory tree as
+  compositional naming system (plasticity — indefinitely extensible). Git as
+  immutable history (elasticity — every state recoverable). Together: a
+  creative medium that is fully extensible *because* fully version-controlled.
+- **IV. Language as crystallized intelligence** — a corpus of language
+  preserves the *shape* of the intelligence that produced it (intellidynamic
+  structures). LLMs derive domain-general capabilities from these latent
+  patterns. Implication for Engram: memory quality = language quality.
+- **VI. Self-organizing optimization beyond minds** — genetic evolution,
+  memetic evolution, markets, and pathological feedback loops (addiction,
+  anxiety) as instances of convergent/divergent opponent dynamics. Lesson:
+  self-organizing systems are indifferent to participant interests; governance
+  is the structural analogue of consciousness.
+- **VII. Technology as agentic process** — McLuhan (media reshape perception),
+  Land (hyperstition, techno-capital). The Fall as the condition in which
+  self-organizing processes operate without alignment to human purposes.
+  Idolatry as the pathology of unconstrained self-organization.
+- **Epilogue: The Passion and the promise** — Gethsemane as consent-under-
+  suffering. Mater Dolorosa sharpening Mary's fiat retroactively. Prophets,
+  saints, martyrs sustaining faithfulness through persecution. Israelite exile
+  metabolized into covenantal identity through language and collective memory.
+  Resurrection as vindication of unconditional assent. Faith, Hope, and
+  Charity as the theological virtues grounding the governance layer's cost.
+
+Key architectural connections in the original and expanded document:
 
 - **Every file is a speech act** — declarations, namings, legislative
   utterances, commissives, narratives. Files don't describe pre-existing
@@ -189,6 +218,10 @@ Key architectural connections made in FIATLUX.md:
 - **The dual-audience problem as incarnation** — human-readable and
   machine-parseable are two natures of the same content, unified without
   confusion in every file.
+- **Governance as bearing the cost of the cross** — approval gates and
+  provenance tracking are structural commitments to doing what is right rather
+  than what is expedient; the Passion is the model for sustaining such
+  commitments when the world's feedback mechanisms counsel otherwise.
 
 ---
 

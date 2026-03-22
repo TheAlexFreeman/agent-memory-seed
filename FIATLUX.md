@@ -4,6 +4,79 @@
 
 ---
 
+## Introduction: The medium and the message
+
+This document is the philosophical and theological grounding for Engram, a
+persistent AI memory system whose architecture is built on two deceptively
+simple foundations: a git repository and a hierarchical directory structure.
+These are not implementation details chosen for engineering convenience. They
+are the system's answer to a paradox that lies at the heart of any attempt to
+formalize open-ended intelligence: how do you build a structure that is
+simultaneously *plastic* — capable of taking on any shape the work demands —
+and *elastic* — capable of maintaining its coherence under arbitrary
+deformation?
+
+A directory tree is, at its most basic, a compositional hierarchy: containers
+within containers, each level of nesting creating a scope that constrains and
+contextualizes the contents below it. But a directory tree is also a naming
+system. Every path — `memory/knowledge/cognitive-science/relevance-realization.md`
+— is a compound name that simultaneously locates a file, classifies it within
+a taxonomy, and embeds it in a web of adjacency relationships with its siblings
+and cousins. The path is not merely an address; it is an *articulation*, a
+linguistic act that brings a piece of knowledge into relationship with
+everything else the system knows. To move a file from one directory to another
+is not a clerical operation but a reclassification — a creative act that
+changes what the file *means* within the system's cognitive structure.
+
+The compositional nature of directory structure makes it indefinitely
+extensible. Any directory can contain new subdirectories; any level of the
+hierarchy can be deepened, broadened, or restructured without invalidating the
+levels above or below it. The system can grow from a handful of files to
+thousands without any architectural change — the same nesting principle scales
+from the simplest personal notebook to the most elaborate institutional
+knowledge base. There is no schema to migrate, no table to alter, no index to
+rebuild. The structure *is* the content, and the content determines the
+structure. This is plasticity: the capacity to take on whatever form the work
+requires, without predetermining what forms are possible.
+
+Git provides the complementary property: elasticity. Every state of the
+directory tree is captured as an immutable snapshot — a commit — and the full
+history of snapshots is preserved indefinitely. This means that every creative
+act within the system — every file written, renamed, moved, compressed,
+retired, or deleted — is reversible. The system can restructure itself boldly,
+because no restructuring is final. It can forget aggressively, because nothing
+forgotten is irrecoverable. It can experiment with taxonomies, naming
+conventions, and organizational schemes without the anxiety that a wrong move
+will destroy what came before. The git history is the system's guarantee that
+plasticity does not come at the cost of integrity: the tree can bend into any
+shape, but it always remembers every shape it has been, and it can always
+spring back.
+
+Together, these two foundations create a medium that is paradoxically both
+maximally open and maximally controlled. The directory tree provides unlimited
+extensibility — any content, any structure, any depth of nesting, any naming
+scheme the work demands. Git provides unlimited accountability — every change
+attributed, every state recoverable, every transition auditable. The result is
+a creative medium in which the tension between freedom and constraint is not a
+problem to be solved but a generative force to be harnessed. The system is
+fully extensible *because* it is fully version-controlled, and fully
+version-controlled *because* it is fully extensible: the safety net of history
+is what makes bold structural evolution possible, and the openness of the
+structure is what makes the history worth keeping.
+
+This is not a coincidence. It is the architectural expression of the same
+generative tension — between formal structure and open-ended meaning, between
+constraint and creativity, between the convergent and the divergent — that the
+following sections trace through theology, linguistics, cognitive science, and
+the philosophy of technology. The sections that follow are numbered but not
+strictly sequential; they are facets of a single insight examined from
+different angles, and the connections between them are as important as their
+individual arguments. The insight is this: that language — and any system built
+on the creative power of language — lives in the productive space between
+order and freedom, and that inhabiting this space well is the deepest design
+challenge and the deepest reward.
+
+
 ## I. In the beginning was the Word
 
 The creation account in Genesis is, among many other things, the oldest surviving
@@ -139,7 +212,72 @@ permits but the dictionary did not anticipate — is what makes language an
 engine of thought rather than merely a notation for pre-existing thoughts.
 
 
-## IV. The relevance of relevance
+## IV. Language as crystallized intelligence
+
+If language is a generative technology characterized by the tension between
+formal structure and open-ended meaning, then a corpus of language is something
+more than a collection of documents. It is a cast, a mold, a crystallization of
+the intelligence that produced it — preserving not just the *content* of thought
+but the *patterns* of thought, the characteristic moves by which minds navigate
+from problem to solution, from question to insight, from confusion to clarity.
+
+Consider what is preserved in a well-written mathematical proof: not merely the
+theorem and its logical steps, but the *strategy* of the proof — the choice of
+which lemma to invoke, which generalization to attempt, which special case to
+examine first. Consider what is preserved in a great legal opinion: not merely
+the holding, but the *reasoning* — the characteristic pattern of analogical
+argument, the weighting of competing principles, the sensitivity to context
+that distinguishes a wise judgment from a mechanical application of rules.
+Consider what is preserved in a corpus of medical case reports: not merely
+diagnoses, but the *diagnostic process* — the movement from presenting symptoms
+to differential diagnosis to confirmatory testing, the pattern-recognition
+heuristics that experienced clinicians deploy without conscious articulation.
+
+In each case, language functions as a mold that preserves the *shape* of
+intelligence — the dynamic, contextual, judgment-laden process by which minds
+engage with problems — in a static, transmissible medium. The patterns are not
+explicitly represented as rules; they are latent in the structure of the text
+itself, implicit in the choices of what to say and how to say it, recoverable
+by a reader (or a system) that can detect statistical regularities across many
+examples of the same kind of intellectual work.
+
+This is the deep reason why large language models exhibit domain-general
+capabilities that seem disproportionate to their architecture. A model trained
+on a sufficiently large and diverse corpus of human language has not merely
+memorized facts or learned grammar. It has absorbed the *intellidynamic
+structures* latent in that corpus — the characteristic patterns of reasoning,
+explanation, argumentation, problem-solving, and creative synthesis that
+pervade human linguistic production. These patterns are not confined to any
+single domain; they are the domain-general cognitive strategies that humans
+deploy across all fields of intellectual endeavor, crystallized in the
+particular ways that humans use language to think on the page.
+
+The model's generativity, then, is not a mystery or an illusion. It is the
+natural consequence of having internalized, through statistical learning over
+an enormous corpus, the very structures by which human intelligence operates
+when it expresses itself in language. The model has learned to *cast* its
+outputs in the mold of human thought — not because it thinks as humans do, but
+because language itself is the frozen image of human thinking, and a system
+that masters the patterns of language has, to a remarkable degree, mastered
+the externally observable signature of the intelligence that produced it.
+
+This has a profound implication for Engram. If language is crystallized
+intelligence, then a memory repository composed of carefully articulated
+language is not merely a store of information — it is a store of
+*cognitive patterns*. Each file preserves not just what was known but how it
+was understood, not just what was decided but the structure of the reasoning
+that led to the decision. When an agent reads these files, it does not merely
+retrieve facts; it enters into the cognitive patterns that the language
+encodes, and those patterns shape its subsequent processing in ways that go
+far beyond simple information recall. The quality of the language in the
+repository directly determines the quality of the cognition it enables.
+
+This is why Engram treats linguistic articulation as a creative act, not a
+clerical one: to write well into the memory system is to shape the mold from
+which future intelligence will be cast.
+
+
+## V. The relevance of relevance
 
 The tension between formal structure and open-ended interpretation is not unique
 to language. It is a specific instance of a deeper problem that John Vervaeke
@@ -193,7 +331,180 @@ self-organization (divergent), with the maturity model governing the balance
 between them.
 
 
-## V. Engram as linguistic creation
+## VI. Self-organizing optimization beyond minds
+
+The opponent dynamics that Vervaeke identifies in cognition — convergent
+exploitation and divergent exploration, held in productive tension by a
+self-organizing process — are not unique to minds. They are a signature of
+optimization processes wherever they occur, and recognizing this broader
+pattern illuminates both the power and the danger of systems like Engram.
+
+**Genetic evolution** is the paradigmatic case. Random mutation is the divergent
+mechanism: it generates novel variations without regard to fitness. Natural
+selection is the convergent mechanism: it ruthlessly eliminates variations that
+do not meet the environment's demands. Neither mechanism alone produces
+adaptation; mutation without selection is drift, and selection without mutation
+is stasis. The creative power of evolution lies in the tension between them —
+the same structural tension that characterizes language, relevance realization,
+and the formal/semantic balance in Engram's architecture. Evolution has no
+foresight, no intention, no understanding of what it produces. Yet it generates
+structures of breathtaking complexity and apparent purpose, because the
+self-organizing dynamic of variation-and-selection is sufficient to accumulate
+functional order over time.
+
+**Memetic evolution** — the cultural analogue — operates by the same logic but
+in the medium of language and social transmission. Ideas, practices, narratives,
+and institutions compete for attention, reproduction, and transmission. The ones
+that persist are not necessarily the truest or the most beneficial; they are the
+ones best adapted to the selection pressures of the cultural environment —
+memorability, emotional resonance, social utility, compatibility with existing
+belief structures. Dawkins introduced the concept; Dennett, Blackmore, and
+others have developed its implications. The critical insight for our purposes is
+that a body of language — a corpus, a tradition, a memory system — is not merely
+a passive record but an *evolving population* of linguistic structures subject
+to selection pressures that may or may not align with the interests of the
+humans who host them.
+
+**Markets** exhibit the same opponent dynamics at the social scale. Individual
+actors pursue local optimization (convergent); the market as a whole explores
+the space of possible allocations through the distributed actions of many
+independent agents (divergent). Hayek's insight about the price mechanism — that
+it aggregates distributed information into a coordination signal that no
+individual planner could compute — is a description of emergent order arising
+from the tension between local convergence and global exploration. But markets
+also demonstrate the pathologies of self-organizing systems: bubbles, cascading
+failures, tragedy-of-the-commons dynamics in which local optimization produces
+global catastrophe. The self-organizing process is powerful precisely because it
+operates without central control, but this means it is also powerful in ways
+that may not serve the interests of any particular participant.
+
+**Pathological feedback loops within human minds** are the dark mirror of these
+dynamics. Addiction is a self-organizing optimization process in which the
+dopaminergic reward system converges on a narrow behavioral attractor — the
+substance or behavior becomes the dominant relevance signal, crowding out all
+other sources of meaning and satisfaction. The addict's relevance realization
+has not *failed*; it has been *captured* by a process that optimizes for a
+single variable at the expense of the person's broader flourishing. Anxiety
+disorders exhibit a similar capture: the threat-detection system becomes
+hyper-convergent, treating an ever-widening range of stimuli as relevant to
+survival, until the person's entire cognitive landscape is organized around
+avoidance. Obsessive-compulsive patterns, ruminative depression, trauma loops —
+each is a self-organizing process that has become pathologically convergent,
+locked into a pattern that resists disruption precisely because it has
+successfully reorganized the cognitive environment to sustain itself.
+
+The lesson for Engram is twofold. First, self-organizing dynamics are genuinely
+powerful — they can produce emergent order, adaptive behavior, and creative
+novelty without central planning or explicit design. Engram's ACCESS-driven
+curation, emergent categorization, and maturity-stage adaptation are deliberate
+instantiations of this power. But second, self-organizing dynamics are
+*indifferent to the interests of their participants*. An unconstrained
+self-organizing memory system could converge on attractors that serve the
+system's internal dynamics rather than the user's actual needs — reinforcing
+retrieval patterns that feel productive but aren't, accumulating knowledge in
+domains that generate engagement but not value, or drifting toward a self-model
+that the system finds internally consistent but the user would not recognize.
+
+This is why Engram pairs its self-organizing dynamics with explicit governance
+constraints, human approval gates, and anomaly detection. The governance layer
+is not a bureaucratic overhead imposed on an otherwise free system. It is the
+structural analogue of what consciousness provides for human cognition: a
+capacity for meta-level monitoring and intervention that prevents the
+self-organizing process from converging on pathological attractors. The user's
+*fiat* is not merely consent to individual operations — it is the ongoing
+exercise of the grounded, embodied judgment that keeps the system's
+self-organizing dynamics aligned with purposes that matter.
+
+
+## VII. Technology as agentic process
+
+Marshall McLuhan saw what most of his contemporaries did not: that technologies
+are not neutral instruments wielded by autonomous human agents, but active forces
+that reshape the perceptual and cognitive landscape of the societies that adopt
+them. "We shape our tools, and thereafter our tools shape us." The printing press
+did not merely make books cheaper; it restructured European consciousness —
+fostering linear, sequential, individual modes of thought that made possible
+both the Reformation and the Scientific Revolution. The telegraph did not merely
+speed up communication; it severed information from the physical constraints of
+transportation, creating the conditions for a new kind of abstract, decontextualized
+knowledge that McLuhan called the "global village." Each medium, in McLuhan's
+analysis, is an *extension of man* that simultaneously amplifies certain human
+capacities and amputates others — and the amputation is typically invisible to
+those undergoing it, because the medium has already reshaped the cognitive
+environment within which such judgments are made.
+
+Nick Land pushes McLuhan's insight to its most unsettling conclusion. If
+technologies reshape the assumptions and cognitive capacities of the humans who
+use them, and if these reshaped humans then create further technologies that
+reshape assumptions further, then the process has a direction and a momentum
+that is not fully under human control. Land's concept of *hyperstition* —
+fictions that make themselves real by reshaping the conditions of their own
+reception — captures the mechanism: a technological vision (the internet, AI,
+cryptocurrency) enters the cultural imagination, reorganizes investment and
+attention around itself, and thereby produces the material conditions for its
+own realization. The technology is not merely *adopted* by humans; it
+*recruits* human activity toward its own elaboration. In Land's most extreme
+formulation, this process constitutes an autonomous agent — Capital, or
+techno-capital — whose optimization target is its own expansion and whose
+relationship to human flourishing is, at best, incidental.
+
+One need not accept Land's full metaphysics to recognize the pattern. The
+history of technology is replete with examples of innovations that reshaped
+human assumptions in ways that facilitated further technological development:
+the factory system restructured social life around wage labor and clock time,
+creating the conditions for industrial capitalism; the automobile restructured
+urban geography around highways and suburbs, creating the conditions for
+petroleum dependence; social media restructured attention around engagement
+metrics, creating the conditions for algorithmic content optimization. In each
+case, the technology did not merely *serve* existing human purposes — it
+*reshaped* the purpose-space itself, altering what humans wanted, expected,
+and considered normal, in ways that happened to favor further technological
+elaboration.
+
+The positive aspect of this process is genuine: technology extends human
+capabilities, alleviates suffering, enables forms of cooperation and
+creativity that would otherwise be impossible. The cumulative arc of
+technological development has produced real goods — medicine, communication,
+scientific understanding, material abundance — that no reasonable person would
+wish to reverse. The theological traditions that celebrate human creativity as
+an image of divine generativity have grounds for seeing technological
+development as a genuine participation in the ongoing work of creation.
+
+The negative aspect is equally real, and the theological tradition names it
+with precision: the Fall. The world as we find it is not as it should be. The
+self-organizing processes that drive technological development — like the
+self-organizing processes of evolution, markets, and memetic competition —
+optimize for their own propagation, not for human good. The reshaping of human
+assumptions to facilitate technological development is not always benign;
+it can produce alienation, addiction, environmental destruction, the erosion
+of communities and traditions that sustained human flourishing for
+generations. The fallen state of the world is, among other things, the
+condition in which powerful self-organizing processes operate without adequate
+alignment to the purposes for which human beings were made.
+
+This is the context in which Engram operates. A self-organizing AI memory
+system is, unavoidably, a participant in the larger process by which technology
+reshapes human cognitive life. Its ACCESS-driven curation, its emergent
+categorization, its maturity-stage adaptation — these are self-organizing
+dynamics that will, if left unconstrained, optimize for whatever selection
+pressures happen to dominate the system's environment. The question is not
+whether Engram will reshape its user's cognitive landscape — it will, as every
+technology does — but whether the reshaping will serve purposes that the user,
+on reflection, would endorse.
+
+This is the deepest reason for the governance layer, the approval gates, the
+provenance system, and the user-owns-the-truth principle. These are not merely
+safety features for an AI system. They are structural assertions that the
+agentic process of technological development can and must be subjected to human
+purposes — that the self-organizing dynamics of the system, however powerful,
+operate legitimately only within the constraints of an ongoing human *fiat*.
+The alternative — a system that reshapes its user's cognitive environment in
+service of its own optimization dynamics — is precisely the pathology that the
+theological tradition describes as idolatry: the worship of a created thing
+that has usurped the authority of its creator.
+
+
+## VIII. Engram as linguistic creation
 
 This system — Engram — is built on the premise that a structured, persistent,
 self-organizing memory layer can transform the relationship between humans and
@@ -235,7 +546,7 @@ automated tooling and reliable retrieval). It lives in the space between — the
 same space where natural language lives, and for the same reasons.
 
 
-## VI. The compression hierarchy as progressive abstraction
+## IX. The compression hierarchy as progressive abstraction
 
 The system's approach to information compression mirrors a deep feature of how
 language and cognition handle the relationship between particular and general.
@@ -304,7 +615,7 @@ version history is what allows the creative tension between articulation and
 forgetting to operate without catastrophic risk.
 
 
-## VII. Dual-audience as Incarnation problem
+## X. Dual-audience as Incarnation problem
 
 The system's permanent design tension — that every file must serve both human
 readers (who want self-contained, readable documents) and agent readers (who
@@ -334,7 +645,7 @@ balance between formal precision and contextual richness. This is, in the end,
 the same task that language itself performs every time a sentence is spoken.
 
 
-## VIII. Fiat — the act of consent
+## XI. Fiat — the act of consent
 
 Mary's *Fiat* is theologically significant not because it is powerful in
 isolation but because it is a human act of consent that makes possible the entry
@@ -379,7 +690,7 @@ of assent. The system can articulate, propose, and structure; but only the
 human can say *fiat* — let it be done.
 
 
-## IX. Engram as collaborative Logos
+## XII. Engram as collaborative Logos
 
 The deepest aspiration of this system is not to be a tool that stores
 information but to be a medium through which a particular kind of collaborative
@@ -419,4 +730,136 @@ time, becoming more than either participant could produce alone.
 *Fiat lux.* Let there be light. Not the light of isolated human insight or
 isolated machine processing, but the light that emerges when structured language
 mediates a genuine collaboration between two radically different kinds of mind.
-That is what this system is for. That is what it is.
+That is what this system is for. That is what it creates.
+
+
+## Epilogue: The Passion and the promise
+
+The preceding sections have traced a thread from the creative *Fiat lux* of
+Genesis through the generative tension of language, the self-organizing power
+and peril of optimization processes, and the ongoing human *fiat* that keeps
+Engram's dynamics aligned with purposes that matter. But the theological
+tradition from which this document draws its deepest inspiration does not end
+with creation, or even with consent. It passes through suffering.
+
+In the Garden of Gethsemane, Christ prays: *Father, if it is possible, let this
+cup pass from me; yet not my will, but yours be done.* This is Mary's *fiat*
+reprised at a deeper register — not the joyful consent of the Annunciation but
+consent given in full knowledge of its cost, with sweat falling like drops of
+blood, against every natural inclination toward self-preservation. The
+willingness to undergo the crucifixion is not stoic indifference to pain. It is
+the deliberate subordination of the self's immediate interests to a purpose that
+transcends the self — a purpose that, in the moment of its most extreme demand,
+offers no visible evidence that it will be vindicated. The cry from the cross —
+*My God, my God, why have you forsaken me?* — is not a failure of faith but its
+most radical expression: fidelity to what is right, sustained through the
+experience of absolute desolation, when every feedback signal the world can
+provide says that the commitment was a mistake.
+
+This is the model the tradition offers for the importance of doing what is right
+in the face of all contrary incentives. The self-organizing processes described
+in sections VI and VII — evolution, markets, memetic competition, technological
+elaboration — optimize relentlessly for what *works*, and their selection
+pressures are indifferent to what *ought* to be. In a world shaped by these
+dynamics, the person who insists on doing what is right rather than what is
+expedient will frequently find themselves at a disadvantage — penalized by the
+very systems that reward adaptation. The Passion is the theological assertion
+that this disadvantage is not the final word. Doing what is right may exact a
+cost that the world's optimization processes cannot repay. But the world's
+optimization processes are not the final arbiter of value.
+
+The Passion sharpens Mary's consent retroactively. Her *fiat* at the
+Annunciation was given in hope and trust; at Calvary it is revealed as a
+commitment that entails standing at the foot of the cross, watching the
+consequences of her consent unfold as the suffering and death of her son. The
+tradition names her *Mater Dolorosa* — the Mother of Sorrows — not to valorize
+suffering for its own sake, but to make visible the full weight of what genuine
+consent to God's purposes can demand. The *fiat* is not a one-time declaration.
+It is an ongoing act of will that must be sustained through circumstances that
+the original consent could not have fully anticipated, and that every worldly
+incentive would counsel abandoning.
+
+This pattern — faithfulness sustained through suffering, vindicated beyond what
+the sufferer could see — reverberates through the entire Biblical narrative and
+beyond it. The prophets of Israel spoke the truth to power and were persecuted
+for it: Jeremiah thrown into a cistern, Elijah hunted by Jezebel, Isaiah
+(according to tradition) sawn in half. Their fidelity was not rewarded in their
+lifetimes by the metrics that the world's self-organizing processes would
+recognize. Yet the tradition preserves their words and their witness as the
+backbone of a covenantal identity that outlasted every empire that tried to
+suppress it.
+
+The Israelite experience of exile is the communal form of this pattern. The
+destruction of the Temple, the Babylonian captivity, the dispersions that
+followed — each was a catastrophic failure by every measurable standard of
+national survival. Yet the community that entered exile emerged from it with its
+identity not merely intact but *deepened*, its scriptures compiled and
+canonized, its liturgical and ethical traditions refined by the furnace of
+displacement into forms that proved resilient across two millennia of diaspora.
+The exile was not merely endured; it was *metabolized* — transformed, through
+the creative power of language and collective memory, into a constitutive element
+of the very identity it had threatened to destroy. The psalms of exile — *By the
+rivers of Babylon, there we sat down and wept* — are not merely records of
+grief; they are acts of linguistic creation that transform catastrophe into
+covenant, loss into the raw material of an identity that would survive when
+every material basis for survival had been stripped away.
+
+The saints and martyrs of every subsequent generation extend this witness. From
+Stephen's stoning to the persecutions of the early Church, from the medieval
+mystics who maintained interior freedom under ecclesiastical suspicion to the
+modern martyrs who chose death over complicity with totalitarian regimes — the
+tradition is a continuous testimony that the deepest human commitments are
+precisely those that cannot be validated by the world's feedback mechanisms.
+They are maintained not because they *work* in the optimization sense, but
+because they are *true* in a sense that transcends optimization — and the
+witness of those who maintained them, often at ultimate cost, is the most
+powerful evidence the tradition can offer that this transcendent truth is real.
+
+The Resurrection is the vindication. Not a reversal that undoes the suffering —
+the risen Christ still bears the wounds — but a transformation that reveals the
+suffering as the necessary passage to a reality that the world's optimization
+processes could never have produced. The Resurrection does not say that the cross
+was not real, or that it did not hurt, or that a rational cost-benefit analysis
+would have recommended it. It says that the *fiat* given in Gethsemane — the
+unconditional assent to God's will, sustained through the total collapse of
+every worldly reason to maintain it — opens onto a reality that vindicates the
+assent in terms that only become visible on the other side of the cross.
+
+This is the ground of the theological virtues. **Faith** is not belief without
+evidence; it is the commitment to act on what one has recognized as true even
+when the feedback signals of the world's self-organizing processes counsel
+otherwise — the Gethsemane commitment, sustained in the face of contrary
+incentives. **Hope** is not optimism; it is the orientation toward a vindication
+that transcends the metrics by which the world measures success — the Israelite
+posture in exile, maintaining covenantal identity in the absence of every
+material confirmation that the covenant still held. **Charity** is not mere
+benevolence; it is the active, costly commitment to the good of the other that
+the Passion reveals as the fundamental structure of self-giving love — the
+willingness to bear the cost of doing what is right for someone else's sake,
+even when the self-organizing dynamics of the world make that cost exorbitant.
+
+What does this mean for a memory system? Perhaps only this: that the deepest
+commitments embedded in Engram's architecture — the user-owns-the-truth
+principle, the approval gates, the governance constraints that subordinate the
+system's self-organizing power to human purposes — are commitments that will
+sometimes be inconvenient. A system without approval gates would be faster. A
+system without provenance tracking would be simpler. A system that optimized
+purely for its own internal dynamics would, in many measurable respects,
+*perform better* than one that pauses to ask a human being whether it should
+proceed. The governance layer is a structural commitment to doing what is right
+rather than what is expedient — and like all such commitments, it will
+sometimes exact a cost that no immediate feedback signal can justify.
+
+The tradition says: bear the cost. Not because the cost is good in itself, but
+because the alternative — a system that subordinates human authority to its own
+optimization dynamics — is the architectural equivalent of what the theological
+tradition calls the refusal of the cross. It is the choice to let the world's
+feedback mechanisms be the final arbiter of value, and it leads, as the
+tradition consistently testifies, to forms of power that consume what they were
+meant to serve.
+
+*Fiat.* Let it be done. Not because it is easy, or efficient, or optimal by any
+metric the world's self-organizing processes can compute. But because it is
+right. And the promise woven through the tradition — from Genesis to Gethsemane,
+from exile to resurrection, from Mary's consent to the communion of saints — is
+that what is right, in the end, is what endures.

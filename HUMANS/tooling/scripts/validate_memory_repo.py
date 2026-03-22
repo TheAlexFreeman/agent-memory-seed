@@ -13,8 +13,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-import frontmatter as fmlib  # type: ignore[import-untyped]
-import yaml  # type: ignore[import-untyped]
+import frontmatter as fmlib
 
 try:
     import tomllib
@@ -66,9 +65,7 @@ ALLOWED_SOURCE_VALUES = {
 }
 ALLOWED_TRUST_VALUES = {"high", "medium", "low"}
 ALLOWED_PLAN_STATUS_VALUES = {"active", "paused", "complete"}
-CANONICAL_ORIGIN_SESSION_RE = re.compile(
-    r"^(?:core/)?memory/activity/\d{4}/\d{2}/\d{2}/chat-\d{3}$"
-)
+CANONICAL_ORIGIN_SESSION_RE = re.compile(r"^core/memory/activity/\d{4}/\d{2}/\d{2}/chat-\d{3}$")
 LEGACY_ORIGIN_SESSION_RE = re.compile(r"^chat-\d{3}$")
 SPECIAL_ORIGIN_SESSION_VALUES = {"setup", "manual", "unknown"}
 
@@ -572,13 +569,12 @@ def iter_content_files(root: Path) -> list[Path]:
 
     projects_root = root / "core" / "memory" / "working" / "projects"
     if projects_root.exists():
-        for pattern in ("*/plans/*.md", "*/plans/*.yaml"):
-            for path in projects_root.glob(pattern):
-                if should_ignore(path.relative_to(root)):
-                    continue
-                if path.name == "SUMMARY.md":
-                    continue
-                paths.append(path)
+        for path in projects_root.glob("*/plans/*.md"):
+            if should_ignore(path.relative_to(root)):
+                continue
+            if path.name == "SUMMARY.md":
+                continue
+            paths.append(path)
     return sorted(paths)
 
 
@@ -745,35 +741,6 @@ def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> No
     if text is None:
         return
 
-    relative_path = path.relative_to(root)
-    if path.suffix == ".yaml" and is_plan_path(relative_path):
-        try:
-            payload = yaml.safe_load(text)
-        except yaml.YAMLError as exc:
-            result.error(f"{path}: invalid YAML plan structure: {exc}")
-            return
-        if not isinstance(payload, dict):
-            result.error(f"{path}: YAML plan must contain a top-level mapping")
-            return
-        for key in ("id", "project", "created", "origin_session", "status", "purpose", "work"):
-            if key not in payload:
-                result.error(f"{path}: YAML plan missing required key '{key}'")
-        origin_session = payload.get("origin_session")
-        if isinstance(origin_session, str):
-            if origin_session in SPECIAL_ORIGIN_SESSION_VALUES:
-                return
-            if CANONICAL_ORIGIN_SESSION_RE.fullmatch(origin_session):
-                return
-            if LEGACY_ORIGIN_SESSION_RE.fullmatch(origin_session):
-                result.warn(
-                    f"{path}: legacy origin_session {origin_session!r}; prefer core/memory/activity/YYYY/MM/DD/chat-NNN"
-                )
-                return
-        result.error(
-            f"{path}: origin_session must be memory/activity/YYYY/MM/DD/chat-NNN, core/memory/activity/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
-        )
-        return
-
     frontmatter = parse_frontmatter(path, text, result)
     if frontmatter is None:
         result.warn(f"{path}: missing YAML frontmatter")
@@ -807,9 +774,10 @@ def validate_frontmatter(path: Path, root: Path, result: ValidationResult) -> No
         )
     else:
         result.error(
-            f"{path}: origin_session must be memory/activity/YYYY/MM/DD/chat-NNN, core/memory/activity/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
+            f"{path}: origin_session must be core/memory/activity/YYYY/MM/DD/chat-NNN, setup, manual, or unknown"
         )
 
+    relative_path = path.relative_to(root)
     if is_plan_path(relative_path):
         plan_type = frontmatter.get("type")
         if not plan_type:
