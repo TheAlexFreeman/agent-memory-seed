@@ -32,6 +32,23 @@ _WRITE_LOCK_TIMEOUT_SECONDS = 5.0
 _WRITE_LOCK_POLL_INTERVAL_SECONDS = 0.05
 
 
+def _preserve_input_root_spelling(candidate_root: Path, reported_root: Path) -> Path:
+    """Prefer the caller's path spelling when it points into the same repo root.
+
+    On Windows, `git rev-parse --show-toplevel` can return an 8.3 short path
+    such as `C:/Users/RUNNER~1/...`, which causes equality checks against the
+    original long path to fail even though both point to the same directory.
+    """
+    resolved_reported_root = reported_root.resolve()
+    try:
+        for ancestor in (candidate_root, *candidate_root.parents):
+            if ancestor.samefile(resolved_reported_root):
+                return ancestor
+    except OSError:
+        pass
+    return resolved_reported_root
+
+
 @dataclass(frozen=True)
 class GitPublicationResult:
     sha: str
@@ -80,7 +97,10 @@ class GitRepo:
         if git_dir_result.returncode != 0:
             raise ValueError(f"Not a git repository: {candidate_root}")
 
-        self.root = Path(result.stdout.strip()).resolve()
+        self.root = _preserve_input_root_spelling(
+            candidate_root,
+            Path(result.stdout.strip()),
+        )
         self.git_dir = Path(git_dir_result.stdout.strip()).resolve()
         # Content prefix: when set, all content-relative paths are resolved
         # under root / content_prefix (e.g., root / "core"). For older test
