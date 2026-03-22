@@ -120,6 +120,12 @@ class AgentMemoryWriteToolTests(unittest.TestCase):
             return git_root / "core" / rel_path
         return git_root / rel_path
 
+    def _assert_same_path(self, left: Path, right: Path) -> None:
+        self.assertTrue(
+            left.samefile(right),
+            msg=f"Expected paths to reference the same location: {left!r} != {right!r}",
+        )
+
     def _create_tools(
         self,
         repo_root: Path,
@@ -241,8 +247,8 @@ preview_argument = "preview"
             enable_raw_write_tools=True,
         )
 
-        self.assertEqual(resolved_root, repo_root.parent)
-        self.assertEqual(repo.root, repo_root.parent)
+        self._assert_same_path(resolved_root, repo_root.parent)
+        self._assert_same_path(repo.root, repo_root.parent)
         payload = json.loads(
             asyncio.run(tools["memory_read_file"](path="memory/knowledge/topic/note.md"))
         )
