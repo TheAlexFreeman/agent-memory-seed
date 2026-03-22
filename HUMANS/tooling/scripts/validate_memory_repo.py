@@ -310,7 +310,7 @@ ONBOARDING_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, 
 SESSION_START_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
-SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
+SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load on demand"
 SETUP_GUIDANCE_REQUIRED_PATTERNS = (
     r"live routing (?:in|from)\s+`?core/HOME\.md`?",
 )
@@ -321,7 +321,6 @@ SESSION_START_REQUIRED_PHRASES = (
     "Load `core/governance/session-checklists.md` only when you want more detail",
     "If `core/governance/review-queue.md` still contains only its placeholder, skip it.",
     "Load it only when there are real pending items or the user asks about them.",
-    SESSION_START_SKILL_MCP_PHRASE,
 )
 SESSION_START_FORBIDDEN_PATTERNS = (
     r"after README\.md has been read",
@@ -332,7 +331,6 @@ SESSION_WRAPUP_SKILL_PATH = Path("core/memory/skills/session-wrapup.md")
 SESSION_WRAPUP_REQUIRED_PHRASES = (
     "Load `core/governance/session-checklists.md` only when you want",
     "session-end runbook",
-    SESSION_WRAPUP_SKILL_MCP_PHRASE,
 )
 SESSION_WRAPUP_FORBIDDEN_PATTERNS = (
     r"compact checklist in `core/governance/session-checklists\.md` is sufficient",
@@ -1521,6 +1519,7 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
         "Whole-file compact mode",
         "Compact file success criteria",
         "Target budget",
+        MCP_PREFERENCE_PHRASE,
     )
     for phrase in required_phrases:
         if phrase not in text:
@@ -1727,16 +1726,9 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
             result.error(
                 f"{root / 'core' / 'governance' / 'session-checklists.md'}: missing on-demand guidance"
             )
-        if SESSION_CHECKLISTS_MCP_PHRASE not in session_checklists:
-            result.error(
-                f"{root / 'core' / 'governance' / 'session-checklists.md'}: missing MCP preference guidance"
-            )
 
-    first_run = read_text(root / "core" / "governance" / "first-run.md", result)
-    if first_run is not None and FIRST_RUN_MCP_PHRASE not in first_run:
-        result.error(
-            f"{root / 'core' / 'governance' / 'first-run.md'}: missing MCP preference guidance"
-        )
+    # MCP preference is centralized in core/HOME.md (checked in validate_quick_reference);
+    # individual files no longer need their own copy.
 
     session_start = root / SESSION_START_SKILL_PATH
     if session_start.exists():
@@ -1765,16 +1757,8 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
                     )
 
     skills_summary = read_text(root / SKILLS_SUMMARY_PATH, result)
-    if skills_summary is not None and SKILLS_SUMMARY_MCP_PHRASE not in skills_summary:
-        result.error(f"{root / SKILLS_SUMMARY_PATH}: missing MCP preference guidance")
-
     onboarding_skill = read_text(root / ONBOARDING_SKILL_PATH, result)
-    if onboarding_skill is not None and ONBOARDING_SKILL_MCP_PHRASE not in onboarding_skill:
-        result.error(f"{root / ONBOARDING_SKILL_PATH}: missing MCP preference guidance")
-
     session_sync = read_text(root / SESSION_SYNC_SKILL_PATH, result)
-    if session_sync is not None and SESSION_SYNC_SKILL_MCP_PHRASE not in session_sync:
-        result.error(f"{root / SESSION_SYNC_SKILL_PATH}: missing MCP preference guidance")
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:

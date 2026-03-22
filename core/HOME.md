@@ -12,13 +12,11 @@ Use this file as the live operational router once you reach it:
 
 1. If you started in `README.md`, continue here for live routing and active parameters.
 2. If this is a fresh instantiation on a blank or template-backed repo, continue to `core/governance/first-run.md`.
-3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack (after governance changes, system updates, or when the user asks for a thorough review), follow the **Full bootstrap** manifest below.
+3. If this is a fresh instantiation on a returning system, or you need the full governance stack (after governance changes, system updates, or user-requested review), follow the **Full bootstrap** manifest below.
 4. If this is a scheduled or recurring automation run (no interactive user), use the **Automation** manifest below.
 5. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 
-**MCP discovery:** If the host exposes Engram under a project-prefixed name instead of `agent-memory`, use the identifier shown in the available-server list.
-
-**MCP preference:** When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+**MCP preference:** When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation. If the host exposes Engram under a project-prefixed name, use the identifier shown in the available-server list.
 
 ---
 
@@ -36,17 +34,17 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 | **ACCESS aggregation** | This file + `core/governance/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `core/governance/curation-algorithms.md` |
 
-**Do not load** `HUMANS/docs/*` (human reference only) or `core/governance/curation-algorithms.md` (on-demand only). `core/governance/session-checklists.md` and `core/governance/scratchpad-guidelines.md` are also on-demand — load them only when you need detailed runbooks, session-end scratchpad review criteria, or extra protocol detail.
+**Do not load** `HUMANS/docs/*` (human reference only) or `core/governance/curation-algorithms.md` (on-demand only). `core/governance/session-checklists.md` and `core/governance/scratchpad-guidelines.md` are also on-demand — load only when you need detailed runbooks or scratchpad review criteria.
 
 ### Compact returning notes
 
-**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/working/projects/`, and `core/memory/activity/`. `core/governance/` is **not** part of the ACCESS lifecycle.
+**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/working/projects/`, `core/memory/activity/`.
 
 - Run metadata-first maintenance probes before loading extra governance files.
 - Load `core/governance/review-queue.md` only when it has real entries or the user asks.
-- Count non-empty lines in `ACCESS.jsonl` files for access-tracked namespaces before loading heavier governance docs.
+- Count non-empty lines in `ACCESS.jsonl` files for access-tracked namespaces before loading governance docs.
 - Treat `core/memory/working/projects/SUMMARY.md`, `core/memory/knowledge/SUMMARY.md`, and `core/memory/skills/SUMMARY.md` as task-driven drill-down context, not unconditional startup reads.
-- In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations and the worktree path for memory files and governance.
+- In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations; use the worktree path for memory files.
 
 ---
 

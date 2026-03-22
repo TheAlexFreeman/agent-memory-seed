@@ -1,10 +1,10 @@
 ---
 source: agent-generated
-origin_session: system-review
+origin_session: manual
 created: 2026-07-25
 trust: medium
-status: active
-next_action: "Owner decides priority order; agent can begin Phase 1 items immediately"
+status: completed
+next_action: "Phase 4 items deferred to Calibration stage"
 ---
 
 # System Review Plan — Consistency, Usability & Context Efficiency
@@ -209,20 +209,20 @@ This is sound in principle but creates maintenance overhead: changes must propag
 
 ## Priority matrix
 
-| Item | Impact | Effort | Change tier | Recommended timing |
-|------|--------|--------|-------------|-------------------|
-| 0.1 ACCESS format paths | Low | Low | Automatic | Now |
-| 0.2 "Do not load" wording | Low | Low | Protected | Now |
-| 1.1 MCP boilerplate dedup | High | Low | Protected | Next session |
-| 1.2 Namespace list consolidation | Medium | Low | Protected | Next session |
-| 1.3 Checklist/skill overlap | High | Medium | Protected | Next session |
-| 1.4 Token budget validation | Medium | Medium | Automatic | Next few sessions |
-| 2.1 Trust-level consolidation | Medium | Low | Protected | Next session |
-| 2.2 ACCESS example consistency | Low | Low | Protected | Next session |
-| 2.3 HUMANS/docs maintenance | Low | Low | Protected | Next periodic review |
-| 3.1 First-run discoverability | Medium | Low | Protected | Next session |
-| 3.2 USER.md purpose clarity | Low | Low | Automatic | Now |
-| 3.3 Bootstrap decision rule | Medium | Low | Protected | Next session |
-| 4.1 Skip annotations | Medium | High | Protected | Calibration stage |
-| 4.2 Aggregation automation | Medium | Medium | Automatic | Before Calibration |
-| 4.3 Three-layer review | Low | High | Protected | Calibration stage |
+| Item | Impact | Effort | Change tier | Status |
+|------|--------|--------|-------------|--------|
+| 0.1 ACCESS format paths | Low | Low | Automatic | **Done** (b3caccb) |
+| 0.2 "Do not load" wording | Low | Low | Protected | **No-op** — already consistent |
+| 1.1 MCP boilerplate dedup | High | Low | Protected | **Done** (b3caccb) |
+| 1.2 Namespace list consolidation | Medium | Low | Protected | **Done** (8a5db5e) |
+| 1.3 Checklist/skill overlap | High | Medium | Protected | **Done** (8a5db5e) |
+| 1.4 Token budget validation | Medium | Medium | Automatic | **No-op** — already in validate_memory_repo.py |
+| 2.1 Trust-level consolidation | Medium | Low | Protected | **Done** (6a0f286) |
+| 2.2 ACCESS example consistency | Low | Low | Protected | **No-op** — field ordering already matches |
+| 2.3 HUMANS/docs maintenance | Low | Low | Protected | **Done** (6a0f286) |
+| 3.1 First-run discoverability | Medium | Low | Protected | **Done** (893118b) |
+| 3.2 USER.md purpose clarity | Low | Low | Automatic | **Done** (893118b) |
+| 3.3 Bootstrap decision rule | Medium | Low | Protected | **Done** (893118b) |
+| 4.1 Skip annotations | Medium | High | Protected | Deferred — Calibration stage |
+| 4.2 Aggregation automation | Medium | Medium | Automatic | Deferred — before Calibration |
+| 4.3 Three-layer review | Low | High | Protected | Deferred — Calibration stage |

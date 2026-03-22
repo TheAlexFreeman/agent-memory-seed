@@ -204,7 +204,7 @@ def build_minimal_repo(root: Path) -> None:
     write(root / "core" / "HOME.md", VALID_QUICK_REFERENCE)
     write(
         root / "core" / "governance" / "first-run.md",
-        f"# First run\n\n{FIRST_RUN_MCP_LINE}\n",
+        "# First run\n",
     )
     write(
         root / "core" / "governance" / "curation-policy.md",
@@ -218,8 +218,7 @@ def build_minimal_repo(root: Path) -> None:
         root / "core" / "governance" / "session-checklists.md",
         (
             "# Session checklists\n"
-            "Load this file on demand when you need more detail than the compact manifest in `core/HOME.md`.\n\n"
-            f"{SESSION_CHECKLISTS_MCP_LINE}\n"
+            "Load on demand when you need more detail than the compact manifest in `core/HOME.md`.\n\n"
         ),
     )
     write(
@@ -319,12 +318,12 @@ def build_minimal_repo(root: Path) -> None:
 
     write(
         root / "core" / "memory" / "skills" / "SUMMARY.md",
-        f"# Skills summary\n\n{SKILLS_SUMMARY_MCP_LINE}\n",
+        "# Skills summary\n",
     )
     write(
         root / "core" / "memory" / "skills" / "onboarding.md",
         textwrap.dedent(
-            f"""\
+            """\
             ---
             source: user-stated
             origin_session: manual
@@ -334,15 +333,13 @@ def build_minimal_repo(root: Path) -> None:
             ---
 
             # Onboarding
-
-            {ONBOARDING_SKILL_MCP_LINE}
             """
         ),
     )
     write(
         root / "core" / "memory" / "skills" / "session-sync.md",
         textwrap.dedent(
-            f"""\
+            """\
             ---
             source: user-stated
             origin_session: manual
@@ -352,8 +349,6 @@ def build_minimal_repo(root: Path) -> None:
             ---
 
             # Session sync
-
-            {SESSION_SYNC_SKILL_MCP_LINE}
             """
         ),
     )
@@ -1304,7 +1299,6 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     ---
 
                     For normal returning sessions, follow the compact returning manifest in `core/HOME.md`. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
-                    {SESSION_START_SKILL_MCP_LINE}
 
                     Run at the beginning of returning sessions after the compact returning manifest in `core/HOME.md` has oriented the agent.
 
@@ -1359,7 +1353,6 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     ---
 
                     Load `core/governance/session-checklists.md` only when you want the shorter session-end runbook there.
-                    {SESSION_WRAPUP_SKILL_MCP_LINE}
                     """
                 ),
             )
