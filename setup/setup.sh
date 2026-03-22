@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules.
-# Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path.
+# Use `core/memory/HOME.md` as the session entry point for normal sessions after `core/INIT.md` routes you there.
 
 # Agent Memory System — Post-clone setup script
 # Personalizes the template repo for a new user.

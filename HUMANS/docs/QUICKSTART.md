@@ -77,7 +77,7 @@ Open a conversation with your AI in the repo directory. The agent will:
 4. Continue to `core/governance/first-run.md` only if `core/INIT.md` routes the session into first-run bootstrap, then run the onboarding skill.
 5. Propose an initial profile, ask you to confirm it, then write to `core/memory/users/` and record the session.
 
-From session two onward, the agent will use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless the router points somewhere more specific.
+From session two onward, the agent will use `core/memory/HOME.md` as the session entry point for normal sessions unless the router points somewhere more specific.
 
 ---
 
@@ -118,7 +118,7 @@ Copy the following into your ChatGPT custom instructions (Settings → Personali
 I have a persistent memory system stored as a git repository.
 
 Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules.
-Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path.
+Use `core/memory/HOME.md` as the session entry point for normal sessions after `core/INIT.md` routes you there.
 
 Key rules:
 - core/INIT.md is the live runtime config; do not use hardcoded thresholds.
@@ -144,7 +144,7 @@ Use this preamble in your system prompt or session initialization:
 You have access to a persistent memory repository. This repository contains structured, version-controlled memory organized into folders: memory/users/ (who the user is), memory/knowledge/ (what they know), memory/skills/ (how to perform tasks), memory/working/projects/ (multi-session plans and roadmaps), memory/activity/ (conversation history), and governance/ (governance rules and context loading guide).
 
 Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules.
-Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path.
+Use `core/memory/HOME.md` as the session entry point for normal sessions after `core/INIT.md` routes you there.
 
 Key rules:
 - core/INIT.md is the live runtime config; do not use hardcoded thresholds.

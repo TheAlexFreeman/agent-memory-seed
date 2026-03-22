@@ -316,6 +316,11 @@ def build_minimal_repo(root: Path) -> None:
     )
 
     write(
+        root / "core" / "memory" / "HOME.md",
+        "# Home\n\n_Nothing here yet._\n",
+    )
+
+    write(
         root / "core" / "memory" / "skills" / "SUMMARY.md",
         "# Skills summary\n",
     )
@@ -1297,7 +1302,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
                     trust: high
                     ---
 
-                    For normal returning sessions, follow the compact returning manifest in `core/INIT.md`. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
+                    For normal returning sessions, follow the compact returning manifest in `core/INIT.md`, then use `core/memory/HOME.md` as the session entry point. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
 
                     Run at the beginning of returning sessions after the compact returning manifest in `core/INIT.md` has oriented the agent.
 
@@ -1778,7 +1783,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "core/memory/working/projects/SUMMARY.md` as the primary orientation surface", text
+            "`core/memory/HOME.md` as the session entry point", text
         )
         self.assertIn(
             "Load `core/governance/session-checklists.md` only when you want more detail",
@@ -1839,10 +1844,12 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         assert compact_row is not None
         self.assertNotIn("README.md", compact_row)
         self.assertNotIn("session-checklists", compact_row)
+        self.assertIn("core/memory/HOME.md", compact_row)
         self.assertIn("core/memory/users/SUMMARY.md", compact_row)
         self.assertIn("core/memory/activity/SUMMARY.md", compact_row)
         self.assertIn("core/memory/working/projects/SUMMARY.md", compact_row)
-        self.assertIn("task-relevant `core/memory/knowledge/SUMMARY.md`", compact_row)
+        self.assertIn("core/memory/knowledge/SUMMARY.md", compact_row)
+        self.assertIn("core/memory/skills/SUMMARY.md", compact_row)
 
     def test_context_budget_copy_uses_canonical_ranges(self) -> None:
         required_phrases = (

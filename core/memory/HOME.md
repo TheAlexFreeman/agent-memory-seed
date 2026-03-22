@@ -1,6 +1,6 @@
 # Home
 
-This is your Home File — the primary orientation surface for the Engram memory store. After `core/INIT.md` routes you here, use this file to load session context and check what's top-of-mind.
+This is the Home file for the memory store. After `core/INIT.md` routes you here, use it to load session context and check what's top-of-mind.
 
 ---
 

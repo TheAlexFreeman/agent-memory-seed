@@ -108,7 +108,7 @@ EXPECTED_BOOTSTRAP_PREFER_SUMMARIES = {
 }
 EXPECTED_RETURNING_STEP_PATHS = (
     "core/INIT.md",
-    "core/memory/working/projects/SUMMARY.md",
+    "core/memory/HOME.md",
     "core/memory/users/SUMMARY.md",
     "core/memory/activity/SUMMARY.md",
     "core/memory/working/scratchpad/USER.md",
@@ -122,7 +122,7 @@ EXPECTED_FIRST_RUN_STEP_PATHS = (
 EXPECTED_FULL_BOOTSTRAP_STEP_PATHS = (
     "README.md",
     "core/INIT.md",
-    "core/memory/working/projects/SUMMARY.md",
+    "core/memory/HOME.md",
     "core/memory/users/SUMMARY.md",
     "core/memory/activity/SUMMARY.md",
     "core/memory/working/scratchpad/USER.md",
@@ -145,6 +145,7 @@ DEPLOYED_WORKTREE_PERIODIC_REVIEW_STEP_PATHS = tuple(
 )
 EXPECTED_AUTOMATION_STEP_PATHS = (
     "core/INIT.md",
+    "core/memory/HOME.md",
     "core/memory/working/scratchpad/USER.md",
     "core/memory/working/scratchpad/CURRENT.md",
     "core/memory/working/projects/SUMMARY.md",
@@ -173,6 +174,7 @@ EXPECTED_BOOTSTRAP_MAINTENANCE_PROBES = (
     "ACCESS.jsonl:count_non_empty_lines",
 )
 EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
+    "core/memory/HOME.md": "placeholder_or_empty",
     "core/memory/working/projects/SUMMARY.md": "placeholder_or_empty",
     "core/memory/activity/SUMMARY.md": "placeholder_or_empty",
     "core/memory/working/scratchpad/USER.md": "placeholder_or_empty",
@@ -181,9 +183,9 @@ EXPECTED_OPTIONAL_STEP_SKIP_RULES = {
 COMPACT_RETURNING_BUDGET = EXPECTED_BOOTSTRAP_TOKEN_BUDGETS["returning"]
 COMPACT_RETURNING_TARGETS = {
     "core/INIT.md": 2600,
+    "core/memory/HOME.md": 500,
     "core/memory/users/SUMMARY.md": 450,
     "core/memory/activity/SUMMARY.md": 750,
-    "core/memory/working/projects/SUMMARY.md": 1700,
     "core/memory/working/scratchpad/USER.md": 400,
     "core/memory/working/scratchpad/CURRENT.md": 650,
 }
@@ -292,7 +294,7 @@ LEGACY_MCP_RUNTIME_DIR_V2 = Path("engram_mcp")
 LEGACY_MCP_ENTRYPOINT_V2 = Path("engram_mcp/memory_mcp.py")
 
 PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `core/INIT.md` for live routing and context-loading rules."
-PROMPT_ROUTE_LINE = "Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/INIT.md` routes you to first-run, full bootstrap, or a more specific path."
+PROMPT_ROUTE_LINE = "Use `core/memory/HOME.md` as the session entry point for normal sessions after `core/INIT.md` routes you there."
 PROMPT_MCP_LINE = "If local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 LIVE_CONFIG_LINE = "core/INIT.md is the live runtime config; do not use hardcoded thresholds."
 ADAPTER_ROUTING_PHRASE = "Start with `README.md` for the architectural contract, then continue to `core/INIT.md` for live routing and thresholds"
@@ -318,6 +320,7 @@ SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
 SESSION_START_SKILL_PATH = Path("core/memory/skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
     "compact returning manifest in `core/INIT.md`",
+    "`core/memory/HOME.md` as the session entry point",
     "Load `core/governance/session-checklists.md` only when you want more detail",
     "If `core/governance/review-queue.md` still contains only its placeholder, skip it.",
     "Load it only when there are real pending items or the user asks about them.",
@@ -978,11 +981,6 @@ def iter_compact_startup_measurements(
         }:
             if is_placeholder_or_empty_text(text):
                 continue
-        if (
-            rel_path == "core/memory/working/projects/SUMMARY.md"
-            and not projects_summary_has_active_projects(text)
-        ):
-            continue
 
         measurements.append((rel_path, estimate_token_count(text), text))
 
@@ -1131,9 +1129,7 @@ def validate_compact_startup_contract(root: Path, result: ValidationResult) -> N
             )
 
         path = root / rel_path
-        if rel_path == "core/memory/working/projects/SUMMARY.md":
-            validate_projects_summary_shape(path, text, root, result)
-        elif rel_path == "core/memory/activity/SUMMARY.md":
+        if rel_path == "core/memory/activity/SUMMARY.md":
             validate_chats_summary_shape(path, text, root, result)
         elif rel_path == "core/memory/working/scratchpad/CURRENT.md":
             validate_scratchpad_current_shape(path, text, root, result)
@@ -1515,7 +1511,7 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
         "Exploration defaults apply",
         "metadata-first maintenance probes",
         "Count non-empty lines in `ACCESS.jsonl` files",
-        "task-relevant `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md`",
+        "task-driven drill-down context",
         "Whole-file compact mode",
         "Compact file success criteria",
         "Target budget",
@@ -1531,12 +1527,14 @@ def validate_quick_reference(root: Path, result: ValidationResult) -> None:
         return
 
     required_compact_markers = (
+        "core/memory/HOME.md",
         "core/memory/users/SUMMARY.md",
         "core/memory/activity/SUMMARY.md",
         "core/memory/working/projects/SUMMARY.md",
         "core/memory/working/scratchpad/USER.md",
         "core/memory/working/scratchpad/CURRENT.md",
-        "task-relevant `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md`",
+        "core/memory/knowledge/SUMMARY.md",
+        "core/memory/skills/SUMMARY.md",
     )
     for marker in required_compact_markers:
         if marker not in compact_row:
@@ -1821,6 +1819,12 @@ def validate_repo(root: Path) -> ValidationResult:
     validate_contract_consistency(root, result)
     validate_quarantine(root, result)
     validate_chat_leaf_sessions(root, result)
+
+    projects_summary = root / "core" / "memory" / "working" / "projects" / "SUMMARY.md"
+    if projects_summary.exists():
+        text = read_text(projects_summary, result)
+        if text is not None:
+            validate_projects_summary_shape(projects_summary, text, root, result)
 
     for path in iter_content_files(root):
         validate_frontmatter(path, root, result)

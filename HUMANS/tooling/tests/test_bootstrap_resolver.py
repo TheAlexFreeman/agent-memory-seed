@@ -45,11 +45,17 @@ def build_repo(
         "core/governance/belief-diff-log.md",
         "core/governance/review-queue.md",
         "core/governance/session-checklists.md",
+        "core/memory/HOME.md",
         "core/memory/users/SUMMARY.md",
         "core/memory/activity/SUMMARY.md",
         "core/memory/working/projects/SUMMARY.md",
     ):
         write(root / path, f"# {Path(path).stem}\n")
+
+    write(
+        root / "core" / "memory" / "HOME.md",
+        "# Home\n\n_Nothing here yet._\n",
+    )
 
     profile_source = "template" if first_run else "user-stated"
     write(
@@ -185,8 +191,8 @@ class BootstrapResolverTests(unittest.TestCase):
             write(
                 root / "agent-bootstrap.toml",
                 BOOTSTRAP_MANIFEST.replace(
-                    'path = "core/memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "placeholder_or_empty"',
-                    'path = "core/memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"',
+                    '[[modes.returning.steps]]\npath = "core/memory/working/scratchpad/USER.md"\nrole = "scratchpad-user"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "core/memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "no_active_projects"\ncost = "light"\n\n[[modes.returning.steps]]\npath = "core/memory/working/scratchpad/USER.md"\nrole = "scratchpad-user"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
                     1,
                 ),
             )
@@ -200,7 +206,7 @@ class BootstrapResolverTests(unittest.TestCase):
                 resolution.startup_panel.repo_next_step.path, "core/INIT.md"
             )
             self.assertEqual(resolution.startup_panel.loaded_count, 3)
-            self.assertEqual(resolution.startup_panel.skipped_count, 3)
+            self.assertEqual(resolution.startup_panel.skipped_count, 4)
             self.assertEqual(trace_by_path["core/memory/working/projects/SUMMARY.md"].status, "skipped")
             self.assertEqual(trace_by_path["core/memory/working/projects/SUMMARY.md"].reason, "no_active_projects")
             self.assertEqual(trace_by_path["core/memory/working/scratchpad/USER.md"].status, "skipped")
@@ -289,12 +295,12 @@ class BootstrapResolverTests(unittest.TestCase):
 
             self.assertEqual(trace_by_role["heavy-context"].status, "skipped")
             self.assertEqual(trace_by_role["heavy-context"].reason, "budget_pressure")
-            self.assertEqual(trace_by_role["heavy-context"].budget_after, 0)
+            self.assertEqual(trace_by_role["heavy-context"].budget_after, 500)
             self.assertTrue(resolution.budget.pressure)
             self.assertEqual(resolution.budget.limit, 1500)
             self.assertEqual(resolution.budget.reserve, 500)
-            self.assertEqual(resolution.budget.estimated_used, 1500)
-            self.assertEqual(resolution.budget.estimated_remaining, 0)
+            self.assertEqual(resolution.budget.estimated_used, 1000)
+            self.assertEqual(resolution.budget.estimated_remaining, 500)
             self.assertIn("budget_pressure", [warning.code for warning in resolution.warnings])
 
     def test_prefer_summaries_skips_transcript_under_budget_pressure(self) -> None:
@@ -310,8 +316,8 @@ class BootstrapResolverTests(unittest.TestCase):
                     "[modes.returning]\ntoken_budget = 2500",
                     1,
                 ).replace(
-                    '[[modes.returning.steps]]\npath = "core/memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
-                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "core/memory/working/projects/SUMMARY.md"\nrole = "project-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "core/memory/activity/SUMMARY.md"\nrole = "activity-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
+                    '[[modes.returning.steps]]\npath = "docs/topic/transcript.md"\nrole = "topic-transcript"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "docs/topic/SUMMARY.md"\nrole = "topic-summary"\nrequired = false\ncost = "light"\n\n[[modes.returning.steps]]\npath = "core/memory/activity/SUMMARY.md"\nrole = "activity-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
                     1,
                 ),
             )

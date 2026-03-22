@@ -8,7 +8,7 @@ trust: high
 
 # Session Start
 
-**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `core/INIT.md`, using `core/memory/working/projects/SUMMARY.md` as the primary orientation surface unless the route points somewhere more specific. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
+**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `core/INIT.md`, then use `core/memory/HOME.md` as the session entry point for the actual load order. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
 
 ## When to use this skill
 
@@ -21,7 +21,8 @@ Skip this skill on the very first session — use `core/governance/first-run.md`
 ### 1. Load recent context (silent)
 
 - When available, prefer local agent-memory MCP read/search tools for locating and opening the relevant summary files.
-- Read `core/memory/working/projects/SUMMARY.md` first to identify the active project, current focus, and the most relevant drill-down targets for this session.
+- Read `core/memory/HOME.md` first if the compact manifest routed you there, then follow its ordered summary loads.
+- Use `core/memory/working/projects/SUMMARY.md` as task-driven drill-down context to identify the active project, current focus, and the most relevant next reads for this session.
 - Read the most recent chat summary (`core/memory/activity/SUMMARY.md` → latest date folder → latest chat `SUMMARY.md`).
 - Note what the user was working on, any open threads, and any action items from the previous session.
 

@@ -6,7 +6,7 @@ trust: medium
 type: build-plan
 category: build
 status: active
-next_action: "Phase 3 — dry-run the new onboarding flow and decide whether to archive the legacy interview flow separately"
+next_action: "Phase 3 — dry-run the new onboarding flow across developer, researcher, and non-technical first-session scenarios"
 ---
 
 # Build Plan: Collaborative Onboarding Redesign
@@ -285,11 +285,9 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
       `core/governance/curation-policy.md` (the current skill is ~930 words; the new
       one may need to be slightly longer given the added demonstration
       guidance — flag if it exceeds 1200 words)
-- [ ] Run the repo validator to confirm no structural regressions
+- [x] Run the repo validator to confirm no structural regressions
 
-Validation note: the repo validator was run during implementation. It still fails on
-pre-existing `agent-bootstrap.toml` and `core/INIT.md` drift unrelated to this onboarding
-change, so that broader validator-cleanup work remains out of scope for this plan.
+Validation note: the repo validator now passes after the startup-contract tooling was realigned with the `core/memory/HOME.md`-based returning-session path. Remaining warnings are coverage/reflection warnings, not structural failures.
 
 ---
 
