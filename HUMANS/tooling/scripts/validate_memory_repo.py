@@ -9,7 +9,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from types import ModuleType
 from typing import Any
 
@@ -313,9 +313,7 @@ SESSION_START_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are availabl
 SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load on demand"
-SETUP_GUIDANCE_REQUIRED_PATTERNS = (
-    r"live routing (?:in|from)\s+`?core/INIT\.md`?",
-)
+SETUP_GUIDANCE_REQUIRED_PATTERNS = (r"live routing (?:in|from)\s+`?core/INIT\.md`?",)
 SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
 SESSION_START_SKILL_PATH = Path("core/memory/skills/session-start.md")
 SESSION_START_REQUIRED_PHRASES = (
@@ -1754,9 +1752,9 @@ def validate_contract_consistency(root: Path, result: ValidationResult) -> None:
                         f"{session_wrapup}: contains forbidden wrapup-skill pattern {pattern!r}"
                     )
 
-    skills_summary = read_text(root / SKILLS_SUMMARY_PATH, result)
-    onboarding_skill = read_text(root / ONBOARDING_SKILL_PATH, result)
-    session_sync = read_text(root / SESSION_SYNC_SKILL_PATH, result)
+    read_text(root / SKILLS_SUMMARY_PATH, result)
+    read_text(root / ONBOARDING_SKILL_PATH, result)
+    read_text(root / SESSION_SYNC_SKILL_PATH, result)
 
 
 def validate_quarantine(root: Path, result: ValidationResult) -> None:

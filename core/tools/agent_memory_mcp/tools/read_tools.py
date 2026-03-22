@@ -186,11 +186,7 @@ def _display_rel_path(path: Path, root: Path) -> str:
     except ValueError:
         humans_root = _resolve_humans_root(root)
         humans_rel = path.relative_to(humans_root).as_posix()
-        return (
-            f"{_HUMANS_DIRNAME}/{humans_rel}"
-            if humans_rel not in {"", "."}
-            else _HUMANS_DIRNAME
-        )
+        return f"{_HUMANS_DIRNAME}/{humans_rel}" if humans_rel not in {"", "."} else _HUMANS_DIRNAME
 
 
 def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -2360,9 +2356,7 @@ def _resolve_requested_knowledge_paths(root: Path, raw_paths: str) -> list[tuple
 
         rel = abs_path.relative_to(root).as_posix()
         if not rel.startswith("memory/knowledge/"):
-            raise ValidationError(
-                f"Knowledge path must live under memory/knowledge/: {requested}"
-            )
+            raise ValidationError(f"Knowledge path must live under memory/knowledge/: {requested}")
         if not abs_path.exists() or not abs_path.is_file():
             raise NotFoundError(f"File not found: {requested}")
         resolved.append((rel, abs_path))
@@ -3203,7 +3197,12 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                     results.append(f"\n_(truncated at {max_results} matches)_")
                     break
 
-        if total_matches < max_results and not explicit_humans_search and include_humans and path in {"", "."}:
+        if (
+            total_matches < max_results
+            and not explicit_humans_search
+            and include_humans
+            and path in {"", "."}
+        ):
             humans_root = _resolve_humans_root(root)
             if humans_root.exists() and humans_root.is_dir():
                 for file_path in sorted(humans_root.glob(glob_pattern)):

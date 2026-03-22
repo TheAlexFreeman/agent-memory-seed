@@ -5,7 +5,14 @@ This package is the stable import surface for Tier 1 semantic tools.
 
 from __future__ import annotations
 
-from . import _session, user_tools, knowledge_tools, plan_tools, session_tools, skill_tools
+from . import (
+    _session,
+    knowledge_tools,
+    plan_tools,
+    session_tools,
+    skill_tools,
+    user_tools,
+)
 
 
 def register(mcp, get_repo, get_root):

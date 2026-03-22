@@ -24,7 +24,14 @@ class ValidateMemoryRepoProjectPlanTests(unittest.TestCase):
             root = Path(tempdir)
             fixtures.build_minimal_repo(root)
             fixtures.write(
-                root / "core" / "memory" / "working" / "projects" / "seed-project" / "plans" / "roadmap.md",
+                root
+                / "core"
+                / "memory"
+                / "working"
+                / "projects"
+                / "seed-project"
+                / "plans"
+                / "roadmap.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -51,7 +58,14 @@ class ValidateMemoryRepoProjectPlanTests(unittest.TestCase):
             root = Path(tempdir)
             fixtures.build_minimal_repo(root)
             fixtures.write(
-                root / "core" / "memory" / "working" / "projects" / "seed-project" / "plans" / "roadmap.md",
+                root
+                / "core"
+                / "memory"
+                / "working"
+                / "projects"
+                / "seed-project"
+                / "plans"
+                / "roadmap.md",
                 textwrap.dedent(
                     """\
                     ---

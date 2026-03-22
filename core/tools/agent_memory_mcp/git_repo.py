@@ -683,9 +683,9 @@ class GitRepo:
             return [line for line in result.stdout.strip().splitlines() if line.strip()]
 
         return {
-            "staged": [self._from_git_path(l) for l in _lines(staged_result)],
-            "unstaged": [self._from_git_path(l) for l in _lines(unstaged_result)],
-            "untracked": [self._from_git_path(l) for l in _lines(untracked_result)],
+            "staged": [self._from_git_path(line) for line in _lines(staged_result)],
+            "unstaged": [self._from_git_path(line) for line in _lines(unstaged_result)],
+            "untracked": [self._from_git_path(line) for line in _lines(untracked_result)],
         }
 
     def first_tracked_author_date(self, rel_path: str) -> date | None:

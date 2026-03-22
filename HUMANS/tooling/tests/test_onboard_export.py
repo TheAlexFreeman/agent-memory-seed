@@ -169,13 +169,15 @@ class OnboardExportTests(unittest.TestCase):
             transcript = (
                 root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "transcript.md"
             ).read_text(encoding="utf-8")
-            summary = (root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "SUMMARY.md").read_text(
-                encoding="utf-8"
-            )
+            summary = (
+                root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "SUMMARY.md"
+            ).read_text(encoding="utf-8")
             reflection = (
                 root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "reflection.md"
             ).read_text(encoding="utf-8")
-            chats_summary = (root / "memory" / "activity" / "SUMMARY.md").read_text(encoding="utf-8")
+            chats_summary = (root / "memory" / "activity" / "SUMMARY.md").read_text(
+                encoding="utf-8"
+            )
 
             self.assertIn("origin_session: core/memory/activity/2026/03/12/chat-001", profile)
             self.assertIn("created: 2026-03-12", profile)

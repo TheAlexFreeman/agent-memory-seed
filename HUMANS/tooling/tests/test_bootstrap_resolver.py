@@ -75,7 +75,18 @@ def build_repo(
     )
 
     if not first_run:
-        write(root / "core" / "memory" / "activity" / "2026" / "03" / "18" / "chat-001" / "SUMMARY.md", "# Chat\n")
+        write(
+            root
+            / "core"
+            / "memory"
+            / "activity"
+            / "2026"
+            / "03"
+            / "18"
+            / "chat-001"
+            / "SUMMARY.md",
+            "# Chat\n",
+        )
 
     projects_summary = (
         "---\ntype: projects-navigator\ngenerated: 2026-03-21 12:00\nproject_count: 1\n---\n\n# Projects\n\n| Project | Status | Mode | Open Qs | Focus | Last activity |\n|---|---|---|---|---|---|\n| example-project | ongoing | exploration | 2 | Example focus | 2026-03-21 |\n"
@@ -94,8 +105,14 @@ def build_repo(
             "# Agent working notes\n\n_No current notes._\n",
         )
     else:
-        write(root / "core" / "memory" / "working" / "scratchpad" / "USER.md", "# User notes\n\nImportant note.\n")
-        write(root / "core" / "memory" / "working" / "scratchpad" / "CURRENT.md", "# Agent working notes\n\nWorking note.\n")
+        write(
+            root / "core" / "memory" / "working" / "scratchpad" / "USER.md",
+            "# User notes\n\nImportant note.\n",
+        )
+        write(
+            root / "core" / "memory" / "working" / "scratchpad" / "CURRENT.md",
+            "# Agent working notes\n\nWorking note.\n",
+        )
 
 
 class BootstrapResolverTests(unittest.TestCase):
@@ -202,17 +219,30 @@ class BootstrapResolverTests(unittest.TestCase):
 
             self.assertEqual(trace_by_path["core/INIT.md"].status, "loaded")
             self.assertEqual(resolution.startup_panel.mode_label, "Returning")
-            self.assertEqual(
-                resolution.startup_panel.repo_next_step.path, "core/INIT.md"
-            )
+            self.assertEqual(resolution.startup_panel.repo_next_step.path, "core/INIT.md")
             self.assertEqual(resolution.startup_panel.loaded_count, 3)
             self.assertEqual(resolution.startup_panel.skipped_count, 4)
-            self.assertEqual(trace_by_path["core/memory/working/projects/SUMMARY.md"].status, "skipped")
-            self.assertEqual(trace_by_path["core/memory/working/projects/SUMMARY.md"].reason, "no_active_projects")
-            self.assertEqual(trace_by_path["core/memory/working/scratchpad/USER.md"].status, "skipped")
-            self.assertEqual(trace_by_path["core/memory/working/scratchpad/USER.md"].reason, "placeholder_or_empty")
-            self.assertEqual(trace_by_path["core/memory/working/scratchpad/CURRENT.md"].status, "skipped")
-            self.assertEqual(trace_by_path["core/memory/working/scratchpad/CURRENT.md"].reason, "placeholder_or_empty")
+            self.assertEqual(
+                trace_by_path["core/memory/working/projects/SUMMARY.md"].status, "skipped"
+            )
+            self.assertEqual(
+                trace_by_path["core/memory/working/projects/SUMMARY.md"].reason,
+                "no_active_projects",
+            )
+            self.assertEqual(
+                trace_by_path["core/memory/working/scratchpad/USER.md"].status, "skipped"
+            )
+            self.assertEqual(
+                trace_by_path["core/memory/working/scratchpad/USER.md"].reason,
+                "placeholder_or_empty",
+            )
+            self.assertEqual(
+                trace_by_path["core/memory/working/scratchpad/CURRENT.md"].status, "skipped"
+            )
+            self.assertEqual(
+                trace_by_path["core/memory/working/scratchpad/CURRENT.md"].reason,
+                "placeholder_or_empty",
+            )
 
     def test_duplicate_paths_are_deduplicated_after_normalization(self) -> None:
         with tempfile.TemporaryDirectory() as tempdir:

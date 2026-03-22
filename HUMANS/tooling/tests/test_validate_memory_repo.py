@@ -1293,7 +1293,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             write(
                 root / "core" / "memory" / "skills" / "session-start.md",
                 textwrap.dedent(
-                    f"""\
+                    """\
                     ---
                     source: user-stated
                     origin_session: manual
@@ -1347,7 +1347,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             write(
                 root / "core" / "memory" / "skills" / "session-wrapup.md",
                 textwrap.dedent(
-                    f"""\
+                    """\
                     ---
                     source: user-stated
                     origin_session: manual
@@ -1782,9 +1782,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             "For normal returning sessions, follow the compact returning manifest in `core/INIT.md`",
             text,
         )
-        self.assertIn(
-            "`core/memory/HOME.md` as the session entry point", text
-        )
+        self.assertIn("`core/memory/HOME.md` as the session entry point", text)
         self.assertIn(
             "Load `core/governance/session-checklists.md` only when you want more detail",
             text,

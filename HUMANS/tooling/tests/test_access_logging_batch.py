@@ -136,7 +136,9 @@ class AccessLoggingBatchTests(unittest.TestCase):
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_entry = json.loads(
-            (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .strip()
         )
 
         self.assertEqual(after_count - before_count, 1)
@@ -185,7 +187,9 @@ class AccessLoggingBatchTests(unittest.TestCase):
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_scan_entry = json.loads(
-            (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl")
+            .read_text(encoding="utf-8")
+            .strip()
         )
 
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
