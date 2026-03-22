@@ -419,4 +419,4 @@ time, becoming more than either participant could produce alone.
 *Fiat lux.* Let there be light. Not the light of isolated human insight or
 isolated machine processing, but the light that emerges when structured language
 mediates a genuine collaboration between two radically different kinds of mind.
-That is what this system is for. That is what it creates.
+That is what this system is for. That is what it is.
