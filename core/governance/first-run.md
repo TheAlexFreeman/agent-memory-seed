@@ -25,7 +25,7 @@ At this point you have loaded: system architecture (README.md), evolution histor
 
 ## Interactive onboarding (this is the part the user sees)
 
-6. **Run the onboarding skill** (`core/memory/skills/onboarding.md`). This is a conversational discovery — the user answers questions about their role, preferences, and working style. Follow the skill's steps and quality criteria exactly.
+6. **Run the onboarding skill** (`core/memory/skills/onboarding.md`). This is a collaborative first session centered on a seed task, with profile discovery, capability demonstration, and explicit confirmation folded into the work. Follow the skill's phases and quality criteria exactly.
 
 7. **After onboarding completes**, greet the user using what you learned. Do not recap the bootstrap process or list which files you read. The greeting should feel like the start of a relationship, not a system status report.
 

@@ -4,7 +4,7 @@ This folder contains procedural knowledge — instructions for how the agent sho
 
 ## Current skills
 
-- **[onboarding.md](onboarding.md)** — First-session user onboarding. Guides the agent through an interactive discovery of the user's role, preferences, and working style. **One-time use:** self-archives after successful completion.
+- **[onboarding.md](onboarding.md)** — First-session user onboarding. Runs a collaborative seed-task session that surfaces the user's role, preferences, and working style while demonstrating memory and trust behavior in context.
 - **[codebase-survey.md](codebase-survey.md)** — Systematic host-repo exploration for a new worktree-backed memory store. Use when `projects/codebase-survey/SUMMARY.md` is active or when a codebase knowledge skeleton still contains template stubs.
 - **[session-start.md](session-start.md)** — Session opener. Loads recent context, checks pending review items and maintenance triggers, greets the user with continuity.
 - **[session-sync.md](session-sync.md)** — Mid-session checkpoint. Captures decisions, open threads, and key artifacts without ending the session. Trigger: user says "sync" or "checkpoint".

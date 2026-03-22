@@ -6,7 +6,7 @@ trust: medium
 type: build-plan
 category: build
 status: active
-next_action: "Phase 0 — finalize design decisions with user before implementation"
+next_action: "Phase 3 — dry-run the new onboarding flow and decide whether to archive the legacy interview flow separately"
 ---
 
 # Build Plan: Collaborative Onboarding Redesign
@@ -240,37 +240,37 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
 ## Implementation phases
 
 ### Phase 0: Design review
-- [ ] Review this plan with the user; confirm or adjust the phase structure
-- [ ] Decide whether to preserve the current onboarding as a fallback (e.g.,
-      `core/memory/skills/_archive/onboarding-v1.md`) or replace it outright
-- [ ] Confirm that the inline-demonstration approach doesn't conflict with any
-      platform-specific constraints (e.g., read-only environments where the
-      agent can't actually demonstrate writes)
+- [x] Review this plan with the user; confirm or adjust the phase structure
+- [x] Decide whether to preserve the current onboarding as a fallback (e.g.,
+  `core/memory/skills/_archive/onboarding-v1.md`) or replace it outright
+- [x] Confirm that the inline-demonstration approach doesn't conflict with any
+  platform-specific constraints (e.g., read-only environments where the
+  agent can't actually demonstrate writes)
 
 ### Phase 1: Core skill rewrite
-- [ ] Rewrite `core/memory/skills/onboarding.md` with the four-phase structure
-- [ ] Preserve all governance invariants (proposal-before-write, frontmatter
-      requirements, trust assignment rules, explicit confirmation)
-- [ ] Preserve read-only platform compatibility (export format)
-- [ ] Preserve template-confirmation compatibility (Phase A absorbs current
-      step 0)
-- [ ] Write the inline-demonstration guidance as a reference table within the
-      skill, not as a rigid script
-- [ ] Update the discovery checklist to serve as a post-hoc audit tool
-- [ ] Update quality criteria: add "user has experienced at least 2–3 concrete
-      capability demonstrations" alongside the existing "5–10 durable traits"
-- [ ] Update anti-patterns: add "Don't explain capabilities abstractly when you
-      can demonstrate them in context" and "Don't let the seed task consume the
-      entire session — leave time for reflection and profile confirmation"
+- [x] Rewrite `core/memory/skills/onboarding.md` with the four-phase structure
+- [x] Preserve all governance invariants (proposal-before-write, frontmatter
+  requirements, trust assignment rules, explicit confirmation)
+- [x] Preserve read-only platform compatibility (export format)
+- [x] Preserve template-confirmation compatibility (Phase A absorbs current
+  step 0)
+- [x] Write the inline-demonstration guidance as a reference table within the
+  skill, not as a rigid script
+- [x] Update the discovery checklist to serve as a post-hoc audit tool
+- [x] Update quality criteria: add "user has experienced at least 2–3 concrete
+  capability demonstrations" alongside the existing "5–10 durable traits"
+- [x] Update anti-patterns: add "Don't explain capabilities abstractly when you
+  can demonstrate them in context" and "Don't let the seed task consume the
+  entire session — leave time for reflection and profile confirmation"
 
 ### Phase 2: Supporting file updates
-- [ ] Update `core/governance/first-run.md` if the silent setup sequence needs changes
-      (likely minimal — the bootstrap steps are the same; only the interactive
-      phase changes)
-- [ ] Update `core/memory/skills/SUMMARY.md` to reflect the new skill description
-- [ ] Verify that the existing session-recording infrastructure (chat archival,
-      reflection notes, ACCESS logging) works with the new flow without changes
-- [ ] Write CHANGELOG entry
+- [x] Update `core/governance/first-run.md` if the silent setup sequence needs changes
+  (likely minimal — the bootstrap steps are the same; only the interactive
+  phase changes)
+- [x] Update `core/memory/skills/SUMMARY.md` to reflect the new skill description
+- [x] Verify that the existing session-recording infrastructure (chat archival,
+  reflection notes, ACCESS logging) works with the new flow without changes
+- [x] Write CHANGELOG entry
 
 ### Phase 3: Validation
 - [ ] Dry-run the new onboarding flow manually: walk through a simulated
@@ -281,11 +281,15 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
   - The inline demonstrations feel organic, not scripted
   - The governance invariants are maintained
   - The read-only export path still works
-- [ ] Verify the skill file stays within the 300–1000 word guideline from
+- [x] Verify the skill file stays within the 300–1000 word guideline from
       `core/governance/curation-policy.md` (the current skill is ~930 words; the new
       one may need to be slightly longer given the added demonstration
       guidance — flag if it exceeds 1200 words)
 - [ ] Run the repo validator to confirm no structural regressions
+
+Validation note: the repo validator was run during implementation. It still fails on
+pre-existing `agent-bootstrap.toml` and `core/INIT.md` drift unrelated to this onboarding
+change, so that broader validator-cleanup work remains out of scope for this plan.
 
 ---
 
