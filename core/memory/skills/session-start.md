@@ -16,8 +16,6 @@ Run at the beginning of returning sessions after the compact returning manifest 
 
 Skip this skill on the very first session — use `core/governance/first-run.md` and the onboarding skill instead.
 
-When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Steps
 
 ### 1. Load recent context (silent)

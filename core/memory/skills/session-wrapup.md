@@ -17,8 +17,6 @@ Activate when:
 - The session is clearly concluding (final thanks, sign-off language).
 - Context window is running low and the session should be archived before context is lost.
 
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Steps
 
 ### 1. Record the session atomically

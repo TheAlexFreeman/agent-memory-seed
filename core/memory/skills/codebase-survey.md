@@ -12,8 +12,6 @@ trust: medium
 
 Use this skill when a worktree-backed memory store has just been initialized for a host repository, when `projects/codebase-survey/SUMMARY.md` is active, or when the files under `knowledge/codebase/` still contain template placeholders.
 
-When local agent-memory MCP tools are available, prefer them for reading plans, searching the worktree, checking freshness, and updating plan state. Fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Steps
 
 ### 1. Start from the survey plan

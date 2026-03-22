@@ -18,6 +18,8 @@ Use this file as the live operational router once you reach it:
 
 **MCP discovery:** If the host exposes Engram under a project-prefixed name instead of `agent-memory`, use the identifier shown in the available-server list.
 
+**MCP preference:** When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+
 ---
 
 ## Context loading manifest

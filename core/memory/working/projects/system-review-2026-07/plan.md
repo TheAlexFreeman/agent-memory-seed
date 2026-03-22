@@ -64,7 +64,7 @@ This review was performed on the `live-test--maiden` branch at commit f86c01d. T
 
 **Recommendation:** State the MCP preference rule **once** in `core/HOME.md` (already the first file loaded in every session mode) and remove it from all other files. Optionally replace with a one-line cross-reference: _"MCP preference: see `core/HOME.md`."_ in files that are loaded independently (like curation-policy.md).
 
-**Savings:** ~1,200–1,500 tokens reclaimed from typical session loads.  
+**Savings:** ~1,200–1,500 tokens reclaimed from typical session loads.
 **Change tier:** Protected (modifies governance + skill files). Requires user approval.
 
 ### 1.2 Consolidate access-tracked namespace list
@@ -81,7 +81,7 @@ Each occurrence is ~70–90 tokens (700–900 total).
 
 **Recommendation:** Define the canonical list once in README.md (it's the architectural contract) and reference it elsewhere. In governance/skill files, replace with: _"all access-tracked namespaces (see README § Access tracking)"_ or better, add a short anchor in `core/HOME.md` since that's always loaded.
 
-**Savings:** ~500–700 tokens.  
+**Savings:** ~500–700 tokens.
 **Change tier:** Protected.
 
 ### 1.3 Resolve session-checklists / skill file overlap
@@ -96,7 +96,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 - **Skill files** remain the detailed reference with MCP-specific steps, quality criteria, and edge cases.
 - This preserves the layered design while eliminating the redundant middle layer.
 
-**Savings:** ~800–1,000 tokens from the checklist file.  
+**Savings:** ~800–1,000 tokens from the checklist file.
 **Change tier:** Protected (modifies governance file).
 
 ### 1.4 Add per-file token budget enforcement
@@ -105,7 +105,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** Add a lightweight CI check or MCP tool (`memory_validate`) assertion that reports when any compact file exceeds its budget by >20%. The validate_memory_repo.py script in `HUMANS/tooling/` could be extended for this.
 
-**Effort:** Moderate.  
+**Effort:** Moderate.
 **Change tier:** Automatic (tooling, not governance content).
 
 ---
@@ -122,7 +122,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** The canonical trust behavior definition belongs in `curation-policy.md` (already the most detailed). README keeps its one-liner summary table. Skill files should reference curation-policy.md rather than restating inline rules.
 
-**Savings:** ~300–500 tokens.  
+**Savings:** ~300–500 tokens.
 **Change tier:** Protected.
 
 ### 2.2 ACCESS.jsonl example format consistency
@@ -131,7 +131,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** Audit both examples for field ordering consistency. Ensure `session_id` is included in both (currently present). Consider whether the deferred-action-template should reference the README format spec rather than embedding its own example.
 
-**Effort:** ~15 minutes.  
+**Effort:** ~15 minutes.
 **Change tier:** Protected (governance files).
 
 ### 2.3 HUMANS/docs maintenance alignment
@@ -140,7 +140,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** Add a periodic-review checklist item: _"Verify HUMANS/docs/ alignment with current governance."_ This is low-cost and prevents silent drift.
 
-**Effort:** ~5 minutes (add one line to periodic review checklist).  
+**Effort:** ~5 minutes (add one line to periodic review checklist).
 **Change tier:** Protected (governance file).
 
 ---
@@ -153,7 +153,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** No structural change needed — the layering is correct for returning sessions. But `first-run.md` should explicitly state _"You are now ready to begin. Do not load additional files unless instructed below."_ to prevent overloading. Currently it lists what NOT to load but doesn't affirmatively signal "stop loading, start working."
 
-**Effort:** ~5 minutes.  
+**Effort:** ~5 minutes.
 **Change tier:** Protected.
 
 ### 3.2 Make scratchpad/USER.md purpose clearer
@@ -162,7 +162,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** Add a one-line header comment to the USER.md template clarifying: _"This file is for notes FROM the human TO the agent — reminders, preferences, or instructions that should persist across sessions. For the agent's understanding of the user, see `core/memory/users/SUMMARY.md`."_
 
-**Effort:** ~5 minutes.  
+**Effort:** ~5 minutes.
 **Change tier:** Automatic (scratchpad content).
 
 ### 3.3 Clarify the "Compact returning" vs "Full bootstrap" decision
@@ -171,7 +171,7 @@ But the "medium" and "full" layers often say the same thing, wasting ~1,100–1,
 
 **Recommendation:** Add a single decision sentence: _"Use Full bootstrap after governance changes, system updates, or when the user asks for a thorough review. Use Compact returning for all other sessions."_
 
-**Effort:** ~5 minutes.  
+**Effort:** ~5 minutes.
 **Change tier:** Protected.
 
 ---

@@ -162,6 +162,8 @@ Each time you retrieve a specific content file from an access-tracked folder dur
 }
 ```
 
+ACCESS field paths (`file`, `session_id`) are relative to `core/` — e.g. `memory/activity/...` means `core/memory/activity/...` in the repo tree. This keeps log entries compact while remaining unambiguous.
+
 Required ACCESS fields: `file`, `date`, `task`, `helpfulness`, `note`.
 
 Optional ACCESS fields:

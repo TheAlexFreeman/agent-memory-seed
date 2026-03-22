@@ -87,7 +87,7 @@ For system-level changes, the change summary is incomplete unless it explains th
 
 ## Preferred memory tool surface
 
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
+MCP preference rule: see `core/HOME.md` § "MCP preference."
 
 This preference affects the interface, not the authority chain:
 

@@ -4,8 +4,6 @@ This document is an agent-facing streamlined flow for the very first session. It
 
 > **Authority:** This flow is reached via `core/HOME.md` routing. It is subordinate to `core/HOME.md` for active thresholds and session routing. When in doubt, defer to `core/HOME.md`.
 
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 **When to use:** No date-organized chat folders exist under `core/memory/activity/`, AND either:
 
 - `core/memory/users/SUMMARY.md` contains "No portrait yet" (blank-slate setup — no profile installed), OR

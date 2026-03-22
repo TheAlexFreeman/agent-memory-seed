@@ -17,8 +17,6 @@ Activate when:
 - A long session has produced significant decisions or context that would be costly to lose.
 - The agent judges that enough has happened to warrant a checkpoint (use judgment — don't checkpoint after trivial exchanges).
 
-When local agent-memory MCP tools are available, prefer them for memory reads and writes during checkpointing; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Steps
 
 ### 1. Summarize progress so far

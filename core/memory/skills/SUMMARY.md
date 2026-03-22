@@ -2,8 +2,6 @@
 
 This folder contains procedural knowledge — instructions for how the agent should perform specific types of tasks. Unlike knowledge (which is _what_), skills are _how_.
 
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes while executing these skills; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 ## Current skills
 
 - **[onboarding.md](onboarding.md)** — First-session user onboarding. Guides the agent through an interactive discovery of the user's role, preferences, and working style. **One-time use:** self-archives after successful completion.

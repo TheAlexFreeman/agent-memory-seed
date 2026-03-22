@@ -83,8 +83,6 @@ When a file is consistently low-value (3+ retrievals, mean helpfulness ≤ 0.3):
 
 _Active thresholds and decision guides are in `core/HOME.md`. If you've already loaded that file this session, skip to "General retrieval rules" below._
 
-When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
-
 Every content file carries a `trust` level in its YAML frontmatter (see `core/governance/update-guidelines.md` for the full schema):
 
 - **Trust: high** — Use freely. May be cited without caveat. Skills at this level can be followed directly.
