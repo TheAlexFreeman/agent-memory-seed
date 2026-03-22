@@ -8,13 +8,13 @@ trust: high
 
 # Session Start
 
-**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `meta/quick-reference.md`, using `projects/SUMMARY.md` as the primary orientation surface unless the route points somewhere more specific. Load `meta/session-checklists.md` only when you want more detail than that compact path.
+**Load this skill on your first bootstrap or when uncertain about the session-start protocol.** For normal returning sessions, follow the compact returning manifest in `core/HOME.md`, using `core/memory/working/projects/SUMMARY.md` as the primary orientation surface unless the route points somewhere more specific. Load `core/governance/session-checklists.md` only when you want more detail than that compact path.
 
 ## When to use this skill
 
-Run at the beginning of returning sessions after the compact returning manifest in `meta/quick-reference.md` has oriented the agent. This skill expands that compact path into a detailed workflow.
+Run at the beginning of returning sessions after the compact returning manifest in `core/HOME.md` has oriented the agent. This skill expands that compact path into a detailed workflow.
 
-Skip this skill on the very first session — use `meta/first-run.md` and the onboarding skill instead.
+Skip this skill on the very first session — use `core/governance/first-run.md` and the onboarding skill instead.
 
 When local agent-memory MCP tools are available, prefer them for memory reads and search during session start; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation.
 
@@ -23,21 +23,21 @@ When local agent-memory MCP tools are available, prefer them for memory reads an
 ### 1. Load recent context (silent)
 
 - When available, prefer local agent-memory MCP read/search tools for locating and opening the relevant summary files.
-- Read `projects/SUMMARY.md` first to identify the active project, current focus, and the most relevant drill-down targets for this session.
-- Read the most recent chat summary (`chats/SUMMARY.md` → latest date folder → latest chat `SUMMARY.md`).
+- Read `core/memory/working/projects/SUMMARY.md` first to identify the active project, current focus, and the most relevant drill-down targets for this session.
+- Read the most recent chat summary (`core/memory/activity/SUMMARY.md` → latest date folder → latest chat `SUMMARY.md`).
 - Note what the user was working on, any open threads, and any action items from the previous session.
 
 ### 2. Check pending items (silent)
 
 - When available, call `memory_session_health_check()` first and treat its output as the authoritative compact maintenance probe.
-- If `memory_session_health_check()` reports pending review-queue items, load `meta/review-queue.md` only when you need the actual entries or the user asks about them.
+- If `memory_session_health_check()` reports pending review-queue items, load `core/governance/review-queue.md` only when you need the actual entries or the user asks about them.
 - If `memory_session_health_check()` reports one or more folders in `aggregation_due`, flag them for session-end handling. At wrap-up, preview the compaction with `memory_run_aggregation(dry_run=True)` before deciding whether to apply summary/archive updates.
 - If `memory_session_health_check()` reports `periodic_review_due: true`, note that during the greeting.
-- Manual fallback when the MCP tool is unavailable: use metadata-first maintenance checks. If `meta/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them. Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `meta/quick-reference.md`). If so, flag it for session-end handling. Check `meta/quick-reference.md` for the last periodic review date. If overdue, note it.
+- Manual fallback when the MCP tool is unavailable: use metadata-first maintenance checks. If `core/governance/review-queue.md` still contains only its placeholder, skip it. Load it only when there are real pending items or the user asks about them. Check whether any ACCESS.jsonl file has reached the aggregation trigger (see `core/HOME.md`). If so, flag it for session-end handling. Check `core/HOME.md` for the last periodic review date. If overdue, note it.
 
 ### 3. Check write access (silent)
 
-- If running on a read-only platform, note this and prepare to produce deferred actions at session end per `meta/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `meta/deferred-action-template.md` for the output format.
+- If running on a read-only platform, note this and prepare to produce deferred actions at session end per `core/governance/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `core/governance/deferred-action-template.md` for the output format.
 
 ### 4. Greet with continuity (interactive)
 

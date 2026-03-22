@@ -20,4 +20,4 @@ _None_
 
 ## Drill-down refs
 
-_None_
+- `core/memory/working/projects/SUMMARY.md` when active project context exists.

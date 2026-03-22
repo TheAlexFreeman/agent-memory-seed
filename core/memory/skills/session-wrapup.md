@@ -8,7 +8,7 @@ trust: high
 
 # Session Wrap-Up
 
-**Load this skill on your first bootstrap or when uncertain about the wrap-up protocol.** Load `meta/session-checklists.md` only when you want the shorter session-end runbook there during normal sessions; it is an on-demand reference, not the live router.
+**Load this skill on your first bootstrap or when uncertain about the wrap-up protocol.** Load `core/governance/session-checklists.md` only when you want the shorter session-end runbook there during normal sessions; it is an on-demand reference, not the live router.
 
 ## When to use this skill
 
@@ -23,10 +23,10 @@ When local agent-memory MCP tools are available, prefer them for memory reads, s
 
 ### 1. Record the session atomically
 
-- Prefer `memory_record_session` when the local agent-memory MCP surface is available. It should write the session `SUMMARY.md`, optional `reflection.md`, update `chats/SUMMARY.md`, and append ACCESS entries in one commit.
+- Prefer `memory_record_session` when the local agent-memory MCP surface is available. It should write the session `SUMMARY.md`, optional `reflection.md`, update `core/memory/activity/SUMMARY.md`, and append ACCESS entries in one commit.
 - If the composite tool is unavailable, fall back to the individual governed writes or direct file writes as needed.
 
-Create the session's chat folder if it doesn't exist: `chats/YYYY/MM/DD/chat-NNN/`.
+Create the session's chat folder if it doesn't exist: `core/memory/activity/YYYY/MM/DD/chat-NNN/`.
 
 Write `SUMMARY.md` following the compression hierarchy in README.md § "Summaries":
 - Key topics discussed.
@@ -42,12 +42,12 @@ When ACCESS entries are available, include them in the same composite call so `s
 
 If this session produced significant new knowledge, identity changes, or skill refinements:
 - Update the relevant folder's `SUMMARY.md` to reflect the new content.
-- For identity or meta changes, ensure they were proposed and approved per `meta/update-guidelines.md`.
+- For identity or governance changes, ensure they were proposed and approved per `core/governance/update-guidelines.md`.
 
 ### 3. Check for system maintenance
 
-- If any ACCESS.jsonl has hit the aggregation trigger (see `meta/quick-reference.md`), load `meta/curation-algorithms.md` and run aggregation now, or flag it for the next session start.
-- If periodic review is overdue, add a reminder to `meta/review-queue.md`.
+- If any ACCESS.jsonl has hit the aggregation trigger (see `core/HOME.md`), load `core/governance/curation-algorithms.md` and run aggregation now, or flag it for the next session start.
+- If periodic review is overdue, add a reminder to `core/governance/review-queue.md`.
 
 ### 4. Produce deferred actions (if read-only)
 
@@ -56,7 +56,7 @@ If write access is unavailable, produce a deferred-action summary listing:
 - All file writes (summaries, reflections, knowledge updates) that should be applied.
 - All review-queue items.
 
-Present this using the format in `meta/update-guidelines.md` § "How to communicate deferred actions". If this is your first read-only session, load `meta/deferred-action-template.md` for a worked example. (`HUMANS/tooling/scripts/onboard-export.sh` is for first-session onboarding only; it does not apply here.)
+Present this using the format in `core/governance/update-guidelines.md` § "How to communicate deferred actions". If this is your first read-only session, load `core/governance/deferred-action-template.md` for a worked example. (`HUMANS/tooling/scripts/onboard-export.sh` is for first-session onboarding only; it does not apply here.)
 
 ### 5. Sign off
 

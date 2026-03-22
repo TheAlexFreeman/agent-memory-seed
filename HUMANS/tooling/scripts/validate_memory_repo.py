@@ -312,7 +312,7 @@ SESSION_SYNC_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available
 SESSION_WRAPUP_SKILL_MCP_PHRASE = "When local agent-memory MCP tools are available, prefer them for memory reads, search, and governed writes during wrap-up; fall back to direct file access only when the MCP surface is unavailable or lacks the needed operation."
 SESSION_CHECKLISTS_ON_DEMAND_PHRASE = "Load this file on demand"
 SETUP_GUIDANCE_REQUIRED_PATTERNS = (
-    r"live routing (?:in|from)\s+`?core/governance/quick-reference\.md`?",
+    r"live routing (?:in|from)\s+`?core/HOME\.md`?",
 )
 SETUP_GUIDANCE_FORBIDDEN_PATTERNS = (r"follow the bootstrap sequence",)
 SESSION_START_SKILL_PATH = Path("core/memory/skills/session-start.md")
@@ -844,6 +844,7 @@ def validate_access_file(path: Path, root: Path, result: ValidationResult) -> No
                         f"{path}:{line_number}: file must stay inside the owning namespace {namespace!r}, got {normalized_file!r}"
                     )
                 else:
+                    file_parts = normalized_file.split("/")
                     target_path = root.joinpath(*file_parts)
                     if not target_path.exists():
                         message = f"{path}:{line_number}: file references missing target {normalized_file!r}"
