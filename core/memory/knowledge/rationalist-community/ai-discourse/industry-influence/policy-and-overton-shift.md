@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: How AI safety concepts moved from rationalist niche to mainstream policy discourse; the role of Bostrom, Ord, and EA networks; the post-ChatGPT Overton shift; tensions between the original framing and the policy version. ~2800 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 4/3.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 4/3.*
 
 ---
 

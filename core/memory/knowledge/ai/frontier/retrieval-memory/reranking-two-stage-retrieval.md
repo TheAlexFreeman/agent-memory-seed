@@ -1,7 +1,7 @@
 ---
 created: 2026-03-20
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/20/chat-003
+origin_session: core/memory/activity/2026/03/20/chat-003
 source: agent-generated
 topic: Reranking and two-stage retrieval — cross-encoder rerankers, cascade architecture,
   position bias

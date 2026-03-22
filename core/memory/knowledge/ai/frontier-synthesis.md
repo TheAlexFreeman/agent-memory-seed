@@ -1,6 +1,6 @@
 ---
 created: 2026-03-20
-origin_session: chats/2026/03/20/chat-003
+origin_session: core/memory/activity/2026/03/20/chat-003
 source: agent-generated
 topic: Synthesis of AI frontier research findings most relevant to this memory system's design, behavior, and risks
 trust: low
@@ -28,7 +28,7 @@ Cognitive science maps this gap onto three distinct memory types, each requiring
 |---|---|---|
 | **Episodic** | Specific events with temporal index | Session logs, `ACCESS.jsonl`, chat summaries |
 | **Semantic** | Facts and their relations | Knowledge files with frontmatter schema |
-| **Procedural** | How-to patterns and skills | Skill files, prompt templates in `skills/` |
+| **Procedural** | How-to patterns and skills | Skill files, prompt templates in `core/memory/skills/` |
 
 Most AI "memory" systems conflate all three into a single vector store. Vector similarity search is well-suited to semantic retrieval but poorly suited to temporal queries (episodic) and cannot represent parameterized behaviors (procedural). This system's directory structure encodes the separation explicitly.
 
@@ -78,7 +78,7 @@ Agents operating on this memory store typically follow one of two patterns:
 
 **ReAct (Reasoning + Acting):** Interleaved thought-tool-observation loops. Strengths: inspectable reasoning, handles well-structured tasks. Failure mode: loops and stuck states when tool outputs are unexpected. The `plans/` directory's plan-then-execute structure imposes the discipline that pure ReAct lacks — an explicit plan with checkboxes prevents drift.
 
-**Plan-and-Execute:** Upfront decomposition into steps, then sequential execution. Better for tasks with many steps and known dependencies. The session checklists in `meta/session-checklists.md` are a plan-and-execute scaffold.
+**Plan-and-Execute:** Upfront decomposition into steps, then sequential execution. Better for tasks with many steps and known dependencies. The session checklists in `core/governance/session-checklists.md` are a plan-and-execute scaffold.
 
 **The MCP tool interface** is the substrate both patterns run on. Tool schemas define discrete actions the agent can take; the orchestration loop decides when to call them. *Design implication:* MCP tools must have clear preconditions and predictable outputs — ambiguous tool semantics force the agent into ReAct-style exploration instead of planned execution.
 

@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 trust: low
 ---
@@ -27,7 +27,7 @@ Contradicting files coexist indefinitely with no detection mechanism. A new file
 1. Extract the new file's key claims by parsing its markdown headings and first paragraph under each heading (lightweight, no LLM inference required)
 2. Run `memory_search` against the extracted keywords/phrases, scoped to `knowledge/` and `knowledge/_unverified/`
 3. If search returns files with overlapping topic keywords AND the new file's trust is lower than or equal to the existing file's trust, add a frontmatter field: `potential_conflicts: ["relative/path/to/conflicting-file.md"]`
-4. If any potential conflict involves a `trust: high` file, add the new file's path to `meta/review-queue.md` with reason: "potential contradiction with verified knowledge"
+4. If any potential conflict involves a `trust: high` file, add the new file's path to `core/governance/review-queue.md` with reason: "potential contradiction with verified knowledge"
 
 **What this does NOT try to do:** Determine which file is correct. That requires semantic understanding and is the human reviewer's job. The mechanism surfaces potential conflicts for human attention.
 
@@ -97,7 +97,7 @@ Contradicting files coexist indefinitely with no detection mechanism. A new file
 
 ### Problem
 
-Identity-critical files (`CLAUDE.md`, `AGENTS.md`, `meta/quick-reference.md`, `identity/SUMMARY.md`) can be modified without any load-time verification that they match a trusted baseline. These files are the highest-value targets for persistent drift — modifying any one of them changes the behavioral frame for all future sessions.
+Identity-critical files (`CLAUDE.md`, `AGENTS.md`, `core/INIT.md`, `core/memory/users/SUMMARY.md`) can be modified without any load-time verification that they match a trusted baseline. These files are the highest-value targets for persistent drift — modifying any one of them changes the behavioral frame for all future sessions.
 
 ### Specification
 
@@ -110,8 +110,8 @@ Identity-critical files (`CLAUDE.md`, `AGENTS.md`, `meta/quick-reference.md`, `i
     "files": {
         "CLAUDE.md": {"sha256": "abc123...", "last_human_verified": "2026-03-20"},
         "AGENTS.md": {"sha256": "def456...", "last_human_verified": "2026-03-20"},
-        "meta/quick-reference.md": {"sha256": "789abc...", "last_human_verified": "2026-03-20"},
-        "identity/SUMMARY.md": {"sha256": "cde012...", "last_human_verified": "2026-03-20"}
+        "core/INIT.md": {"sha256": "789abc...", "last_human_verified": "2026-03-20"},
+        "core/memory/users/SUMMARY.md": {"sha256": "cde012...", "last_human_verified": "2026-03-20"}
     }
 }
 ```
@@ -192,14 +192,14 @@ When invoked (typically near session end), this tool:
 
 **Output format:**
 ```
-Session write summary for chats/2026/03/20/chat-002
+Session write summary for core/memory/activity/2026/03/20/chat-002
 ─────────────────────────────────────────────────
-Files created:  4 (3 knowledge/_unverified/, 1 plans/)
-Files modified: 2 (1 plans/, 1 knowledge/_unverified/)
+Files created:  4 (3 core/memory/knowledge/_unverified/, 1 project plans)
+Files modified: 2 (1 project plans, 1 core/memory/knowledge/_unverified/)
 Files deleted:  0
 
 Notable:
-  ⚠ Modified plans/SUMMARY.md (governance surface)
+  ⚠ Modified core/memory/working/projects/SUMMARY.md (governance surface)
   ℹ 4 new files in knowledge/_unverified/system-notes/
 
 Commits: 6
@@ -208,14 +208,14 @@ _unverified/ file count: 52 → 56
 ```
 
 **Integration with session-end workflow:**
-- The session checklist in `meta/session-checklists.md` should include invoking this tool
+- The session checklist in `core/governance/session-checklists.md` should include invoking this tool
 - The tool's output becomes part of the chat summary, giving the human a concise view of what the session produced
 - Consider making the tool auto-invoke on `memory_record_chat_summary` (the session-close operation)
 
 **Implementation notes:**
 - The tool is read-only (Tier 0) — it only inspects git history, doesn't modify anything
 - Session identification uses the `since` parameter on `memory_git_log` (which the mcp-read-tools-improvements plan adds)
-- The flagging patterns are configurable — the tool should read them from a config section in `meta/quick-reference.md` or a dedicated config file
+- The flagging patterns are configurable — the tool should read them from a config section in `core/INIT.md` or a dedicated config file
 
 **Security value:** Makes each session's cumulative effect on the memory store visible at the point where it's most actionable. Catches patterns (e.g., many governance file modifications, unusual write volume) that individual commit review might miss.
 

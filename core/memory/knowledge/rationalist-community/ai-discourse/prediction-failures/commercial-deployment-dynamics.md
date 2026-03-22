@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: How the commercial deployment of LLMs created safety dynamics the rationalist community didn't anticipate; the role of market competition, consumer pressure, regulatory attention, and reputational risk; "safety by capitalism" vs. safety by design. ~3000 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 3/2.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 3/2.*
 
 ---
 

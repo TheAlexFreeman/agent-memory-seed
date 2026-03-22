@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: Bostrom's orthogonality thesis and instrumental convergence as foundational rationalist AI safety concepts; how they map onto RLHF-trained language models; where the concepts retain force and where the framing misfires. ~3500 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 1/1.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 1/1.*
 
 ---
 

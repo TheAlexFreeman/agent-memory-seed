@@ -233,9 +233,9 @@ instantiate these principles:
 - The specific validator rules and their implementation (see
   `HUMANS/tooling/tests/test_validate_memory_repo.py`).
 - The instruction containment policy and folder behavioral contracts (see
-  `meta/curation-policy.md` § "Instruction containment").
+  `core/governance/curation-policy.md` § "Instruction containment").
 - The memetic security surface and governance layers (see
-  `knowledge/self/engram-governance-model.md`).
+  `self/engram-governance-model.md`).
 - The cognitive complementarity analysis that informs the human/agent division
   of labor in protocol design (see
   `knowledge/cognitive-science/human-llm-cognitive-complementarity.md`).

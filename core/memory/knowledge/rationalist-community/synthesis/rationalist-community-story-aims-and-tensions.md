@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: Synthesis of the community's full development — from source literatures to mature social world — clarifying its central aims, its constitutive tensions, and the questions that remain open about what it has accomplished and what it has become. ~4000 words. Trust: low — based on widely available sources but not primary-source verified.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 6/1 (synthesis).*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 6/1 (synthesis).*
 
 ---
 

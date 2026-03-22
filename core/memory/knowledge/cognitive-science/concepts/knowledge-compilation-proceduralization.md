@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-004
+origin_session: core/memory/activity/2026/03/20/chat-004
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -86,7 +86,7 @@ After composition, these become a single production: IF [goal is to divide fract
 
 **The `knowledge/` folder as declarative memory:** The agent's knowledge base corresponds to ACT*'s declarative memory — an explicit, verbally statable network of factual and conceptual chunks.
 
-**The `skills/` folder as procedural memory:** If the agent system includes procedural files (step-by-step protocols, decision trees, reflexive patterns of behavior), these correspond to compiled production rules — the procedural complement to declarative knowledge files.
+**The `core/memory/skills/` folder as procedural memory:** If the agent system includes procedural files (step-by-step protocols, decision trees, reflexive patterns of behavior), these correspond to compiled production rules — the procedural complement to declarative knowledge files.
 
 **Risk of premature compilation:** In human learning, compiling incorrect declarative knowledge into production rules is a major hazard — the incorrect procedure fires rapidly and automatically, resisting correction precisely because it is no longer running through declarative check steps. The analogous risk for an agent system:
 - Frequent patterns of action (treated as "how we always do this") that were based on incorrect or outdated declarative knowledge

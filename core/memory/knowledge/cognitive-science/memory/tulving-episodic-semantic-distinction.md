@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -75,7 +75,7 @@ The episodic/semantic distinction maps directly onto the Engram system's dual st
 
 | Biological | Engram analog | Function |
 |-----------|--------------|----------|
-| Episodic memory | Raw conversation records (`chats/`) | What happened, when, in full context |
+| Episodic memory | Raw conversation records (`core/memory/activity/`) | What happened, when, in full context |
 | Semantic memory | Knowledge files (`knowledge/`) + SUMMARY files | Distilled facts, concepts, generalizations |
 | Consolidation | Session summaries, SUMMARY updates | Transfer from episodic to semantic form |
 | Episodic encoding specificity | Session context, tool-output pairing | Retrieval depends on contextual match |

@@ -2,7 +2,7 @@
 created: 2026-03-20
 domain: ai/frontier
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 related: knowledge/_unverified/philosophy/cs-lewis-abolition-of-man.md
 source: external-research
 tags:

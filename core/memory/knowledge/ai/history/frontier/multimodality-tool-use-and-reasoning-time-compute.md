@@ -1,6 +1,6 @@
 ---
 source: external-research
-origin_session: chats/2026/03/18/chat-005
+origin_session: core/memory/activity/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [multimodal, tool-use, rag, reasoning, chain-of-thought, gpt-4, gemini, mixture-of-experts, open-weights, agents, o1, reinforcement-learning, inference-time-compute]

@@ -41,4 +41,4 @@ Core knowledge on software testing at every level — from unit tests through fo
 - `knowledge/software-engineering/systems-architecture/` — design-for-testability is a core architectural concern
 - `knowledge/cognitive-science/` — metacognition and calibration apply directly to test-coverage reasoning
 - `knowledge/ai/` — ML evaluation methodology sits at the intersection of testing and AI
-- `plans/cognitive-metacognition-calibration-research.md` — mutation testing as a Dunning-Kruger diagnostic
+- `cognitive-metacognition-calibration-research (historical plan reference)` — mutation testing as a Dunning-Kruger diagnostic

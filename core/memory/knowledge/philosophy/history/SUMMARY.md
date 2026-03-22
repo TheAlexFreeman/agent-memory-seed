@@ -8,7 +8,7 @@ trust: medium
 
 # History of Philosophy — Broad Survey
 
-This directory holds the output of `plans/philosophy-history-survey.md`. Files are organized by period and tradition, each tracking four cross-cutting through-lines:
+This directory holds the output of `philosophy-history-survey (historical plan reference)`. Files are organized by period and tradition, each tracking four cross-cutting through-lines:
 
 1. **Mind, knowledge, and world** — epistemology, philosophy of mind, perception, skepticism
 2. **Language and meaning** — the relationship between thought, language, and reality

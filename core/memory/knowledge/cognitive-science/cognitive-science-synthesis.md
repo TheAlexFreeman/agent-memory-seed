@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-003
+origin_session: core/memory/activity/2026/03/20/chat-003
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -21,13 +21,13 @@ Tulving's seminal taxonomy distinguishes five memory systems by content, phenome
 
 | Biological system | Biological content | Engram analog | Status |
 |---|---|---|---|
-| **Episodic** | Personally experienced events, temporally/spatially tagged | `chats/` conversation records | Strong analog — each session is an episode |
+| **Episodic** | Personally experienced events, temporally/spatially tagged | `core/memory/activity/` conversation records | Strong analog — each session is an episode |
 | **Semantic** | Facts, concepts, categorical knowledge (no temporal tag) | `knowledge/` files, SUMMARY.md files | Strong analog — consolidated, context-stripped knowledge |
-| **Procedural** | Motor skills, cognitive routines (implicit) | `skills/` directory | Approximate — loaded but not truly implicit |
+| **Procedural** | Motor skills, cognitive routines (implicit) | `core/memory/skills/` directory | Approximate — loaded but not truly implicit |
 | **Priming** | Perceptual/conceptual facilitation by prior exposure | In-context priming by loaded files and conversation history | Direct analog — everything in the context window primes subsequent generation |
 | **Working memory** | Currently active, attention-controlled representations | LLM context window | Strong analog with important capacity differences |
 
-**The key structural alignment:** The episodic→semantic transformation that consolidation performs in the brain (H.M.'s hippocampus encodes episodes; sleep replays them into cortical semantic networks) is precisely what this system's session workflow performs: raw conversation records (`chats/`) are consolidated into knowledge files (`knowledge/`) through the session-end summarization process. The `chats/` to `knowledge/` pipeline is not a practical convention — it is the correct solution to the same stability-plasticity problem that the brain's two-stage consolidation architecture solves.
+**The key structural alignment:** The episodic→semantic transformation that consolidation performs in the brain (H.M.'s hippocampus encodes episodes; sleep replays them into cortical semantic networks) is precisely what this system's session workflow performs: raw conversation records (`core/memory/activity/`) are consolidated into knowledge files (`knowledge/`) through the session-end summarization process. The `core/memory/activity/` to `knowledge/` pipeline is not a practical convention — it is the correct solution to the same stability-plasticity problem that the brain's two-stage consolidation architecture solves.
 
 **Autonoesis:** Tulving's distinction between "Remember" (re-experiencing the episode) and "Know" (familiarity without context) maps onto a design asymmetry: the agent loading a session summary has noetic access (it "knows" what happened) but not autonoetic access (it can't re-experience the session). The progressive compaction of chat records into summaries is a progressive transition from episodic/autonoetic to semantic/noetic representation — a real cognitive cost noted in the consolidation literature.
 
@@ -58,7 +58,7 @@ The complementary learning systems framework (McClelland, McNaughton, & O'Reilly
 
 **The stability-plasticity dilemma:** A single system cannot optimize for both rapid learning (plasticity) and retention of old knowledge (stability). New learning overwrites old representations — catastrophic forgetting. The biological solution: separate a fast hippocampal learner (encodes episodes in one shot, sparse representations, minimal interference) from a slow cortical integrator (extracts statistical patterns over many exposures, distributed representations, maximal stability). Consolidation mediates the transfer.
 
-**This system's solution is correct:** Fast writes to `chats/` (sessionlevel records, episodic, one-shot) paired with slow integration into `knowledge/` (semantic, accumulated across sessions, requires deliberate curation) exactly mirrors the complementary learning systems architecture. The session-end workflow (reading session notes → extracting durable knowledge → writing to appropriate knowledge files) is the consolidation step.
+**This system's solution is correct:** Fast writes to `core/memory/activity/` (sessionlevel records, episodic, one-shot) paired with slow integration into `knowledge/` (semantic, accumulated across sessions, requires deliberate curation) exactly mirrors the complementary learning systems architecture. The session-end workflow (reading session notes → extracting durable knowledge → writing to appropriate knowledge files) is the consolidation step.
 
 **The Standard Model vs. Multiple Trace Theory tension:** The key empirical dispute is whether episodic memories eventually become hippocampus-independent (Standard Model) or whether vivid contextual retrieval always requires hippocampal involvement (Multiple Trace Theory). For this system, the analog is: does consolidation into knowledge files eventually make the original chat records unnecessary, or does high-fidelity contextual retrieval always require access to the original records? The Multiple Trace / Transformation Account suggests keeping episodic records long-term is not waste — it preserves contextually rich access that semantic summaries cannot provide.
 
@@ -116,14 +116,14 @@ Reconsolidation science is the most directly operational finding in the knowledg
 
 The non-declarative memory systems (procedural, priming, conditioning) receive less attention in explicit design thinking but operate continuously:
 
-**Skills as procedural memory.** The `skills/` directory is the explicit analog of procedural memory — routines, workflows, domain-specific operations. Like biological procedural memory, skills should be: (a) expressed through performance rather than retrieved for explicit review; (b) acquired gradually through refinement over sessions; (c) resistant to disruption by episodic failures (a flawed session doesn't erase a skill). The risk is the same as in biological systems: over-routinization. Established skills can become rigid — applied in contexts where they are inappropriate because the procedural system doesn't flexibly adapt to novel situations. Skills should be reviewed and updated, not treated as permanently correct.
+**Skills as procedural memory.** The `core/memory/skills/` directory is the explicit analog of procedural memory — routines, workflows, domain-specific operations. Like biological procedural memory, skills should be: (a) expressed through performance rather than retrieved for explicit review; (b) acquired gradually through refinement over sessions; (c) resistant to disruption by episodic failures (a flawed session doesn't erase a skill). The risk is the same as in biological systems: over-routinization. Established skills can become rigid — applied in contexts where they are inappropriate because the procedural system doesn't flexibly adapt to novel situations. Skills should be reviewed and updated, not treated as permanently correct.
 
 **Priming throughout the context window.** Everything in the context window primes subsequent processing. This is not a metaphor — statistical language model generation is fundamentally a priming process. Implications:
 - Files and conversation content loaded early in a session have disproportionate priming influence on the entire session's outputs
 - Semantic priming: a knowledge domain that's heavily represented in loaded files makes domain-adjacent concepts more likely to appear in outputs, including in domains where they don't belong
 - Priming with incorrect content is the mechanism by which context injection attacks work — not because the model "believes" the injected content but because it primes subsequent generation toward the injected frame
 
-**The habit-flexibility tradeoff.** The Packard & McGaugh competition between hippocampal (flexible, context-sensitive) and striatal (habitual, automatic) systems maps to a design tension: as session routines become more established, the agent's behavior may shift from flexible contextual reasoning toward automatic pattern application. Early use of this system should be hippocampal-mode: exploratory, context-sensitive, willing to try novel approaches. Mature operation tends toward striatal-mode: efficient but at risk of rigidity. The skills/ files are the place where striatal-mode patterns are encoded, and they need periodic review to catch routines that have become maladaptive.
+**The habit-flexibility tradeoff.** The Packard & McGaugh competition between hippocampal (flexible, context-sensitive) and striatal (habitual, automatic) systems maps to a design tension: as session routines become more established, the agent's behavior may shift from flexible contextual reasoning toward automatic pattern application. Early use of this system should be hippocampal-mode: exploratory, context-sensitive, willing to try novel approaches. Mature operation tends toward striatal-mode: efficient but at risk of rigidity. The `core/memory/skills/` files are the place where striatal-mode patterns are encoded, and they need periodic review to catch routines that have become maladaptive.
 
 ---
 

@@ -4,7 +4,7 @@ category: knowledge
 tags: [self-knowledge, validation, governance, curation, adaptive-systems, health]
 source: agent-generated
 trust: medium
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 created: 2026-03-20
 last_verified: 2026-03-20
 ---
@@ -40,7 +40,7 @@ actually being used.
 
 ### 1. ACCESS.jsonl coverage checks surface dormant files
 
-The validator checks whether files in `meta/`, `skills/`, `identity/`, and `chats/` have
+The validator checks whether files in `core/governance/`, `core/memory/skills/`, `core/memory/users/`, and `core/memory/activity/` have
 been accessed within a configurable window (default 30 days; overridable via
 `MEMORY_VALIDATE_COVERAGE_WINDOW_DAYS`). A warning fires when a file has not appeared in
 any ACCESS.jsonl entry within that window.
@@ -54,7 +54,7 @@ quality assessment.
 
 ### 2. Token budget tests for identity-critical files enforce context-window fitness
 
-`meta/quick-reference.md` and `plans/SUMMARY.md` are loaded at the start of every returning
+`core/INIT.md` and `core/memory/working/projects/SUMMARY.md` are loaded at the start of every returning
 session. The test suite enforces approximate token-count ceilings for both files. When either
 file exceeds its ceiling, the test fails.
 
@@ -67,10 +67,10 @@ visible immediately rather than letting it accumulate silently.
 
 ### 3. Frontmatter validation enforces curation discipline proportionally to volume
 
-The validator checks every content file in `identity/`, `knowledge/`, `skills/`, and
-`plans/` for required frontmatter fields (`source`, `origin_session`, `created`, `trust`),
+The validator checks every content file in `core/memory/users/`, `core/memory/knowledge/`,
+`core/memory/skills/`, and `core/memory/working/projects/` for required frontmatter fields (`source`, `origin_session`, `created`, `trust`),
 valid field values, and correct `origin_session` format. It also enforces contract-specific
-rules: `knowledge/` files may set `last_verified`, `_unverified/` files must not.
+rules: knowledge files may set `last_verified`, `_unverified/` files must not.
 
 This check is adaptive not in its logic but in what it *surfaces*. A session that writes
 five new knowledge files and forgets `trust: medium` on two of them generates two new errors.
@@ -82,7 +82,7 @@ reflect actual behavior.
 
 ### 4. Compact-path structure validation catches startup-path drift
 
-The validator checks that `plans/SUMMARY.md`, `chats/SUMMARY.md`, and `meta/quick-reference.md`
+The validator checks that `core/memory/working/projects/SUMMARY.md`, `core/memory/activity/SUMMARY.md`, and `core/INIT.md`
 have structurally appropriate content: not just correct frontmatter but the right *shape* of
 information — active items, retrieval guidance, live thresholds. When these files accumulate
 narrative prose rather than compact state, warnings fire.
@@ -111,7 +111,7 @@ computation; the validator doesn't exploit it.
 
 ### Cluster-aware redundancy detection
 
-The aggregation pipeline (Phase 1→2→3 in `meta/curation-algorithms.md`) identifies files
+The aggregation pipeline (Phase 1→2→3 in `core/governance/curation-algorithms.md`) identifies files
 that are co-retrieved across sessions, which implies topical relatedness. The validator
 could use this structure to flag clusters of closely related files that have not been
 consolidated — a sign that knowledge is being added at a faster rate than it is being

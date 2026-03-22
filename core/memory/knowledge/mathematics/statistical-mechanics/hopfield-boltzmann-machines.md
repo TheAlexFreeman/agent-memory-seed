@@ -1,6 +1,6 @@
 ---
 created: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---

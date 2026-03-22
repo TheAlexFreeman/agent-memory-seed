@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: The intellectual traditions and online social formations that preceded and enabled LessWrong — Extropianism, transhumanism, futurism, early AI discourse, cryonics, the libertarian-science-fiction milieu, Usenet/mailing list culture, and the 2000s blogosphere. ~3,000 words. Trust: low — based on widely available secondary sources; specific historical claims should be verified.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 2/2.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 2/2.*
 *Related files: `origins/eliezer-yudkowsky-intellectual-biography.md`, `origins/the-sequences-core-arguments.md`*
 
 ---

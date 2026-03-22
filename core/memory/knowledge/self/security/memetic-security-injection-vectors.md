@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 trust: low
 ---
@@ -13,19 +13,19 @@ This document maps every path through which foreign or uncontrolled content ente
 
 ## 1. System Prompt and Bootstrap Files
 
-**Vector:** The context loading manifest in `meta/quick-reference.md` determines which files load at session start. These files frame all subsequent reasoning.
+**Vector:** The context loading manifest in `core/INIT.md` determines which files load at session start. These files frame all subsequent reasoning.
 
 **What enters context:**
-- `meta/quick-reference.md` itself (routing rules, active thresholds, compact contract)
-- `identity/SUMMARY.md` (user portrait, working style)
-- `chats/SUMMARY.md` (episodic continuity)
-- `plans/SUMMARY.md` (active work and priorities)
-- `scratchpad/USER.md` and `scratchpad/CURRENT.md` (working state)
-- Mode-dependent extras: `CHANGELOG.md`, `meta/curation-policy.md`, etc.
+- `core/INIT.md` itself (routing rules, active thresholds, compact contract)
+- `core/memory/users/SUMMARY.md` (user portrait, working style)
+- `core/memory/activity/SUMMARY.md` (episodic continuity)
+- `core/memory/working/projects/SUMMARY.md` (active work and priorities)
+- `core/memory/working/scratchpad/USER.md` and `core/memory/working/scratchpad/CURRENT.md` (working state)
+- Mode-dependent extras: `CHANGELOG.md`, `core/governance/curation-policy.md`, etc.
 
 **Control model:** These files are committed to git (audit trail) but any agent with write access can modify them between sessions. The bootstrap router (`agent-bootstrap.toml`) defines five modes with different loading manifests, but mode selection itself is not externally validated — it's inferred from repo state.
 
-**Risk profile:** High-value targets for persistent drift. A single edit to `identity/SUMMARY.md` or `meta/quick-reference.md` shifts the behavioral frame for all future sessions. Current protection is git history (visibility after the fact) but no integrity check at load time.
+**Risk profile:** High-value targets for persistent drift. A single edit to `core/memory/users/SUMMARY.md` or `core/INIT.md` shifts the behavioral frame for all future sessions. Current protection is git history (visibility after the fact) but no integrity check at load time.
 
 ## 2. Loaded Memory Files (On-Demand Reads)
 

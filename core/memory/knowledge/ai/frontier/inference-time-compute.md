@@ -3,7 +3,7 @@ category: knowledge
 confidence: high
 created: 2026-03-20
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 source: external-research
 status: active
 tags:
@@ -298,16 +298,16 @@ on price-performance for batch workloads.
 
 ## Engram Relevance
 
-For the engram_mcp system specifically:
+For the agent_memory_mcp system specifically:
 
-- **Self-hosted inference**: If engram_mcp were extended with an embedded inference step
+- **Self-hosted inference**: If agent_memory_mcp were extended with an embedded inference step
   (e.g., for semantic similarity in `memory_search`), quantized local models (via
   llama.cpp or Ollama) would be the right deployment target given the sandbox constraints.
 - **Embedding models**: Sentence-transformers and similar embedding models are already
   small enough (22M–335M parameters) that INT8 quantization is routine. The semantic_tools.py
   similarity search would benefit from an optimized embedding engine.
 - **Speculative decoding irrelevance**: As a memory/tool server rather than an inference
-  service, engram_mcp is not a primary beneficiary of speculative decoding — but the
+  service, agent_memory_mcp is not a primary beneficiary of speculative decoding — but the
   host agent (Claude) benefits, which reduces the cost of memory-intensive sessions.
 - **Prompt caching**: Multi-turn conversations that repeatedly load the same memory context
   benefit from API-level prompt caching; the memory system's design (concise frontmatter

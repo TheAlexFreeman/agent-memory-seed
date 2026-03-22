@@ -1,6 +1,6 @@
 ---
 source: agent-generated
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 type: knowledge
 domain: ai-tools
 tags: [agent-memory, mcp, persistent-memory, rag, git, governance, ecosystem]
@@ -77,4 +77,4 @@ The project is most valuable for users who run AI agents continuously across com
 
 - [`ai-tools-landscape-2026.md`](ai-tools-landscape-2026.md) — survey of the tools this system integrates with
 - [`knowledge/systems-architecture/`](../systems-architecture/SUMMARY.md) — the storage and concurrency foundations underlying this design
-- [`plans/worktree-integration.md`](../../plans/worktree-integration.md) — the roadmap for deeper host-project integration
+- worktree-integration — the roadmap for deeper host-project integration (historical plan reference)

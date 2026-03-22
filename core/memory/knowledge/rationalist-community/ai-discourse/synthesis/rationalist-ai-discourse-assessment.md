@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: A synthesis of the preceding files in this collection. Evaluates which rationalist AI ideas retained value, which were wrong, how the discourse evolved through contact with the LLM paradigm, and where it stands now. ~3500 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 6 — Synthesis.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 6 — Synthesis.*
 
 ---
 

@@ -22,6 +22,6 @@ Research notes on the storage, concurrency, and automation primitives that under
 
 ## Cross-references
 
-- [plans/systems-architecture-research.md](../../plans/systems-architecture-research.md) — the research plan these files satisfy (now complete)
-- [plans/worktree-integration.md](../../plans/worktree-integration.md) — downstream integration plan that depends on worktree/orphan-branch semantics
+- systems-architecture-research (historical plan reference) — the research plan these files satisfy (now complete)
+- worktree-integration (historical plan reference) — downstream integration plan that depends on worktree/orphan-branch semantics
 - [tools/agent_memory_mcp/git_repo.py](../../tools/agent_memory_mcp/git_repo.py) — current Git wrapper discussed throughout these notes (path will change after mcp-reorganization)

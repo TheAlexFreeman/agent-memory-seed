@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: A map of the major arc-sequences Yudkowsky wrote on Overcoming Bias and LessWrong (2006–2009), their key arguments, intellectual sources, and their function as canon-forming pedagogy. ~3,500 words. Trust: low — based on widely available secondary descriptions and paraphrase; direct verification against primary texts recommended.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 1/2.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 1/2.*
 *Related file: `origins/eliezer-yudkowsky-intellectual-biography.md`*
 
 ---

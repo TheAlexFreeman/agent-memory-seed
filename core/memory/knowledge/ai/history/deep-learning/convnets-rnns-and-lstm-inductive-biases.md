@@ -1,6 +1,6 @@
 ---
 source: external-research
-origin_session: chats/2026/03/18/chat-005
+origin_session: core/memory/activity/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [convnets, cnn, rnn, lstm, gru, lenet, inductive-bias, spatial-structure, sequence-modeling, hochreiter, schmidhuber, lecun]

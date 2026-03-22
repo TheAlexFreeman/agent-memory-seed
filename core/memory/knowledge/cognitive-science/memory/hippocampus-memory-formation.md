@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -66,7 +66,7 @@ More recent work extends the cognitive map idea to **conceptual space**: the hip
 
 ## Agent Memory Implications
 
-1. **One-shot vs. statistical learning.** The hippocampal/cortical division maps directly to the distinction between recording individual sessions (one-shot, episodic) and building SUMMARY knowledge (statistical, cumulative). The Engram architecture mirrors the complementary learning systems framework: fast writes to `chats/` (hippocampal analog), slow consolidation into `knowledge/` (cortical analog).
+1. **One-shot vs. statistical learning.** The hippocampal/cortical division maps directly to the distinction between recording individual sessions (one-shot, episodic) and building SUMMARY knowledge (statistical, cumulative). The Engram architecture mirrors the complementary learning systems framework: fast writes to `core/memory/activity/` (hippocampal analog), slow consolidation into `knowledge/` (cortical analog).
 
 2. **Pattern separation for similar sessions.** When the agent has multiple sessions on similar topics, each session should be stored as a distinct episodic record, not blended with prior sessions. Blending is consolidation; premature blending is catastrophic interference. The current practice of per-session chat records preserves episode-level separation.
 

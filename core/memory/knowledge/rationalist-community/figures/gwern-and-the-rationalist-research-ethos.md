@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: Gwern Branwen's distinctive intellectual style, his relationship to the rationalist community, his influence on methods and norms, and what distinguishes him from institutional LessWrong culture. ~2900 words. Trust: low — based on widely available sources but not primary-source verified.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 4/2.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 4/2.*
 
 ---
 

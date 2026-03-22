@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: How rationalist-community members entered AI industry and safety roles at frontier labs; the pipeline from EA/rationalist community to OpenAI, Anthropic, DeepMind; impact on institutional culture and research priorities. ~3000 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 4/1.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 4/1.*
 
 ---
 

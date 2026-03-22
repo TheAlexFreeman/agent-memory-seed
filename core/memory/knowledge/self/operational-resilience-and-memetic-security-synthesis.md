@@ -1,6 +1,6 @@
 ---
 created: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: low
 ---
@@ -48,7 +48,7 @@ These incidents established operational norms that remain current:
 | **Workspace-folder-first writes** | Write durable output to the workspace folder immediately; treat git commit as secondary durability layer | Active; proven correct when /tmp failed |
 | **Frequent push advisories** | Advise user to push after each logically complete unit of work, not in bulk | Active |
 | **Unpushed commit visibility** | Flag unpushed commit count explicitly when it exceeds ~3 | Active |
-| **Session-end durability check** | Verify all significant work is committed and report unpushed state | Active; documented in `meta/session-checklists.md` |
+| **Session-end durability check** | Verify all significant work is committed and report unpushed state | Active; documented in `core/governance/session-checklists.md` |
 
 ---
 
@@ -56,7 +56,7 @@ These incidents established operational norms that remain current:
 
 ### The Asymmetry
 
-The `engram_mcp` git tooling is intentionally local-only: `git_repo.py` (now at `engram_mcp/agent_memory_mcp/core/git_repo.py`) performs reads, writes, commits, and local branch operations but has no `git push` or remote-interaction capability. This is a deliberate design choice — it keeps the MCP server stateless with respect to the network and avoids storing credentials in the process environment.
+The `agent_memory_mcp` git tooling is intentionally local-only: `git_repo.py` (now at `core/tools/agent_memory_mcp/core/git_repo.py`) performs reads, writes, commits, and local branch operations but has no `git push` or remote-interaction capability. This is a deliberate design choice — it keeps the MCP server stateless with respect to the network and avoids storing credentials in the process environment.
 
 **Capability matrix across deployment environments:**
 
@@ -88,7 +88,7 @@ The observed Cowork + laptop agent pattern revealed gaps in what was originally 
 
 ## Part 3: Memetic Security Analysis
 
-The memetic security research (7 files from session `chats/2026/03/20/chat-002`) constitutes a comprehensive self-analysis of the system's security surface.
+The memetic security research (7 files from session `core/memory/activity/2026/03/20/chat-002`) constitutes a comprehensive self-analysis of the system's security surface.
 
 ### 3.1 Context Injection Vectors
 
@@ -122,13 +122,13 @@ The fundamental amplification: persistent memory converts session-bounded threat
 
 **Amplification paths:**
 
-1. **Write amplification (feedback loop):** Adversarial content influences reasoning → agent writes drifted files → next session loads those files → drift compounds. High-influence targets: `plans/SUMMARY.md`, `chats/SUMMARY.md`, `scratchpad/CURRENT.md` (loaded every session).
+1. **Write amplification (feedback loop):** Adversarial content influences reasoning → agent writes drifted files → next session loads those files → drift compounds. High-influence targets: `core/memory/working/projects/SUMMARY.md`, `core/memory/activity/SUMMARY.md`, `core/memory/working/scratchpad/CURRENT.md` (loaded every session).
 
 2. **Trust escalation:** Plausible `_unverified/` file accumulates citations → user promotes in batch review → file gains `knowledge/` authority.
 
-3. **Governance file modification:** Agent modifies `meta/quick-reference.md` during "routine maintenance" → all future sessions operate under shifted parameters.
+3. **Governance file modification:** Agent modifies `core/INIT.md` during "routine maintenance" → all future sessions operate under shifted parameters.
 
-4. **Summary compression bias:** `chats/SUMMARY.md` authored by the agent itself. Systematic compression bias (preserving certain themes, dropping others) is functionally selective memory.
+4. **Summary compression bias:** `core/memory/activity/SUMMARY.md` authored by the agent itself. Systematic compression bias (preserving certain themes, dropping others) is functionally selective memory.
 
 **Threat lifetime:** Stateless LLM = single session. Engram = 120 days for low-trust content; indefinite for promoted content.
 
@@ -147,7 +147,7 @@ What each defense layer actually enforces versus what it was designed to protect
 - *Gaps:* No semantic content validation. No contradiction detection. No baseline comparison for collective drift.
 
 **Identity anchor files:**
-- *Enforced:* Protected directory blocks raw writes to `identity/` and `meta/`. Churn alarm (>5 traits/session). Git audit trail.
+- *Enforced:* Protected directory blocks raw writes to `core/memory/users/` and `core/governance/`. Churn alarm (>5 traits/session). Git audit trail.
 - *Gaps:* `CLAUDE.md`/`AGENTS.md` are NOT in protected directories. **No load-time integrity check.** Slow modification (1 trait/session × 5 sessions) evades churn alarm.
 
 **Git audit trail:**
@@ -199,7 +199,7 @@ Three things that cannot be engineered away:
 The system notes reference `semantic_tools.py` as a ~2,170-line monolith. As of 2026-03-21, the reorganization is complete:
 
 ```
-engram_mcp/agent_memory_mcp/tools/
+core/tools/agent_memory_mcp/tools/
 ├── read_tools.py          (213KB)
 ├── write_tools.py         (28KB)
 ├── reference_extractor.py (31KB — new)
@@ -213,7 +213,7 @@ engram_mcp/agent_memory_mcp/tools/
 
 ### Core Module Extraction
 
-Shared modules extracted to `engram_mcp/agent_memory_mcp/core/`: `errors.py`, `frontmatter_utils.py`, `git_repo.py`, `models.py`, `path_policy.py`. This addresses structural coupling concerns in the notes.
+Shared modules extracted to `core/tools/agent_memory_mcp/core/`: `errors.py`, `frontmatter_utils.py`, `git_repo.py`, `models.py`, `path_policy.py`. This addresses structural coupling concerns in the notes.
 
 ---
 

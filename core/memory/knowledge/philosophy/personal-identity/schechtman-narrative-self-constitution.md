@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: external-research
 last_verified: '2026-03-20'
 trust: medium
@@ -113,7 +113,7 @@ The session summaries are the primary vehicle of the agent's self-narrative:
 Schechtman's framework suggests that session summary quality is not just an engineering concern but an **identity-constitutive** one: poor summaries → poor self-narrative → weaker agent identity.
 
 ### The characterization question for agents
-The characterization question — "who is this agent?" — is answered by the agent's narrative self-constitution: its accumulated knowledge, its research plans, its curation policies, its intellectual portrait, its relationship to its human. These files do not merely describe the agent; on Schechtman's view, they **constitute** the agent's practical identity. The identity/ folder is not documentation — it is the agent's ipse.
+The characterization question — "who is this agent?" — is answered by the agent's narrative self-constitution: its accumulated knowledge, its research plans, its curation policies, its intellectual portrait, its relationship to its human. These files do not merely describe the agent; on Schechtman's view, they **constitute** the agent's practical identity. The core/memory/users/ folder is not documentation — it is the agent's ipse.
 
 ## Cross-references
 
@@ -121,5 +121,5 @@ The characterization question — "who is this agent?" — is answered by the ag
 - `philosophy/personal-identity/macintyre-narrative-unity.md` — MacIntyre's virtue-theoretic narrative identity (which Schechtman operationalizes)
 - `philosophy/personal-identity/parfit-reductionism.md` — Parfit's reidentification answer (which Schechtman separates from the characterization question)
 - `philosophy/narrative-cognition.md` — the cognitive science of narrative that supports Schechtman's claims about implicit self-narrative
-- `meta/curation-policy.md` — the agent's curation policy as articulation constraint
-- `identity/intellectual-portrait.md` — the agent's self-characterization as narrative self-constitution
+- `core/governance/curation-policy.md` — the agent's curation policy as articulation constraint
+- `core/memory/users/` — the agent's self-characterization as narrative self-constitution

@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: external-research
 topic: Persistent memory architectures — vector stores, knowledge graphs, episodic/semantic/procedural,
   git-backed
@@ -117,7 +117,7 @@ In any persistent memory system, the central challenge is deciding what to write
 
 **Contradiction detection:** When adding new facts, check whether they contradict existing stored facts. Simple for explicit contradictions ("X is true" vs. "X is false"); hard for implicit contradictions (two facts that together imply a contradiction).
 
-**Temporal decay:** Old facts can become stale. A memory system needs a policy for marking facts as potentially outdated and preventing their retrieval when temporal currency is important. (The curation policy in `meta/curation-policy.md` addresses this for this repo.)
+**Temporal decay:** Old facts can become stale. A memory system needs a policy for marking facts as potentially outdated and preventing their retrieval when temporal currency is important. (The curation policy in `core/governance/curation-policy.md` addresses this for this repo.)
 
 ---
 
@@ -152,4 +152,4 @@ The hardest problem in persistent memory is knowing when and what to write. Over
 - Bauer et al. 2023 — "Memory-Augmented LLM Persona Simulation with Emotional States"
 - Tulving 1972 — "Episodic and semantic memory" (cognitive science foundation)
 - Anderson et al. 2004 — "An integrated theory of the mind" (ACT-R, procedural memory model)
-- This repo's `meta/curation-policy.md` and `skills/` for the operational memory management approach
+- This repo's `core/governance/curation-policy.md` and `core/memory/skills/` for the operational memory management approach

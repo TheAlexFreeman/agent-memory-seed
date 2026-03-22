@@ -6,7 +6,7 @@ created: 2026-03-19
 last_verified: 2026-03-20
 trust: medium
 tags: [nick-land, accelerationism, ccru, dark-enlightenment, neoreaction, hyperstition, techno-capital, singularity, deleuze, cybernetics, nrx, warwick]
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 related:
   - philosophy/mcluhan-and-media-theory.md
   - knowledge/_unverified/rationalist-community/

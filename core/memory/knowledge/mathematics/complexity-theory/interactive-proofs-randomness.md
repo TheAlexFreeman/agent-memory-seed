@@ -1,6 +1,6 @@
 ---
 created: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -170,4 +170,4 @@ So while randomness may not help *computation*, it dramatically helps *verificat
 - **Circuit complexity**: Derandomisation ↔ circuit lower bounds — see [circuit-complexity-lower-bounds](circuit-complexity-lower-bounds.md)
 - **Descriptive complexity**: Logical characterisations of IP — see [descriptive-complexity-logic](descriptive-complexity-logic.md)
 - **Information theory**: Randomness extraction and min-entropy — see [../information-theory/entropy-source-coding-theorem.md](../information-theory/entropy-source-coding-theorem.md)
-- **Cryptography and trust**: ZK proofs underpin trustless computation — connects to identity/trust themes in the broader knowledge base
+- **Cryptography and trust**: ZK proofs underpin trustless computation — connects to core/memory/users/trust themes in the broader knowledge base

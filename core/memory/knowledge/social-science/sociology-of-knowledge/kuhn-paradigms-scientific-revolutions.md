@@ -110,7 +110,7 @@ Kuhn's framework applies directly to the Engram system's knowledge curation miss
 - The `ai-history/` and `philosophy/` knowledge bases document paradigm transitions; Kuhn provides the conceptual vocabulary for narrating them
 - The system's own development involves choices about what counts as "good" memory (paradigm-like commitments about trust, promotion, and curation)
 - Awareness of incommensurability warns against assuming that knowledge organized under one paradigm (e.g., cognitive science's computational model) can be directly translated into another (e.g., dynamical systems models)
-- The `plans/ai-paradigm-genealogy-research.md` plan is explicitly a Kuhnian project
+- The `ai-paradigm-genealogy-research (historical plan reference)` plan is explicitly a Kuhnian project
 
 ## Related
 

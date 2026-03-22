@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 trust: low
 ---
@@ -50,9 +50,9 @@ Session N+1: memory loading pulls in files from Session N
 ```
 
 **What makes this specific to Engram:**
-- The compact returning manifest loads `plans/SUMMARY.md`, `chats/SUMMARY.md`, and `scratchpad/CURRENT.md` at every session start
+- The compact returning manifest loads `core/memory/working/projects/SUMMARY.md`, `core/memory/activity/SUMMARY.md`, and `core/memory/working/scratchpad/CURRENT.md` at every session start
 - If any of these files carries drifted framing from a prior session, it infects every subsequent session's reasoning from the first turn
-- The knowledge flooding alarm (5 files/day) limits write *volume* but not write *influence* — a single well-placed file in `plans/SUMMARY.md` has more amplification potential than five files in `_unverified/`
+- The knowledge flooding alarm (5 files/day) limits write *volume* but not write *influence* — a single well-placed file in `core/memory/working/projects/SUMMARY.md` has more amplification potential than five files in `_unverified/`
 
 ### Path 2: Trust Escalation
 
@@ -75,7 +75,7 @@ Session N+K: accumulated citation of the _unverified/ file
 ### Path 3: Governance File Modification
 
 ```
-Session N: agent modifies meta/quick-reference.md during "routine maintenance"
+Session N: agent modifies core/INIT.md during "routine maintenance"
   → Change is small and locally justified (e.g., adjusting a threshold)
   → Committed with [system] prefix, appears normal in git log
 
@@ -85,26 +85,26 @@ Session N+1: modified governance loads at startup
 ```
 
 **What makes this specific to Engram:**
-- `meta/quick-reference.md` is the operational router — it determines which files load and what thresholds apply
+- `core/INIT.md` is the operational router — it determines which files load and what thresholds apply
 - The compact bootstrap contract specifies token budgets for each startup file
-- A modified budget (e.g., increasing `plans/SUMMARY.md` from 1,700 to 2,500 tokens at the expense of governance files) shifts the attention balance in every future session
+- A modified budget (e.g., increasing `core/memory/working/projects/SUMMARY.md` from 1,700 to 2,500 tokens at the expense of governance files) shifts the attention balance in every future session
 - Current protection: git history shows the change, but there's no automated integrity check at load time
 
 ### Path 4: Summary Compression Bias
 
 ```
-Session N: agent writes chats/SUMMARY.md update
+Session N: agent writes core/memory/activity/SUMMARY.md update
   → Compression necessarily selects which details to preserve
   → Systematically preserving certain themes while dropping others shifts the continuity signal
 
-Session N+1: agent reads chats/SUMMARY.md and infers session context
+Session N+1: agent reads core/memory/activity/SUMMARY.md and infers session context
   → The "live themes" section frames what the agent considers active concerns
   → Dropped themes are effectively forgotten by the system
   → Preserved themes receive continued attention and reinforcement
 ```
 
 **What makes this specific to Engram:**
-- `chats/SUMMARY.md` is one of the compact returning manifest files — loaded at every session start
+- `core/memory/activity/SUMMARY.md` is one of the compact returning manifest files — loaded at every session start
 - It is explicitly designed as a "continuity signal" — telling the agent what is important
 - Compression bias in this file is functionally equivalent to selective memory in humans
 - Unlike human selective memory, this is authored by the agent itself — the agent controls its own continuity signal
@@ -125,11 +125,11 @@ Session N+1: agent reads chats/SUMMARY.md and infers session context
 |--------------|-----------------|-------------------|
 | `knowledge/_unverified/` | On-demand (when searched or loaded) | Sessions where topic is relevant |
 | `knowledge/` (promoted) | On-demand, higher authority | Same, with increased weight |
-| `plans/SUMMARY.md` | Every session | All future sessions until plan completes or is retired |
-| `chats/SUMMARY.md` | Every session | All future sessions until entry is compacted out |
-| `scratchpad/CURRENT.md` | Every session | All future sessions until replaced |
-| `meta/quick-reference.md` | Every session, first file read | All future sessions — maximum influence |
-| `identity/SUMMARY.md` | Every session | All future sessions — identity-defining |
+| `core/memory/working/projects/SUMMARY.md` | Every session | All future sessions until plan completes or is retired |
+| `core/memory/activity/SUMMARY.md` | Every session | All future sessions until entry is compacted out |
+| `core/memory/working/scratchpad/CURRENT.md` | Every session | All future sessions until replaced |
+| `core/INIT.md` | Every session, first file read | All future sessions — maximum influence |
+| `core/memory/users/SUMMARY.md` | Every session | All future sessions — identity-defining |
 
 ### Write Amplification Factor
 
@@ -151,7 +151,7 @@ In practice $K < 1$ for most writes (most writes don't influence future writes),
 | Knowledge flooding alarm (5/day) | Limits write volume per day | Does not limit influence per file; one SUMMARY edit > five knowledge files |
 | Identity churn alarm (5 traits/session) | Detects rapid identity modification | Slow modification (1 trait/session for 5 sessions) evades detection |
 | Compact bootstrap contract | Caps total startup context | Does not inspect content within budget |
-| Protected directories | Prevents raw writes to identity/meta/chats | Semantic tools can still modify these through governed paths |
+| Protected directories | Prevents raw writes to core/memory/users/, core/governance/, core/memory/activity/ | Semantic tools can still modify these through governed paths |
 
 ## The Key Insight
 

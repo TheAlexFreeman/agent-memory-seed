@@ -11,7 +11,7 @@ related:
   - ancient/plato.md
   - ancient/aristotle.md
   - ancient/hellenistic.md
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 ---
 
 # The Axial Revolution: Transcendence, Reflexivity, and the Birth of Universal Ethics

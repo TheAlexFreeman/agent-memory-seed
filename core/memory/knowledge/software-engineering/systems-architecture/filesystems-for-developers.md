@@ -1,6 +1,6 @@
 ---
 source: external-research
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [filesystem, journaling, copy-on-write, fuse, inotify, nfs, smb, apfs, ext4, windows]

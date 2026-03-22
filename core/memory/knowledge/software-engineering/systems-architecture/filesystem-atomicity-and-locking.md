@@ -1,6 +1,6 @@
 ---
 source: external-research
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 type: knowledge
 domain: systems-architecture
 tags: [filesystem, atomicity, rename, locking, o-excl, flock, fsync, durability, fuse, nfs]
@@ -187,4 +187,4 @@ That layered model is the right lens for the next architectural steps.
 ## Sources
 
 - Linux man pages: `rename(2)`, `open(2)`, `flock(2)`, `fsync(2)`
-- Active plan context in [plans/systems-architecture-research.md](plans/systems-architecture-research.md)
+- Active plan context in systems-architecture-research (historical plan reference)

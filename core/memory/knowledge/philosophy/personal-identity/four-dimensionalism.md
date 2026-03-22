@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: external-research
 last_verified: '2026-03-20'
 trust: medium
@@ -83,4 +83,4 @@ This is not a metaphor — it is a direct application of four-dimensionalist voc
 - `philosophy/personal-identity/hume-bundle-theory.md` — bundle theory as proto-four-dimensionalism
 - `philosophy/personal-identity/parfit-what-matters-survival.md` — Parfit vs. Lewis on whether identity is what matters
 - `philosophy/phenomenology/clark-chalmers-extended-mind.md` — extended mind thesis: the worm's stages can have spatially extended cognitive states
-- `plans/agent-memory-mcp.md` — the engineered mechanisms of inter-stage continuity
+- agent-memory-mcp — the engineered mechanisms of inter-stage continuity (historical plan reference)

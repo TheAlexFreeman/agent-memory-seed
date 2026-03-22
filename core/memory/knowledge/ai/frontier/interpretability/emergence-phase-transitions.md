@@ -1,7 +1,7 @@
 ---
 created: 2026-03-19
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: external-research
 topic: Emergence and phase transitions in LLMs — grokking, the emergence debate, bitter
   lesson

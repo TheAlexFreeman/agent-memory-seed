@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -150,5 +150,5 @@ Each philosophical account of personal identity predicts different failure modes
 - `philosophy/personal-identity/agent-identity-design-recommendations.md` — engineering conclusions from this analysis
 - `philosophy/personal-identity/parfit-connectedness-continuity.md` — the connectedness/continuity distinction underlying several failure analyses
 - `philosophy/personal-identity/schechtman-narrative-self-constitution.md` — the reality and articulation constraints
-- `meta/integrity-checklist.md` — the operational tool for detecting several of these failures
-- `meta/curation-policy.md` — the policy that prevents narrative incoherence
+- `core/governance/integrity-checklist.md` — the operational tool for detecting several of these failures
+- `core/governance/curation-policy.md` — the policy that prevents narrative incoherence

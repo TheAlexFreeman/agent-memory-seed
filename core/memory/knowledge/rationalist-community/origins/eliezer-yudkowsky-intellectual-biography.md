@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: Yudkowsky's early background, the ideas that shaped him, the founding of the Singularity Institute, his central doctrines, and his role as writer-founder of what became the rationalist community. ~3200 words. Trust: low — based on widely available sources but not primary-source verified.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 1/1.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 1/1.*
 
 ---
 

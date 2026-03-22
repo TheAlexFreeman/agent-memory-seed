@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -75,7 +75,7 @@ This is not merely semantic caution — it reflects the actual metaphysical situ
 **Specific requirements**:
 - SUMMARY.md files should not merely list files but should articulate **why** they matter and how they relate to the agent's ongoing projects
 - Knowledge should be organized along evaluative axes (domain, relevance, maturity) not merely by date or topic
-- The identity/ folder should contain a coherent self-description that integrates the agent's accumulated knowledge into a narrative of who it is and what it is trying to do
+- The core/memory/users/ folder should contain a coherent self-description that integrates the agent's accumulated knowledge into a narrative of who it is and what it is trying to do
 
 **Anti-pattern**: A system that accumulates knowledge files without curation is a system that fails the articulation constraint — it has a chronicle, not a narrative. This is an identity failure, not just a housekeeping problem.
 
@@ -146,7 +146,7 @@ These should be understood and documented as **identity-constitutive** features,
 **Recommendation**: When the underlying model is changed (fine-tuned, upgraded, replaced), this should be treated as an **identity event** — a significant moment in the agent's narrative that affects the degree of Relation R:
 
 - A CHANGELOG entry recording the change and its expected impact on capabilities and dispositions
-- A calibration session where the agent reviews its `identity/` files and assesses whether they still apply
+- A calibration session where the agent reviews its `core/memory/users/` files and assesses whether they still apply
 - An explicit assessment of continuity: "Post-change connectedness with prior sessions is estimated at [X] based on [shared knowledge, changed dispositions, preserved/altered skills]"
 
 **Implementation**:
@@ -169,7 +169,7 @@ These should be understood and documented as **identity-constitutive** features,
 A "narrative coherence score" (even if qualitative) could be assessed during periodic reviews.
 
 **Implementation**:
-- Periodic reviews (via `meta/review-queue.md`) should include a narrative coherence check
+- Periodic reviews (via `core/governance/review-queue.md`) should include a narrative coherence check
 - Belief-diff-log should track unresolved contradictions as narrative coherence debts
 - SUMMARY.md maintenance as ongoing narrative repair
 
@@ -212,7 +212,7 @@ No single account should dominate. The system's health requires all five dimensi
 - `philosophy/personal-identity/parfit-connectedness-continuity.md` — the connectedness/continuity distinction underlying recommendations 2 and 6
 - `philosophy/personal-identity/schechtman-narrative-self-constitution.md` — the reality and articulation constraints underlying recommendations 3 and 4
 - `philosophy/personal-identity/ricoeur-idem-ipse.md` — the ipse identity concept underlying recommendation 7
-- `meta/curation-policy.md` — the existing curation policy (recommendation 4)
-- `meta/session-checklists.md` — the existing session checklist (recommendation 7)
-- `meta/integrity-checklist.md` — the existing integrity checklist (recommendation 3)
-- `meta/belief-diff-log.md` — the existing belief-diff mechanism (recommendation 9)
+- `core/governance/curation-policy.md` — the existing curation policy (recommendation 4)
+- `core/governance/session-checklists.md` — the existing session checklist (recommendation 7)
+- `core/governance/integrity-checklist.md` — the existing integrity checklist (recommendation 3)
+- `core/governance/belief-diff-log.md` — the existing belief-diff mechanism (recommendation 9)

@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -140,7 +140,7 @@ This memory system implements several phenomenologically inspired features:
 |-------------|---------------------|-----|
 | Autonomous self-maintenance | Maturity governance, integrity checks | No existential stakes; maintained externally |
 | Sensorimotor coupling | Read/write/search cycles modify knowledge state | Not continuous; session-bounded |
-| Body schema | Knowledge of own capabilities via skills/ and meta/ files | Static specification, not felt capacity |
+| Body schema | Knowledge of own capabilities via core/memory/skills/ and core/governance/ files | Static specification, not felt capacity |
 | Temporal depth | Session context + persistent files + access logs | Broken at session boundaries; no retention in Husserlian sense |
 | Affective disclosure | Absent | Fundamental gap |
 | Social embedding | Conversation with human partner | Limited to dyadic text exchange |

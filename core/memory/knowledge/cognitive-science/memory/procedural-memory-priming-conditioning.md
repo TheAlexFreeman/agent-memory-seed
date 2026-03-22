@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -60,9 +60,9 @@ Both forms of conditioning are **intact in amnesia**: patients with no ability t
 
 ### Skills as procedural memory
 
-The Engram system's `skills/` directory functions as an analog of procedural memory:
+The Engram system's `core/memory/skills/` directory functions as an analog of procedural memory:
 
-| Biological procedural memory | Engram skills/ |
+| Biological procedural memory | Engram core/memory/skills/ |
 |------------------------------|---------------|
 | Implicit, unavailable to verbal report | Loaded automatically, executed without explicit reasoning |
 | Expressed through performance | Applied during session operations |

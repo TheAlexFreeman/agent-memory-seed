@@ -1,6 +1,6 @@
 ---
 source: external-research
-origin_session: chats/2026/03/18/chat-005
+origin_session: core/memory/activity/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [nlp, statistical-nlp, word-embeddings, word2vec, glove, seq2seq, encoder-decoder, language-model, n-gram, distributed-semantics]

@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-004
+origin_session: core/memory/activity/2026/03/20/chat-004
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -96,5 +96,5 @@ The agent memory system's trust architecture is best understood as an attempt to
 - `metacognitive-control-learning.md` — study allocation; testing effect; rereading illusion
 - `conflict-monitoring-feeling-of-rightness.md` — FOR; De Neys; frontal syndrome; load degradation
 - `calibrated-uncertainty-communication.md` — superforecasters; proper scoring; epistemic cowardice
-- `knowledge/meta/curation-policy.md` — the trust system this research grounds
+- `knowledge/core/governance/curation-policy.md` — the trust system this research grounds
 - `knowledge/cognitive-science/attention/dual-process-system1-system2.md` — System 1/2 connects to metacognitive control

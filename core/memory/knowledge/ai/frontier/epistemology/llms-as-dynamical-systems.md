@@ -5,7 +5,7 @@ cross_references:
 - knowledge/_unverified/philosophy/compression-intelligence-ait.md
 - knowledge/_unverified/philosophy/free-energy-autopoiesis-cybernetics.md
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: external-research
 topic: LLMs as dynamical systems — activation trajectories, in-context learning, reasoning
   as trajectory extension

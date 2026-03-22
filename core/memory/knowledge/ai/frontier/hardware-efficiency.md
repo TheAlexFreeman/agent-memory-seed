@@ -3,7 +3,7 @@ category: knowledge
 confidence: high
 created: 2026-03-20
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 source: external-research
 status: active
 tags:
@@ -352,13 +352,13 @@ next-generation). This creates a single-point-of-concentration risk:
 ## Engram Relevance
 
 - **Local inference viability**: Apple Silicon M-series (up to 128 GB unified memory)
-  makes running 70B Q4 models locally practical, relevant if engram_mcp is extended with
+  makes running 70B Q4 models locally practical, relevant if agent_memory_mcp is extended with
   local inference. MacBook Pro M4 Max is a reasonable development target for self-hosted
   semantic search or generation.
 - **Embedding model costs**: Embedding models used for semantic search (see semantic_tools.py)
   are tiny relative to frontier LLMs — BGE-M3 (570M params) runs at thousands of
   requests/sec on a single H100 or comfortably on CPU. Inference cost for embeddings
-  is essentially free at engram_mcp's scale.
+  is essentially free at agent_memory_mcp's scale.
 - **API cost trajectory**: Claude API costs for memory-intensive sessions are on the same
   downward trajectory as the broader market; long-context pricing per token is falling,
   which benefits memory system designs that load many context files per session.

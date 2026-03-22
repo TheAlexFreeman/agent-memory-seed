@@ -3,7 +3,7 @@ source: external-research
 created: 2026-03-19
 last_verified: 2026-03-20
 trust: medium
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 type: knowledge
 domain: ai-tools
 ---

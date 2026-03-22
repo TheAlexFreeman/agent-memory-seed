@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: The rationalist community expected AI to arrive as search/optimization/planning (agent-like); instead it arrived as language modeling (model-like); implications of this paradigm surprise for AI safety theory and strategy. ~3200 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 3/1.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 3/1.*
 
 ---
 

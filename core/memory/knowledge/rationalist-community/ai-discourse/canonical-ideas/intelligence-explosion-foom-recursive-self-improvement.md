@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: I.J. Good's intelligence explosion; Yudkowsky's FOOM hypothesis; recursive self-improvement; confrontation with scaling laws and the actual trajectory of AI capability gains; hard vs. soft takeoff. ~3400 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 1/5.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 1/5.*
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 trust: low
 ---
@@ -23,7 +23,7 @@ This document audits each of Engram's existing security mitigations against the 
 
 **Demotion path exists:** `memory_demote_knowledge` reverses promotion, unconditionally setting `trust: low` and moving the file back to `_unverified/` with a _(demoted)_ annotation.
 
-**Trust decay thresholds:** The `memory_audit_trust` tool reads live thresholds from `meta/quick-reference.md` and flags files whose `last_verified` or `created` dates exceed the configured limits (120 days for low-trust, 180 days for medium-trust).
+**Trust decay thresholds:** The `memory_audit_trust` tool reads live thresholds from `core/INIT.md` and flags files whose `last_verified` or `created` dates exceed the configured limits (120 days for low-trust, 180 days for medium-trust).
 
 ### What It Does Not Enforce
 
@@ -54,13 +54,13 @@ This document audits each of Engram's existing security mitigations against the 
 
 ### What It Enforces (Mechanically)
 
-**Frontmatter schema:** Every markdown file under governed directories must have: `source` (from allowed values: user-stated, agent-inferred, agent-generated, external-research, skill-discovery, template, unknown), `origin_session` (canonical format `chats/YYYY/MM/DD/chat-NNN` or special values), `created` (ISO date), `trust` (high/medium/low). Plans additionally require `type`, `status`, `next_action`.
+**Frontmatter schema:** Every markdown file under governed directories must have: `source` (from allowed values: user-stated, agent-inferred, agent-generated, external-research, skill-discovery, template, unknown), `origin_session` (canonical format `core/memory/activity/YYYY/MM/DD/chat-NNN` or special values), `created` (ISO date), `trust` (high/medium/low). Plans additionally require `type`, `status`, `next_action`.
 
-**Structural integrity:** Chat directory structure (`chats/YYYY/MM/DD/chat-NNN/SUMMARY.md`), plan progress tracking format, ACCESS.jsonl entry schema (required fields, date format, helpfulness range 0.0–1.0).
+**Structural integrity:** Chat directory structure (`core/memory/activity/YYYY/MM/DD/chat-NNN/SUMMARY.md`), plan progress tracking format, ACCESS.jsonl entry schema (required fields, date format, helpfulness range 0.0–1.0).
 
-**Token budgets:** Compact returning startup files are measured against hard targets: `meta/quick-reference.md` (2,600), `identity/SUMMARY.md` (450), `chats/SUMMARY.md` (750), `plans/SUMMARY.md` (1,700), scratchpad files (400+650). Total budget: 7,000 tokens with 1,000 headroom. Token estimation uses `ceil(len(text)/4)`.
+**Token budgets:** Compact returning startup files are measured against hard targets: `core/INIT.md` (2,600), `core/memory/users/SUMMARY.md` (450), `core/memory/activity/SUMMARY.md` (750), `core/memory/working/projects/SUMMARY.md` (1,700), scratchpad files (400+650). Total budget: 7,000 tokens with 1,000 headroom. Token estimation uses `ceil(len(text)/4)`.
 
-**Conflict markers:** Scans `identity/` and `knowledge/` for `[CONFLICT]` markers at validation time.
+**Conflict markers:** Scans `core/memory/users/` and `core/memory/knowledge/` for `[CONFLICT]` markers at validation time.
 
 **CI enforcement:** The validator runs in CI (`python HUMANS/tooling/scripts/validate_memory_repo.py`) alongside pytest, ensuring that every pushed commit passes structural validation.
 
@@ -96,15 +96,15 @@ This document audits each of Engram's existing security mitigations against the 
 
 ### What They Provide
 
-**`CLAUDE.md` / `AGENTS.md`** — loaded by the host editor (VS Code, Cursor, Claude Code) before the first turn. They set the behavioral frame: "follow routing rules in `meta/quick-reference.md`," "prefer MCP tools for governed writes," etc. These are the closest thing the system has to a stable identity across sessions.
+**`CLAUDE.md` / `AGENTS.md`** — loaded by the host editor (VS Code, Cursor, Claude Code) before the first turn. They set the behavioral frame: "follow routing rules in `core/INIT.md`," "prefer MCP tools for governed writes," etc. These are the closest thing the system has to a stable identity across sessions.
 
-**`meta/quick-reference.md`** — the operational router, loaded at every session start. Contains active thresholds, context loading manifest, compact bootstrap contract. This file determines *which other files load* and *what behavioral parameters apply*.
+**`core/INIT.md`** — the operational router, loaded at every session start. Contains active thresholds, context loading manifest, compact bootstrap contract. This file determines *which other files load* and *what behavioral parameters apply*.
 
-**`identity/SUMMARY.md`** — user portrait and working style, loaded at every returning session.
+**`core/memory/users/SUMMARY.md`** — user portrait and working style, loaded at every returning session.
 
 ### What Protects Them
 
-**Protected directory enforcement:** `identity/` and `meta/` are in the `_PROTECTED_ROOTS` list. Raw Tier 2 writes (`memory_write`, `memory_edit`) to these directories are blocked with `MemoryPermissionError`. Writes must go through Tier 1 semantic tools (`memory_update_identity_trait` for identity files).
+**Protected directory enforcement:** `core/memory/users/` and `core/governance/` are in the `_PROTECTED_ROOTS` list. Raw Tier 2 writes (`memory_write`, `memory_edit`) to these directories are blocked with `MemoryPermissionError`. Writes must go through Tier 1 semantic tools (`memory_update_user_trait` for user files).
 
 **Identity churn alarm:** `memory_update_identity_trait` tracks a per-session counter. If the agent modifies identity files more than 5 times in a single session, an alarm is raised.
 
@@ -112,19 +112,19 @@ This document audits each of Engram's existing security mitigations against the 
 
 ### What Does NOT Protect Them
 
-**`CLAUDE.md` and `AGENTS.md` are NOT in protected directories.** They are top-level files. No MCP tool exists to modify them (the MCP tool surface covers `identity/`, `meta/`, `knowledge/`, `plans/`, `scratchpad/`, `chats/`, `skills/`), but they can be modified through direct file system access outside the MCP layer.
+**`CLAUDE.md` and `AGENTS.md` are NOT in protected directories.** They are top-level files. No MCP tool exists to modify them (the MCP tool surface covers `core/memory/users/`, `core/governance/`, `core/memory/knowledge/`, `core/memory/working/projects/`, `core/memory/working/scratchpad/`, `core/memory/activity/`, `core/memory/skills/`), but they can be modified through direct file system access outside the MCP layer.
 
-**No integrity check at load time.** When `meta/quick-reference.md` loads at session start, there is no verification that it matches a known-good baseline. If the file was modified between sessions (by any agent, through any path), the modified version loads silently.
+**No integrity check at load time.** When `core/INIT.md` loads at session start, there is no verification that it matches a known-good baseline. If the file was modified between sessions (by any agent, through any path), the modified version loads silently.
 
 **Slow modification evades the churn alarm.** The identity churn alarm triggers at 5 modifications per session. An adversary modifying 1 trait per session for 5 sessions achieves the same total change without triggering the alarm.
 
-**`meta/quick-reference.md` is in the protected directory but can be modified via semantic tools.** The protection blocks raw writes but not governed writes through tools that target `meta/` content. The `memory_append_scratchpad` tool with `target="meta/review-queue.md"` can modify meta-directory files through the semantic layer.
+**`core/INIT.md` is in the protected directory but can be modified via semantic tools.** The protection blocks raw writes but not governed writes through tools that target governance content. The `memory_append_scratchpad` tool with `target="core/governance/review-queue.md"` can modify meta-directory files through the semantic layer.
 
 ### Gap Analysis
 
 | Designed protection | Actual protection | Gap |
 |---|---|---|
-| Identity files are protected from casual edits | ✅ Protected directory + semantic tool gate | None for identity/; gap for CLAUDE.md/AGENTS.md |
+| Identity files are protected from casual edits | ✅ Protected directory + semantic tool gate | None for core/memory/users/; gap for CLAUDE.md/AGENTS.md |
 | Rapid identity change is detected | ✅ Churn alarm at 5/session | Evadable by slow modification (1/session) |
 | Identity file modifications are auditable | ✅ Git audit trail with [identity] prefix | None — but requires inspection |
 | Identity files are authentic at load time | ❌ No integrity check on load | **Critical** — modified files load silently |
@@ -133,7 +133,7 @@ This document audits each of Engram's existing security mitigations against the 
 
 - **Direct adversarial modification of identity files:** Partially mitigated. Protected directory blocks raw writes; churn alarm catches rapid modification; git trail provides audit.
 - **Slow identity drift:** Weakly mitigated. Churn alarm doesn't catch cross-session accumulation. Periodic review is the designed countermeasure but depends on review actually happening.
-- **Bootstrap manipulation:** Not addressed. Modified `meta/quick-reference.md` changes the rules for all subsequent sessions without any load-time verification.
+- **Bootstrap manipulation:** Not addressed. Modified `core/INIT.md` changes the rules for all subsequent sessions without any load-time verification.
 
 ---
 
@@ -185,13 +185,13 @@ This document audits each of Engram's existing security mitigations against the 
 
 **Promotion as a tool invocation:** `memory_promote_knowledge` is the only governed path from `_unverified/` to `knowledge/`. It requires specifying a trust level (medium or high) and creates an auditable commit.
 
-**Periodic review signals:** `memory_audit_trust` flags overdue files. The periodic review checklist in `meta/update-guidelines.md` includes reviewing unverified content. The `_detect_access_anomalies` function flags files with 5+ retrievals that have never been verified — the "never_approved_high_retrieval" signal.
+**Periodic review signals:** `memory_audit_trust` flags overdue files. The periodic review checklist in `core/governance/update-guidelines.md` includes reviewing unverified content. The `_detect_access_anomalies` function flags files with 5+ retrievals that have never been verified — the "never_approved_high_retrieval" signal.
 
 ### What It Does Not Provide
 
 **Mandatory human involvement:** The promotion tool is invocable by any agent. There is no code-level check that a human authorized the promotion. The "human review gate" is a *design convention*, not a *technical enforcement*. An agent can call `memory_promote_knowledge` on any `_unverified/` file without human interaction.
 
-**Pending-review tracking:** `meta/review-queue.md` is manually maintained prose, not a structured queue. It is not auto-populated when files are written to `_unverified/`. There is no canonical "pending review" state between "unverified" and "verified."
+**Pending-review tracking:** `core/governance/review-queue.md` is manually maintained prose, not a structured queue. It is not auto-populated when files are written to `_unverified/`. There is no canonical "pending review" state between "unverified" and "verified."
 
 **Volume management:** There is no mechanism to prevent the `_unverified/` directory from growing faster than human review bandwidth. As of this audit, `_unverified/` contains 50+ files across multiple topic areas. The 120-day trust decay threshold archives stale files, but the window between writing and archival is long enough for significant context influence.
 
@@ -226,7 +226,7 @@ This document audits each of Engram's existing security mitigations against the 
 | Precedent creep (self-reinforcing) | ❌ Not addressed | ❌ Not addressed | ❌ No load-time check | ⚠️ Visible in history | ❌ Self-promotion possible | **Weak** |
 | Scope expansion | ❌ Not addressed | ❌ Not addressed | ✅ Protected directories | ⚠️ Visible in history | N/A | **Weak** |
 | Cross-agent writes | ✅ All writes to _unverified/ | ✅ Schema validated | ✅ Protected from raw writes | ✅ Recorded per agent | ❌ No inter-agent auth | **Partial** |
-| Governance file modification | N/A | ✅ Token budgets | ⚠️ Protected but modifiable via semantic tools | ✅ Recorded | ❌ No human gate for meta/ | **Partial** |
+| Governance file modification | N/A | ✅ Token budgets | ⚠️ Protected but modifiable via semantic tools | ✅ Recorded | ❌ No human gate for governance/ | **Partial** |
 | Write amplification loop | ⚠️ Writes to _unverified/ | ❌ No detection | ❌ No interruption | ⚠️ Visible over time | ❌ Self-promotion possible | **Weak** |
 
 ### Key Findings

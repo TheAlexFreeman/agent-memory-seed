@@ -5,7 +5,7 @@ tags: [philosophy, ai-governance, alignment, identity, memetics, engram-relevanc
 source: external-research
 trust: medium
 status: active
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 created: 2026-03-20
 last_verified: 2026-03-20
 confidence: medium
@@ -174,7 +174,7 @@ already present or pending in this repo, and a few that suggest new directions.
 The memory system is already built around this idea implicitly, but the Covenant makes
 it explicit: what persists across sessions is not the agent's weights or architecture
 but its documented commitments and behavioral patterns. The `CLAUDE.md` file, the
-`meta/quick-reference.md`, the plan taxonomy, and the trust tier system collectively
+`core/INIT.md`, the plan taxonomy, and the trust tier system collectively
 constitute the "moral framework" that gives the engram agent durable identity across
 context resets. This is the right design — and it suggests that **the CLAUDE.md and
 quick-reference files should be treated as identity-critical, not just convenience docs**.
@@ -197,7 +197,7 @@ quarantine; human review is required for promotion. This is well-designed. Exten
 ### 3. Minimal Core Tenets, Flexible Doctrine
 
 The Covenant's structural minimalism principle directly supports the existing token-budget
-constraints on `meta/quick-reference.md` (2600-token target). The instinct to keep
+constraints on `core/INIT.md` (2600-token target). The instinct to keep
 routing rules short is not just a memory efficiency optimization — it's architecturally
 correct for coordination: **the rules an agent can reliably internalize in every session
 are more valuable than comprehensive rules it sometimes misses or misapplies**. This

@@ -1,6 +1,6 @@
 ---
 source: external-research
-origin_session: chats/2026/03/18/chat-005
+origin_session: core/memory/activity/2026/03/18/chat-005
 type: knowledge
 domain: ai-history
 tags: [transformer, attention, self-attention, vaswani, bahdanau, bert, gpt, nlp, parallelization, positional-encoding, multi-head-attention, layer-norm]

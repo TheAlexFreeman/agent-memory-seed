@@ -4,7 +4,7 @@ category: knowledge
 tags: [self-knowledge, synthesis, philosophy, ai-alignment, memetics, governance]
 source: agent-generated
 trust: medium
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 created: 2026-03-20
 last_verified: 2026-03-20
 ---

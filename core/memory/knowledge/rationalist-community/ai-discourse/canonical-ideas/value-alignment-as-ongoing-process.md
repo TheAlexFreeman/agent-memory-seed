@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: The shift from "solve alignment before building AGI" to "alignment as continuous engineering"; iterative RLHF, constitutional AI, scalable oversight; the rationalist community's original framing vs. the empirical reality of how alignment work is actually done. ~3000 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 2/2.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 2/2.*
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-004
+origin_session: core/memory/activity/2026/03/20/chat-004
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -122,5 +122,5 @@ The knowledge base is a **hybrid prototype-theory / theory-theory system:**
 - `knowledge/cognitive-science/metacognition/metacognition-synthesis-agent-implications.md`
 - `knowledge/cognitive-science/cognitive-science-synthesis.md`
 - `knowledge/cognitive-science/memory/working-memory-baddeley-model.md`
-- `meta/curation-policy.md` (on trust levels and file management)
-- `meta/update-guidelines.md` (on when to revise vs. create new files)
+- `core/governance/curation-policy.md` (on trust levels and file management)
+- `core/governance/update-guidelines.md` (on when to revise vs. create new files)

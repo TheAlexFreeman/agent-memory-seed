@@ -2,7 +2,7 @@
 created: 2026-03-20
 domain: ai/frontier
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 related: knowledge/ai/frontier/multi-agent/multi-agent-coordination.md
 source: external-research
 tags:
@@ -227,7 +227,7 @@ but predictability — knowing when the agent will do the right thing.
 The Engram/agent-memory-seed system is itself an example of the orchestrator/
 subagent pattern: the MCP server is a stateful subagent (providing memory read/
 write), and the host agent (Cowork, Claude Code, etc.) is the orchestrator.
-The design choices in `engram_mcp/` — typed state via frontmatter, git-backed
+The design choices in `core/tools/` — typed state via frontmatter, git-backed
 durability, explicit read/write governance — parallel LangGraph's design
 philosophy: prefer explicit, inspectable state over emergent conversational state.
 

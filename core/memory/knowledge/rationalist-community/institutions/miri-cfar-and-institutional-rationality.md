@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: The organizational history of MIRI (from Singularity Institute), CFAR's founding and workshop model, the division of labor between LessWrong, MIRI, CFAR, and later organizations, and how institutional rationality developed as a project. ~3200 words. Trust: low — based on widely available sources but not primary-source verified.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 5/1.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 5/1.*
 
 ---
 

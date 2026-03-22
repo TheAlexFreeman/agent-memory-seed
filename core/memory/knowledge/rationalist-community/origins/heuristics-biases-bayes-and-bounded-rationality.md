@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-001
+origin_session: core/memory/activity/2026/03/19/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: The academic traditions — heuristics-and-biases psychology, bounded rationality, Bayesian probability theory, and forecasting — that LessWrong and the rationalist community drew on, how they were reinterpreted, and where the community's claims tracked or outran the underlying science. ~3,200 words. Trust: low — based on standard secondary accounts; specific empirical claims should be verified against the primary literature.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 2/1.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 2/1.*
 *Related files: `origins/eliezer-yudkowsky-intellectual-biography.md`, `origins/the-sequences-core-arguments.md`*
 
 ---

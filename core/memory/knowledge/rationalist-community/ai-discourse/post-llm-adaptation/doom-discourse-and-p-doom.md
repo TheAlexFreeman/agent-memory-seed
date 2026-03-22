@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: How the rationalist community developed and communicates existential risk estimates from AI; the p(doom) phenomenon; the sociology and epistemology of doom forecasting; its relationship to the actual risk landscape. ~3000 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 5/1.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 5/1.*
 
 ---
 

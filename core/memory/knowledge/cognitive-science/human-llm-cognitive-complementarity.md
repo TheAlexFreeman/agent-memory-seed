@@ -52,7 +52,7 @@ The human memory architecture is the best-understood divergence point. Tulving's
 
 **The episodic gap is the most consequential for collaboration.** Human collaborators accumulate shared history — joint episodes that anchor trust, calibrate expectations, and ground references. Without external episodic memory, the LLM resets to a stranger at every session boundary. This is not merely inconvenient; it prevents the formation of a genuine collaborative working relationship that deepens over time.
 
-*This system's response:* The `chats/` → `knowledge/` consolidation pipeline is a direct architectural remedy, implementing the hippocampal-cortical two-stage consolidation process (McClelland et al., 1995) as an external system. The human's episodic memory of past sessions + the system's stored session records together reconstruct enough shared context to sustain longitudinal collaboration. See `memory/` subfolder for the full empirical basis.
+*This system's response:* The `core/memory/activity/` → `knowledge/` consolidation pipeline is a direct architectural remedy, implementing the hippocampal-cortical two-stage consolidation process (McClelland et al., 1995) as an external system. The human's episodic memory of past sessions + the system's stored session records together reconstruct enough shared context to sustain longitudinal collaboration. See `memory/` subfolder for the full empirical basis.
 
 ### Attention and cognitive control
 
@@ -127,8 +127,8 @@ The three-way comparison reveals that a collaboration framework like this one is
 
 | Missing component | Supplied by |
 |---|---|
-| LLM episodic memory | `chats/` session records + `knowledge/` consolidation |
-| LLM executive control | Session routing, SUMMARY-based context curation, `meta/quick-reference.md` |
+| LLM episodic memory | `core/memory/activity/` session records + `knowledge/` consolidation |
+| LLM executive control | Session routing, SUMMARY-based context curation, `core/INIT.md` |
 | LLM metacognitive monitoring | `trust:` levels, `source:` provenance, curation policy |
 | LLM learning / consolidation | Session-end review → knowledge promotion pipeline |
 | LLM functional forgetting | `_unverified/` decay, retrieval-induced suppression via SUMMARY emphasis |

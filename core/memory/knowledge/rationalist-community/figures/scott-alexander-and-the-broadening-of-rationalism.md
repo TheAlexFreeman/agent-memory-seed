@@ -1,7 +1,7 @@
 ---
 created: '2026-03-19'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: Scott Alexander's role in translating rationalist ideas to a wider audience, the character of Slate Star Codex / Astral Codex Ten, points of alignment and divergence from core LessWrong culture, and Alexander's distinctive intellectual contribution. ~3100 words. Trust: low — based on widely available sources but not primary-source verified.*
 
-*Related plan: plans/lesswrong-rationalist-community-research.md, Phase 4/1.*
+*Related plan: lesswrong-rationalist-community-research.md, Phase 4/1.*
 
 ---
 

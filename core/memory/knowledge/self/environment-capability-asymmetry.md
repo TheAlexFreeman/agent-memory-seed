@@ -4,16 +4,16 @@ type: architecture-note
 domain: system-operations
 created: 2026-03-20
 trust: low
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 tags: [git, architecture, multi-agent, environment, deployment, coordination]
-related: knowledge/_unverified/system-notes/2026-03-19-tmp-data-loss-incident.md
+related: self/_archive/2026-03-19-tmp-data-loss-incident.md
 ---
 
 # Environment Capability Asymmetry in Engram Deployments
 
 ## The core observation
 
-The `engram_mcp` git tooling is intentionally local-only: `git_repo.py` performs
+The `agent_memory_mcp` git tooling is intentionally local-only: `core/tools/agent_memory_mcp/core/git_repo.py` performs
 reads, writes, commits, and local branch operations but has no `git push` or
 remote-interaction capability. This is a reasonable design choice — it keeps the
 server stateless with respect to the network and avoids storing credentials in
@@ -111,4 +111,4 @@ maturity. The capability asymmetry it creates is manageable through the
 workspace-folder-first write norm. The failure modes are well-understood and
 primarily manifest as divergence between Cowork sessions and laptop agents —
 a known coordination pattern that the multi-agent section of
-`plans/worktree-integration.md` should document explicitly.
+the system documentation should cover explicitly.

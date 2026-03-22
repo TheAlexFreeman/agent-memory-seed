@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 last_verified: '2026-03-20'
 trust: medium
@@ -77,7 +77,7 @@ The biological consolidation model validates and extends the Engram architecture
 
 | Biological stage | Engram analog | Current implementation |
 |-----------------|--------------|----------------------|
-| Hippocampal encoding | Session chat record in `chats/` | Raw conversation preserved per-session |
+| Hippocampal encoding | Session chat record in `core/memory/activity/` | Raw conversation preserved per-session |
 | Hippocampal binding | Tool outputs + file references in context | Cross-references between files maintain binding |
 | Systems consolidation | SUMMARY file updates, knowledge file creation | Session summaries extract and stabilize key content |
 | Cortical independence | Verified knowledge in `knowledge/` | Promoted files accessible without original session context |

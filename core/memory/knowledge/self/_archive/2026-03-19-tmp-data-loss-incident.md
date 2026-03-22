@@ -5,7 +5,7 @@ domain: system-operations
 created: 2026-03-19
 trust: low
 tags: [incident, data-loss, tmp, git, session-hygiene, pwr, engram, lessons-learned]
-origin_session: chats/2026/03/19/chat-002
+origin_session: core/memory/activity/2026/03/19/chat-002
 ---
 
 # Incident Report: /tmp Data Loss — 2026-03-19

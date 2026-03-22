@@ -4,7 +4,7 @@ category: knowledge
 tags: [engram, governance, trust, curation, security, self-knowledge]
 source: agent-generated
 trust: medium
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 created: 2026-03-20
 last_verified: 2026-03-20
 ---
@@ -48,27 +48,27 @@ are visible, bounded, and recoverable.
 
 Two files are the closest thing the system has to stable identity across sessions:
 
-- **`meta/quick-reference.md`**: routing authority, active thresholds, compact bootstrap
+- **`core/INIT.md`**: routing authority, active thresholds, compact bootstrap
   contract, and decision triggers. Loaded at the start of every session. ~2,600-token
   budget enforced by the test suite.
-- **`plans/SUMMARY.md`**: the active priority stack — what the system should be working
-  on and why. ~1,700-token budget enforced by the test suite.
+- **`core/memory/working/projects/SUMMARY.md`**: the active priority stack — what the system
+  should be working on and why. ~1,700-token budget enforced by the test suite.
 
-**Why these are identity-critical**: a session that starts with a different `quick-reference.md`
-or `SUMMARY.md` is, in a meaningful sense, a different agent operating under different norms.
+**Why these are identity-critical**: a session that starts with a different `core/INIT.md`
+or projects `SUMMARY.md` is, in a meaningful sense, a different agent operating under different norms.
 These files set the behavioral frame before anything else loads.
 
 **Current protection**: committed to git (tamper-evident audit trail). No baseline hash check
 yet — modification is visible in git history but not flagged automatically at session start.
-This is a known gap documented in `plans/memetic-security-research.md` (item 4.3).
+This is a known gap.
 
 ### Layer 2: The Trust Tier System
 
 Every file has a path-based trust tier and a `trust` frontmatter field:
 
 **Path tier** (structural, enforced by convention and validator):
-- `knowledge/_unverified/` — quarantine zone; agent-written, not human-reviewed
-- `knowledge/*/` (non-`_unverified`) — promoted; human has explicitly approved
+- `core/memory/knowledge/_unverified/` — quarantine zone; agent-written, not human-reviewed
+- `core/memory/knowledge/*/` (non-`_unverified`) — promoted; human has explicitly approved
 
 **`trust` field** (semantic, used by retrieval and curation logic):
 - `trust: low` — uncertain content, archived after 120 days without re-verification
@@ -85,9 +85,9 @@ The model still reads the body text of `trust: low` files and may be influenced 
 
 ### Layer 3: The Validator and Test Suite
 
-190 pytest tests in `HUMANS/tooling/tests/test_validate_memory_repo.py` enforce:
+The pytest tests in `HUMANS/tooling/tests/test_validate_memory_repo.py` enforce:
 - Required frontmatter fields (`source`, `trust`, `origin_session`, `created`, `type`/`category`)
-- `origin_session` format (`chats/YYYY/MM/DD/chat-NNN` or sentinel values)
+- `origin_session` format (`core/memory/activity/YYYY/MM/DD/chat-NNN` or sentinel values)
 - Token budget compliance for compact startup files
 - Manifest completeness (all tracked files in `setup/initial-commit-paths.txt`)
 - Section heading requirements (`## Active plans`, `## Recent completions` in SUMMARY.md)
@@ -104,7 +104,7 @@ inconsistent state and should not be treated as trustworthy.
 
 ### Layer 4: The Human Review Gate
 
-The only path from `knowledge/_unverified/` to promoted `knowledge/` is `memory_promote_knowledge`,
+The only path from `core/memory/knowledge/_unverified/` to promoted knowledge is `memory_promote_knowledge`,
 which requires explicit human instruction. This is the most important protection in the
 governance model because it is the only layer that applies *semantic* judgment.
 
@@ -113,7 +113,7 @@ for research and drafting. The human has better judgment about whether a piece o
 is actually correct, useful, and aligned with the user's goals.
 
 **Practical limit**: the human review gate works only if it is actually used. If content
-accumulates in `_unverified/` faster than it can be reviewed, the effective protection
+accumulates in `core/memory/knowledge/_unverified/` faster than it can be reviewed, the effective protection
 weakens — the gate still exists but the queue behind it grows indefinitely. The knowledge
 flooding alarm (>5 files/day) exists to detect this condition.
 
@@ -130,14 +130,14 @@ other protections meaningful — it is the layer that turns "visible" into "corr
 
 **What this requires**: someone to look. Passive drift accumulating over many sessions will
 not automatically trigger a review. The git trail is evidence; it requires a human investigator
-to be useful. The periodic review cadence (documented in `meta/update-guidelines.md`) is
+to be useful. The periodic review cadence (documented in `core/governance/update-guidelines.md`) is
 the norm designed to ensure the trail is actually checked.
 
 ---
 
 ## The Curation Policy
 
-The active curation parameters (from `meta/quick-reference.md`, current stage: Exploration):
+The active curation parameters (from `core/INIT.md`, current stage: Exploration):
 
 | Parameter | Value |
 |---|---|
@@ -175,14 +175,14 @@ advantaged in any design process the agent participates in.
 
 **The mitigation**: the git audit trail provides a record of every governance change and who
 proposed it. Human review of identity-critical files at periodic review intervals (see
-`meta/integrity-checklist.md`) is the check on this dynamic. The fact that this file itself
+`core/governance/integrity-checklist.md`) is the check on this dynamic. The fact that this file itself
 flags the problem is not the same as solving it — but it is the correct first step.
 
 ---
 
 ## The Memetic Security Surface
 
-A more detailed treatment is in `plans/memetic-security-research.md`. The summary:
+The summary:
 
 The context window is the primary persistence layer for both values and memetic threats.
 Anything loaded into context can, in principle, influence behavior. The governance model's

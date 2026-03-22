@@ -1,7 +1,7 @@
 ---
 created: '2026-03-21'
 last_verified: '2026-03-21'
-origin_session: chats/2026/03/21/chat-001
+origin_session: core/memory/activity/2026/03/21/chat-001
 source: agent-generated
 trust: medium
 ---
@@ -10,7 +10,7 @@ trust: medium
 
 *Coverage: The organisations founded, led, or substantially influenced by people from the rationalist/EA community; how their missions, cultures, and approaches reflect rationalist ideas; how commercial and research realities have modified the original vision. ~2800 words. Trust: low — synthetic assessment, not primary-source verified.*
 
-*Related plan: plans/rationalist-ai-discourse-research.md, Phase 5/3.*
+*Related plan: rationalist-ai-discourse-research.md, Phase 5/3.*
 
 ---
 

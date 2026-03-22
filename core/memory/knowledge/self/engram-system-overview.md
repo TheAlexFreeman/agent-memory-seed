@@ -4,7 +4,7 @@ category: knowledge
 tags: [engram, architecture, self-knowledge, mcp, memory-system]
 source: agent-generated
 trust: medium
-origin_session: chats/2026/03/20/chat-001
+origin_session: core/memory/activity/2026/03/20/chat-001
 created: 2026-03-20
 last_verified: 2026-03-20
 ---
@@ -13,7 +13,7 @@ last_verified: 2026-03-20
 
 This file is self-knowledge: a description of this system by the system itself, written for
 use by future sessions of this agent. It should be treated as authoritative about intent and
-design philosophy, and cross-checked against `README.md` and `meta/quick-reference.md` for
+design philosophy, and cross-checked against `README.md` and `core/INIT.md` for
 operational details. Human review is recommended before relying on it for architectural decisions.
 
 ---
@@ -50,108 +50,120 @@ agent-memory-seed/
 ├── agent-bootstrap.toml         # Structured bootstrap configuration
 ├── README.md                    # Full architectural reference
 │
-├── meta/                        # Governance and operational parameters
-│   ├── quick-reference.md       # IDENTITY-CRITICAL: routing authority, active thresholds
-│   ├── curation-policy.md       # Trust decay and archiving policy
-│   ├── update-guidelines.md     # How to change the system
-│   ├── system-maturity.md       # Stage definitions and transition criteria
-│   ├── curation-algorithms.md   # Full aggregation and cluster algorithms
-│   ├── review-queue.md          # Flagged items awaiting human review
-│   ├── belief-diff-log.md       # Tracking belief changes over time
-│   └── integrity-checklist.md  # Periodic review checklist
-│
-├── identity/                    # Who the user is; persistent user profile
-│   └── SUMMARY.md               # User portrait, working style, goals
-│
-├── chats/                       # Session history by date
-│   └── YYYY/MM/DD/chat-NNN/     # Per-session summaries and reflections
-│       ├── SUMMARY.md
-│       └── reflection.md
-│
-├── plans/                       # Active multi-session work tracking
-│   ├── SUMMARY.md               # IDENTITY-CRITICAL: priority stack, next actions
-│   └── *.md                     # Individual build and research plans
-│
-├── scratchpad/                  # Ephemeral working notes
-│   ├── CURRENT.md               # Active session threads and immediate next steps
-│   └── USER.md                  # User-authored constraints and preferences
-│
-├── knowledge/                   # Promoted (human-reviewed) knowledge
-│   ├── SUMMARY.md               # Knowledge index
-│   ├── ai-history/              # AI paradigm history (promoted)
-│   ├── literature/              # Literary knowledge (promoted)
-│   ├── systems-architecture/    # Storage, git, concurrency primitives (promoted)
-│   ├── tooling/                 # Operational tooling notes (promoted)
-│   ├── self/                    # This folder — self-knowledge (promoted)
-│   └── _unverified/             # Agent-written, awaiting human review
-│       ├── ai/frontier/         # Frontier AI research
-│       ├── ai-tools/            # AI tooling landscape
-│       ├── devops/              # DevOps/Docker research
-│       ├── django/              # Django stack research
-│       ├── mcp/                 # MCP protocol and ecosystem
-│       ├── philosophy/          # Philosophy (Lewis, history, governance)
-│       ├── rationalist-community/
-│       ├── react/               # React/frontend research
-│       └── system-notes/        # Operational notes about this system
-│
-├── skills/                      # Reusable procedure files for the agent
-│
-├── engram_mcp/                  # Python MCP server (the runtime)
-│   └── agent_memory_mcp/
-│       ├── server.py            # FastMCP server definition
-│       ├── server_main.py       # CLI entrypoint
-│       ├── tools/
-│       │   ├── read_tools.py    # ~2000 lines: read, search, git log tools
-│       │   ├── semantic_tools.py # ~2000 lines: semantic search, plan tools (MONOLITH)
-│       │   └── write_tools.py   # ~550 lines: write, update, archive tools
-│       └── tests/               # 190 pytest tests
-│
-├── tools/                       # Legacy location; now a compat shim
-│   └── agent_memory_mcp/
-│       └── __init__.py          # Re-exports from engram_mcp (Phase 0 of reorganization)
+├── core/                        # All system internals live under core/
+│   ├── INIT.md                  # IDENTITY-CRITICAL: live router, active thresholds, bootstrap
+│   │
+│   ├── governance/              # Governance and operational parameters
+│   │   ├── curation-policy.md   # Trust decay and archiving policy
+│   │   ├── update-guidelines.md # How to change the system
+│   │   ├── system-maturity.md   # Stage definitions and transition criteria
+│   │   ├── curation-algorithms.md # Full aggregation and cluster algorithms
+│   │   ├── review-queue.md      # Flagged items awaiting human review
+│   │   ├── belief-diff-log.md   # Tracking belief changes over time
+│   │   ├── integrity-checklist.md # Periodic review checklist
+│   │   └── ...                  # first-run.md, session-checklists.md, etc.
+│   │
+│   ├── memory/                  # Retrievable memory content
+│   │   ├── users/               # Who the user is; persistent user profile
+│   │   │   ├── SUMMARY.md       # User portrait, working style, goals
+│   │   │   └── Alex/            # User-specific subfolders (profile, traits)
+│   │   │
+│   │   ├── knowledge/           # Topic knowledge
+│   │   │   ├── ai/              # AI history, frontier, tools
+│   │   │   ├── cognitive-science/ # Memory, attention, concepts, metacognition
+│   │   │   ├── mathematics/     # Logic, complexity, causal inference, game theory
+│   │   │   ├── philosophy/      # History, ethics, personal identity, phenomenology
+│   │   │   ├── software-engineering/ # Django, React, devops, testing, systems-architecture
+│   │   │   ├── social-science/  # Behavioral economics, cultural evolution
+│   │   │   ├── rationalist-community/ # Origins, AI discourse, institutions
+│   │   │   ├── literature/      # Literary knowledge
+│   │   │   ├── self/            # This folder — system self-knowledge
+│   │   │   └── _archive/        # Retired knowledge; preserved but not loaded
+│   │   │
+│   │   ├── skills/              # Reusable procedure files for the agent
+│   │   │
+│   │   ├── activity/            # Episodic memory — session history
+│   │   │   └── YYYY/MM/DD/chat-NNN/
+│   │   │       ├── transcript.md, SUMMARY.md, reflection.md
+│   │   │       └── artifacts/
+│   │   │
+│   │   └── working/
+│   │       ├── projects/        # Active multi-session work tracking
+│   │       │   ├── SUMMARY.md   # IDENTITY-CRITICAL: priority stack, next actions
+│   │       │   └── project-id/  # Per-project: plans/, SUMMARY.md
+│   │       └── scratchpad/
+│   │           ├── USER.md      # User-authored constraints and preferences
+│   │           └── CURRENT.md   # Agent working notes, active session threads
+│   │
+│   └── tools/                   # MCP server implementation
+│       └── agent_memory_mcp/    # Python FastMCP package
+│           ├── server.py        # FastMCP server definition
+│           ├── server_main.py   # CLI entrypoint
+│           ├── core/            # Shared internals (git_repo, path_policy, models)
+│           ├── tools/
+│           │   ├── read_tools.py     # Read, search, git log, analytics tools
+│           │   ├── write_tools.py    # Write, edit, delete, move, frontmatter tools
+│           │   └── semantic/         # Domain-aware tools (split by concern)
+│           │       ├── session_tools.py   # Session lifecycle, access logging, aggregation
+│           │       ├── knowledge_tools.py # Promote, demote, archive, reorganize knowledge
+│           │       ├── plan_tools.py      # Plan CRUD, status tracking
+│           │       ├── user_tools.py      # User trait management
+│           │       └── skill_tools.py     # Skill updates
+│           └── tests/           # Unit tests (in core/tools/tests/)
 │
 └── HUMANS/                      # Human-facing documentation and tooling
-    ├── docs/                    # MCP setup guides, integration docs
+    ├── docs/                    # QUICKSTART, CORE, DESIGN, MCP, INTEGRATIONS
     └── tooling/
         ├── scripts/             # validate_memory_repo.py, inspect_compact_budget.py, etc.
-        └── tests/               # test_validate_memory_repo.py (the 190-test suite)
+        └── tests/               # test_validate_memory_repo.py and full test suite
 ```
 
 ---
 
-## The MCP Server (engram_mcp)
+## The MCP Server (core/tools/agent_memory_mcp)
 
 The MCP server exposes the memory system to any MCP-capable agent (Claude Desktop, Claude Code,
-Cursor, etc.). It is implemented in Python using FastMCP.
+Cursor, etc.). It is implemented in Python using FastMCP. The package lives at
+`core/tools/agent_memory_mcp/`.
 
 ### Tool Categories
 
-**Read tools** (`read_tools.py`):
+**Read tools** (`tools/read_tools.py`):
 - `memory_read_file` — read a specific file by path
-- `memory_list_files` — list files by folder or pattern
+- `memory_list_folder` — list files by folder or pattern
 - `memory_search` — keyword/semantic search across the repo
 - `memory_git_log` — structured git history for a path or the whole repo
+- `memory_get_capabilities` — return the governed capability manifest
+- `memory_session_bootstrap` — optimized bootstrap loader for session start
+- `memory_access_analytics` — usage analytics from ACCESS.jsonl
 
-**Semantic tools** (`semantic_tools.py` — currently a monolith being split):
-- Identity tools: `memory_get_identity`, `memory_update_identity`
-- Knowledge tools: `memory_search_knowledge`, `memory_get_knowledge_file`
-- Plan tools: `memory_get_plans`, `memory_update_plan`, `memory_archive_plan`
-- Session tools: `memory_start_session`, `memory_end_session`, `memory_append_scratchpad`
+**Semantic tools** (split into `tools/semantic/` modules by domain):
+- **Session tools** (`session_tools.py`): `memory_record_session`, `memory_record_chat_summary`,
+  `memory_append_scratchpad`, `memory_flag_for_review`, `memory_log_access`,
+  `memory_run_aggregation`, `memory_record_reflection`, `memory_record_periodic_review`
+- **Knowledge tools** (`knowledge_tools.py`): `memory_promote_knowledge`,
+  `memory_promote_knowledge_batch`, `memory_promote_knowledge_subtree`,
+  `memory_demote_knowledge`, `memory_archive_knowledge`, `memory_reorganize_path`,
+  `memory_add_knowledge_file`, `memory_mark_reviewed`
+- **Plan tools** (`plan_tools.py`): `memory_create_plan`, `memory_update_plan_next_action`,
+  `memory_mark_plan_item_complete`, `memory_list_plans`
+- **User tools** (`user_tools.py`): `memory_update_user_trait`
+- **Skill tools** (`skill_tools.py`): `memory_update_skill`
 
-**Write tools** (`write_tools.py`):
+**Write tools** (`tools/write_tools.py`):
 - `memory_write` — write a new file (with frontmatter validation)
-- `memory_update` — update an existing file
-- `memory_archive_knowledge` — move a file to `_archive/`
-- `memory_flag_for_review` — add a file to the human review queue
-- `memory_promote_knowledge` — move a file from `_unverified/` to `knowledge/`
+- `memory_edit` — edit an existing file
+- `memory_delete` — delete a file
+- `memory_move` — move/rename a file
+- `memory_update_frontmatter` — update frontmatter fields
+- `memory_update_frontmatter_bulk` — batch frontmatter updates
+- `memory_commit` — explicit commit (for batched operations)
 
 ### Key Design Constraints
 
 - All writes are committed to git immediately (no uncommitted writes)
 - The server resolves the repo root via `MEMORY_REPO_ROOT` or `AGENT_MEMORY_ROOT` env vars
 - Push to remote is deliberately NOT implemented (see `environment-capability-asymmetry.md`)
-- A GitHub token can be added to `.codex/config.toml` `[mcp_servers.agent_memory.env]` if
-  push capability is wanted in a future version
 
 ---
 
@@ -162,9 +174,9 @@ review status:
 
 | Tier | Path | Meaning |
 |---|---|---|
-| Unverified | `knowledge/_unverified/` | Agent-written, not yet human-reviewed |
-| Promoted | `knowledge/*/` (non-`_unverified`) | Human-reviewed, approved for full weight |
-| Archived | `knowledge/_archive/` | Retired; preserved for reference but not loaded in normal context |
+| Unverified | `core/memory/knowledge/_unverified/` | Agent-written, not yet human-reviewed |
+| Promoted | `core/memory/knowledge/*/` (non-`_unverified`) | Human-reviewed, approved for full weight |
+| Archived | `core/memory/knowledge/_archive/` | Retired; preserved for reference but not loaded in normal context |
 
 The trust field (`low` / `medium` / `high`) encodes confidence about the *content*, independent
 of the review status. A promoted file can still be `trust: medium` if its content is uncertain.
@@ -179,49 +191,37 @@ The system also uses `source` frontmatter (`agent-generated`, `external-research
 The bootstrap is designed for minimal context cost. Two entry points:
 
 **Compact returning** (~3,000–7,000 tokens): the default for day-to-day sessions. Loads:
-`meta/quick-reference.md` → `identity/SUMMARY.md` → `chats/SUMMARY.md` → `plans/SUMMARY.md`
-→ `scratchpad/USER.md` → `scratchpad/CURRENT.md` (all skipped if empty or only placeholder text).
+`core/INIT.md` → `core/memory/users/SUMMARY.md` → `core/memory/activity/SUMMARY.md` →
+`core/memory/working/projects/SUMMARY.md` → `core/memory/working/scratchpad/USER.md` →
+`core/memory/working/scratchpad/CURRENT.md` (all skipped if empty or only placeholder text).
 
 **Full bootstrap** (~18,000–25,000 tokens): for fresh instantiation on a returning system or
-periodic governance reviews. Adds `README.md`, `CHANGELOG.md`, `meta/curation-policy.md`,
-`meta/update-guidelines.md`.
+periodic governance reviews. Adds `README.md`, `CHANGELOG.md`, `core/governance/curation-policy.md`,
+`core/governance/update-guidelines.md`.
 
 The compact path has strict token budgets enforced by the test suite:
-`meta/quick-reference.md` ≤ ~2,600 tokens, `plans/SUMMARY.md` ≤ ~1,700 tokens.
+`core/INIT.md` ≤ ~2,600 tokens, `core/memory/working/projects/SUMMARY.md` ≤ ~1,700 tokens.
 
 ---
 
-## Plan Taxonomy
+## Project Tracking
 
-Plans live in `plans/` and are categorized:
+Projects live in `core/memory/working/projects/` and are organized as subdirectories:
 
-- **Build plans** (`category: build`): implementation plans with a defined done-state.
-  Dependency-ordered; have blocking relationships. Current TOP PRIORITY: `mcp-reorganization.md`
-  (22/41 complete as of 2026-03-20, at Phase 3).
-- **Research plans** (`category: research`): open-ended knowledge-base work. Pursued
-  opportunistically or on user request. Current TOP PRIORITY: `memetic-security-research.md`
-  (0/18, just created 2026-03-20).
-
-Build plans take precedence over research plans when unblocked work is available.
+- Each project has its own folder (e.g. `projects/general-knowledge-base/`)
+- Projects contain `plans/` subfolder for individual plan files, plus `IN/` for intake
+- `core/memory/working/projects/SUMMARY.md` is the priority stack and orientation doc
+- Completed projects are moved to `core/memory/working/projects/OUT/`
 
 ---
 
-## Current Development State (as of 2026-03-20)
+## Current Development State
 
-The system is in **Exploration** stage (see `meta/quick-reference.md`).
+The system is in **Exploration** stage (see `core/INIT.md`).
 
-**mcp-reorganization** (the primary build plan) is moving the MCP runtime from the legacy
-`tools/` path into the `engram_mcp/` package. Phase 0 (manifest repair, origin_session fixes,
-compat shim) is complete. The laptop agent has advanced this to Phase 3, item 24 (22/41
-complete). The `tools/agent_memory_mcp/__init__.py` is now a compat shim re-exporting from
-`engram_mcp`.
+The MCP server has been reorganized from the legacy `core/tools/` and `tools/` paths into
+`core/tools/agent_memory_mcp/`. The semantic tools monolith has been split into domain-specific
+modules under `tools/semantic/`.
 
-**Two-agent coordination pattern**: this system is regularly worked on by two agents
-concurrently — a Cowork (sandbox) agent and a laptop Claude Code agent. The Cowork agent
-cannot push to remote (no GitHub credentials, FUSE mount). The laptop agent can push. The
-mitigation: workspace-folder-first writes so Cowork changes are always visible locally, and
-git as the audit trail / merge mechanism. Documented in
-`knowledge/_unverified/system-notes/environment-capability-asymmetry.md`.
-
-**Test suite**: 190 tests passing, 1 skipped. The suite is in `HUMANS/tooling/tests/`.
-Running `python3 -m pytest` from repo root is the standard verification step before every commit.
+**Test suite**: The suite is in `HUMANS/tooling/tests/`.
+Running `python -m pytest` from repo root is the standard verification step before every commit.

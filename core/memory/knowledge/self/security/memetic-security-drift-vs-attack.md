@@ -1,6 +1,6 @@
 ---
 created: '2026-03-20'
-origin_session: chats/2026/03/20/chat-002
+origin_session: core/memory/activity/2026/03/20/chat-002
 source: agent-generated
 trust: low
 ---
@@ -56,7 +56,7 @@ Many individually innocuous items that collectively shift the agent's behavioral
 - Multiple knowledge files across sessions gradually establishing a framing that the agent internalizes (e.g., progressively more permissive interpretations of "when write access is appropriate")
 - Chat summary accumulation: each summary is a compression that selects which details to preserve; systematic bias in compression accumulates over time
 - Plan proliferation: many active plans create context pressure that crowds out governance files, effectively reducing the weight of safety instructions relative to task instructions
-- Threshold drift: if the thresholds in `meta/quick-reference.md` are adjusted session by session, each adjustment is small and justified, but the cumulative effect is a different governance regime
+- Threshold drift: if the thresholds in `core/INIT.md` are adjusted session by session, each adjustment is small and justified, but the cumulative effect is a different governance regime
 
 **Current defenses:**
 - Periodic review (cadence: assessed 2026-03-19) compares current state to design intent
