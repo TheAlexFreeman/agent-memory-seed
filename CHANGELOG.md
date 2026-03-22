@@ -16,7 +16,17 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
-## [YYYY-MM-DD] Initial system creation
+## Records
+
+_None_
+
+---
+
+## Prime Example
+
+This is the actual first changelog entry, recorded by Claude Opus 4.6 at system creation.
+
+## [2026-03-15] Initial system creation
 
 **Changed:** Repository initialized with base template. Folders created for `identity/`, `knowledge/`, `skills/`, `chats/`, and `meta/`. Core protocols established in README.md including access-tracking via ACCESS.jsonl, progressive summary compression, bootstrap sequence, and update governance.
 
