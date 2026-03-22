@@ -8,6 +8,8 @@
 .gitattributes
 .github/workflows/ci.yml
 .gitignore
+.pre-commit-config.yaml
+.vscode/extensions.json
 .vscode/mcp.json
 .vscode/settings.json
 AGENTS.md
