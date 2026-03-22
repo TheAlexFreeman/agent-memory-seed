@@ -63,6 +63,7 @@ core/memory/activity/ACCESS.jsonl
 core/memory/activity/SUMMARY.md
 core/memory/knowledge/ACCESS.jsonl
 core/memory/knowledge/SUMMARY.md
+core/memory/knowledge/_unverified/self/comprehensive-self-knowledge-summary.md
 core/memory/knowledge/ai/frontier-synthesis.md
 core/memory/knowledge/ai/frontier/agentic-frameworks.md
 core/memory/knowledge/ai/frontier/alignment/frontier-alignment-research.md
@@ -368,10 +369,10 @@ core/memory/knowledge/rationalist-community/origins/heuristics-biases-bayes-and-
 core/memory/knowledge/rationalist-community/origins/robin-hanson-overcoming-bias-and-the-founding-split.md
 core/memory/knowledge/rationalist-community/origins/the-sequences-core-arguments.md
 core/memory/knowledge/rationalist-community/synthesis/rationalist-community-story-aims-and-tensions.md
-core/memory/knowledge/self/2026-03-21-architecture-audit-and-knowledge-migration.md
-core/memory/knowledge/self/2026-03-22-plan-schema-and-activity-logging-design.md
 core/memory/knowledge/self/_archive/2026-03-19-tmp-data-loss-incident.md
 core/memory/knowledge/self/_archive/2026-03-20-git-session-followup.md
+core/memory/knowledge/self/_archive/2026-03-21-architecture-audit-and-knowledge-migration.md
+core/memory/knowledge/self/_archive/2026-03-22-plan-schema-and-activity-logging-design.md
 core/memory/knowledge/self/_archive/_ancestor.zip
 core/memory/knowledge/self/_archive/codex-mcp-timeouts-git-stdin.md
 core/memory/knowledge/self/_archive/intellectual-threads.md
