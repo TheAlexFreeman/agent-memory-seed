@@ -181,7 +181,9 @@ def _append_plan_log(
         files_changed.append(log_path)
 
 
-def _render_outbox_summary(existing: str, project_id: str, plan_id: str, artifacts: list[str]) -> str:
+def _render_outbox_summary(
+    existing: str, project_id: str, plan_id: str, artifacts: list[str]
+) -> str:
     heading = f"## {project_id}"
     lines = existing.splitlines()
     entry_lines = [
@@ -718,7 +720,8 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if any(path not in candidates for path in selected):
             invalid = [path for path in selected if path not in candidates]
             raise ValidationError(
-                "artifact_paths must be a subset of the plan's existing outputs: " + ", ".join(invalid)
+                "artifact_paths must be a subset of the plan's existing outputs: "
+                + ", ".join(invalid)
             )
 
         out_root = project_outbox_root(resolved_project_id, plan.id)
@@ -782,9 +785,13 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         abs_summary = root / outbox_summary
         existing_summary = (
-            abs_summary.read_text(encoding="utf-8") if abs_summary.exists() else "# Projects Outbox\n"
+            abs_summary.read_text(encoding="utf-8")
+            if abs_summary.exists()
+            else "# Projects Outbox\n"
         )
-        updated_summary = _render_outbox_summary(existing_summary, resolved_project_id, plan.id, selected)
+        updated_summary = _render_outbox_summary(
+            existing_summary, resolved_project_id, plan.id, selected
+        )
         abs_summary.parent.mkdir(parents=True, exist_ok=True)
         abs_summary.write_text(updated_summary, encoding="utf-8")
         repo.add(outbox_summary)

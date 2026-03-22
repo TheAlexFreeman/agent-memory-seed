@@ -806,7 +806,9 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
     ):
         add("execute_plan", 0.95, "Intent sounds like starting or completing structured plan work.")
     if any(word in intent_lower for word in ("export", "review")) and "plan" in intent_lower:
-        add("review_plan", 0.93, "Intent sounds like reviewing or exporting completed plan outputs.")
+        add(
+            "review_plan", 0.93, "Intent sounds like reviewing or exporting completed plan outputs."
+        )
 
     if "promote" in intent_lower and (
         "knowledge" in intent_lower

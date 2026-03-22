@@ -516,9 +516,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         resolution = resolver.resolve_capabilities(REPO_ROOT)
         ui_feedback = resolution["ui_feedback"]
         create_plan = next(op for op in ui_feedback["operations"] if op["id"] == "create_plan")
-        execute_plan = next(
-            op for op in ui_feedback["operations"] if op["id"] == "execute_plan"
-        )
+        execute_plan = next(op for op in ui_feedback["operations"] if op["id"] == "execute_plan")
 
         self.assertEqual(ui_feedback["title"], "Governed Memory Writes")
         self.assertEqual(ui_feedback["status"], "ready")
