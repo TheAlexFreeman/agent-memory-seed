@@ -237,8 +237,9 @@ class MemoryMCPTests(unittest.TestCase):
             "memory_extract_file",
             "memory_inspect_commit",
             "memory_record_periodic_review",
-            "memory_mark_plan_item_complete",
-            "memory_create_plan",
+            "memory_plan_execute",
+            "memory_plan_create",
+            "memory_plan_review",
         ):
             self.assertTrue(callable(getattr(self.module, name)))
         self.assertFalse(hasattr(self.module, "memory_write"))

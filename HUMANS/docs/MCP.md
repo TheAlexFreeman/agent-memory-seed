@@ -151,9 +151,9 @@ These are the normal write path. Each tool represents a bounded operation with b
 
 **Plans**
 
-- `memory_create_plan`
-- `memory_mark_plan_item_complete`
-- `memory_update_plan_next_action`
+- `memory_plan_create`
+- `memory_plan_execute`
+- `memory_plan_review`
 
 **Knowledge lifecycle**
 

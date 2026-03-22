@@ -20,7 +20,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-import frontmatter as fm
+import frontmatter as fm  # type: ignore[import-untyped]
 
 # ---------------------------------------------------------------------------
 # Frontmatter read/write
@@ -198,16 +198,38 @@ def count_active_project_plans(root: Path, project_id: str) -> int:
         return 0
 
     active_count = 0
-    for plan_file in plans_dir.glob("*.md"):
+    for plan_file in sorted(list(plans_dir.glob("*.yaml")) + list(plans_dir.glob("*.md"))):
         if not plan_file.is_file():
+            continue
+        if plan_file.suffix == ".yaml":
+            try:
+                import yaml  # type: ignore[import-untyped]
+
+                raw = yaml.safe_load(plan_file.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            if not isinstance(raw, dict):
+                continue
+            status = str(raw.get("status", "unknown"))
+            if status == "active":
+                active_count += 1
             continue
         try:
             fm_dict, _ = read_with_frontmatter(plan_file)
+            status = str(fm_dict.get("status", "unknown"))
         except Exception:
             continue
-        if str(fm_dict.get("status", "unknown")) == "active":
+        if status == "active":
             active_count += 1
     return active_count
+
+
+def count_project_plans(root: Path, project_id: str) -> int:
+    """Count all YAML or legacy markdown plans within one project directory."""
+    plans_dir = root / "memory" / "working" / "projects" / project_id / "plans"
+    if not plans_dir.is_dir():
+        return 0
+    return sum(1 for plan_file in plans_dir.iterdir() if plan_file.suffix in {".yaml", ".md"})
 
 
 # ---------------------------------------------------------------------------
@@ -444,6 +466,7 @@ def build_plan_summary_block(
     next_action: str | None,
     plan_progress: tuple[int, int],
     description: str = "",
+    detail_path: str | None = None,
 ) -> str:
     """Build a BEGIN/END block for the plans SUMMARY."""
     done, total = plan_progress
@@ -453,7 +476,7 @@ def build_plan_summary_block(
     lines = [
         f"<!-- BEGIN: {plan_id} -->",
         f"### {heading_title} · status: {status_str} · trust: {trust}",
-        f"Detail: memory/working/projects/{plan_id}.md",
+        f"Detail: {detail_path or f'memory/working/projects/{plan_id}.md'}",
     ]
     if description:
         lines.append(f"Scope: {description}")

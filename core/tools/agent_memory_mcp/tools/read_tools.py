@@ -800,14 +800,13 @@ def _route_intent_candidates(intent: str, rel_path: str | None, root: Path) -> l
 
     if "create" in intent_lower and "plan" in intent_lower:
         add("create_plan", 0.98, "Intent explicitly requests creating a plan.")
-    if "next action" in intent_lower and any(
-        word in intent_lower for word in ("update", "set", "change")
-    ):
-        add("update_plan_next_action", 0.94, "Intent focuses on updating a plan next_action field.")
     if "plan" in intent_lower and any(
-        word in intent_lower for word in ("complete", "check off", "mark done")
+        word in intent_lower
+        for word in ("complete", "check off", "mark done", "start", "execute", "advance")
     ):
-        add("mark_plan_item_complete", 0.94, "Intent sounds like checking off a plan item.")
+        add("execute_plan", 0.95, "Intent sounds like starting or completing structured plan work.")
+    if any(word in intent_lower for word in ("export", "review")) and "plan" in intent_lower:
+        add("review_plan", 0.93, "Intent sounds like reviewing or exporting completed plan outputs.")
 
     if "promote" in intent_lower and (
         "knowledge" in intent_lower
@@ -1982,52 +1981,35 @@ def _scan_unverified_content(root: Path, low_threshold: int) -> dict[str, Any]:
 
 
 def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[str, Any]]:
-    from ..frontmatter_utils import parse_plan_items, read_with_frontmatter
+    from ..plan_utils import load_plan, next_action, plan_progress, plan_title
 
     entries: list[dict[str, Any]] = []
 
     plan_files: list[tuple[Path, str | None]] = []
     projects_root = _resolve_memory_subpath(root, "memory/working/projects", "projects")
     if projects_root.is_dir():
-        for plan_file in sorted(projects_root.glob("*/plans/*.md")):
+        for plan_file in sorted(projects_root.glob("*/plans/*.yaml")):
             if plan_file.is_file():
                 plan_files.append((plan_file, plan_file.parents[1].name))
 
-    legacy_plans_dir = _resolve_memory_subpath(root, "memory/working/projects", "plans")
-    if legacy_plans_dir.is_dir():
-        for plan_file in sorted(legacy_plans_dir.glob("*.md")):
-            if plan_file.name == "SUMMARY.md":
-                continue
-            plan_files.append((plan_file, None))
-
     for plan_file, project_id in plan_files:
         try:
-            fm_dict, body = read_with_frontmatter(plan_file)
+            plan = load_plan(plan_file, root)
         except Exception:
             continue
-        plan_status = str(fm_dict.get("status", "unknown"))
+        plan_status = plan.status
         if status is not None and plan_status != status:
             continue
-        try:
-            phases = parse_plan_items(plan_file.read_text(encoding="utf-8"))
-            plan_done = sum(1 for phase in phases for item in phase["items"] if item["done"])
-            plan_total = sum(int(phase["total"]) for phase in phases)
-        except Exception:
-            plan_done = 0
-            plan_total = 0
-        title_match = re.search(r"(?m)^#\s+(.+?)\s*$", body)
-        title = str(
-            fm_dict.get("title") or (title_match.group(1) if title_match else plan_file.stem)
-        )
+        plan_done, plan_total = plan_progress(plan)
         entries.append(
             {
-                "plan_id": plan_file.stem,
-                "project_id": project_id,
+                "plan_id": plan.id,
+                "project_id": plan.project if project_id is None else project_id,
                 "path": plan_file.relative_to(root).as_posix(),
-                "title": title,
+                "title": plan_title(plan),
                 "status": plan_status,
-                "trust": fm_dict.get("trust", "unknown"),
-                "next_action": fm_dict.get("next_action", ""),
+                "trust": "medium",
+                "next_action": next_action(plan) or "",
                 "progress": {
                     "done": plan_done,
                     "total": plan_total,
@@ -2685,7 +2667,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         governance docs manually.
 
         operation: Desktop operation key (for example `create_plan`) or tool
-                   name (for example `memory_create_plan`).
+               name (for example `memory_plan_create`).
         path:      Optional repo-relative target path whose governance surface
                    should be evaluated alongside the operation.
         """

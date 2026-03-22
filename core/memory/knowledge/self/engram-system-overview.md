@@ -145,8 +145,8 @@ Cursor, etc.). It is implemented in Python using FastMCP. The package lives at
   `memory_promote_knowledge_batch`, `memory_promote_knowledge_subtree`,
   `memory_demote_knowledge`, `memory_archive_knowledge`, `memory_reorganize_path`,
   `memory_add_knowledge_file`, `memory_mark_reviewed`
-- **Plan tools** (`plan_tools.py`): `memory_create_plan`, `memory_update_plan_next_action`,
-  `memory_mark_plan_item_complete`, `memory_list_plans`
+- **Plan tools** (`plan_tools.py`): `memory_plan_create`, `memory_plan_execute`,
+  `memory_plan_review`, `memory_list_plans`
 - **User tools** (`user_tools.py`): `memory_update_user_trait`
 - **Skill tools** (`skill_tools.py`): `memory_update_skill`
 

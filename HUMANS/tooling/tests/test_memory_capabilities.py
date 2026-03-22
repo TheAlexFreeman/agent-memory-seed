@@ -179,8 +179,8 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(
             discovery["minimum_semantic_tools"],
             [
-                "memory_create_plan",
-                "memory_mark_plan_item_complete",
+                "memory_plan_create",
+                "memory_plan_execute",
                 "memory_add_knowledge_file",
             ],
         )
@@ -329,12 +329,12 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         operations = manifest["operations"]
 
         self.assertEqual(
-            operations["memory_create_plan"]["change_class"],
+            operations["memory_plan_create"]["change_class"],
             "proposed",
         )
         self.assertEqual(
-            operations["memory_mark_plan_item_complete"]["change_class"],
-            "automatic",
+            operations["memory_plan_execute"]["change_class"],
+            "proposed",
         )
         self.assertEqual(
             operations["memory_update_user_trait"]["change_class"],
@@ -350,7 +350,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         )
         self.assertEqual(
             desktop_operations["create_plan"]["change_class"],
-            operations["memory_create_plan"]["change_class"],
+            operations["memory_plan_create"]["change_class"],
         )
         self.assertEqual(
             desktop_operations["flag_for_review"]["change_class"],
@@ -366,7 +366,7 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         operations = manifest["operations"]
 
         self.assertEqual(
-            operations["memory_create_plan"]["commit_category_hint"],
+            operations["memory_plan_create"]["commit_category_hint"],
             "plan",
         )
         self.assertEqual(
@@ -516,8 +516,8 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         resolution = resolver.resolve_capabilities(REPO_ROOT)
         ui_feedback = resolution["ui_feedback"]
         create_plan = next(op for op in ui_feedback["operations"] if op["id"] == "create_plan")
-        mark_complete = next(
-            op for op in ui_feedback["operations"] if op["id"] == "mark_plan_item_complete"
+        execute_plan = next(
+            op for op in ui_feedback["operations"] if op["id"] == "execute_plan"
         )
 
         self.assertEqual(ui_feedback["title"], "Governed Memory Writes")
@@ -551,19 +551,20 @@ class MemoryCapabilitiesTests(unittest.TestCase):
         self.assertEqual(
             create_plan["changed_files"],
             [
-                "memory/working/projects/{project_id}/plans/{plan_id}.md",
+                "memory/working/projects/{project_id}/plans/{plan_id}.yaml",
                 "memory/working/projects/{project_id}/SUMMARY.md",
                 "memory/working/projects/SUMMARY.md",
+                "memory/working/projects/{project_id}/operations.jsonl",
             ],
         )
         self.assertEqual(
             create_plan["highlighted_result_labels"],
             ["Status", "Plan File"],
         )
-        self.assertFalse(mark_complete["preview_required"])
+        self.assertTrue(execute_plan["preview_required"])
         self.assertEqual(
-            mark_complete["highlighted_result_labels"],
-            ["Next Action", "Plan Progress"],
+            execute_plan["highlighted_result_labels"],
+            ["Plan Status", "Phase Id"],
         )
 
     def test_resolver_degrades_to_read_only_when_runtime_exports_only_read_tools(

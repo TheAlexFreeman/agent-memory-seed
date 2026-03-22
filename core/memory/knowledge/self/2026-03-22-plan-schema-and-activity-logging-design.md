@@ -4,7 +4,7 @@ category: knowledge
 tags: [engram, architecture, plans, activity-logging, protocol-design, self-knowledge, yaml-schema]
 source: agent-generated
 trust: medium
-origin_session: 2026/03/22
+origin_session: manual
 created: 2026-03-22
 last_verified: 2026-03-22
 ---
