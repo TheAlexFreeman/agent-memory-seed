@@ -190,6 +190,18 @@ When the MCP has write access, governed publication uses a porcelain-first, plum
 - **No silent scope widening:** degraded publication must preserve the governed staged snapshot only. It must not pull in unrelated staged files or unstaged working-tree edits.
 - **Visibility:** tool outputs should surface publication metadata and warnings so callers can distinguish normal publication from degraded publication.
 
+### Reverting memory commits
+
+When using the MCP revert surface, treat revert as a two-step operation rather than a single destructive action:
+
+1. Call `memory_revert_commit` with `confirm: false` (or omit `confirm`) to preview the target commit.
+2. Review the returned `target_message`, `files_changed`, `applies_cleanly`, and `policy_reasons`.
+3. Call `memory_revert_commit` again with `confirm: true` and the returned `preview_token` only if the preview is still acceptable.
+
+The preview token is tied to the current `HEAD`. If the repository moves between preview and confirm, the confirm call is rejected and the agent must preview again.
+
+`memory_revert_commit` is intentionally scoped to memory-domain history. Confirm is rejected when any of the following are true: the target is a merge commit, the commit prefix is not one of the known memory prefixes, the revert would not apply cleanly at the current `HEAD`, the commit touches files outside the governed memory surface, or a `[system]` commit touches anything outside governance files such as `governance/`, `README.md`, `CHANGELOG.md`, `AGENTS.md`, `CLAUDE.md`, or `agent-bootstrap.toml`.
+
 ## Read-only operation
 
 Some deployment contexts give the agent read access but not write access — sandboxed chat environments, models without tool use, or sessions where git commits are disabled. The memory system degrades gracefully.

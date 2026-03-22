@@ -59,11 +59,29 @@ When a file is consistently low-value (3+ retrievals, mean helpfulness ≤ 0.3):
 ## Summary refresh cadence
 
 - **Chat-level summaries:** Immediately after each session.
-- **Session reflection notes:** Immediately after each session (written to `reflection.md` in the chat folder — see README § "Session reflection" for the format).
+- **Session reflection notes:** Immediately after each session (written to `reflection.md` in the chat folder — see format below).
 - **Daily summaries:** End of each day with multiple sessions (skip for single-session days).
 - **Monthly summaries:** First session of a new month, reviewing the prior month.
 - **Yearly summaries:** First session of a new year, reviewing the prior year.
 - **Folder SUMMARY.md files:** Updated on ACCESS.jsonl aggregation or significant new content.
+
+### Session reflection format
+
+Each session should produce a brief reflection note written to the chat folder as `reflection.md` (e.g. `core/memory/activity/YYYY/MM/DD/chat-NNN/reflection.md`):
+
+```markdown
+## Session reflection
+
+**Memory retrieved:** [list of files accessed, with helpfulness scores]
+**Memory influence:** [1-2 sentences on how retrieved memory shaped the session's responses]
+**Outcome quality:** [brief assessment: did the session go well? did memory help or hinder?]
+**Gaps noticed:** [any moments where relevant memory was missing, or irrelevant memory intruded]
+**System observations:** [optional: any patterns about the memory system itself]
+```
+
+ACCESS.jsonl tracks file-level retrieval. Session reflection tracks the reasoning level — how memory was used, which combinations worked, and where the system has blind spots. Over time, reflection notes reveal characteristic strengths, blind spots, retrieval pattern quality, and combinatorial insights that pure access tracking cannot capture.
+
+When reviewing reflection notes during periodic review, look for recurring themes and update folder SUMMARY.md files to address identified gaps, `core/governance/review-queue.md` with proposals to address systematic blind spots, and `core/governance/system-maturity.md` with observations relevant to stage assessment.
 
 ## Size limits
 
