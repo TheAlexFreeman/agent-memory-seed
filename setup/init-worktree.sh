@@ -467,6 +467,10 @@ Start from \
 \`core/memory/knowledge/codebase/\` one by one."
 
     write_text_file "$worktree_root/core/memory/working/projects/codebase-survey/questions.md" "---
+source: template
+origin_session: setup
+created: $TODAY
+trust: medium
 type: questions
 next_question_id: 1
 ---

@@ -313,6 +313,14 @@ If `core/HOME.md` routes you to a fresh instantiation on a returning system, or 
 
 ### Context budget
 
+The canonical token-budget guidance lives in `core/HOME.md`, but the published ranges are repeated here so the architecture reference and setup docs stay aligned:
+
+| Session mode | Typical token cost |
+| --- | --- |
+| First-run onboarding bootstrap | ~15,000–20,000 |
+| Returning compact session | ~3,000–7,000 |
+| Full bootstrap / periodic review | ~18,000–25,000 |
+
 For token-cost planning numbers per session mode, see `core/HOME.md` § "Context budget guideline". That table is the single authoritative source.
 
 For models with smaller context windows, prefer the compact returning manifest in `core/HOME.md` after the first session. As a guideline, bootstrap files should consume no more than ~15% of the model's effective context window.

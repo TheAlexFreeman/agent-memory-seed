@@ -1,6 +1,6 @@
 ---
-created: { { TODAY } }
-last_verified: { { TODAY } }
+created: {{TODAY}}
+last_verified: {{TODAY}}
 next_action: "Phase 0, item 1: identify the application entry points and boot sequence"
 origin_session: setup
 source: template

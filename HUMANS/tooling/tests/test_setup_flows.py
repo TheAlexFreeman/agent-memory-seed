@@ -66,14 +66,6 @@ def build_setup_repo(root: Path) -> None:
         "core",
         "HUMANS",
         "setup",
-        "meta",
-        "identity",
-        "chats",
-        "knowledge",
-        "projects",
-        "plans",
-        "skills",
-        "scratchpad",
     ):
         shutil.copytree(
             REPO_ROOT / dirname,
@@ -184,8 +176,12 @@ class SetupFlowTests(unittest.TestCase):
                 "Writing code and debugging",
             )
 
-            summary = (root / "memory" / "users" / "SUMMARY.md").read_text(encoding="utf-8")
-            profile = (root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
+            summary = (root / "core" / "memory" / "users" / "SUMMARY.md").read_text(
+                encoding="utf-8"
+            )
+            profile = (root / "core" / "memory" / "users" / "profile.md").read_text(
+                encoding="utf-8"
+            )
 
             self.assertIn("**User:** Alex", summary)
             self.assertIn("**Uses AI for:** Writing code and debugging", summary)
@@ -283,12 +279,12 @@ class SetupFlowTests(unittest.TestCase):
             ).stdout.strip()
             self.assertEqual("agent-memory", branch_name)
 
-            profile_text = (worktree_root / "memory" / "users" / "profile.md").read_text(
+            profile_text = (worktree_root / "core" / "memory" / "users" / "profile.md").read_text(
                 encoding="utf-8"
             )
-            projects_summary = (worktree_root / "projects" / "SUMMARY.md").read_text(
-                encoding="utf-8"
-            )
+            projects_summary = (
+                worktree_root / "core" / "memory" / "working" / "projects" / "SUMMARY.md"
+            ).read_text(encoding="utf-8")
             bootstrap_text = (worktree_root / "agent-bootstrap.toml").read_text(encoding="utf-8")
             self.assertIn("**codebase_root:**", profile_text)
             self.assertIn("**project_name:**", profile_text)
@@ -299,30 +295,71 @@ class SetupFlowTests(unittest.TestCase):
             self.assertTrue((worktree_root / ".ignore").is_file())
             self.assertTrue((worktree_root / ".editorconfig").is_file())
             self.assertTrue(
-                (worktree_root / "projects" / "codebase-survey" / "SUMMARY.md").is_file()
-            )
-            self.assertTrue(
-                (worktree_root / "projects" / "codebase-survey" / "questions.md").is_file()
-            )
-            self.assertTrue(
                 (
-                    worktree_root / "projects" / "codebase-survey" / "plans" / "survey-plan.md"
+                    worktree_root
+                    / "core"
+                    / "memory"
+                    / "working"
+                    / "projects"
+                    / "codebase-survey"
+                    / "SUMMARY.md"
                 ).is_file()
             )
             self.assertTrue(
-                (worktree_root / "knowledge" / "codebase" / "architecture.md").is_file()
+                (
+                    worktree_root
+                    / "core"
+                    / "memory"
+                    / "working"
+                    / "projects"
+                    / "codebase-survey"
+                    / "questions.md"
+                ).is_file()
             )
-            self.assertTrue((worktree_root / "knowledge" / "codebase" / "data-model.md").is_file())
-            self.assertTrue((worktree_root / "knowledge" / "codebase" / "operations.md").is_file())
-            self.assertTrue((worktree_root / "knowledge" / "codebase" / "decisions.md").is_file())
-            self.assertTrue((worktree_root / "skills" / "codebase-survey.md").is_file())
+            self.assertTrue(
+                (
+                    worktree_root
+                    / "core"
+                    / "memory"
+                    / "working"
+                    / "projects"
+                    / "codebase-survey"
+                    / "plans"
+                    / "survey-plan.md"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    worktree_root / "core" / "memory" / "knowledge" / "codebase" / "architecture.md"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    worktree_root / "core" / "memory" / "knowledge" / "codebase" / "data-model.md"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    worktree_root / "core" / "memory" / "knowledge" / "codebase" / "operations.md"
+                ).is_file()
+            )
+            self.assertTrue(
+                (
+                    worktree_root / "core" / "memory" / "knowledge" / "codebase" / "decisions.md"
+                ).is_file()
+            )
+            self.assertTrue(
+                (worktree_root / "core" / "memory" / "skills" / "codebase-survey.md").is_file()
+            )
 
             codex_config = (host_root / ".codex" / "config.toml").read_text(encoding="utf-8")
             self.assertIn(str(worktree_root).replace("\\", "\\\\"), codex_config)
             self.assertIn(
-                str(worktree_root / "core" / "tools" / "memory_mcp.py").replace("\\", "\\\\"),
+                'cwd = "',
                 codex_config,
             )
+            self.assertIn('MEMORY_REPO_ROOT = "', codex_config)
+            self.assertIn('HOST_REPO_ROOT = "', codex_config)
 
             host_agents = (host_root / "AGENTS.md").read_text(encoding="utf-8")
             host_claude = (host_root / "CLAUDE.md").read_text(encoding="utf-8")
@@ -358,13 +395,7 @@ class SetupFlowTests(unittest.TestCase):
 
             worktree_root = host_root / ".agent-memory"
             result = validator.validate_repo(worktree_root)
-            unexpected_errors = [
-                error
-                for error in result.errors
-                if "meta\\quick-reference.md: compact startup file uses ~" not in error
-            ]
-
-            self.assertEqual(unexpected_errors, [], "\n".join(unexpected_errors))
+            self.assertEqual(result.errors, [], "\n".join(result.errors))
 
     def test_init_worktree_dry_run_prints_commands_without_mutating_repo(self) -> None:
         with (

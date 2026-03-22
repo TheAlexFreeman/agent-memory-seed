@@ -222,15 +222,18 @@ def build_minimal_repo(root: Path) -> None:
             f"{SESSION_CHECKLISTS_MCP_LINE}\n"
         ),
     )
-    write(root / "governance" / "review-queue.md", "# Review Queue\n\n_No pending items._\n")
+    write(
+        root / "core" / "governance" / "review-queue.md",
+        "# Review Queue\n\n_No pending items._\n",
+    )
     write(root / "core" / "governance" / "system-maturity.md", "# System maturity\n")
-    write(root / "governance" / "belief-diff-log.md", "# Belief diff log\n")
+    write(root / "core" / "governance" / "belief-diff-log.md", "# Belief diff log\n")
     write(root / "core" / "governance" / "integrity-checklist.md", "# Integrity checklist\n")
 
-    for dirname in ("identity", "knowledge", "skills", "plans", "chats"):
-        write(root / dirname / "SUMMARY.md", f"# {dirname} summary\n")
-        write(root / dirname / "ACCESS.jsonl", "")
-
+    write(root / "core" / "memory" / "users" / "ACCESS.jsonl", "")
+    write(root / "core" / "memory" / "knowledge" / "ACCESS.jsonl", "")
+    write(root / "core" / "memory" / "skills" / "ACCESS.jsonl", "")
+    write(root / "core" / "memory" / "activity" / "ACCESS.jsonl", "")
     write(root / "core" / "memory" / "working" / "projects" / "ACCESS.jsonl", "")
     write(
         root / "core" / "memory" / "working" / "projects" / "SUMMARY.md",
@@ -256,12 +259,62 @@ def build_minimal_repo(root: Path) -> None:
     )
 
     write(
-        root / "memory" / "activity" / "SUMMARY.md",
-        "# Chats Summary\n\n_Nothing here yet._\n",
+        root / "core" / "memory" / "users" / "SUMMARY.md",
+        "# Users Summary\n\nNo portrait yet.\n\nDrill-down: [profile.md](profile.md)\n",
     )
     write(
-        root / "core" / "memory" / "working" / "projects" / "SUMMARY.md",
-        "# Plans — Summary\n\n## Active plans\n\n_No active plans._\n\n## Recent completions\n\n_None yet._\n",
+        root / "core" / "memory" / "users" / "profile.md",
+        textwrap.dedent(
+            """\
+            ---
+            source: template
+            origin_session: setup
+            created: 2026-03-16
+            trust: medium
+            ---
+
+            # Profile
+            """
+        ),
+    )
+    write(
+        root / "core" / "memory" / "activity" / "SUMMARY.md",
+        textwrap.dedent(
+            """\
+            ---
+            source: system
+            origin_session: setup
+            created: 2026-03-16
+            trust: high
+            ---
+
+            # Activity Summary
+
+            ## Live themes
+
+            No recurring live themes yet.
+
+            ## Recent continuity
+
+            No session history yet.
+
+            ## Retrieval guide
+
+            Load dated summaries when you need session continuity beyond this compact surface.
+
+            ## Drill-down paths
+
+            - core/memory/activity/2026/03/16/chat-001/SUMMARY.md
+            """
+        ),
+    )
+    write(
+        root / "core" / "memory" / "activity" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+        "# Chat Summary\n\nSession notes.\n",
+    )
+    write(
+        root / "core" / "memory" / "activity" / "2026" / "03" / "16" / "chat-001" / "reflection.md",
+        "## Session reflection\n\nFixture reflection note.\n",
     )
 
     write(
@@ -306,12 +359,12 @@ def build_minimal_repo(root: Path) -> None:
     )
 
     write(
-        root / "memory" / "working" / "scratchpad" / "USER.md",
+        root / "core" / "memory" / "working" / "scratchpad" / "USER.md",
         "# User notes\n\n_Nothing here yet. Add any context you'd like the agent to pick up at session start._\n",
     )
     write(
-        root / "memory" / "working" / "scratchpad" / "CURRENT.md",
-        "# Agent working notes\n\n_No current notes._\n",
+        root / "core" / "memory" / "working" / "scratchpad" / "CURRENT.md",
+        "# Agent working notes\n\n## Active threads\n\n_None_\n\n## Immediate next actions\n\n_None_\n\n## Open questions\n\n_None_\n\n## Drill-down refs\n\n- core/memory/working/projects/SUMMARY.md\n",
     )
 
 
@@ -717,7 +770,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "working" / "scratchpad" / "CURRENT.md",
+                root / "core" / "memory" / "working" / "scratchpad" / "CURRENT.md",
                 "# Agent working notes\n\n"
                 + "## Active threads\n\n- "
                 + ("very long note " * 800)
@@ -738,7 +791,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "activity" / "SUMMARY.md",
+                root / "core" / "memory" / "activity" / "SUMMARY.md",
                 textwrap.dedent(
                     """\
                     # Chats Summary
@@ -805,13 +858,15 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
+            broken_manifest = re.sub(
+                r'(\[\[modes\.returning\.steps\]\]\npath = "core/memory/activity/SUMMARY\.md"\nrole = "activity-summary"\nrequired = false\n)skip_if = "placeholder_or_empty"\n(cost = "light")',
+                r"\1\2",
+                VALID_BOOTSTRAP_MANIFEST,
+                count=1,
+            )
             write(
                 root / "agent-bootstrap.toml",
-                VALID_BOOTSTRAP_MANIFEST.replace(
-                    '[[modes.returning.steps]]\npath = "core/memory/activity/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\nskip_if = "placeholder_or_empty"\ncost = "light"',
-                    '[[modes.returning.steps]]\npath = "core/memory/activity/SUMMARY.md"\nrole = "chat-summary"\nrequired = false\ncost = "light"',
-                    1,
-                ),
+                broken_manifest,
             )
 
             result = validator.validate_repo(root)
@@ -935,7 +990,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -959,7 +1014,14 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "core" / "memory" / "working" / "projects" / "roadmap.md",
+                root
+                / "core"
+                / "memory"
+                / "working"
+                / "projects"
+                / "seed-project"
+                / "plans"
+                / "roadmap.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -986,7 +1048,14 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "core" / "memory" / "working" / "projects" / "roadmap.md",
+                root
+                / "core"
+                / "memory"
+                / "working"
+                / "projects"
+                / "seed-project"
+                / "plans"
+                / "roadmap.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1017,7 +1086,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1041,7 +1110,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1107,7 +1176,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1132,7 +1201,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1157,7 +1226,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1515,7 +1584,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "users" / "profile.md",
+                root / "core" / "memory" / "users" / "profile.md",
                 textwrap.dedent(
                     """\
                     ---
@@ -1591,8 +1660,27 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
+            (
+                root
+                / "core"
+                / "memory"
+                / "activity"
+                / "2026"
+                / "03"
+                / "16"
+                / "chat-001"
+                / "reflection.md"
+            ).unlink()
             write(
-                root / "memory" / "activity" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+                root
+                / "core"
+                / "memory"
+                / "activity"
+                / "2026"
+                / "03"
+                / "16"
+                / "chat-001"
+                / "SUMMARY.md",
                 "# Chat Summary\n\nSession notes.\n",
             )
 
@@ -1607,7 +1695,15 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             root = Path(tempdir)
             build_minimal_repo(root)
             write(
-                root / "memory" / "activity" / "2026" / "03" / "16" / "chat-001" / "SUMMARY.md",
+                root
+                / "core"
+                / "memory"
+                / "activity"
+                / "2026"
+                / "03"
+                / "16"
+                / "chat-001"
+                / "SUMMARY.md",
                 "# Chat Log\n\nSession notes.\n",
             )
 
@@ -1681,7 +1777,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
     def test_session_start_skill_defaults_to_quick_reference_and_uses_checklists_on_demand(
         self,
     ) -> None:
-        text = (REPO_ROOT / "skills" / "session-start.md").read_text(encoding="utf-8")
+        text = (REPO_ROOT / "core" / "memory" / "skills" / "session-start.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn(
             "For normal returning sessions, follow the compact returning manifest in `core/HOME.md`",
@@ -1702,7 +1800,9 @@ class ValidateMemoryRepoTests(unittest.TestCase):
     def test_session_wrapup_skill_uses_on_demand_session_checklists_language(
         self,
     ) -> None:
-        text = (REPO_ROOT / "skills" / "session-wrapup.md").read_text(encoding="utf-8")
+        text = (REPO_ROOT / "core" / "memory" / "skills" / "session-wrapup.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertIn(
             "Load `core/governance/session-checklists.md` only when you want",
@@ -1741,7 +1841,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         )
 
     def test_compact_manifest_excludes_readme_and_session_checklists(self) -> None:
-        quick_reference = (REPO_ROOT / "HOME.md").read_text(encoding="utf-8")
+        quick_reference = (REPO_ROOT / "core" / "HOME.md").read_text(encoding="utf-8")
         compact_row = validator.extract_manifest_row(quick_reference, "Compact returning")
 
         assert compact_row is not None
@@ -1764,7 +1864,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         for path in (
             REPO_ROOT / "README.md",
             REPO_ROOT / "HUMANS" / "docs" / "QUICKSTART.md",
-            REPO_ROOT / "HOME.md",
+            REPO_ROOT / "core" / "HOME.md",
         ):
             text = path.read_text(encoding="utf-8")
             for phrase in required_phrases:
@@ -1772,13 +1872,13 @@ class ValidateMemoryRepoTests(unittest.TestCase):
 
     def test_seed_compact_context_budget_fits_published_upper_bound(self) -> None:
         compact_paths = [
-            REPO_ROOT / "HOME.md",
-            REPO_ROOT / "memory" / "users" / "SUMMARY.md",
-            REPO_ROOT / "projects" / "SUMMARY.md",
-            REPO_ROOT / "memory" / "working" / "scratchpad" / "USER.md",
-            REPO_ROOT / "memory" / "working" / "scratchpad" / "CURRENT.md",
+            REPO_ROOT / "core" / "HOME.md",
+            REPO_ROOT / "core" / "memory" / "users" / "SUMMARY.md",
+            REPO_ROOT / "core" / "memory" / "working" / "projects" / "SUMMARY.md",
+            REPO_ROOT / "core" / "memory" / "working" / "scratchpad" / "USER.md",
+            REPO_ROOT / "core" / "memory" / "working" / "scratchpad" / "CURRENT.md",
         ]
-        chats_summary = REPO_ROOT / "memory" / "activity" / "SUMMARY.md"
+        chats_summary = REPO_ROOT / "core" / "memory" / "activity" / "SUMMARY.md"
         chats_text = chats_summary.read_text(encoding="utf-8")
         if "*No conversations yet.*" not in chats_text:
             compact_paths.append(chats_summary)
