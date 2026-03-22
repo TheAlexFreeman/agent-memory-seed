@@ -1,30 +1,45 @@
 # Home
 
-This is your Home File. It is your primary orientation surface for the Engram memory store. Use this file as a map of the memory architecture and a place for anything that must be top-of-mind for both user and agent across sessions.
+This is your Home File — the primary orientation surface for the Engram memory store. After `core/INIT.md` routes you here, use this file to load session context and check what's top-of-mind.
 
 ---
 
-## Relevant Context
+## Context loading order
 
-Load these files in this order: `core/memory/users/SUMMARY.md` → `core/memory/activity/SUMMARY.md` _(skip if empty or still placeholder)_ → `core/memory/working/scratchpad/USER.md` _(skip if only placeholder)_ → `core/memory/working/scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `core/memory/working/projects/SUMMARY.md` plus task-relevant `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md` only when the active project, recent history, or current task makes them relevant
+Load in this order. Skip files marked _(skip if placeholder)_ when they contain only default text.
 
-### Compact returning notes
+1. `core/memory/users/SUMMARY.md` — user portrait and working style
+2. `core/memory/activity/SUMMARY.md` _(skip if placeholder)_ — recent session continuity
+3. `core/memory/working/scratchpad/USER.md` _(skip if placeholder)_ — user-authored current priorities
+4. `core/memory/working/scratchpad/CURRENT.md` _(skip if placeholder)_ — agent working notes
 
-**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/activity/`, `core/memory/working/projects/OUT/`.
+Then load task-driven drill-downs only when the current task makes them relevant:
 
-- Run metadata-first maintenance probes before loading extra governance files.
-- Load `core/governance/review-queue.md` only when it has real entries or the user asks.
-- Count non-empty lines in `ACCESS.jsonl` files for access-tracked namespaces before loading governance docs.
-- Treat `core/memory/working/projects/SUMMARY.md`, `core/memory/knowledge/SUMMARY.md`, and `core/memory/skills/SUMMARY.md` as task-driven drill-down context, not unconditional startup reads.
-- In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations; use the worktree path for memory files.
+- `core/memory/working/projects/SUMMARY.md` — active projects and plans
+- `core/memory/knowledge/SUMMARY.md` — accumulated knowledge index
+- `core/memory/skills/SUMMARY.md` — codified procedures
 
+### Maintenance probes (before loading extra files)
+
+- Count non-empty lines in `ACCESS.jsonl` files — if any hit the aggregation trigger (see `core/INIT.md`), note for end-of-session.
+- Check `core/governance/review-queue.md` — load only when it has real entries or the user asks.
+
+### Access-tracked namespaces
+
+`core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/activity/`, `core/memory/working/projects/`.
+
+Log retrievals from these folders to their `ACCESS.jsonl`. See `README.md` § "Memory curation" for the format. `core/governance/` is not access-tracked.
+
+### Worktree mode
+
+In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations; use the worktree path for memory files.
 
 ---
 
 ## Top of mind
 
-TODO: Protocol design
- - activity logging for automations and user interactions
- - user/automation tracking for per-session best-guess
- - activity log consolidation/archival, eventual summarization into narrative
- - which aspects of the system most engage the user, and why?
+Protocol design (active):
+- Activity logging for automations and user interactions
+- User/automation tracking for per-session best-guess
+- Activity log consolidation/archival, eventual summarization into narrative
+- Which aspects of the system most engage the user, and why?
