@@ -164,6 +164,8 @@ REQUIRED_NATIVE_FALLBACK_OWNERSHIP = {
 EXPECTED_SEMANTIC_DETECTION = "manifest_and_minimum_semantic_tools"
 EXPECTED_READ_ONLY_DETECTION = "minimum_read_tools_without_write_tools"
 RESULT_HIGHLIGHT_PRIORITY = (
+    "plan_status",
+    "phase_id",
     "next_action",
     "plan_progress",
     "phase_progress",

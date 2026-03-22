@@ -16,7 +16,7 @@ Use this skill when a worktree-backed memory store has just been initialized for
 
 ### 1. Start from the survey plan
 
-- Read `projects/codebase-survey/plans/survey-plan.md` and identify the first unchecked item.
+- Read `projects/codebase-survey/plans/survey-plan.yaml` and identify the first pending phase.
 - Confirm which knowledge file that item should update.
 - Keep the current pass narrow: finish one survey item before broadening scope.
 

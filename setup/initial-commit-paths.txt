@@ -13,6 +13,7 @@
 AGENTS.md
 CHANGELOG.md
 CLAUDE.md
+FIATLUX.md
 HUMANS/README.md
 HUMANS/docs/CORE.md
 HUMANS/docs/DESIGN.md
@@ -364,6 +365,7 @@ core/memory/knowledge/rationalist-community/origins/robin-hanson-overcoming-bias
 core/memory/knowledge/rationalist-community/origins/the-sequences-core-arguments.md
 core/memory/knowledge/rationalist-community/synthesis/rationalist-community-story-aims-and-tensions.md
 core/memory/knowledge/self/2026-03-21-architecture-audit-and-knowledge-migration.md
+core/memory/knowledge/self/2026-03-22-plan-schema-and-activity-logging-design.md
 core/memory/knowledge/self/_archive/2026-03-19-tmp-data-loss-incident.md
 core/memory/knowledge/self/_archive/2026-03-20-git-session-followup.md
 core/memory/knowledge/self/_archive/_ancestor.zip
@@ -523,9 +525,11 @@ core/memory/working/projects/general-knowledge-base/questions.md
 core/memory/working/projects/getting-to-know-you/SUMMARY.md
 core/memory/working/projects/getting-to-know-you/questions.md
 core/memory/working/projects/onboarding-redesign/SUMMARY.md
-core/memory/working/projects/onboarding-redesign/plans/build-plan.md
+core/memory/working/projects/onboarding-redesign/notes/build-plan-design.md
+core/memory/working/projects/onboarding-redesign/plans/build-plan.yaml
 core/memory/working/projects/onboarding-redesign/questions.md
 core/memory/working/projects/system-literacy/SUMMARY.md
+core/memory/working/projects/system-literacy/notes/project-plans-roadmap.md
 core/memory/working/projects/system-literacy/questions.md
 core/memory/working/scratchpad/CURRENT.md
 core/memory/working/scratchpad/USER.md
@@ -542,6 +546,7 @@ core/tools/agent_memory_mcp/frontmatter_utils.py
 core/tools/agent_memory_mcp/git_repo.py
 core/tools/agent_memory_mcp/models.py
 core/tools/agent_memory_mcp/path_policy.py
+core/tools/agent_memory_mcp/plan_utils.py
 core/tools/agent_memory_mcp/preview_contract.py
 core/tools/agent_memory_mcp/server.py
 core/tools/agent_memory_mcp/server_main.py
@@ -569,7 +574,7 @@ setup/init-worktree.sh
 setup/initial-commit-paths.txt
 setup/setup.html
 setup/setup.sh
-setup/templates/codebase-survey-plan.md
+setup/templates/codebase-survey-plan.yaml
 setup/templates/knowledge/codebase/SUMMARY.md
 setup/templates/knowledge/codebase/architecture.md
 setup/templates/knowledge/codebase/data-model.md

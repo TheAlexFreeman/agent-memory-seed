@@ -424,8 +424,8 @@ write_codebase_starters() {
     local template_path
 
     render_template_file \
-        "$template_root/codebase-survey-plan.md" \
-        "$worktree_root/core/memory/working/projects/codebase-survey/plans/survey-plan.md" \
+        "$template_root/codebase-survey-plan.yaml" \
+        "$worktree_root/core/memory/working/projects/codebase-survey/plans/survey-plan.yaml" \
         "$project_name" \
         "$host_root_native" \
         "$worktree_native" \
@@ -463,7 +463,7 @@ Exploration mode fits the initial survey: the goal is to discover stable structu
 
 ## Notes
 Start from \
-\`plans/survey-plan.md\` and replace the template stubs under \
+\`plans/survey-plan.yaml\` and replace the template stubs under \
 \`core/memory/knowledge/codebase/\` one by one."
 
     write_text_file "$worktree_root/core/memory/working/projects/codebase-survey/questions.md" "---

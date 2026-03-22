@@ -279,7 +279,9 @@ def _coerce_phases(raw_phases: Any) -> list[PlanPhase]:
                 id=str(raw_phase.get("id", "")),
                 title=str(raw_phase.get("title", "")),
                 status=str(raw_phase.get("status", "pending")),
-                commit=raw_phase.get("commit") if raw_phase.get("commit") is None else str(raw_phase.get("commit")),
+                commit=raw_phase.get("commit")
+                if raw_phase.get("commit") is None
+                else str(raw_phase.get("commit")),
                 blockers=[str(blocker) for blocker in blockers],
                 changes=_coerce_change_specs(raw_phase.get("changes")),
             )
@@ -467,7 +469,8 @@ def phase_blockers(
             {
                 "reference": blocker,
                 "kind": "inter-plan",
-                "satisfied": other_phase.status in {"completed", "skipped"} and bool(other_phase.commit),
+                "satisfied": other_phase.status in {"completed", "skipped"}
+                and bool(other_phase.commit),
                 "status": other_phase.status,
                 "commit": other_phase.commit,
                 "detail": other_phase.title,
@@ -514,7 +517,9 @@ def resolve_phase(plan: PlanDocument, phase_id: str | None = None) -> PlanPhase:
     return phase
 
 
-def build_review_from_input(raw_review: dict[str, Any], completed: str, session_id: str) -> PlanReview:
+def build_review_from_input(
+    raw_review: dict[str, Any], completed: str, session_id: str
+) -> PlanReview:
     return PlanReview(
         completed=completed,
         completed_session=session_id,

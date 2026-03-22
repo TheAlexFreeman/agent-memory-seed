@@ -252,4 +252,4 @@ In worktree mode, the init script writes `mcp-config-example.json` in the host r
 2. Exempt the memory branch from CI and branch protection.
 3. Exclude the worktree path from host tooling.
 4. Trust the generated MCP config for your client.
-5. Start with `core/memory/working/projects/codebase-survey/plans/survey-plan.md` and fill `core/memory/knowledge/codebase/` as you learn the host repo.
+5. Start with `core/memory/working/projects/codebase-survey/plans/survey-plan.yaml` and fill `core/memory/knowledge/codebase/` as you learn the host repo.

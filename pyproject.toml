@@ -18,13 +18,13 @@ engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
 
 [project.optional-dependencies]
 # Install with: pip install -e ".[core]"
-core = ["python-frontmatter>=1.1"]
+core = ["python-frontmatter>=1.1", "PyYAML>=6.0"]
 
 # Install with: pip install -e ".[server]"
-server = ["mcp>=1.0", "python-frontmatter>=1.1"]
+server = ["mcp>=1.0", "python-frontmatter>=1.1", "PyYAML>=6.0"]
 
 # Install with: pip install -e ".[dev]"
-dev = ["pytest>=8.0", "ruff>=0.4", "mcp>=1.0", "python-frontmatter>=1.1"]
+dev = ["pytest>=8.0", "ruff>=0.4", "mcp>=1.0", "python-frontmatter>=1.1", "PyYAML>=6.0"]
 
 [tool.setuptools]
 packages = [

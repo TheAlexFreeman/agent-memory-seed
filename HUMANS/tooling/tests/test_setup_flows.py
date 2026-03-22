@@ -343,7 +343,7 @@ class SetupFlowTests(unittest.TestCase):
                     / "projects"
                     / "codebase-survey"
                     / "plans"
-                    / "survey-plan.md"
+                    / "survey-plan.yaml"
                 ).is_file()
             )
             self.assertTrue(
