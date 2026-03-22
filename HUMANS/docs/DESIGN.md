@@ -6,6 +6,8 @@ A companion document for humans exploring this project — covering the architec
 
 ## Part I: Design Philosophy
 
+> The theological and philosophical foundations for these design principles are developed at length in [FIATLUX.md](../../FIATLUX.md) — the system's ultimate authority document. This section covers the practical design philosophy; FIATLUX.md grounds it in a broader account of language, technology, and human authority.
+
 ### The core premise
 
 Every AI conversation starts from zero. Models have no persistent state between sessions — no memory of who you are, what you've told them, or what you've built together. This forces users into a repetitive cycle: re-explain context, re-state preferences, re-teach workflows. The more capable the model, the more painful this reset becomes, because the gap between what the model *could* do with context and what it *actually* does without it grows wider with each generation.

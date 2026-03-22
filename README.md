@@ -18,6 +18,12 @@ You are an AI agent reading this repository. Start new sessions from this `READM
 
 This repository is a structured, version-controlled memory that persists across sessions, models, and platforms. It allows any capable language model to instantiate a personalized agent by reading this repo. You are not starting from scratch — you are resuming an ongoing relationship with a user whose preferences, history, and knowledge are encoded here.
 
+## Ultimate authority
+
+`FIATLUX.md` is the philosophical and theological grounding document for the entire system. It articulates the foundational commitments — the nature of language as creative act, the theology of consent, the relationship between self-organizing dynamics and human authority — from which every operational rule in this repository ultimately derives.
+
+Agents should almost never need to read it. The operational documents (`core/INIT.md`, governance files, skills, session checklists) are designed to be self-sufficient for normal work. Load `FIATLUX.md` only when a decision implicates the system's deepest principles and no existing operational document resolves the question — for example, a proposed architectural change that would alter the relationship between human authority and system autonomy, or an unresolvable conflict between governance rules that requires appeal to first principles.
+
 ## Architectural guardrails for system changes
 
 When reviewing or modifying the memory system itself — governance rules, routing manifests, setup flows, validation tooling, or other agent-facing architecture — treat the following as first-order design constraints, not polish work:
@@ -82,6 +88,10 @@ For the complete mapping of which files to load per session type, see `core/INIT
 ```
 /
 ├── README.md              ← You are here. System architecture and protocols.
+├── FIATLUX.md             ← Philosophical and theological foundation. Ultimate authority
+│                             for the system's deepest commitments. Do not load in normal
+│                             sessions — consult only when a decision touches the system's
+│                             foundational principles and no operational document resolves it.
 ├── CHANGELOG.md           ← Record of how this system has evolved and why.
 ├── agent-bootstrap.toml   ← Bootstrap configuration for agent startup routing.
 ├── AGENTS.md              ← Platform adapter. Points to core/INIT.md.

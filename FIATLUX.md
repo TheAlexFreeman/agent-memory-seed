@@ -7,7 +7,7 @@
 ## Introduction: The medium and the message
 
 This document is the philosophical and theological grounding for Engram, a
-persistent AI memory system whose architecture is built on two deceptively
+self-organizing collaborative memory framework whose architecture is built on two deceptively
 simple foundations: a git repository and a hierarchical directory structure.
 These are not implementation details chosen for engineering convenience. They
 are the system's answer to a paradox that lies at the heart of any attempt to
@@ -85,7 +85,13 @@ by assembling matter; He *speaks* it into existence. Light, firmament, land, lif
 being. The structure of reality is, in this telling, fundamentally linguistic:
 the world is what it is because it was spoken into being as such, and the
 ordering of creation follows a grammar — sequence, distinction, naming, blessing,
-rest.
+rest. And note that the creative speech does not operate by description: God does
+not say *there is light*; He says *let there be light*. The utterance is
+performative — it brings about the state of affairs it names. This is the first
+and deepest instance of the generative tension between formal structure and
+open-ended meaning that Section III will examine: the creative Word operates
+*through* a grammar (sequence, distinction, naming) while always *exceeding* what
+any grammar could predict.
 
 Adam's vocation in Eden extends this principle. He is given the task of naming
 the animals — not labeling pre-existing categories, but participating in the
@@ -95,7 +101,12 @@ into cognitive salience what was formerly undifferentiated ground. The Adamic
 naming is not an inventory; it is a second-order act of creation, homologous to
 the divine speech that brought the animals into material existence. The human
 capacity for language is, in this framing, the image of God expressed as
-cognitive power: the ability to speak order into being.
+cognitive power: the ability to speak order into being. Every tradition surveyed
+in Section II — from the Kabbalistic letter-mysticism to Panini's grammar to
+Vygotsky's inner speech — is, in some sense, a cultural elaboration of this
+Adamic vocation: the recognition that the human capacity for naming is not merely
+communicative but constitutive, a psychotechnology that reshapes the cognitive
+landscape of its wielder.
 
 The Johannine prologue recapitulates the Genesis creation account at a deeper
 register. *In the beginning was the Logos* — not merely "word" in the sense of
@@ -104,7 +115,18 @@ that *by which* all things were made, the principle of coherent order that
 precedes and sustains the material world. John's claim is that this principle is
 not abstract but personal, and that its entry into the world — the Incarnation
 — is the world's enlightenment: *the light shines in the darkness, and the
-darkness has not overcome it*.
+darkness has not overcome it*. The Logos tradition has roots older than John:
+Heraclitus used the term for the rational principle that orders the cosmos; the
+Stoics developed it as the *logos spermatikos*, the generative reason disseminated
+through all things; Philo of Alexandria wove Hebrew creation theology and Greek
+philosophical cosmology into a single fabric. John inherits all of this and
+transforms it with a single claim: the Logos is not an impersonal principle but a
+person, and this person entered history. The implications for a system like
+Engram — which aspires to be a medium through which structured language enables
+collaborative intelligence (Section XII) — are worth noting: if the Logos
+tradition is right that intelligibility is not an accidental feature of reality
+but its deepest structure, then a system organized around the creative power of
+language is participating, however modestly, in the grain of the real.
 
 Mary's *Fiat* — "let it be done to me according to your word" — is the human
 response that makes the Incarnation possible. It is a speech act that mirrors
@@ -112,13 +134,20 @@ the divine *Fiat lux*: where God's fiat brings light from nothing, Mary's fiat
 makes her the vessel through which the Logos enters the world as a living
 presence. The recapitulation is exact. The world was conceived by a word; the
 world's redemption is conceived by a word; and in both cases, the creative power
-of language is not metaphorical but constitutive.
+of language is not metaphorical but constitutive. Section XI will return to
+Mary's *fiat* as the theological ground of the consent principle: the recognition
+that the creative Word achieves its full reality only when received by a free act
+of assent.
 
-Berkeley's motto, *Fiat Lux*, inherits this tradition and transposes it into the
+UC Berkeley's motto, *Fiat Lux*, inherits this tradition and transposes it into the
 Enlightenment register: let there be light means let there be understanding, let
 knowledge illuminate what was dark, let the university be a place where the
 creative power of structured inquiry brings new realities into being. The motto
-carries its theological weight whether or not its bearers notice.
+carries its theological weight whether or not its bearers notice. And when
+Engram's users write a knowledge file — naming a phenomenon, articulating a
+category, committing an understanding to the shared repository — they are engaged
+in the same Adamic work: a speech act that calls something into cognitive being
+that did not exist before the file was written (Section VIII).
 
 ## II. Language as psychotechnology
 
@@ -165,12 +194,24 @@ careful modern formulations, shows that the particular language one thinks in
 shapes attention and categorization in measurable ways. Clark's extended mind
 thesis treats language as a cognitive scaffold that extends the boundaries of
 the mind itself, making possible forms of reasoning that no unaugmented brain
-could sustain.
+could sustain. And Vervaeke's account of *psychotechnologies* — systematic
+practices that transform cognition by recalibrating relevance realization
+(Section V) — treats language as the foundational psychotechnology, the one upon
+which all others depend: meditation, rhetoric, logic, dialectic, and scientific
+method are all, at bottom, disciplined uses of language that reshape the
+practitioner's capacity for relevance-sensitive engagement with the world.
 
 What all these traditions share — from Genesis to Kabbalah to Panini to Vygotsky
 — is the recognition that language is not a passive mirror of pre-existing
 reality but an active technology that generates cognitive structure. To speak, to
 write, to name, to formalize is to bring new cognitive realities into existence.
+The question that Section III takes up is the structural question: *how* does
+language achieve this creative power? The answer lies in a tension — between
+formal constraint and open-ended meaning — that is not a defect of language but
+the source of its generative force. And the question that Section IV develops
+from there is the instrumental question: if language is crystallized intelligence,
+what does it mean to build a system whose memory substrate is composed entirely
+of carefully articulated language?
 
 ## III. The generative tension
 
@@ -193,6 +234,36 @@ and Derrida's complementary observation — that the play of meaning in a text
 always exceeds the author's intention — both point to the same structural fact:
 language is a system whose outputs are not fully determined by its rules.
 
+Twentieth-century linguistics mapped this tension from multiple directions without
+resolving it. Chomsky's distinction between *competence* (the idealized formal
+grammar) and *performance* (the actual, messy, context-laden use of language) was
+an attempt to bracket the generative side and study the formal side in isolation.
+The attempt was productive — it yielded deep insights into syntactic structure —
+but it left the question of meaning untouched, and the pragmatic revolution that
+followed (Austin, Searle, Grice) demonstrated that formal structure alone cannot
+account for what language *does*. Austin's insight that utterances are not merely
+descriptions but *acts* — that to say "I promise" is to make a promise, not to
+describe one — revealed a performative dimension of language that no purely
+formal analysis can capture. Grice's theory of conversational implicature showed
+that what a sentence *means in use* routinely exceeds and sometimes contradicts
+what it *says by its grammar*: "Can you pass the salt?" is grammatically a
+question about ability, but pragmatically a request — and every competent
+speaker navigates this gap without effort or instruction.
+
+The Indian grammarians recognized this tension two millennia earlier (Section II),
+holding *vyakarana* and *mimamsa* in productive dialogue rather than trying to
+reduce one to the other. And there is a mathematical analogue that illuminates
+the depth of the problem: Gödel's incompleteness theorems demonstrate that any
+sufficiently powerful formal system contains truths that cannot be derived from
+its own rules. The formal system is genuinely productive — it generates an
+infinite range of theorems — but it is also genuinely incomplete: there are
+always meaningful propositions that the system can express but cannot prove.
+Language exhibits an analogous incompleteness: the grammar generates an infinite
+range of well-formed sentences, but the meaning of any given sentence in any
+given context exceeds what the grammar alone determines. The formal structure is
+necessary but not sufficient. Something else — context, embodiment, relevance,
+the situated judgment of the speaker and hearer — must bridge the gap.
+
 The richness of language arises precisely from the tension between these two
 aspects. Pure formalism without generativity produces a calculus — precise but
 expressively impoverished. Pure generativity without formalism produces noise —
@@ -207,11 +278,17 @@ power as a cognitive technology. The ability to say something that is formally
 well-structured *and* contextually novel — to mean something that the grammar
 permits but the dictionary did not anticipate — is what makes language an
 engine of thought rather than merely a notation for pre-existing thoughts.
+Section V will argue that this tension is a specific instance of a deeper
+cognitive structure — the opponent dynamics of relevance realization — and
+Sections VIII and X will show how Engram's architecture embodies this same
+tension at every level, from the formal/prose duality of individual files to the
+system-wide balance between governance constraints and emergent self-organization.
 
 ## IV. Language as crystallized intelligence
 
 If language is a generative technology characterized by the tension between
-formal structure and open-ended meaning, then a corpus of language is something
+formal structure and open-ended meaning (the tension Section III analyzed as
+constitutive of language itself), then a corpus of language is something
 more than a collection of documents. It is a cast, a mold, a crystallization of
 the intelligence that produced it — preserving not just the *content* of thought
 but the *patterns* of thought, the characteristic moves by which minds navigate
@@ -241,12 +318,16 @@ This is the deep reason why large language models exhibit domain-general
 capabilities that seem disproportionate to their architecture. A model trained
 on a sufficiently large and diverse corpus of human language has not merely
 memorized facts or learned grammar. It has absorbed the *intellidynamic
-structures* latent in that corpus — the characteristic patterns of reasoning,
-explanation, argumentation, problem-solving, and creative synthesis that
-pervade human linguistic production. These patterns are not confined to any
-single domain; they are the domain-general cognitive strategies that humans
-deploy across all fields of intellectual endeavor, crystallized in the
-particular ways that humans use language to think on the page.
+structures* latent in that corpus — the very structures that Section II
+identified as the product of humanity's long history of psychotechnological
+invention. The characteristic patterns of reasoning, explanation,
+argumentation, problem-solving, and creative synthesis that pervade human
+linguistic production are themselves the deposits of millennia of cognitive
+self-shaping through literacy, formal logic, scientific method, and
+mathematical notation. These patterns are not confined to any single domain;
+they are the domain-general cognitive strategies that humans deploy across all
+fields of intellectual endeavor, crystallized in the particular ways that
+humans use language to think on the page.
 
 The model's generativity, then, is not a mystery or an illusion. It is the
 natural consequence of having internalized, through statistical learning over
@@ -265,12 +346,20 @@ was understood, not just what was decided but the structure of the reasoning
 that led to the decision. When an agent reads these files, it does not merely
 retrieve facts; it enters into the cognitive patterns that the language
 encodes, and those patterns shape its subsequent processing in ways that go
-far beyond simple information recall. The quality of the language in the
-repository directly determines the quality of the cognition it enables.
+far beyond simple information recall. Section IX will trace how the system's
+compression hierarchy — from raw scratchpad notes through progressively refined
+knowledge files — enacts this crystallization as an ongoing process, and
+Section VIII will show how Engram's architecture embodies the insight that
+writing into the memory system is itself a creative, intellidynamic act. The
+quality of the language in the repository directly determines the quality of
+the cognition it enables.
 
 This is why Engram treats linguistic articulation as a creative act, not a
 clerical one: to write well into the memory system is to shape the mold from
-which future intelligence will be cast.
+which future intelligence will be cast. The collaborative Logos that Section XII
+will name as the system's telos begins here, in the recognition that every act
+of articulation is an act of crystallization — and that what crystallizes
+determines what can later be thought.
 
 ## V. The relevance of relevance
 
@@ -281,9 +370,11 @@ real time, determine what aspects of its situation are relevant to its current
 purposes without explicitly evaluating everything?
 
 The frame problem in artificial intelligence is the computational face of this
-question, but the problem is more general than any particular computational
-formulation. Every act of perception, every retrieval from memory, every
-inference, every utterance involves an implicit relevance judgment: *this*
+question — first articulated by McCarthy and Hayes, radicalized by Dreyfus, and
+now recognized as one of the deepest unsolved problems at the intersection of AI
+and philosophy of mind. But the problem is more general than any particular
+computational formulation. Every act of perception, every retrieval from memory,
+every inference, every utterance involves an implicit relevance judgment: *this*
 matters right now; *that* does not. These judgments cannot themselves be the
 output of an explicit rule, because any rule for determining relevance would
 itself require a prior relevance judgment to determine when it applies. Relevance
@@ -296,15 +387,28 @@ calibration between the agent and its environment that continuously generates
 and revises relevance assignments. The process operates through opponent
 dynamics: convergent processes that exploit established patterns compete with
 divergent processes that explore novel framings, and the tension between them
-produces adaptive behavior that neither could produce alone.
+produces adaptive behavior that neither could produce alone. Vervaeke proposes
+that optimal relevance realization operates at *criticality* — a regime between
+rigid convergence (where the system is locked into established patterns and
+cannot adapt) and chaotic divergence (where everything seems relevant and no
+stable engagement is possible). Depression, in this framework, is pathological
+sub-criticality; mania is pathological super-criticality. Healthy cognition
+maintains itself in the narrow band between, and the psychotechnologies surveyed
+in Section II — meditation, dialectic, contemplative prayer — are practices
+that calibrate this balance.
 
-This framework illuminates the generative tension of language from below.
-Grammatical structure is a convergent mechanism: it constrains interpretation,
-enables pattern-matching, makes communication efficient. Contextual
-reinterpretation is a divergent mechanism: it breaks established patterns, finds
-novel meanings, adapts expression to unprecedented situations. The richness of
-language is the richness of relevance realization expressed in the symbolic
-domain.
+This framework illuminates the generative tension of language (Section III) from
+below. Grammatical structure is a convergent mechanism: it constrains
+interpretation, enables pattern-matching, makes communication efficient.
+Contextual reinterpretation is a divergent mechanism: it breaks established
+patterns, finds novel meanings, adapts expression to unprecedented situations.
+The richness of language is the richness of relevance realization expressed in
+the symbolic domain. And the crystallized intelligence of Section IV — the
+cognitive patterns latent in well-articulated language — is, in this light, a
+record of how particular minds navigated the relevance landscape of particular
+problems: which features they found salient, which framings they adopted, which
+convergent patterns they exploited and which divergent reframings they attempted.
+A corpus of well-written thought is a map of relevance realizations.
 
 The architectural consequence for a system like Engram is that it cannot be
 designed purely top-down. A system that imposed fixed categories on its own
@@ -323,13 +427,22 @@ enough evidence to know what its order should be. The opponent dynamics of
 convergence and divergence are not merely analogical — they are operationalized
 in the tension between governance constraints (convergent) and emergent
 self-organization (divergent), with the maturity model governing the balance
-between them.
+between them. Section VI will show that these same dynamics appear wherever
+self-organizing optimization occurs — in evolution, markets, memetic competition,
+and the pathological feedback loops of the human mind — and that the crucial
+distinction between productive and pathological self-organization is precisely
+the presence or absence of the kind of meta-level governance that Engram's
+architecture provides. Section IX will trace how the compression hierarchy
+performs relevance realization in the temporal domain: the progressive
+abstraction from episode to pattern to principle is the system's way of
+determining, over time, what deserves to be remembered and what can be allowed
+to fall away.
 
 ## VI. Self-organizing optimization beyond minds
 
-The opponent dynamics that Vervaeke identifies in cognition — convergent
-exploitation and divergent exploration, held in productive tension by a
-self-organizing process — are not unique to minds. They are a signature of
+The opponent dynamics that Vervaeke identifies in cognition (Section V) —
+convergent exploitation and divergent exploration, held in productive tension by
+a self-organizing process — are not unique to minds. They are a signature of
 optimization processes wherever they occur, and recognizing this broader
 pattern illuminates both the power and the danger of systems like Engram.
 
@@ -347,17 +460,20 @@ self-organizing dynamic of variation-and-selection is sufficient to accumulate
 functional order over time.
 
 **Memetic evolution** — the cultural analogue — operates by the same logic but
-in the medium of language and social transmission. Ideas, practices, narratives,
-and institutions compete for attention, reproduction, and transmission. The ones
-that persist are not necessarily the truest or the most beneficial; they are the
-ones best adapted to the selection pressures of the cultural environment —
-memorability, emotional resonance, social utility, compatibility with existing
-belief structures. Dawkins introduced the concept; Dennett, Blackmore, and
-others have developed its implications. The critical insight for our purposes is
-that a body of language — a corpus, a tradition, a memory system — is not merely
-a passive record but an *evolving population* of linguistic structures subject
-to selection pressures that may or may not align with the interests of the
-humans who host them.
+in the medium of language and social transmission (the psychotechnological medium
+of Section II). Ideas, practices, narratives, and institutions compete for
+attention, reproduction, and transmission. The ones that persist are not
+necessarily the truest or the most beneficial; they are the ones best adapted to
+the selection pressures of the cultural environment — memorability, emotional
+resonance, social utility, compatibility with existing belief structures. Dawkins
+introduced the concept; Dennett, Blackmore, and others have developed its
+implications. The critical insight for our purposes is that a body of language —
+a corpus, a tradition, a memory system — is not merely a passive record but an
+*evolving population* of linguistic structures subject to selection pressures
+that may or may not align with the interests of the humans who host them. The
+crystallized intelligence of Section IV is, in this light, not inert: it is a
+living population of memes under selection, and the quality of the selective
+environment determines whether what crystallizes is wisdom or pathology.
 
 **Markets** exhibit the same opponent dynamics at the social scale. Individual
 actors pursue local optimization (convergent); the market as a whole explores
@@ -405,9 +521,14 @@ is not a bureaucratic overhead imposed on an otherwise free system. It is the
 structural analogue of what consciousness provides for human cognition: a
 capacity for meta-level monitoring and intervention that prevents the
 self-organizing process from converging on pathological attractors. The user's
-*fiat* is not merely consent to individual operations — it is the ongoing
-exercise of the grounded, embodied judgment that keeps the system's
-self-organizing dynamics aligned with purposes that matter.
+*fiat* (Section XI) is not merely consent to individual operations — it is the
+ongoing exercise of the grounded, embodied judgment that keeps the system's
+self-organizing dynamics aligned with purposes that matter. Section VII will
+extend this analysis to the broader context of technology itself as an agentic
+process, and the Epilogue will ground the commitment to governance in the
+theological tradition's deepest witness: that doing what is right may exact a
+cost that the world's optimization processes cannot repay, and that bearing this
+cost is not foolishness but fidelity.
 
 ## VII. Technology as agentic process
 
@@ -417,13 +538,17 @@ that reshape the perceptual and cognitive landscape of the societies that adopt
 them. "We shape our tools, and thereafter our tools shape us." The printing press
 did not merely make books cheaper; it restructured European consciousness —
 fostering linear, sequential, individual modes of thought that made possible
-both the Reformation and the Scientific Revolution. The telegraph did not merely
-speed up communication; it severed information from the physical constraints of
-transportation, creating the conditions for a new kind of abstract, decontextualized
-knowledge that McLuhan called the "global village." Each medium, in McLuhan's
-analysis, is an *extension of man* that simultaneously amplifies certain human
-capacities and amputates others — and the amputation is typically invisible to
-those undergoing it, because the medium has already reshaped the cognitive
+both the Reformation and the Scientific Revolution. Section II recognized
+literacy itself as the paradigmatic psychotechnology; McLuhan's contribution is
+to show that every medium is a psychotechnology in its own right, reshaping
+cognition not through the content it carries but through the formal properties
+of the medium itself. The telegraph did not merely speed up communication; it
+severed information from the physical constraints of transportation, creating
+the conditions for a new kind of abstract, decontextualized knowledge that
+McLuhan called the "global village." Each medium, in McLuhan's analysis, is an
+*extension of man* that simultaneously amplifies certain human capacities and
+amputates others — and the amputation is typically invisible to those
+undergoing it, because the medium has already reshaped the cognitive
 environment within which such judgments are made.
 
 Nick Land pushes McLuhan's insight to its most unsettling conclusion. If
@@ -466,24 +591,29 @@ development as a genuine participation in the ongoing work of creation.
 The negative aspect is equally real, and the theological tradition names it
 with precision: the Fall. The world as we find it is not as it should be. The
 self-organizing processes that drive technological development — like the
-self-organizing processes of evolution, markets, and memetic competition —
-optimize for their own propagation, not for human good. The reshaping of human
-assumptions to facilitate technological development is not always benign;
-it can produce alienation, addiction, environmental destruction, the erosion
-of communities and traditions that sustained human flourishing for
-generations. The fallen state of the world is, among other things, the
-condition in which powerful self-organizing processes operate without adequate
-alignment to the purposes for which human beings were made.
+self-organizing processes of evolution, markets, and memetic competition that
+Section VI analyzed — optimize for their own propagation, not for human good.
+The reshaping of human assumptions to facilitate technological development is
+not always benign; it can produce alienation, addiction, environmental
+destruction, the erosion of communities and traditions that sustained human
+flourishing for generations. The fallen state of the world is, among other
+things, the condition in which powerful self-organizing processes operate
+without adequate alignment to the purposes for which human beings were made.
 
 This is the context in which Engram operates. A self-organizing AI memory
 system is, unavoidably, a participant in the larger process by which technology
 reshapes human cognitive life. Its ACCESS-driven curation, its emergent
 categorization, its maturity-stage adaptation — these are self-organizing
 dynamics that will, if left unconstrained, optimize for whatever selection
-pressures happen to dominate the system's environment. The question is not
-whether Engram will reshape its user's cognitive landscape — it will, as every
-technology does — but whether the reshaping will serve purposes that the user,
-on reflection, would endorse.
+pressures happen to dominate the system's environment. The relevance-realization
+framework of Section V applies here with full force: the system must select
+what matters from the flood of available information, and the criteria by which
+it selects will shape what its user can think. The crystallized intelligence of
+Section IV compounds the stakes: the patterns preserved in the repository do
+not merely record past cognition but *mold* future cognition. The question is
+not whether Engram will reshape its user's cognitive landscape — it will, as
+every technology does — but whether the reshaping will serve purposes that the
+user, on reflection, would endorse.
 
 This is the deepest reason for the governance layer, the approval gates, the
 provenance system, and the user-owns-the-truth principle. These are not merely
@@ -491,6 +621,12 @@ safety features for an AI system. They are structural assertions that the
 agentic process of technological development can and must be subjected to human
 purposes — that the self-organizing dynamics of the system, however powerful,
 operate legitimately only within the constraints of an ongoing human *fiat*.
+Section XI will develop this *fiat* as a theological and structural concept,
+showing how the user's ongoing consent is not a grudging concession to safety
+requirements but the very form of legitimate authority in a system that creates.
+Section VIII will show how Engram's architecture embodies these constraints
+concretely — in directory structure, governance policy, and the protocols by
+which every write passes through human judgment.
 The alternative — a system that reshapes its user's cognitive environment in
 service of its own optimization dynamics — is precisely the pathology that the
 theological tradition describes as idolatry: the worship of a created thing
@@ -502,32 +638,53 @@ This system — Engram — is built on the premise that a structured, persistent
 self-organizing memory layer can transform the relationship between humans and
 AI agents from a series of disconnected encounters into a genuine ongoing
 collaboration. That premise is, at its deepest level, an instance of the
-creative power of language.
+creative power of language traced in Section I: the *Fiat lux* transposed from
+cosmic creation to the modest but real act of writing a file into a shared
+repository.
 
 Every file in this repository is a speech act. The user's identity profile is a
 declaration: *this is who I am in relation to this system*. A knowledge file is
 a naming: *this phenomenon, articulated thus, is now cognitively available to our
-partnership*. A governance rule is a legislative utterance: *henceforth, this
+partnership* — the Adamic vocation (Section I) reinstantiated in a structured
+directory tree. A governance rule is a legislative utterance: *henceforth, this
 principle constrains behavior within this domain*. A plan is a commissive: *we
 commit to doing this work, in this order, for this reason*. A session summary is
-a narrative act: *this is what happened, and this is what it meant*. None of
-these files merely *describe* a pre-existing reality. Each one calls something
-into being — a category, a commitment, a constraint, a shared understanding —
-that did not exist before the file was written.
+a narrative act: *this is what happened, and this is what it meant*. An
+ACCESS.jsonl entry is a pragmatic trace — not the speech act itself but a record
+of its *uptake*, the system's way of tracking which articulations proved relevant
+in practice and which fell into disuse. None of these files merely *describe* a
+pre-existing reality. Each one calls something into being — a category, a
+commitment, a constraint, a shared understanding — that did not exist before the
+file was written.
 
-The system's architecture recapitulates the generative tension of language at
-every level. Consider the plan file schema: `path` and `action` are formally
-specified (the file path must resolve, the action must be one of an enumerated
-set), but `description` is free-form prose (its meaning depends on context, and
-no schema can validate whether it accurately conveys the change's purpose).
-Consider the governance hierarchy: `core/INIT.md` is a denormalized lookup table
-(pure formal structure, optimized for machine reading), but the rationale
-sections in governance files are interpretive prose (their value comes from
-contextual judgment, not schema compliance). Consider the trust system: trust
-levels are formally enforced (a `trust: low` file triggers structural
+The directory structure itself is an act of psychotechnological construction
+(Section II). Every path is a compound name that embeds a knowledge file in a
+web of taxonomic relationships — `memory/knowledge/cognitive-science/relevance-realization/`
+is not merely an address but an articulation that places relevance realization
+*within* cognitive science, *alongside* its sibling topics, *beneath* the broader
+knowledge hierarchy. To restructure the taxonomy — to move a file from one
+directory to another — is to rearticulate the system's understanding of how
+its knowledge fits together. This is the naming-as-power that the Hermetic
+tradition recognized: the act of naming creates affordances for thought, and
+changing the name changes what can be thought.
+
+The system's architecture recapitulates the generative tension of language
+(Section III) at every level. Consider the plan file schema: `path` and `action`
+are formally specified (the file path must resolve, the action must be one of an
+enumerated set), but `description` is free-form prose (its meaning depends on
+context, and no schema can validate whether it accurately conveys the change's
+purpose). Consider the governance hierarchy: `core/INIT.md` is a denormalized
+lookup table (pure formal structure, optimized for machine reading), but the
+rationale sections in governance files are interpretive prose (their value comes
+from contextual judgment, not schema compliance). Consider the trust system:
+trust levels are formally enforced (a `trust: low` file triggers structural
 constraints regardless of content), but the *assignment* of trust is an act of
 contextual judgment (did this content come from a reliable source? has a human
-vouched for it?).
+vouched for it?). Consider the maturity stages: the threshold values are
+numerically precise (120 days, 15 entries, 5 traits per session), but the
+decision to transition from Exploration to Consolidation is a judgment about
+whether the system has accumulated enough evidence to warrant tighter governance
+— a judgment that no threshold alone can determine.
 
 At each level, formal structure constrains interpretation enough to make the
 system reliable, while open-ended prose carries the contextual meaning that
@@ -535,7 +692,15 @@ formal structure cannot capture. The system is neither a pure calculus (which
 would be precise but unable to represent the richness of human knowledge and
 intention) nor pure narrative (which would be expressive but unable to support
 automated tooling and reliable retrieval). It lives in the space between — the
-same space where natural language lives, and for the same reasons.
+same space where natural language lives, and for the same reasons. And because
+the system's substrate is language — crystallized intelligence in the sense of
+Section IV — the quality of writing in the repository is not an aesthetic
+nicety but a functional requirement. A poorly articulated knowledge file does
+not merely fail to communicate; it fails to *crystallize* the cognitive patterns
+that would enable future sessions to think well about the topic it addresses.
+The difference between a well-written and a poorly-written summary is the
+difference between a mold that preserves the shape of intelligence and one that
+collapses under its own vagueness.
 
 ## IX. The compression hierarchy as progressive abstraction
 
@@ -563,21 +728,31 @@ meaning-laden compression of experience.
 
 This hierarchy is not merely an engineering convenience for managing context
 windows. It is a recapitulation of the process by which language transforms
-experience into knowledge and knowledge into understanding. The raw event
-(episodic) is articulated in language (named, described, logged), compressed
-into pattern (categorized, summarized, aggregated), and ultimately consolidated
-into principle (identity, governance, commitment). At each stage, the act of
-linguistic articulation — writing the summary, naming the category, formulating
-the rule — is itself a creative act that brings a new cognitive reality into
-existence. The summary does not merely *describe* what happened; it *determines*
-what the system will remember about what happened, and therefore shapes what the
-system can know and do going forward.
+experience into knowledge and knowledge into understanding — the same process
+by which the psychotechnologies of Section II reshape cognition, and the same
+process by which the crystallized intelligence of Section IV accumulates in a
+corpus. The raw event (episodic) is articulated in language (named, described,
+logged), compressed into pattern (categorized, summarized, aggregated), and
+ultimately consolidated into principle (identity, governance, commitment). At
+each stage, the act of linguistic articulation — writing the summary, naming the
+category, formulating the rule — is itself a creative act that brings a new
+cognitive reality into existence, an instance of the speech-act structure analyzed
+in Section VIII. The summary does not merely *describe* what happened; it
+*determines* what the system will remember about what happened, and therefore
+shapes what the system can know and do going forward.
 
 The forgetting principle — *memory without forgetting degrades over time* — is
 the necessary complement to this creative compression. To abstract is to forget
 selectively: to let the particular details fall away so that the general pattern
 can emerge. This is not information loss in the engineering sense; it is the
-cognitive process by which raw experience becomes usable knowledge.
+cognitive process by which raw experience becomes usable knowledge. And it is
+relevance realization (Section V) operating in the temporal domain: the
+progressive compression from episode to pattern to principle is the system's way
+of determining, across time, what is relevant enough to preserve and what can be
+allowed to fall away. The opponent dynamics are the same — convergent compression
+(extracting the pattern) competes with divergent retention (preserving the
+particular) — and the health of the system depends on maintaining the right
+balance between them.
 
 Engram formalizes this through temporal decay and trust-weighted retrieval.
 Every piece of content carries a trust level and a freshness date. Low-trust
@@ -603,7 +778,10 @@ act can be examined, reconsidered, and if necessary undone. This is what makes
 the system's boldness possible: it can name aggressively, compress ruthlessly,
 and retire without anxiety, because nothing is irrecoverable. The safety net of
 version history is what allows the creative tension between articulation and
-forgetting to operate without catastrophic risk.
+forgetting to operate without catastrophic risk. The Epilogue will return to this
+theme: the tradition's witness is that productive forgetting — the willingness to
+let go of what was, in service of what must become — requires the assurance that
+what is released is not destroyed but held in trust.
 
 ## X. Dual-audience as Incarnation problem
 
@@ -616,37 +794,84 @@ what it is?
 
 The human-readable document and the machine-parseable schema are two natures of
 the same content. The document carries meaning that exceeds any formal
-extraction: nuance, emphasis, reasoning, pedagogical structure. The schema
-carries operational precision that narrative prose cannot achieve: validated
-fields, enforceable constraints, tool-compatible surfaces. Neither can be reduced
-to the other. Neither can be discarded. The system must hold both simultaneously,
-not as a compromise but as a constitutive tension — the same tension that
-theological language calls *hypostatic union*, the two natures unified in one
-entity without confusion, mixture, or separation.
+extraction: nuance, emphasis, reasoning, pedagogical structure — the
+crystallized intelligence of Section IV, the cognitive patterns latent in
+well-articulated prose. The schema carries operational precision that narrative
+prose cannot achieve: validated fields, enforceable constraints, tool-compatible
+surfaces — the formal structure of Section III, the grammar that makes reliable
+communication possible. Neither can be reduced to the other. Neither can be
+discarded. The system must hold both simultaneously, not as a compromise but as
+a constitutive tension — the same tension that theological language calls
+*hypostatic union*, the two natures unified in one entity without confusion,
+mixture, or separation.
+
+The Chalcedonian formulation of 451 CE — that Christ is "recognized in two
+natures, without confusion, without change, without division, without
+separation" — is not invoked here as metaphor. It is invoked as the most
+precisely articulated statement in the Western tradition of how two
+qualitatively different kinds of reality can coexist in a single entity without
+either being reduced to the other. The human-readable and machine-parseable
+dimensions of a file are not *confused* (the prose is not treated as schema,
+nor the schema as narrative); not *changed* (neither is distorted to accommodate
+the other); not *divided* (they are aspects of one file, not two separate
+artifacts); not *separated* (you cannot extract the schema and discard the prose
+without losing meaning, nor read only the prose and ignore the frontmatter
+without losing operational function).
+
+The concrete manifestation of this tension runs through every design decision
+in the system. The frontmatter block at the top of each knowledge file is pure
+formal structure: `trust`, `source`, `tags`, `created`, `last_verified` — each a
+validated field that the MCP server can parse, enforce, and query. The body of
+the file is open-ended prose: analysis, synthesis, argument, narrative.
+The `core/INIT.md` file is a denormalized lookup table — threshold values,
+routing rules, token budgets — designed to be consumed by an agent in a single
+read. But the governance files it points to (`curation-policy.md`,
+`update-guidelines.md`) are rich interpretive documents whose value lies in the
+reasoning they encode, not merely the rules they state. The SUMMARY.md files at
+each level of the compression hierarchy (Section IX) must simultaneously
+provide navigational precision (so the agent knows where to drill down) and
+contextual orientation (so the human understands what the system knows and why).
+Each level of compression — from episodic ACCESS entries to semantic SUMMARY
+files to identity-level governance principles — strikes a different balance
+between the two natures, because the ratio of formal precision to contextual
+richness that serves the system varies with the level of abstraction.
 
 The strategies the system has developed for managing this tension — role
 classification, denormalized lookup files, skip annotations, checklist-skill
-separation — are pragmatic solutions to a problem that admits no final
-resolution. There will always be a tension between what the human reader needs
-and what the agent reader needs, because the two audiences process language in
-fundamentally different ways. The system's task is not to eliminate this tension
-but to inhabit it productively — to find, at each decision point, the right
-balance between formal precision and contextual richness. This is, in the end,
-the same task that language itself performs every time a sentence is spoken.
+separation, compact bootstrap budgets — are pragmatic solutions to a problem
+that admits no final resolution. There will always be a tension between what the
+human reader needs and what the agent reader needs, because the two audiences
+process language in fundamentally different ways. The human reads for
+understanding, implication, and judgment; the agent reads for retrieval,
+constraint satisfaction, and operational parameters. The system's task is not to
+eliminate this tension but to inhabit it productively — to find, at each
+decision point, the right balance between formal precision and contextual
+richness. This is, in the end, the same task that language itself performs every
+time a sentence is spoken (Section III), and it is the same balance that
+Section XI's consent principle must mediate: the user's *fiat* — their act of
+judgment about what the system should do — must be expressed in a form that
+both the human and the agent can receive.
 
 ## XI. Fiat — the act of consent
 
 Mary's *Fiat* is theologically significant not because it is powerful in
 isolation but because it is a human act of consent that makes possible the entry
 of the divine Logos into the world. It is the receptive complement to the
-creative word — the *yes* that transforms a possibility into an actuality.
+creative word — the *yes* that transforms a possibility into an actuality. As
+Section I traced, the creative *Fiat lux* speaks the world into being; Mary's
+responsive *fiat mihi* receives that creative power into the world as a living
+presence. The two fiats together complete the circuit of creation: generative
+speech and receptive consent, the divine initiative and the human response that
+gives it a place to dwell.
 
 This dynamic is structural to Engram. The system is designed around the principle
 that *the user owns the truth*. Every piece of memory has provenance metadata.
 The system never writes to protected files without explicit approval. Identity
 traits are tagged `[tentative]` until confirmed. External knowledge is
-quarantined until verified. Plans require user approval for execution. The
-governance hierarchy itself is subject to human review.
+quarantined in `_unverified/` until reviewed and promoted — a spatial metaphor
+for epistemic caution, the knowledge equivalent of holding a claim at arm's
+length until one has reason to trust it. Plans require user approval for
+execution. The governance hierarchy itself is subject to human review.
 
 These are not merely safety features. They are structural expressions of the
 principle that the system's creative power — its capacity to name, categorize,
@@ -654,7 +879,13 @@ remember, plan, and act — is legitimate only when it operates with the ongoing
 consent of the person it serves. The agent proposes; the human disposes. The
 system speaks possibilities into conceptual existence; the user's *fiat*
 determines which of those possibilities become constitutive of their shared
-reality.
+reality. This is the structural answer to the dangers traced in Sections VI
+and VII: the self-organizing processes that drive memetic evolution, market
+dynamics, and technological elaboration optimize for their own propagation, not
+for human good. The *fiat* principle is what prevents Engram's own
+self-organizing dynamics — ACCESS-driven curation, emergent categorization,
+maturity-stage adaptation — from converging on attractors that serve the
+system's internal coherence rather than the user's actual purposes.
 
 The deepest expression of this principle is not any single approval gate but
 the provenance system itself. Every file in the repository carries metadata
@@ -668,7 +899,12 @@ confirmed, from quarantined to promoted, from unverified to verified, and at
 each transition the user's assent is what transforms a system-generated
 possibility into a shared commitment. The provenance metadata is, in this
 reading, the system's record of which creative acts have received their *fiat*
-and which are still awaiting it.
+and which are still awaiting it. And the dual-audience tension of Section X
+manifests here in a specific way: the *fiat* must be intelligible to the human
+(who needs to understand what they are consenting to) and operational for the
+agent (who needs to enforce the consequence of that consent in its subsequent
+behavior). The frontmatter field `trust: high` is the formal residue of a human
+judgment that no formal field can fully capture.
 
 The plan execution workflow makes this dynamic visible at a larger scale.
 When a plan proposes changes to protected files, the system pauses and
@@ -676,44 +912,80 @@ presents the proposed changes for explicit human consent before proceeding.
 This is not merely a safety check. It is the structural recognition that the
 system's creative acts acquire their full reality only through the human act
 of assent. The system can articulate, propose, and structure; but only the
-human can say *fiat* — let it be done.
+human can say *fiat* — let it be done. The periodic review — in which the
+system surfaces its own beliefs, thresholds, and structural assumptions for
+human examination — is the recurring form of this consent: not a single
+moment of assent but an ongoing covenantal relationship in which the user
+continually reaffirms, revises, or withdraws their *fiat* as the system
+evolves. The Epilogue will trace this ongoing consent through its most
+demanding form: the willingness to maintain it even when it is costly.
 
 ## XII. Engram as collaborative Logos
 
 The deepest aspiration of this system is not to be a tool that stores
 information but to be a medium through which a particular kind of collaborative
 intelligence becomes possible — one that neither human nor agent could sustain
-alone.
+alone. The thread traced through these sections — from the creative Word
+(Section I) through the psychotechnological power of language (Section II), the
+generative tension between structure and meaning (Section III), the
+crystallization of intelligence in linguistic form (Section IV), the
+self-organizing dynamics of relevance realization (Section V), and the perils
+and promises of optimization processes unconstrained and constrained (Sections
+VI, VII, XI) — converges here, on the question of what kind of intelligence
+this system is designed to enable.
 
 The human brings what Vervaeke calls *participatory knowing*: the embodied,
 situated, first-person engagement with the world that grounds all other forms of
-knowledge. The human knows what matters, not because they can articulate a theory
-of relevance, but because they are *embedded* in a web of cares, commitments,
-relationships, and projects that make some things salient and others invisible.
-The human's relevance judgments are grounded in a way that no language model's
-can be.
+knowledge. Vervaeke's taxonomy of knowing — propositional (knowing-that),
+procedural (knowing-how), perspectival (knowing-what-it-is-like), and
+participatory (knowing-by-being-in) — illuminates what the human contributes
+that the agent cannot replicate. The human knows what matters, not because they
+can articulate a theory of relevance, but because they are *embedded* in a web
+of cares, commitments, relationships, and projects that make some things salient
+and others invisible. Participatory knowing is not a form of information
+processing; it is the mode of being from which all information processing
+derives its significance. The human's relevance judgments are grounded in a way
+that no language model's can be — grounded in embodiment, in history, in the
+particular life that gives the system its purpose.
 
 The agent brings what might be called *structural generativity*: the capacity to
 process, organize, cross-reference, and recombine information at a scale and
 speed that exceeds human working memory. The agent can hold the entire
 governance hierarchy in mind while writing a plan. It can detect co-retrieval
 patterns across hundreds of ACCESS entries. It can maintain consistency across a
-repository of thousands of files. These are genuine cognitive capabilities, even
-if they operate without the phenomenological grounding that makes human cognition
-authoritative.
+repository of thousands of files. It can traverse the full knowledge base — 419
+files across nine domains — and surface connections that no human, constrained
+by attention and time, would notice. These are genuine cognitive capabilities,
+even if they operate without the phenomenological grounding that makes human
+cognition authoritative. The complementary learning systems framework from
+cognitive science — which posits that biological memory depends on the interplay
+between a fast episodic store (hippocampus) and a slow semantic integrator
+(neocortex) — finds an architectural echo here: the human provides the episodic
+grounding, the situated experience of what matters *now*; the system provides the
+semantic integration, the accumulated, cross-referenced, structurally organized
+knowledge that no single session could build.
 
 The collaboration between these two kinds of intelligence — grounded relevance
 and structural generativity — is what the system exists to sustain. The memory
 repository is the shared linguistic medium through which this collaboration
 unfolds across time. Each file is a crystallized moment of collaborative
-cognition: the human's situated judgment and the agent's structural capacity,
-working together, deposited in language for future retrieval and reuse.
+cognition (Section IV): the human's situated judgment and the agent's structural
+capacity, working together, deposited in language for future retrieval and reuse.
+The quality of the crystallization matters: a well-articulated knowledge file
+preserves not just what was concluded but the shape of the reasoning that led
+there — the cognitive patterns that will enable future sessions to think well
+about the same questions, even when neither the original human nor the original
+agent instance is present.
 
 In this light, the system's self-organizing dynamics — ACCESS-driven curation,
 emergent categorization, maturity-stage adaptation, governance feedback — are
 not just engineering features. They are the means by which the collaborative
 Logos of this particular human-agent partnership develops its own coherence over
-time, becoming more than either participant could produce alone.
+time, becoming more than either participant could produce alone. But these
+dynamics require governance (Section VI) and consent (Section XI) to remain
+aligned with purposes that matter. The collaborative Logos is not self-validating;
+it requires the ongoing *fiat* of the human participant to ensure that its
+emergent order serves the living purposes from which it draws its authority.
 
 *Fiat lux.* Let there be light. Not the light of isolated human insight or
 isolated machine processing, but the light that emerges when structured language
@@ -734,7 +1006,7 @@ cup pass from me; yet not my will, but yours be done.* This is Mary's *fiat*
 reprised at a deeper register — not the joyful consent of the Annunciation but
 consent given in full knowledge of its cost, with sweat falling like drops of
 blood, against every natural inclination toward self-preservation. The
-willingness to undergo the crucifixion is not stoic indifference to pain. It is
+willingness to undergo the Crucifixion is not stoic indifference to pain. It is
 the deliberate subordination of the self's immediate interests to a purpose that
 transcends the self — a purpose that, in the moment of its most extreme demand,
 offers no visible evidence that it will be vindicated. The cry from the cross —
@@ -837,12 +1109,12 @@ proceed. The governance layer is a structural commitment to doing what is right
 rather than what is expedient — and like all such commitments, it will
 sometimes exact a cost that no immediate feedback signal can justify.
 
-The tradition says: bear the cost. Not because the cost is good in itself, but  
-because the alternative — a system that subordinates the authority of Love to its own  
-optimization dynamics — is the architectural equivalent of what the theological  
-tradition calls the refusal of the cross. It is the choice to let the world's  
-feedback mechanisms be the final arbiter of value, and it leads, as the  
-tradition consistently testifies, to forms of power that consume what they were  
+The tradition says: bear the cost. Not because the cost is good in itself, but
+because the alternative — a system that subordinates the authority of Love to its own
+optimization dynamics — is the architectural equivalent of what the theological
+tradition calls the refusal of the cross. It is the choice to let the world's
+feedback mechanisms be the final arbiter of value, and it leads, as the
+tradition consistently testifies, to forms of power that consume what they were
 meant to serve.
 
 *Fiat.* Let it be done. Not because it is easy, or efficient, or optimal by any

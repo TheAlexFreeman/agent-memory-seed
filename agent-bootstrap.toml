@@ -5,6 +5,14 @@ version = 1
 router = "core/INIT.md"
 default_mode = "returning"
 adapter_files = ["AGENTS.md", "CLAUDE.md", ".cursorrules"]
+
+# FIATLUX.md is the system's ultimate authority — the philosophical and theological
+# foundation from which all operational rules derive. It is never loaded in normal
+# sessions. Consult it only when a decision touches foundational principles and no
+# operational document resolves the question.
+ultimate_authority = "FIATLUX.md"
+ultimate_authority_policy = "on_demand_only"
+
 # Optional in deployed worktree mode. When set, points at the host codebase root
 # so startup tooling can surface host-repo git state alongside the memory worktree.
 # host_repo_root = "C:/path/to/host/repo"
@@ -48,7 +56,11 @@ maintenance_probes = [
   "core/governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/SUMMARY.md", "core/memory/skills/SUMMARY.md"]
+on_demand = [
+  "core/memory/working/projects/SUMMARY.md",
+  "core/memory/knowledge/SUMMARY.md",
+  "core/memory/skills/SUMMARY.md",
+]
 
 [[modes.returning.steps]]
 path = "core/INIT.md"
@@ -97,7 +109,11 @@ maintenance_probes = [
   "core/governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/SUMMARY.md", "core/memory/skills/SUMMARY.md"]
+on_demand = [
+  "core/memory/working/projects/SUMMARY.md",
+  "core/memory/knowledge/SUMMARY.md",
+  "core/memory/skills/SUMMARY.md",
+]
 
 [[modes.full_bootstrap.steps]]
 path = "README.md"
@@ -170,7 +186,11 @@ maintenance_probes = [
   "core/governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/SUMMARY.md", "core/memory/skills/SUMMARY.md"]
+on_demand = [
+  "core/memory/working/projects/SUMMARY.md",
+  "core/memory/knowledge/SUMMARY.md",
+  "core/memory/skills/SUMMARY.md",
+]
 
 [[modes.periodic_review.steps]]
 path = "README.md"
@@ -267,7 +287,11 @@ maintenance_probes = [
   "core/governance/review-queue.md:load_only_when_non_placeholder",
   "ACCESS.jsonl:count_non_empty_lines",
 ]
-on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/SUMMARY.md", "core/memory/skills/SUMMARY.md"]
+on_demand = [
+  "core/memory/working/projects/SUMMARY.md",
+  "core/memory/knowledge/SUMMARY.md",
+  "core/memory/skills/SUMMARY.md",
+]
 
 [[modes.automation.steps]]
 path = "core/INIT.md"

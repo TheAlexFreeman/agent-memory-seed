@@ -36,6 +36,8 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 
 **Do not load** `HUMANS/docs/*` (human reference only) or `core/governance/curation-algorithms.md` (on-demand only). `core/governance/session-checklists.md` and `core/governance/scratchpad-guidelines.md` are also on-demand — load only when you need detailed runbooks or scratchpad review criteria.
 
+**Do not load** `FIATLUX.md` in normal sessions. It is the system's ultimate authority — the philosophical and theological foundation from which all operational rules derive — but the operational documents are designed to be self-sufficient. Consult `FIATLUX.md` only when a decision touches the system's foundational principles (e.g., the relationship between human authority and system autonomy, the theology of consent, the nature of language as creative act) and no operational document resolves it.
+
 ### Worktree mode
 
 - In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations; use the worktree path for memory files.

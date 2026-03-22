@@ -224,7 +224,7 @@ The design does not aim to remove all risk. It aims to make risk visible, bounde
 
 ## Guiding philosophy
 
-At a high level, this system follows a few broad beliefs.
+At a high level, this system follows a few broad beliefs. For the comprehensive philosophical and theological grounding of these principles — why language is a creative act, why human consent is structurally central, why self-organizing dynamics require governance — see [FIATLUX.md](../../FIATLUX.md).
 
 ### Continuity is more valuable than novelty
 
@@ -261,5 +261,6 @@ If you use this system as intended, you should expect:
 - Read [QUICKSTART.md](QUICKSTART.md) if you want to set up or start using the system.
 - Read this file if you want the core mental model and architectural rationale.
 - Read [DESIGN.md](DESIGN.md) if you want deeper product philosophy, use cases, and future directions.
+- Read [FIATLUX.md](../../FIATLUX.md) if you want the foundational philosophical and theological grounding for the system's deepest commitments.
 - Read [GLOSSARY.md](GLOSSARY.md) if a term is unfamiliar.
 - Read [README.md](../../README.md) if you need the full architecture and agent protocol reference.
