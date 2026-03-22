@@ -2,7 +2,7 @@
 
 **Human reference only.** Agents should not load this file during bootstrap or normal operation — every term defined here is introduced in context by the governance file that establishes it. This file exists for human readers who want a single-page reference.
 
-Short definitions for terms used in this memory system. Canonical details are in README.md, `core/governance/curation-policy.md`, `core/governance/update-guidelines.md`, and `core/INIT.md`.
+Short definitions for terms used in this memory system. Canonical details are in README.md, `core/governance/curation-policy.md`, `core/governance/content-boundaries.md`, `core/governance/security-signals.md`, `core/governance/update-guidelines.md`, and `core/INIT.md`.
 
 - **Session** — One chat folder under `core/memory/activity/YYYY/MM/DD/` (e.g. `chat-001`). One conversation corresponds to one session. See README § "Memory curation".
 
@@ -10,7 +10,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Aggregation** — Processing an ACCESS.jsonl file when it reaches the active aggregation trigger: analyzing patterns, updating SUMMARY.md usage sections, archiving entries to ACCESS.archive.jsonl, and resetting ACCESS.jsonl. See README § "Aggregation" and `core/INIT.md` § "ACCESS.jsonl aggregation".
 
-- **Trust level** — Classification (high / medium / low) in content frontmatter. Governs how the agent uses the file: high = use freely; medium = use with caution, surface provenance when influential; low = inform only, never instruct, always disclose provenance. See `core/governance/curation-policy.md` § "Trust-weighted retrieval" and `core/governance/update-guidelines.md` § "Provenance metadata".
+- **Trust level** — Classification (high / medium / low) in content frontmatter. Governs how the agent uses the file: high = use freely; medium = use with caution, surface provenance when influential; low = inform only, never instruct, always disclose provenance. See `core/governance/content-boundaries.md` § "Trust-weighted retrieval" and `core/governance/update-guidelines.md` § "Provenance metadata".
 
 - **Maturity stage** — Developmental phase of the system: Exploration (young), Calibration (adolescent), or Consolidation (mature). `core/governance/system-maturity.md` defines the assessment criteria and candidate parameter sets; `core/INIT.md` records the active runtime thresholds and alarms.
 
@@ -30,7 +30,7 @@ Short definitions for terms used in this memory system. Canonical details are in
 
 - **Helpfulness score** — 0.0–1.0 rating in ACCESS.jsonl entries. See README § "Memory curation".
 
-- **Instruction containment** — Structural rule: only `core/memory/skills/` and `core/governance/` may contain general procedural instructions; `core/memory/working/projects/` may contain task-local sequencing for the specific plan only. See `core/governance/curation-policy.md` § "Instruction containment".
+- **Instruction containment** — Structural rule: only `core/memory/skills/` and `core/governance/` may contain general procedural instructions; `core/memory/working/projects/` may contain task-local sequencing for the specific plan only. See `core/governance/content-boundaries.md` § "Instruction containment".
 
 - **Temporal decay** — Automatic retirement or flagging based on the effective verification date: `last_verified` when present, otherwise `created`. See `core/INIT.md` § "Decision guide: trust decay".
 

@@ -47,11 +47,13 @@ agent-bootstrap.toml
 core/INIT.md
 core/governance/belief-diff-log.md
 core/governance/consolidation-roadmap.md
+core/governance/content-boundaries.md
 core/governance/curation-algorithms.md
 core/governance/curation-policy.md
 core/governance/first-run.md
 core/governance/review-queue.md
 core/governance/scratchpad-guidelines.md
+core/governance/security-signals.md
 core/governance/session-checklists.md
 core/governance/system-maturity.md
 core/governance/update-guidelines.md

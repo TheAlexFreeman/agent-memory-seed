@@ -280,6 +280,12 @@ role = "integrity-audit"
 required = true
 cost = "medium"
 
+[[modes.periodic_review.steps]]
+path = "core/governance/security-signals.md"
+role = "security-reference"
+required = true
+cost = "light"
+
 [modes.automation]
 token_budget = 7000
 prefer_summaries = true

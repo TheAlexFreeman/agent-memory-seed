@@ -29,14 +29,14 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 | **First run** | this file → `core/governance/first-run.md` (which directs: `CHANGELOG.md`, `core/governance/update-guidelines.md` §§ Change categories + Read-only operation, `core/memory/skills/SUMMARY.md`, `core/memory/skills/onboarding.md`) |
 | **Compact returning** | this file → `core/memory/HOME.md` _(skip if empty or still placeholder; then load `core/memory/users/SUMMARY.md`, `core/memory/activity/SUMMARY.md`, `core/memory/working/scratchpad/USER.md`, and `core/memory/working/scratchpad/CURRENT.md`; load task-relevant `core/memory/working/projects/SUMMARY.md` and/or `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md` only as needed)_ |
 | **Full bootstrap** | this file → Compact returning files + `CHANGELOG.md`, `core/governance/curation-policy.md`, `core/governance/update-guidelines.md` |
-| **Periodic review** | Full bootstrap files + `core/governance/system-maturity.md`, `core/governance/belief-diff-log.md`, `core/governance/review-queue.md`, `core/governance/session-checklists.md` § "Periodic integrity audit" |
+| **Periodic review** | Full bootstrap files + `core/governance/system-maturity.md`, `core/governance/belief-diff-log.md`, `core/governance/review-queue.md`, `core/governance/session-checklists.md` § "Periodic integrity audit", `core/governance/security-signals.md` |
 | **Automation** | this file → `core/memory/HOME.md` _(load only project and scratchpad sections)_ |
 | **ACCESS aggregation** | This file + `core/governance/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `core/governance/curation-algorithms.md` |
 
-**Do not load** `HUMANS/docs/*` (human reference only) or `core/governance/curation-algorithms.md` (on-demand only). `core/governance/session-checklists.md` and `core/governance/scratchpad-guidelines.md` are also on-demand — load only when you need detailed runbooks or scratchpad review criteria.
+**Do not load** `HUMANS/docs/*` (human reference only) or `core/governance/curation-algorithms.md` (on-demand only). `core/governance/session-checklists.md`, `core/governance/scratchpad-guidelines.md`, and `core/governance/content-boundaries.md` are also on-demand — load when their specific content is needed.
 
-**Do not load** `FIATLUX.md` in normal sessions. It is the system's ultimate authority — the philosophical and theological foundation from which all operational rules derive — but the operational documents are designed to be self-sufficient. Consult `FIATLUX.md` only when a decision touches the system's foundational principles (e.g., the relationship between human authority and system autonomy, the theology of consent, the nature of language as creative act) and no operational document resolves it.
+**Do not load** `FIATLUX.md` in normal sessions — the operational documents are self-sufficient. Consult it only when a decision touches foundational principles and no operational document resolves it.
 
 ### Worktree mode
 
@@ -122,7 +122,7 @@ Trust sets the decay threshold; freshness comes from the effective verification 
 - `trust: high` — older than **365 days**: mention during periodic review for a freshness check only.
 - Files without frontmatter are treated as `trust: medium` until fixed.
 
-See `core/governance/curation-policy.md` for the full freshness-vs-confidence rationale and retroactive-frontmatter guidance.
+See `core/governance/security-signals.md` for the full freshness-vs-confidence rationale and retroactive-frontmatter guidance.
 
 ## Decision guide: anomaly detection
 

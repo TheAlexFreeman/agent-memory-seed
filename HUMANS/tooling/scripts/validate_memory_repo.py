@@ -139,6 +139,7 @@ EXPECTED_PERIODIC_REVIEW_STEP_PATHS = EXPECTED_FULL_BOOTSTRAP_STEP_PATHS + (
     "core/governance/belief-diff-log.md",
     "core/governance/review-queue.md",
     "core/governance/session-checklists.md",
+    "core/governance/security-signals.md",
 )
 DEPLOYED_WORKTREE_FULL_BOOTSTRAP_STEP_PATHS = tuple(
     path for path in EXPECTED_FULL_BOOTSTRAP_STEP_PATHS if path != "CHANGELOG.md"
@@ -267,6 +268,8 @@ RUNTIME_GUIDANCE_FILES = (
     Path("HUMANS/docs/QUICKSTART.md"),
     Path("core/INIT.md"),
     Path("core/governance/curation-policy.md"),
+    Path("core/governance/content-boundaries.md"),
+    Path("core/governance/security-signals.md"),
     Path("core/governance/update-guidelines.md"),
     Path("core/governance/session-checklists.md"),
 )

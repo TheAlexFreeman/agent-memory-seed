@@ -186,4 +186,4 @@ Add governance files to the compact bootstrap contract in `core/INIT.md` with ta
 | **Phase 2** | Retire 3 small files | 3 removed, 2 absorb content | 9 files (~1,050 lines) |
 | **Phase 3** | Split curation-policy, add choreography | 1 split → 3, orchestration added | 11 files (~1,100 lines) |
 
-**Phase 1 — completed 2026-03-22.** **Phase 2 — completed 2026-03-22.** Phase 3 is worth doing but not urgent — it improves maintainability without changing any behavior. Phase 4 is tracked for future assessment.
+**Phase 1 — completed 2026-03-22.** **Phase 2 — completed 2026-03-22.** **Phase 3a — completed 2026-03-23.** **Phase 3b — completed 2026-03-23.** Phase 3c is observation-driven — evaluate during the next periodic review. Phase 4 is tracked for future assessment.

@@ -45,6 +45,7 @@ def build_repo(
         "core/governance/belief-diff-log.md",
         "core/governance/review-queue.md",
         "core/governance/session-checklists.md",
+        "core/governance/security-signals.md",
         "core/memory/HOME.md",
         "core/memory/users/SUMMARY.md",
         "core/memory/activity/SUMMARY.md",

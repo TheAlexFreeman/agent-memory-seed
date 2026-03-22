@@ -227,6 +227,14 @@ def build_minimal_repo(root: Path) -> None:
     )
     write(root / "core" / "governance" / "system-maturity.md", "# System maturity\n")
     write(root / "core" / "governance" / "belief-diff-log.md", "# Belief diff log\n")
+    write(
+        root / "core" / "governance" / "content-boundaries.md",
+        "# Content Boundaries\nTrust-weighted retrieval and instruction containment.\n",
+    )
+    write(
+        root / "core" / "governance" / "security-signals.md",
+        "# Security Signals\nTemporal decay, anomaly detection, drift, governance feedback.\n",
+    )
 
     write(root / "core" / "memory" / "users" / "ACCESS.jsonl", "")
     write(root / "core" / "memory" / "knowledge" / "ACCESS.jsonl", "")

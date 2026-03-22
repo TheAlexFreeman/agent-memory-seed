@@ -34,7 +34,7 @@ trust: high | medium | low
 - **created** — Date the file was first written.
 - **last_verified** — Optional date a human last reviewed or confirmed the content. Omit it for newly created content that has not yet been human-verified.
 - **Plans special case.** For project plan files under `core/memory/working/projects/`, `last_verified` is the date the plan state was last reviewed or advanced in-session. It is a freshness marker for plan state, not a claim that every sentence in the plan has been externally verified.
-- **trust** — The current trust classification (see `core/governance/curation-policy.md` for retrieval behavior at each level).
+- **trust** — The current trust classification (see `core/governance/content-boundaries.md` for retrieval behavior at each level).
 
 ### Trust assignment rules
 
@@ -285,7 +285,7 @@ During any session, if the agent notices it has been more than 30 days since the
 4. **Review queue.** Non-security entries in `core/governance/review-queue.md` awaiting approval?
 5. **Unhelpful memory.** Files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with knowledge amplification protocol.
 6. **Maturity assessment.** Assess developmental stage using `core/governance/system-maturity.md`. If changed, log transition and update `core/INIT.md`.
-7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `core/governance/curation-policy.md` § "Governance feedback".
+7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `core/governance/security-signals.md` § "Governance feedback".
 8. **Folder structure.** Does it still make sense given actual usage?
 9. **Emergent categorization.** Cross-folder retrieval clusters? See `core/governance/curation-policy.md` § "Emergent categorization." (Most expensive step — do last.)
 10. **Session reflection themes.** Review recent reflection notes for recurring patterns. Address through summary updates or review-queue proposals.

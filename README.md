@@ -109,6 +109,8 @@ For the complete mapping of which files to load per session type, see `core/INIT
 │   │
 │   ├── governance/        ← How this system updates itself.
 │   │   ├── curation-policy.md    ← Rules for memory hygiene, decay, and promotion.
+│   │   ├── content-boundaries.md  ← Trust-weighted retrieval and instruction containment.
+│   │   ├── security-signals.md    ← Temporal decay, anomaly detection, drift, governance feedback.
 │   │   ├── curation-algorithms.md ← Task similarity and cluster detection (on-demand).
 │   │   ├── update-guidelines.md  ← Protocols for proposing and merging changes.
 │   │   ├── review-queue.md       ← Pending suggestions for system modifications.
@@ -291,7 +293,7 @@ This memory system employs **defense-in-depth** against memory injection — the
 
 The system layers nine defenses: **provenance metadata** (YAML frontmatter tracking source and trust), **trust-weighted retrieval** (high = use freely, medium = use with caution, low = inform only), **quarantine** (`_unverified/` staging for external content), **instruction containment** (only `skills/` and `governance/` may instruct), **protected skills** (explicit approval + CHANGELOG), **temporal decay** (unverified content auto-expires), **anomaly detection** (ACCESS pattern analysis), **belief diff** (30-day drift audit), and **git integrity** (signed commits, branch protection).
 
-For the full specification of each layer including thresholds, behavioral contracts, and the boundary-violation test, see `core/governance/curation-policy.md`. For provenance metadata schema and trust assignment rules, see `core/governance/update-guidelines.md`. For active decay thresholds and anomaly triggers, see `core/INIT.md`.
+For the full specification of each layer including thresholds, behavioral contracts, and the boundary-violation test, see `core/governance/content-boundaries.md` (trust-weighted retrieval, instruction containment) and `core/governance/security-signals.md` (temporal decay, anomaly detection, drift detection, governance feedback). For provenance metadata schema and trust assignment rules, see `core/governance/update-guidelines.md`. For active decay thresholds and anomaly triggers, see `core/INIT.md`.
 
 ### What this does not defend against
 
