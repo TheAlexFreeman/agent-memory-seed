@@ -1,6 +1,6 @@
 # Belief Diff Log
 
-This file records periodic snapshots of how the memory system's content has changed over time. Each entry is generated during the 30-day periodic review cycle (see `meta/update-guidelines.md`) and provides a concise summary of drift since the previous entry.
+This file records periodic snapshots of how the memory system's content has changed over time. Each entry is generated during the 30-day periodic review cycle (see `core/governance/update-guidelines.md`) and provides a concise summary of drift since the previous entry.
 
 ## Purpose
 

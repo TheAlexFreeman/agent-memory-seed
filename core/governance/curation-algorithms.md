@@ -1,6 +1,6 @@
 # Curation Algorithms
 
-**Load this file only when running ACCESS.jsonl aggregation or a stage transition.** It is not needed during normal sessions. For active thresholds and the current task similarity method, see `meta/quick-reference.md`.
+**Load this file only when running ACCESS.jsonl aggregation or a stage transition.** It is not needed during normal sessions. For active thresholds and the current task similarity method, see `core/HOME.md`.
 
 This document contains the full algorithmic specifications for task similarity detection, cluster identification, and category vocabulary emergence. These algorithms progress through three phases aligned with the system's maturity stages.
 
@@ -37,7 +37,7 @@ This document contains the full algorithmic specifications for task similarity d
 
 ### Persistent storage
 
-Task groups are recorded in `meta/task-groups.md` (created automatically during the first Calibration-stage aggregation). Each group entry includes: the group name, representative task strings, normalized tokens, first-seen date, session count, and commonly co-retrieved files. This history feeds Phase 3's vocabulary emergence.
+Task groups are recorded in `core/governance/task-groups.md` (created automatically during the first Calibration-stage aggregation). Each group entry includes: the group name, representative task strings, normalized tokens, first-seen date, session count, and commonly co-retrieved files. This history feeds Phase 3's vocabulary emergence.
 
 ### Retroactive application
 
@@ -51,9 +51,9 @@ At the Exploration → Calibration transition, the agent normalizes all historic
 
 ### Vocabulary emergence (executed once at Calibration → Consolidation transition)
 
-1. Read `meta/task-groups.md`. Prune groups with fewer than 5 matched sessions (insufficient evidence).
+1. Read `core/governance/task-groups.md`. Prune groups with fewer than 5 matched sessions (insufficient evidence).
 2. Merge near-duplicate groups (80%+ token overlap AND 60%+ overlap in co-retrieved files).
-3. Promote surviving groups to categories. Write the vocabulary to `meta/task-categories.md`.
+3. Promote surviving groups to categories. Write the vocabulary to `core/governance/task-categories.md`.
 4. Propose the ACCESS.jsonl schema addition to the user — adding `category` is a protected-tier change.
 
 ### Schema addition
@@ -74,7 +74,7 @@ Once approved, ACCESS.jsonl entries gain a `category` field:
 > **JSONL format note:** The multi-line format above is for documentation readability only. ACCESS.jsonl requires one JSON object per line. Write each entry as a single line when appending to the file:
 > `{"file": "...", "date": "...", "task": "...", "category": "react-performance", "helpfulness": 0.0, "note": "..."}`
 
-The `task` field is retained as human-readable context and raw input for vocabulary refinement. The `category` field is selected from `meta/task-categories.md` at write time. If no category fits (Jaccard similarity below 0.5), assign `uncategorized`.
+The `task` field is retained as human-readable context and raw input for vocabulary refinement. The `category` field is selected from `core/governance/task-categories.md` at write time. If no category fits (Jaccard similarity below 0.5), assign `uncategorized`.
 
 ### Cluster detection (Consolidation)
 
@@ -100,7 +100,7 @@ At the Calibration → Consolidation transition, the agent backfills `category` 
 | Calibration   | 3 sessions | Same threshold, but finer task-group scoping reduces false positives |
 | Consolidation | 4 sessions | Higher bar appropriate for cleaner category-based signal             |
 
-The active threshold is recorded in `meta/quick-reference.md`.
+The active threshold is recorded in `core/HOME.md`.
 
 ## Aggregation runbook
 
@@ -108,24 +108,24 @@ Concrete steps for running ACCESS.jsonl aggregation. This procedure applies at a
 
 ### Prerequisites
 
-- At least one `ACCESS.jsonl` file has reached the active aggregation trigger (see `meta/quick-reference.md`).
-- You have loaded this file and `meta/quick-reference.md`.
+- At least one `ACCESS.jsonl` file has reached the active aggregation trigger (see `core/HOME.md`).
+- You have loaded this file and `core/HOME.md`.
 
 ### Procedure
 
-1. **Collect entries.** Read all non-empty `ACCESS.jsonl` files from every folder (`identity/`, `knowledge/`, `knowledge/_unverified/`, `skills/`, `plans/`, `chats/`).
+1. **Collect entries.** Read all non-empty `ACCESS.jsonl` files from the access-tracked memory namespaces (`memory/users/`, `memory/knowledge/`, `memory/knowledge/_unverified/`, `memory/skills/`, `memory/working/projects/`, and `memory/activity/`).
 2. **Merge into a working set.** Group entries by `session_id` when present; fall back to `date` for legacy entries without `session_id`.
 3. **Run task similarity analysis** using the phase appropriate to the current maturity stage (Phase 1 / 2 / 3 above). Record any new clusters or task groups.
 4. **Compute per-file statistics.** For each file appearing in the working set: total retrievals, mean helpfulness, sessions where retrieved, co-retrieved files.
-5. **Identify high-value files** (5+ retrievals, mean helpfulness ≥ 0.7). Enrich per `meta/curation-policy.md` § "Knowledge amplification."
+5. **Identify high-value files** (5+ retrievals, mean helpfulness ≥ 0.7). Enrich per `core/governance/curation-policy.md` § "Knowledge amplification."
 6. **Identify low-value files** (3+ retrievals, mean helpfulness ≤ 0.3). Investigate root cause and flag for retirement if appropriate.
 7. **Update SUMMARY.md files.** Refresh the "Usage patterns" section in each folder's SUMMARY.md with: high-value files, low-value files, co-retrieval clusters, and retrieval trends since last aggregation.
-8. **Update task-groups or task-categories.** At Calibration+: write or update `meta/task-groups.md`. At Consolidation: update `meta/task-categories.md`.
+8. **Update task-groups or task-categories.** At Calibration+: write or update `core/governance/task-groups.md`. At Consolidation: update `core/governance/task-categories.md`.
 9. **Archive entries.** Append the current contents of each `ACCESS.jsonl` to `ACCESS.archive.jsonl` in the same folder (create the archive file if it doesn't exist).
 10. **Reset ACCESS.jsonl files.** Clear each processed `ACCESS.jsonl` to empty.
 11. **Commit.** Log as a `[curation]` commit with a summary of findings (e.g., "Aggregation: 15 entries, 2 high-value files, 1 cluster detected").
 
 ### Post-aggregation
 
-- If aggregation revealed files needing retirement, add entries to `meta/review-queue.md`.
-- If a maturity stage transition is indicated, follow the transition procedure in `meta/system-maturity.md` and update `meta/quick-reference.md`.
+- If aggregation revealed files needing retirement, add entries to `core/governance/review-queue.md`.
+- If a maturity stage transition is indicated, follow the transition procedure in `core/governance/system-maturity.md` and update `core/HOME.md`.

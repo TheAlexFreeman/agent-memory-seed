@@ -1,6 +1,6 @@
 # System Maturity
 
-This document tracks the memory system's developmental stage and defines candidate parameter sets for each stage. The core insight: a young system should bias toward exploration (capturing aggressively, retiring slowly), while a mature system should bias toward order (capturing selectively, retiring confidently). This file is a reference for maturity assessment and parameter selection during periodic review; `meta/quick-reference.md` is the live runtime source for active thresholds.
+This document tracks the memory system's developmental stage and defines candidate parameter sets for each stage. The core insight: a young system should bias toward exploration (capturing aggressively, retiring slowly), while a mature system should bias toward order (capturing selectively, retiring confidently). This file is a reference for maturity assessment and parameter selection during periodic review; `core/HOME.md` is the live runtime source for active thresholds.
 
 ## Maturity signals
 
@@ -8,7 +8,7 @@ The system's developmental stage is assessed from quantitative signals, not cale
 
 | Signal | How to measure | What it indicates |
 |--------|---------------|-------------------|
-| **Total sessions** | Count of chat folders in `chats/` | Volume of interaction |
+| **Total sessions** | Count of chat folders in `core/memory/activity/` | Volume of interaction |
 | **ACCESS density** | Total ACCESS.jsonl entries across all folders | Depth of retrieval history |
 | **File coverage** | Percentage of content files accessed at least once | How much of the memory has proven relevant |
 | **Confirmation ratio** | Ratio of `trust: high` files to total content files | How much of the memory has been validated |
@@ -48,7 +48,7 @@ The system's developmental stage is assessed from quantitative signals, not cale
 | Aggregation trigger | 20 entries | Standard aggregation frequency |
 | Identity churn alarm | 3 traits/session | Standard drift detection |
 | Knowledge flooding alarm | 3 files/day | Standard flooding detection |
-| Task similarity method | Task-string normalization | Finer-grained; retroactively normalizes Phase 1 data. See `meta/curation-algorithms.md` § Phase 2 |
+| Task similarity method | Task-string normalization | Finer-grained; retroactively normalizes Phase 1 data. See `core/governance/curation-algorithms.md` § Phase 2 |
 | Cluster co-retrieval threshold | 3 sessions | Same threshold; task-group scoping reduces false positives |
 
 ### Stage 3: Consolidation (mature system)
@@ -65,12 +65,12 @@ The system's developmental stage is assessed from quantitative signals, not cale
 | Aggregation trigger | 25 entries | Larger batches for more statistically meaningful patterns |
 | Identity churn alarm | 2 traits/session | Mature identity should be stable |
 | Knowledge flooding alarm | 2 files/day | Past bulk knowledge acquisition |
-| Task similarity method | Controlled category vocabulary | Machine-readable, stable across sessions. See `meta/curation-algorithms.md` § Phase 3 |
+| Task similarity method | Controlled category vocabulary | Machine-readable, stable across sessions. See `core/governance/curation-algorithms.md` § Phase 3 |
 | Cluster co-retrieval threshold | 4 sessions | Higher bar for cleaner category-based signal |
 
 ## Current stage assessment
 
-_Not yet assessed._ The first assessment triggers at the earlier of: (a) the system reaching 5 sessions, or (b) the first periodic review. Until then, Exploration defaults apply (as recorded in `meta/quick-reference.md`). Record each assessment below with the date and signal values.
+_Not yet assessed._ The first assessment triggers at the earlier of: (a) the system reaching 5 sessions, or (b) the first periodic review. Until then, Exploration defaults apply (as recorded in `core/HOME.md`). Record each assessment below with the date and signal values.
 
 ### Assessment log
 
@@ -106,18 +106,18 @@ _Not yet assessed._ The first assessment triggers at the earlier of: (a) the sys
 
 **Active parameter set:** Exploration (retained — no change)
 
-**Notes:** All six signals are consistent with Stage 1 Exploration. ACCESS entries are concentrated in `plans/` (100 of 128), which reflects the heavily plan-driven session pattern. The large `_unverified` knowledge base (107 trust:low files across philosophy, devops, django, react, rationalist-community) represents significant content accumulation but zero confirmation — the confirmation ratio is too low for Calibration. The system needs at least 20 sessions and meaningful file coverage before reassessment is warranted. No stage transition.
+**Notes:** All six signals are consistent with Stage 1 Exploration. ACCESS entries are concentrated in `memory/working/projects/` (100 of 128), which reflects the heavily plan-driven session pattern. The large `_unverified` knowledge base (107 trust:low files across philosophy, devops, django, react, rationalist-community) represents significant content accumulation but zero confirmation — the confirmation ratio is too low for Calibration. The system needs at least 20 sessions and meaningful file coverage before reassessment is warranted. No stage transition.
 
 ## Stage transitions
 
 Transitions are not hard boundaries. The agent should:
 
-1. **Assess maturity** during each periodic review (see `meta/update-guidelines.md`).
+1. **Assess maturity** during each periodic review (see `core/governance/update-guidelines.md`).
 2. **Advance only on a clear majority** — 4 or more of the 6 signals must agree on the later stage before advancing. A 3-3 split is not sufficient to move forward.
 3. **Tiebreaker: stay put, or prefer the earlier stage.** If signals are evenly split (3-3) between two adjacent stages, remain in the current stage. If there is no prior assessment (first evaluation ever), default to Exploration regardless of the split.
-4. **Regress only on sustained signal drop.** Do not revert to an earlier stage based on a single signal crossing back. If 4 or more signals drop back to an earlier stage's range, flag for re-assessment in `meta/review-queue.md` rather than auto-reverting — regression should be a deliberate decision, not a reflexive one.
+4. **Regress only on sustained signal drop.** Do not revert to an earlier stage based on a single signal crossing back. If 4 or more signals drop back to an earlier stage's range, flag for re-assessment in `core/governance/review-queue.md` rather than auto-reverting — regression should be a deliberate decision, not a reflexive one.
 5. **Log all transitions and close calls** in both this file's assessment log and in `CHANGELOG.md`. A "close call" (3-3 split that was resolved by tiebreaker) is worth noting so future assessments can see the trend.
 
 The system can also regress: if a user's focus shifts dramatically (new job, new domain), many existing files may become irrelevant, file coverage drops, and the system should temporarily revert toward exploration parameters for the new domain while maintaining consolidation parameters for stable areas. This is a judgment call for the agent, documented in the assessment log.
 
-When a stage transition occurs, load `meta/curation-algorithms.md` for the full algorithmic specifications of the new stage's task similarity method.
+When a stage transition occurs, load `core/governance/curation-algorithms.md` for the full algorithmic specifications of the new stage's task similarity method.

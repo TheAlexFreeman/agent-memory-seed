@@ -196,7 +196,7 @@ Gradual, incremental changes can shift agent behavior without any single change 
 
 ## Governance feedback
 
-The governance rules in `meta/` are not exempt from evolutionary pressure. Rules that produce bad outcomes should be identified and revised.
+The governance rules in `core/governance/` are not exempt from evolutionary pressure. Rules that produce bad outcomes should be identified and revised.
 
 **Principle:** Top-down constraints must be shaped by bottom-up evidence. A rule that consistently causes friction — archiving files that get re-retrieved, flagging patterns that are always false positives — needs revision. The system generates the insight; the human approves the change.
 

@@ -4,14 +4,14 @@ This document defines how changes to the memory system are proposed, evaluated, 
 
 ## Provenance metadata
 
-Every content file in `identity/`, `knowledge/`, `skills/`, and `plans/` must include YAML frontmatter tracking its origin and trust level. Files in `meta/` and `chats/` are exempt — governance docs are protected by change-control tiers, and chat transcripts are read-only archives.
+Every content file in `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, and project plans under `core/memory/working/projects/` must include YAML frontmatter tracking its origin and trust level. Files in `core/governance/` and `core/memory/activity/` are exempt — governance docs are protected by change-control tiers, and chat transcripts are read-only archives.
 
 ### Required frontmatter schema
 
 ```yaml
 ---
 source: user-stated | agent-inferred | agent-generated | external-research | skill-discovery | template | unknown
-origin_session: chats/YYYY/MM/DD/chat-NNN | setup | manual | unknown
+origin_session: core/memory/activity/YYYY/MM/DD/chat-NNN | setup | manual | unknown
 created: YYYY-MM-DD
 last_verified: YYYY-MM-DD # optional until a human confirms the content
 trust: high | medium | low
@@ -30,11 +30,11 @@ trust: high | medium | low
   - `skill-discovery`: A procedural pattern the agent identified from user corrections or repeated workflows.
   - `unknown`: Reserved for legacy backfill or genuinely unrecoverable origin. Do not use for new content when a concrete source can be identified.
   - `template`: Content pre-populated from a starter profile template installed by `setup.sh --profile`. Replaced with a concrete source (typically `user-stated`) after onboarding confirmation.
-- **origin_session** — The canonical session path (e.g. `chats/YYYY/MM/DD/chat-NNN`), or `setup` for starter templates, or `manual` for hand-authored content, or `unknown` for files predating this schema.
+- **origin_session** — The canonical session path (e.g. `core/memory/activity/YYYY/MM/DD/chat-NNN`), or `setup` for starter templates, or `manual` for hand-authored content, or `unknown` for files predating this schema.
 - **created** — Date the file was first written.
 - **last_verified** — Optional date a human last reviewed or confirmed the content. Omit it for newly created content that has not yet been human-verified.
-- **Plans special case.** For files in `plans/`, `last_verified` is the date the plan state was last reviewed or advanced in-session. It is a freshness marker for plan state, not a claim that every sentence in the plan has been externally verified.
-- **trust** — The current trust classification (see `meta/curation-policy.md` for retrieval behavior at each level).
+- **Plans special case.** For project plan files under `core/memory/working/projects/`, `last_verified` is the date the plan state was last reviewed or advanced in-session. It is a freshness marker for plan state, not a claim that every sentence in the plan has been externally verified.
+- **trust** — The current trust classification (see `core/governance/curation-policy.md` for retrieval behavior at each level).
 
 ### Trust assignment rules
 
@@ -79,7 +79,7 @@ Files that predate this schema should have frontmatter added during the next per
 
 When the agent is reviewing or modifying the memory system itself — governance docs, routing manifests, bootstrap/setup flows, validation rules, or other protected architecture — the proposal must address three fundamental considerations:
 
-- **Consistency.** `README.md`, `meta/quick-reference.md`, `meta/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
+- **Consistency.** `README.md`, `core/HOME.md`, `core/governance/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
 - **User-friendliness.** Preserve progressive disclosure, comprehensible approval steps, readable setup copy, and maintenance workflows that a normal user can actually follow.
 - **Context efficiency.** Preserve the compact returning manifest, prefer metadata-first checks and on-demand loads, and justify any added bootstrap or periodic-review overhead.
 
@@ -91,7 +91,7 @@ When local agent-memory MCP tools are available, prefer them for memory reads, s
 
 This preference affects the interface, not the authority chain:
 
-- `meta/quick-reference.md`, `README.md`, and the folder summaries still govern what to load and why.
+- `core/HOME.md`, `README.md`, and the folder summaries still govern what to load and why.
 - MCP preference does not bypass trust-weighted retrieval, instruction containment, or protected-change approvals.
 - Raw file edits remain the fallback for operations the MCP surface does not yet cover.
 
@@ -100,26 +100,26 @@ This preference affects the interface, not the authority chain:
 ### Automatic changes (no approval needed)
 
 - Appending entries to ACCESS.jsonl files.
-- Writing chat transcripts and chat-level summaries to `chats/`.
-- Writing external-research results to `knowledge/_unverified/` (never directly to `knowledge/`).
+- Writing chat transcripts and chat-level summaries to `memory/activity/`.
+- Writing external-research results to `memory/knowledge/_unverified/` (never directly to `memory/knowledge/`).
 - Updating "Usage patterns" sections in SUMMARY.md files based on access aggregation.
-- Routine progress updates in `plans/`: `status`, `next_action`, progress text, `last_verified`, and `plans/SUMMARY.md` coverage refreshes.
-- Updating `meta/task-groups.md` during ACCESS.jsonl aggregation (Calibration stage and beyond).
+- Routine progress updates in project plans: `status`, `next_action`, progress text, `last_verified`, and `memory/working/projects/SUMMARY.md` coverage refreshes.
+- Updating `governance/task-groups.md` during ACCESS.jsonl aggregation (Calibration stage and beyond).
 - Routine summary refreshes at any level.
 
 ### Proposed changes (require user awareness)
 
-- Adding new knowledge files to `knowledge/` (i.e., outside `_unverified/`).
+- Adding new knowledge files to `memory/knowledge/` (i.e., outside `_unverified/`).
 - Creating meta-knowledge files (emergent abstractions) — propose to user, do not create silently.
-- Adding, modifying, or removing files in `identity/`.
-- Creating a new plan in `plans/`.
-- Archiving, retiring, or materially changing the scope of a plan in `plans/`.
-- Promoting files from `knowledge/_unverified/` to `knowledge/`.
+- Adding, modifying, or removing files in `memory/users/`.
+- Creating a new plan in `memory/working/projects/`.
+- Archiving, retiring, or materially changing the scope of a plan in `memory/working/projects/`.
+- Promoting files from `memory/knowledge/_unverified/` to `memory/knowledge/`.
 - Restructuring folders (renaming, splitting, merging).
 - Retiring or archiving memory files.
 - Modifying any SUMMARY.md in ways that change meaning rather than just updating coverage.
 
-For proposed changes: describe the change and reasoning to the user. If approved, apply and log in CHANGELOG.md. If the user is unavailable, add to `meta/review-queue.md`.
+For proposed changes: describe the change and reasoning to the user. If approved, apply and log in CHANGELOG.md. If the user is unavailable, add to `core/governance/review-queue.md`.
 
 ### Approval workflow
 
@@ -129,32 +129,32 @@ For proposed changes: describe the change and reasoning to the user. If approved
 2. Wait for an explicit response (approval or rejection). Do not infer approval from silence or topic changes.
 3. If approved → apply the change and log in CHANGELOG.md.
 4. If rejected → acknowledge and do not proceed. Note the rejection context for future reference.
-5. If the user doesn't respond and the session continues on other topics → add to `meta/review-queue.md` as `type: proposed`.
+5. If the user doesn't respond and the session continues on other topics → add to `core/governance/review-queue.md` as `type: proposed`.
 
 **For protected changes:**
 
-Same workflow, but with elevated formality: state explicitly that the change requires approval because it modifies a protected file (`skills/`, `meta/`, `README.md`). For system-level changes, include the expected impact on consistency, user-friendliness, and context efficiency. Use phrasing like: "This requires your explicit approval because it modifies [target]. Shall I proceed?"
+Same workflow, but with elevated formality: state explicitly that the change requires approval because it modifies a protected file (`core/memory/skills/`, `core/governance/`, `README.md`). For system-level changes, include the expected impact on consistency, user-friendliness, and context efficiency. Use phrasing like: "This requires your explicit approval because it modifies [target]. Shall I proceed?"
 
 **What counts as approval:** An explicit affirmative response — "yes," "go ahead," "approved," "do it," or equivalent. Lack of objection, moving on to another topic, or ambiguous responses ("maybe," "I guess") are not approval. When in doubt, ask again clearly.
 
 ### Protected changes (require explicit approval)
 
 - Creating, modifying, or removing files in `skills/`.
-- Any modification to files in `meta/` (including this file), **with the exception of machine-generated state files** listed below.
+- Any modification to files in `governance/` (including this file), **with the exception of machine-generated state files** listed below.
 - Any modification to `README.md`.
 - Any modification to `CHANGELOG.md` beyond appending new entries.
 - Bulk operations (retiring multiple files, restructuring multiple folders).
 
-**Machine-generated state files in `meta/` (exempt from protected-change requirement):**
+**Machine-generated state files in `core/governance/` (exempt from protected-change requirement):**
 
 | File                      | Generated by                                  | Why exempt                                                                                                    |
 | ------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `meta/task-groups.md`     | ACCESS.jsonl aggregation (Calibration stage+) | Auto-generated data file, not a governance document                                                           |
-| `meta/task-categories.md` | Calibration → Consolidation transition        | Distilled from task-groups.md; initial creation requires protected approval, routine maintenance is automatic |
+| `governance/task-groups.md`     | ACCESS.jsonl aggregation (Calibration stage+) | Auto-generated data file, not a governance document                                                           |
+| `governance/task-categories.md` | Calibration → Consolidation transition        | Distilled from task-groups.md; initial creation requires protected approval, routine maintenance is automatic |
 
 Protected changes must never be applied silently. Always present them to the user with full reasoning and wait for explicit confirmation.
 
-**Why `skills/` is protected:** Skill files contain procedures the agent will execute. They are the highest-value target for memory injection — a poisoned skill file directly controls agent behavior.
+**Why `memory/skills/` is protected:** Skill files contain procedures the agent will execute. They are the highest-value target for memory injection — a poisoned skill file directly controls agent behavior.
 
 ## Commit conventions
 
@@ -171,14 +171,14 @@ Categories and their change-control tiers:
 | Prefix | Typical paths | Change tier |
 |---|---|---|
 | `[access]` | `ACCESS.jsonl` files | Automatic |
-| `[chat]` | `chats/` | Automatic |
+| `[chat]` | `memory/activity/` | Automatic |
 | `[curation]` | `knowledge/_unverified/` promotions, SUMMARY refreshes | Automatic or Proposed |
-| `[identity]` | `identity/` | Proposed |
-| `[knowledge]` | `knowledge/` | Automatic (`_unverified/`) or Proposed (verified) |
-| `[plan]` | `plans/` | Automatic (progress) or Proposed (create/archive/scope) |
-| `[scratchpad]` | `scratchpad/` | Automatic |
-| `[skill]` | `skills/` | Protected |
-| `[system]` | `meta/`, `README.md`, `CHANGELOG.md` | Protected |
+| `[identity]` | `memory/users/` | Proposed |
+| `[knowledge]` | `memory/knowledge/` | Automatic (`_unverified/`) or Proposed (verified) |
+| `[plan]` | `memory/working/projects/` | Automatic (progress) or Proposed (create/archive/scope) |
+| `[scratchpad]` | `memory/working/scratchpad/` | Automatic |
+| `[skill]` | `memory/skills/` | Protected |
+| `[system]` | `governance/`, `README.md`, `CHANGELOG.md` | Protected |
 
 ### Publication semantics
 
@@ -205,7 +205,7 @@ All behavioral rules remain active regardless of write access: trust-weighted re
 | Appending to ACCESS.jsonl         | Compile entries mentally; present to user as a block to copy in       |
 | Writing chat summaries            | Present the summary as output; user can paste it into the repo        |
 | Updating SUMMARY.md files         | Note which summaries need updating and what changes are needed        |
-| Writing to `meta/review-queue.md` | Surface the finding verbally and describe what entry would be written |
+| Writing to `governance/review-queue.md` | Surface the finding verbally and describe what entry would be written |
 | Logging a maturity assessment     | Run the assessment, report the result, ask the user to commit it      |
 | Periodic review curation actions  | Run through the checklist, report findings; user handles the commits  |
 | Writing session reflection notes  | Summarize the reflection verbally; user can paste it in               |
@@ -219,11 +219,11 @@ At the end of any session where write actions were deferred, present a concise *
 
 ### ACCESS.jsonl entries
 [folder/ACCESS.jsonl]
-{"file": "...", "date": "...", "task": "...", "helpfulness": 0.7, "note": "...", "session_id": "chats/YYYY/MM/DD/chat-NNN"}
+{"file": "...", "date": "...", "task": "...", "helpfulness": 0.7, "note": "...", "session_id": "memory/activity/YYYY/MM/DD/chat-NNN"}
 
 ### Review-queue entries
-[meta/review-queue.md]
-- type: security, file: knowledge/some-file.md, pattern: "always do X" detected
+[governance/review-queue.md]
+- type: security, file: memory/knowledge/some-file.md, pattern: "always do X" detected
 
 ### Other
 - SUMMARY.md for knowledge/ needs "Usage patterns" updated: react-patterns.md is high-value (7 retrievals)
@@ -231,7 +231,7 @@ At the end of any session where write actions were deferred, present a concise *
 
 This makes the read-only session auditable and allows the user to batch-commit the deferred actions.
 
-For a detailed worked example of a deferred-action summary, see `meta/deferred-action-template.md`.
+For a detailed worked example of a deferred-action summary, see `core/governance/deferred-action-template.md`.
 
 ### Periodic review in read-only
 
@@ -239,30 +239,30 @@ The agent should still run periodic reviews when the 30-day threshold is reached
 
 ## Periodic review
 
-During any session, if the agent notices it has been more than 30 days since the date in `meta/quick-reference.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` CHANGELOG entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
+During any session, if the agent notices it has been more than 30 days since the date in `core/HOME.md` § "Last periodic review" (or, if that date is missing or "Not yet run", since repo creation or the last `[system]` CHANGELOG entry), it should suggest a brief system review. **Follow this order** — security and integrity issues discovered early may affect or abort later steps.
 
-1. **Security flags.** Are there any security flags (type: `security`) in `meta/review-queue.md`? Resolve or escalate before proceeding.
-2. **Unverified content.** Files in `knowledge/_unverified/` awaiting promotion or retirement? Check against active low-trust threshold.
-3. **Conflict resolution.** Any `[CONFLICT]` tags unresolved in identity or knowledge files?
-4. **Review queue.** Non-security entries in `meta/review-queue.md` awaiting approval?
+1. **Security flags.** Are there any security flags (type: `security`) in `core/governance/review-queue.md`? Resolve or escalate before proceeding.
+2. **Unverified content.** Files in `core/memory/knowledge/_unverified/` awaiting promotion or retirement? Check against active low-trust threshold.
+3. **Conflict resolution.** Any `[CONFLICT]` tags unresolved in user-profile or knowledge files?
+4. **Review queue.** Non-security entries in `core/governance/review-queue.md` awaiting approval?
 5. **Unhelpful memory.** Files consistently flagged as unhelpful in ACCESS.jsonl? Cross-reference with knowledge amplification protocol.
-6. **Maturity assessment.** Assess developmental stage using `meta/system-maturity.md`. If changed, log transition and update `meta/quick-reference.md`.
-7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `meta/curation-policy.md` § "Governance feedback".
+6. **Maturity assessment.** Assess developmental stage using `core/governance/system-maturity.md`. If changed, log transition and update `core/HOME.md`.
+7. **Governance evaluation.** Are curation rules producing good outcomes? For system-level governance, explicitly review consistency across authority surfaces, user-friendliness of the workflow, and context efficiency of the load path. See `core/governance/curation-policy.md` § "Governance feedback".
 8. **Folder structure.** Does it still make sense given actual usage?
-9. **Emergent categorization.** Cross-folder retrieval clusters? See `meta/curation-policy.md` § "Emergent categorization." (Most expensive step — do last.)
+9. **Emergent categorization.** Cross-folder retrieval clusters? See `core/governance/curation-policy.md` § "Emergent categorization." (Most expensive step — do last.)
 10. **Session reflection themes.** Review recent reflection notes for recurring patterns. Address through summary updates or review-queue proposals.
-11. **Update last review date** in `meta/quick-reference.md`.
+11. **Update last review date** in `core/HOME.md`.
 
 This review should be lightweight — a quick summary and any recommendations, not a full audit.
 
 ### Belief diff
 
-As part of each periodic review, generate a **belief diff** recorded as a new dated entry in `meta/belief-diff-log.md` covering: new files added, files modified, files retired or archived, trust level changes, security flags triggered, and identity drift. See `meta/belief-diff-log.md` for the entry format.
+As part of each periodic review, generate a **belief diff** recorded as a new dated entry in `core/governance/belief-diff-log.md` covering: new files added, files modified, files retired or archived, trust level changes, security flags triggered, and identity drift. See `core/governance/belief-diff-log.md` for the entry format.
 
 ## Commit integrity
 
-Protected changes should use GPG-signed commits (`git commit -S`) when the environment supports it. `git log --show-signature` shows which commits are signed. Unsigned commits on protected files (`meta/`, `skills/`, `README.md`) should be flagged in `meta/review-queue.md`. This is guidance, not enforcement.
+Protected changes should use GPG-signed commits (`git commit -S`) when the environment supports it. `git log --show-signature` shows which commits are signed. Unsigned commits on protected files (`core/governance/`, `core/memory/skills/`, `README.md`) should be flagged in `core/governance/review-queue.md`. This is guidance, not enforcement.
 
 ## Model portability
 
-When switching models: no repository changes needed, the new model starts with `meta/quick-reference.md` and follows its routing, limitations should be noted in `meta/review-queue.md`, and model transitions recorded in CHANGELOG.md as system events.
+When switching models: no repository changes needed, the new model starts with `core/HOME.md` and follows its routing, limitations should be noted in `core/governance/review-queue.md`, and model transitions recorded in CHANGELOG.md as system events.
