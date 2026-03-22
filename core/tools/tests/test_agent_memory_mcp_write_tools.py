@@ -453,7 +453,7 @@ Philosophy of mind studies consciousness intentionality and representation.
             capture_output=True,
             text=True,
         ).stdout
-        self.assertIn("D\tplans/delete-me.md", staged)
+        self.assertIn("D\tmemory/working/projects/delete-me.md", staged)
 
     def test_memory_delete_blocks_when_permission_hook_rejects(self) -> None:
         repo_root = self._init_repo_with_file("memory/working/scratchpad/delete-me.md")

@@ -41,7 +41,7 @@ class MemoryMCPTests(unittest.TestCase):
         output = asyncio.run(self.module.memory_list_folder(path="."))
 
         self.assertNotIn("HUMANS/", output)
-        self.assertIn("memory/users/", output)
+        self.assertIn("memory/", output)
 
     def test_root_listing_can_include_humans(self) -> None:
         output = asyncio.run(self.module.memory_list_folder(path=".", include_humans=True))
@@ -150,7 +150,7 @@ class MemoryMCPTests(unittest.TestCase):
                     await session.initialize()
                     result = await session.call_tool(
                         "memory_read_file",
-                        {"path": "AGENTS.md"},
+                        {"path": "HOME.md"},
                     )
                     text_block = cast(Any, result.content[0])
                     return cast(dict[str, object], json.loads(text_block.text))
@@ -158,7 +158,7 @@ class MemoryMCPTests(unittest.TestCase):
         payload = anyio.run(run_call)
 
         self.assertTrue(cast(bool, payload["inline"]))
-        self.assertIn("Agent Memory System", cast(str, payload["content"]))
+        self.assertIn("# Home", cast(str, payload["content"]))
         self.assertIn("version_token", payload)
 
     def test_native_resources_enumerate_and_read(self) -> None:

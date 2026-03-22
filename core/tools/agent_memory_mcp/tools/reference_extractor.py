@@ -463,11 +463,11 @@ def _summary_targets_for_reorganization(source: str, dest: str) -> list[str]:
     targets: set[str] = set()
     for candidate in (source, dest):
         parts = Path(candidate).parts
-        if not parts or parts[0] != "knowledge":
+        if len(parts) < 2 or parts[0] != "memory" or parts[1] != "knowledge":
             continue
-        targets.add("knowledge/SUMMARY.md")
+        targets.add("memory/knowledge/SUMMARY.md")
         parent = Path(candidate).parent.as_posix()
-        if parent and parent != "." and parent != "knowledge":
+        if parent and parent != "." and parent != "memory/knowledge":
             targets.add(f"{parent}/SUMMARY.md")
     return sorted(targets)
 
@@ -679,7 +679,7 @@ def _iter_governed_directories_in_scope(root: Path, scope: str = "") -> list[str
 def _orphan_topic_suggestions(root: Path, scope: str) -> list[dict[str, Any]]:
     suggestions: list[dict[str, Any]] = []
     for rel_dir in _iter_governed_directories_in_scope(root, scope):
-        if not rel_dir.startswith("knowledge/"):
+        if not rel_dir.startswith("memory/knowledge/"):
             continue
         abs_dir = root / rel_dir
         content_files = _folder_content_files(abs_dir)

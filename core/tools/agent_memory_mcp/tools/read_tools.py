@@ -153,6 +153,46 @@ def _resolve_memory_subpath(root: Path, current_rel: str, legacy_rel: str) -> Pa
     return root / current_rel
 
 
+def _resolve_humans_root(root: Path) -> Path:
+    """Return the human-facing tree, supporting both repo-rooted and content-rooted layouts."""
+    for candidate in (root / _HUMANS_DIRNAME, root.parent / _HUMANS_DIRNAME):
+        if candidate.exists():
+            return candidate
+    return root.parent / _HUMANS_DIRNAME
+
+
+def _resolve_visible_path(root: Path, raw_path: str) -> Path:
+    """Resolve a repo-visible path, including sibling HUMANS/ content when exposed."""
+    normalized = raw_path.replace("\\", "/").strip()
+    if normalized in {"", "."}:
+        return root.resolve()
+
+    rel_path = Path(normalized)
+    if rel_path.is_absolute():
+        return rel_path.resolve()
+
+    parts = rel_path.parts
+    if parts and parts[0] == _HUMANS_DIRNAME:
+        humans_root = _resolve_humans_root(root)
+        remainder = parts[1:]
+        return (humans_root.joinpath(*remainder) if remainder else humans_root).resolve()
+    return (root / rel_path).resolve()
+
+
+def _display_rel_path(path: Path, root: Path) -> str:
+    """Return the visible repo-relative path for content-rooted and sibling HUMANS paths."""
+    try:
+        return path.relative_to(root).as_posix()
+    except ValueError:
+        humans_root = _resolve_humans_root(root)
+        humans_rel = path.relative_to(humans_root).as_posix()
+        return (
+            f"{_HUMANS_DIRNAME}/{humans_rel}"
+            if humans_rel not in {"", "."}
+            else _HUMANS_DIRNAME
+        )
+
+
 def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     tool_sets = manifest.get("tool_sets") if isinstance(manifest.get("tool_sets"), dict) else {}
     read_support = tool_sets.get("read_support") if isinstance(tool_sets, dict) else []
@@ -816,7 +856,7 @@ def _route_workflow_hint(operation: str | None, rel_path: str | None, root: Path
     normalized_path = _normalize_repo_relative_path(rel_path) if rel_path else None
     abs_path = (root / normalized_path) if normalized_path else None
     path_is_dir = bool(abs_path and abs_path.exists() and abs_path.is_dir())
-    default_folder = normalized_path or "knowledge/_unverified"
+    default_folder = normalized_path or "memory/knowledge/_unverified"
 
     if normalized_operation == "promote_knowledge":
         return (
@@ -832,9 +872,9 @@ def _route_workflow_hint(operation: str | None, rel_path: str | None, root: Path
         return "Promote the selected flat file list with memory_promote_knowledge_batch(...)."
     if normalized_operation == "promote_knowledge_subtree":
         target_folder = (
-            default_folder.replace("knowledge/_unverified/", "knowledge/", 1)
-            if default_folder.startswith("knowledge/_unverified/")
-            else "knowledge/<target-folder>"
+            default_folder.replace("memory/knowledge/_unverified/", "memory/knowledge/", 1)
+            if default_folder.startswith("memory/knowledge/_unverified/")
+            else "memory/knowledge/<target-folder>"
         )
         return (
             f"Review the folder with memory_prepare_unverified_review(folder_path='{default_folder}'), "
@@ -847,7 +887,7 @@ def _route_workflow_hint(operation: str | None, rel_path: str | None, root: Path
 def _preview_file_entry(entry: Path, root: Path, preview_chars: int) -> dict[str, Any]:
     from ..frontmatter_utils import read_with_frontmatter
 
-    rel_path = entry.relative_to(root).as_posix()
+    rel_path = _display_rel_path(entry, root)
     item: dict[str, Any] = {
         "name": entry.name,
         "path": rel_path,
@@ -2214,12 +2254,15 @@ def _build_lineage_summary(path: str, provenance: dict[str, Any]) -> list[str]:
 
 def _repo_relative(path: Path, root: Path) -> Path:
     """Return a path relative to the repo root."""
-    return path.relative_to(root)
+    return Path(_display_rel_path(path, root))
 
 
 def _is_humans_path(path: Path, root: Path) -> bool:
     """Return True when a path is under HUMANS/."""
-    relative = _repo_relative(path, root)
+    try:
+        relative = _repo_relative(path, root)
+    except ValueError:
+        return False
     return bool(relative.parts) and relative.parts[0] == _HUMANS_DIRNAME
 
 
@@ -2316,8 +2359,10 @@ def _resolve_requested_knowledge_paths(root: Path, raw_paths: str) -> list[tuple
             raise ValidationError(f"Knowledge path escapes repository root: {requested}") from exc
 
         rel = abs_path.relative_to(root).as_posix()
-        if not rel.startswith("knowledge/"):
-            raise ValidationError(f"Knowledge path must live under knowledge/: {requested}")
+        if not rel.startswith("memory/knowledge/"):
+            raise ValidationError(
+                f"Knowledge path must live under memory/knowledge/: {requested}"
+            )
         if not abs_path.exists() or not abs_path.is_file():
             raise NotFoundError(f"File not found: {requested}")
         resolved.append((rel, abs_path))
@@ -2672,18 +2717,26 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         from ..errors import NotFoundError
         from ..frontmatter_utils import read_with_frontmatter
 
+        root = get_root()
         repo = get_repo()
-        abs_path = repo.abs_path(path)
+        abs_path = _resolve_visible_path(root, path)
         if not abs_path.exists():
             raise NotFoundError(f"File not found: {path}")
 
+        display_path = _display_rel_path(abs_path, root)
+
         fm_dict, body = read_with_frontmatter(abs_path)
-        version_token = repo.hash_object(path)
+        try:
+            abs_path.relative_to(root)
+        except ValueError:
+            version_token = repo._run(["git", "hash-object", str(abs_path)]).stdout.strip()
+        else:
+            version_token = repo.hash_object(display_path)
         content = abs_path.read_text(encoding="utf-8")
         size_bytes = len(content.encode("utf-8"))
 
         result = {
-            "path": path,
+            "path": display_path,
             "size_bytes": size_bytes,
             "inline": size_bytes <= _READ_FILE_INLINE_THRESHOLD_BYTES,
             "version_token": version_token,
@@ -2739,7 +2792,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             preview_chars == 0; otherwise structured JSON entry metadata.
         """
         root = get_root()
-        folder = (root / path).resolve()
+        folder = _resolve_visible_path(root, path)
         if not folder.exists():
             return f"Error: Folder not found: {path}"
         if not folder.is_dir():
@@ -2751,6 +2804,11 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             all_entries = list(folder.iterdir())
         except PermissionError:
             return f"Error: Permission denied reading {path}"
+
+        if not explicit_humans_request and include_humans and path in {"", "."}:
+            humans_root = _resolve_humans_root(root)
+            if humans_root.exists() and humans_root.is_dir():
+                all_entries.append(humans_root)
 
         def _keep(entry: Path) -> bool:
             if entry.name in _IGNORED_NAMES:
@@ -2769,7 +2827,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if preview_chars > 0:
             payload_entries: list[dict[str, Any]] = []
             for entry in entries:
-                rel = entry.relative_to(root).as_posix()
+                rel = _display_rel_path(entry, root)
                 if entry.is_dir():
                     payload_entries.append(
                         {
@@ -2792,9 +2850,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             )
 
         for entry in entries:
-            rel = str(entry.relative_to(root))
+            rel = _display_rel_path(entry, root)
             if entry.is_dir():
-                lines.append(f"📁 {entry.name}/")
+                lines.append(f"📁 {rel}/")
             else:
                 size = entry.stat().st_size
                 lines.append(f"📄 {entry.name}  ({size:,} bytes)  `{rel}`")
@@ -2814,7 +2872,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         ),
     )
     async def memory_review_unverified(
-        folder_path: str = "knowledge/_unverified",
+        folder_path: str = "memory/knowledge/_unverified",
         max_extract_words: int = 150,
         include_expired: bool = True,
     ) -> str:
@@ -2830,9 +2888,21 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             raise ValidationError("max_extract_words must be >= 0")
 
         root = get_root()
-        folder = (root / folder_path).resolve()
+        folder = _resolve_memory_subpath(root, folder_path, "knowledge/_unverified")
         if not folder.exists():
-            raise ValidationError(f"Folder not found: {folder_path}")
+            return json.dumps(
+                {
+                    "folder_path": folder_path,
+                    "max_extract_words": max_extract_words,
+                    "include_expired": include_expired,
+                    "total_files": 0,
+                    "expired_count": 0,
+                    "trust_counts": {"low": 0, "medium": 0, "high": 0, "unknown": 0},
+                    "groups": {},
+                },
+                indent=2,
+                default=str,
+            )
         if not folder.is_dir():
             raise ValidationError(f"Not a directory: {folder_path}")
 
@@ -2946,7 +3016,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         from ..errors import StagingError, ValidationError
 
         root = get_root()
-        search_root = (root / path).resolve()
+        search_root = _resolve_visible_path(root, path)
         if not search_root.exists():
             return f"Error: Path not found: {path}"
 
@@ -2985,15 +3055,18 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         # Try git grep first (fast path for tracked files)
         repo = get_repo()
-        try:
-            raw_matches = repo.grep(
-                query,
-                glob=git_pathspec,
-                case_sensitive=case_sensitive,
-            )
-        except StagingError:
-            # git grep unavailable or failed — fall through to Python fallback
+        if explicit_humans_search:
             raw_matches = None
+        else:
+            try:
+                raw_matches = repo.grep(
+                    query,
+                    glob=git_pathspec,
+                    case_sensitive=case_sensitive,
+                )
+            except StagingError:
+                # git grep unavailable or failed — fall through to Python fallback
+                raw_matches = None
 
         # Build per-file match groups from git grep output
         results: list[str] = []
@@ -3090,7 +3163,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 if not file_path.is_file():
                     continue
                 try:
-                    file_rel = file_path.relative_to(root).as_posix()
+                    file_rel = _display_rel_path(file_path, root)
                 except ValueError:
                     continue
                 if file_rel in seen_files:
@@ -3129,6 +3202,46 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 if total_matches >= max_results:
                     results.append(f"\n_(truncated at {max_results} matches)_")
                     break
+
+        if total_matches < max_results and not explicit_humans_search and include_humans and path in {"", "."}:
+            humans_root = _resolve_humans_root(root)
+            if humans_root.exists() and humans_root.is_dir():
+                for file_path in sorted(humans_root.glob(glob_pattern)):
+                    if any(part in _IGNORED_NAMES for part in file_path.parts):
+                        continue
+                    if not file_path.is_file():
+                        continue
+                    file_rel = _display_rel_path(file_path, root)
+                    if file_rel in seen_files:
+                        continue
+                    try:
+                        text = file_path.read_text(encoding="utf-8", errors="replace")
+                    except OSError:
+                        continue
+
+                    cached_lines = _get_file_lines(file_rel, untracked_text=text)
+
+                    file_output = []
+                    for line_no, line in enumerate(cached_lines, 1):
+                        if python_pattern.search(line):
+                            _append_match_lines(
+                                file_output,
+                                file_rel=file_rel,
+                                line_no=line_no,
+                                line_text=line,
+                                untracked_text=text,
+                            )
+                            total_matches += 1
+                            if total_matches >= max_results:
+                                break
+
+                    if file_output:
+                        results.append(f"\n**{file_rel}** _(untracked)_")
+                        results.extend(file_output)
+
+                    if total_matches >= max_results:
+                        results.append(f"\n_(truncated at {max_results} matches)_")
+                        break
 
         if not results:
             return f"No matches found for {query!r} in {path!r}."
@@ -4599,7 +4712,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         ),
     )
     async def memory_prepare_unverified_review(
-        folder_path: str = "knowledge/_unverified",
+        folder_path: str = "memory/knowledge/_unverified",
         max_files: int = 12,
         max_extract_words: int = 60,
         paths_only: bool = False,
@@ -4694,7 +4807,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         ),
     )
     async def memory_prepare_promotion_batch(
-        folder_path: str = "knowledge/_unverified",
+        folder_path: str = "memory/knowledge/_unverified",
         max_files: int = 12,
     ) -> str:
         """Return compact promotion candidates with default target paths and operation hints."""
@@ -4716,7 +4829,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             {
                 "source_path": item["path"],
                 "target_path": cast(str, item["path"]).replace(
-                    "knowledge/_unverified/", "knowledge/", 1
+                    "memory/knowledge/_unverified/", "memory/knowledge/", 1
                 ),
                 "trust": item.get("trust"),
                 "days_old": item.get("age_days"),
@@ -4740,8 +4853,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         else:
             suggested_operation = "memory_promote_knowledge_batch"
         suggested_target_folder = (
-            normalized_folder.replace("knowledge/_unverified/", "knowledge/", 1)
-            if normalized_folder.startswith("knowledge/_unverified/")
+            normalized_folder.replace("memory/knowledge/_unverified/", "memory/knowledge/", 1)
+            if normalized_folder.startswith("memory/knowledge/_unverified/")
             else None
         )
         payload = {
@@ -5402,7 +5515,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         description="Guide a host through compact unverified-review preparation.",
     )
     async def memory_prepare_unverified_review_prompt(
-        folder_path: str = "knowledge/_unverified",
+        folder_path: str = "memory/knowledge/_unverified",
         max_files: int = 12,
         max_extract_words: int = 60,
     ) -> str:
@@ -5427,7 +5540,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         description="Structure a governed knowledge-promotion preview conversation.",
     )
     async def memory_governed_promotion_preview_prompt(
-        folder_path: str = "knowledge/_unverified",
+        folder_path: str = "memory/knowledge/_unverified",
         max_files: int = 12,
     ) -> str:
         bundle = json.loads(

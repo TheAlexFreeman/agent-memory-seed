@@ -192,7 +192,7 @@ def render_projects_navigator(
 
 
 def count_active_project_plans(root: Path, project_id: str) -> int:
-    """Count active plans within one project-local plans/ directory."""
+    """Count active plans within one project-local memory/working/projects/.../plans/ directory."""
     plans_dir = root / "memory" / "working" / "projects" / project_id / "plans"
     if not plans_dir.is_dir():
         return 0
@@ -393,7 +393,7 @@ def add_progress_log_row(content: str, action_description: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# plans/SUMMARY.md — BEGIN/END anchor manipulation
+# memory/working/projects/SUMMARY.md — BEGIN/END anchor manipulation
 # ---------------------------------------------------------------------------
 
 
@@ -571,7 +571,7 @@ def infer_section_id_from_path(rel_path: str) -> str:
     memory/knowledge/philosophy/history/foo.md           → "philosophy"
     """
     parts = Path(rel_path).parts
-    # Find the first folder after "knowledge/" or "knowledge/_unverified/"
+    # Find the first folder after "memory/knowledge/" or "memory/knowledge/_unverified/"
     try:
         k_idx = parts.index("knowledge")
     except ValueError:

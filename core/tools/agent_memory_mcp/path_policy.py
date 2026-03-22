@@ -51,10 +51,10 @@ def resolve_repo_path(repo, raw_path: str, *, field_name: str = "path") -> tuple
 def validate_raw_write_target(repo, raw_path: str, *, field_name: str = "path") -> tuple[str, Path]:
     """Normalize and validate write targets against the protected-directory policy.
 
-    Protected directories (identity/, meta/, chats/, skills/) are blocked for
-    raw Tier 2 writes. Tier 2 writes must stay under knowledge/, plans/,
-    projects/, or scratchpad/. Use Tier 1 semantic tools for governed writes to protected
-    directories (e.g. memory_update_identity_trait,
+    Protected directories (memory/users/, governance/, memory/activity/,
+    memory/skills/) are blocked for raw Tier 2 writes. Tier 2 writes must stay
+    under memory/knowledge/ or memory/working/. Use Tier 1 semantic tools for
+    governed writes to protected directories (e.g. memory_update_identity_trait,
     memory_record_chat_summary).
 
     Returns the repo-relative path and absolute path on success.
@@ -88,8 +88,9 @@ def validate_raw_move_destination(
 ) -> tuple[str, Path]:
     """Normalize and validate move destinations against the protected-directory policy.
 
-    Tier 2 moves must not target protected directories (identity/, meta/,
-    chats/, skills/). Use Tier 1 semantic tools for governed writes there.
+    Tier 2 moves must not target protected directories (memory/users/,
+    governance/, memory/activity/, memory/skills/). Use Tier 1 semantic tools
+    for governed writes there.
     """
     rel_path, abs_path = resolve_repo_path(repo, raw_path, field_name=field_name)
 

@@ -101,6 +101,8 @@ def _resolve_live_router_rel(root: Path) -> str:
     """Prefer current core/HOME.md but keep legacy fallback support."""
     if (root / "core" / "HOME.md").exists():
         return "core/HOME.md"
+    if (root / "core" / "governance" / "quick-reference.md").exists():
+        return "core/governance/quick-reference.md"
     if (root / "HOME.md").exists():
         return "HOME.md"
     return "meta/quick-reference.md"
@@ -120,7 +122,7 @@ def _access_jsonl_for(rel_path: str) -> str | None:
 
 
 def _load_task_categories(root: Path) -> set[str]:
-    categories_path = root / "governance" / "task-categories.md"
+    categories_path = root / _resolve_governance_rel(root, "task-categories.md")
     if not categories_path.exists():
         return set()
 
@@ -317,7 +319,7 @@ def _normalize_access_entry(
         categories = _load_task_categories(root)
         if not categories:
             raise ValidationError(
-                "category cannot be set until governance/task-categories.md exists with a controlled vocabulary"
+                "category cannot be set until the controlled vocabulary file exists in governance/task-categories.md"
             )
         if category not in categories:
             raise ValidationError(f"category must be one of {sorted(categories)}, got: {category}")
