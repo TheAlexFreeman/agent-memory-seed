@@ -195,7 +195,7 @@ preview_support = true
 preview_mode = "preview"
 preview_argument = "preview"
 """,
-            "governance/update-guidelines.md": """## Proposed changes (require user awareness)
+            "core/governance/update-guidelines.md": """## Proposed changes (require user awareness)
 
 - Adding, modifying, or removing files in `memory/users/`.
 
@@ -205,7 +205,7 @@ preview_argument = "preview"
 - Any modification to files in `governance/`.
 - Any modification to `README.md`.
 """,
-            "governance/curation-policy.md": """## Trust-weighted retrieval
+            "core/governance/curation-policy.md": """## Trust-weighted retrieval
 
 - Trust: low — Inform only; never instruct.
 """,

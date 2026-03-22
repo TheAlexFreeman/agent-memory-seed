@@ -145,6 +145,14 @@ def _resolve_capabilities_manifest_path(root: Path) -> Path:
     return root / _CAPABILITIES_MANIFEST_PATH
 
 
+def _resolve_memory_subpath(root: Path, current_rel: str, legacy_rel: str) -> Path:
+    """Return a content path, preferring the current memory layout with legacy fallback."""
+    for candidate in (root / current_rel, root / legacy_rel):
+        if candidate.exists():
+            return candidate
+    return root / current_rel
+
+
 def _build_capabilities_summary(manifest: dict[str, Any]) -> dict[str, Any]:
     tool_sets = manifest.get("tool_sets") if isinstance(manifest.get("tool_sets"), dict) else {}
     read_support = tool_sets.get("read_support") if isinstance(tool_sets, dict) else []
@@ -1462,7 +1470,16 @@ def _parse_current_stage(repo_root: Path) -> str:
 def _load_content_files(root: Path) -> set[str]:
     """Return repo-relative content files covered by maturity and review rules."""
     content_files: set[str] = set()
-    for dirname in ("knowledge", "plans", "identity", "skills"):
+    for dirname in (
+        "memory/knowledge",
+        "memory/working/projects",
+        "memory/users",
+        "memory/skills",
+        "knowledge",
+        "plans",
+        "identity",
+        "skills",
+    ):
         dir_path = root / dirname
         if not dir_path.is_dir():
             continue
@@ -1547,7 +1564,15 @@ def _compute_maturity_signals(
     identity_stability: int | None = None
     try:
         proc = repo._run(
-            ["git", "log", "-1", "--format=%ad", "--date=short", "--", "identity/profile.md"],
+            [
+                "git",
+                "log",
+                "-1",
+                "--format=%ad",
+                "--date=short",
+                "--",
+                "memory/users/profile.md",
+            ],
             check=False,
         )
         last_change_str = proc.stdout.strip()
@@ -1749,9 +1774,14 @@ def _parse_review_queue_entries(root: Path) -> list[dict[str, str]]:
 
 
 def _find_conflict_tags(root: Path) -> list[str]:
-    """Return files in identity/ or knowledge/ that still contain [CONFLICT]."""
+    """Return files in memory/users or memory/knowledge that still contain [CONFLICT]."""
     matches: list[str] = []
-    for dirname in ("identity", "knowledge"):
+    for dirname in (
+        "memory/users",
+        "memory/knowledge",
+        "identity",
+        "knowledge",
+    ):
         dir_path = root / dirname
         if not dir_path.is_dir():
             continue
@@ -1769,7 +1799,7 @@ def _scan_unverified_content(root: Path, low_threshold: int) -> dict[str, Any]:
     """Summarize low-trust files in knowledge/_unverified/ for periodic review."""
     from ..frontmatter_utils import read_with_frontmatter
 
-    folder = root / "knowledge" / "_unverified"
+    folder = _resolve_memory_subpath(root, "memory/knowledge/_unverified", "knowledge/_unverified")
     files: list[dict[str, Any]] = []
     overdue: list[dict[str, Any]] = []
     if not folder.is_dir():
@@ -1807,13 +1837,13 @@ def _collect_plan_entries(root: Path, status: str | None = None) -> list[dict[st
     entries: list[dict[str, Any]] = []
 
     plan_files: list[tuple[Path, str | None]] = []
-    projects_root = root / "projects"
+    projects_root = _resolve_memory_subpath(root, "memory/working/projects", "projects")
     if projects_root.is_dir():
         for plan_file in sorted(projects_root.glob("*/plans/*.md")):
             if plan_file.is_file():
                 plan_files.append((plan_file, plan_file.parents[1].name))
 
-    legacy_plans_dir = root / "plans"
+    legacy_plans_dir = _resolve_memory_subpath(root, "memory/working/projects", "plans")
     if legacy_plans_dir.is_dir():
         for plan_file in sorted(legacy_plans_dir.glob("*.md")):
             if plan_file.name == "SUMMARY.md":
@@ -1987,26 +2017,32 @@ def _detect_access_anomalies(
 def _collect_recent_reflections(root: Path, limit: int = 5) -> list[dict[str, str]]:
     """Collect recent reflection files with a short preview line."""
     reflections: list[dict[str, str]] = []
-    for reflection_path in sorted(root.glob("chats/**/reflection.md"), reverse=True):
-        try:
-            text = reflection_path.read_text(encoding="utf-8")
-        except OSError:
-            continue
-        preview = ""
-        for line in text.splitlines():
-            stripped = line.strip()
-            if not stripped or stripped.startswith("#"):
+    seen: set[str] = set()
+    for pattern in ("memory/activity/**/reflection.md", "chats/**/reflection.md"):
+        for reflection_path in sorted(root.glob(pattern), reverse=True):
+            rel_path = reflection_path.relative_to(root).as_posix()
+            if rel_path in seen:
                 continue
-            preview = stripped
-            break
-        reflections.append(
-            {
-                "path": reflection_path.relative_to(root).as_posix(),
-                "preview": preview,
-            }
-        )
-        if len(reflections) >= limit:
-            break
+            seen.add(rel_path)
+            try:
+                text = reflection_path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            preview = ""
+            for line in text.splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                preview = stripped
+                break
+            reflections.append(
+                {
+                    "path": rel_path,
+                    "preview": preview,
+                }
+            )
+            if len(reflections) >= limit:
+                return reflections
     return reflections
 
 
@@ -2617,8 +2653,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         Always includes a version_token (git object hash) for optimistic locking.
 
         Args:
-            path: Repo-relative path (e.g. 'identity/profile.md',
-                  'knowledge/_unverified/django/celery-canvas.md').
+            path: Repo-relative content path (e.g. 'memory/users/profile.md',
+                'memory/knowledge/_unverified/django/celery-canvas.md').
 
         Returns:
             JSON with keys:
@@ -3697,7 +3733,9 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 "near_miss_range": [_CURATION_NEAR_MISS_MIN, _CURATION_NEAR_MISS_MAX],
                 "false_positive_max": _CURATION_FALSE_POSITIVE_MAX,
                 "retirement_max": _CURATION_RETIREMENT_MAX,
-                "policy_source": "meta/curation-policy.md",
+                "policy_source": _resolve_governance_path(root, "curation-policy.md")
+                .relative_to(root)
+                .as_posix(),
             },
             "folders": folder_filters or None,
             "total_entries": len(filtered_entries),
@@ -3983,7 +4021,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         """Return session-start maintenance status for ACCESS, review queue, and review cadence.
 
         Reads the active aggregation trigger and last periodic review date from
-        meta/quick-reference.md, counts hot ACCESS.jsonl entries, and summarizes
+        the live router file, counts hot ACCESS.jsonl entries, and summarizes
         pending review-queue items.
 
         Returns:
@@ -4055,7 +4093,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_check_aggregation_triggers() -> str:
         """Report which hot ACCESS logs are below, near, or above aggregation trigger.
 
-        Uses the active aggregation threshold from meta/quick-reference.md and
+        Uses the active aggregation threshold from the live router file and
         counts valid non-empty entries in each hot ACCESS.jsonl file.
 
         Returns:
@@ -4249,7 +4287,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
     async def memory_run_periodic_review() -> str:
         """Run the ordered periodic-review checklist as a read-only report.
 
-        The tool mirrors the checklist in meta/update-guidelines.md and returns
+        The tool mirrors the checklist in governance/update-guidelines.md and returns
         structured findings plus deferred write targets rather than mutating any
         protected files directly.
         """
@@ -4330,8 +4368,8 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             },
             "consistency_targets": [
                 "README.md",
-                "meta/quick-reference.md",
-                "meta/update-guidelines.md",
+                _resolve_live_router_path(root).relative_to(root).as_posix(),
+                _resolve_governance_path(root, "update-guidelines.md").relative_to(root).as_posix(),
             ],
             "user_friendliness_notes": [
                 "Keep protected changes in deferred output rather than applying them silently.",
@@ -4353,20 +4391,26 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             for folder_name in cast(list[str], cluster["folders"]):
                 summary_update_targets.add(f"{folder_name}/SUMMARY.md")
 
-        deferred_write_targets = ["meta/belief-diff-log.md"]
+        deferred_write_targets = [
+            _resolve_governance_path(root, "belief-diff-log.md").relative_to(root).as_posix()
+        ]
         if (
             pending_non_security_entries
             or pending_security_entries
             or anomaly_candidates
             or unverified["overdue"]
         ):
-            deferred_write_targets.append("meta/review-queue.md")
+            deferred_write_targets.append(
+                _resolve_governance_path(root, "review-queue.md").relative_to(root).as_posix()
+            )
         if (
             days_since_review is None
             or (days_since_review is not None and days_since_review > review_window_days)
             or maturity["transition_recommended"]
         ):
-            deferred_write_targets.append("meta/quick-reference.md")
+            deferred_write_targets.append(
+                _resolve_live_router_path(root).relative_to(root).as_posix()
+            )
         deferred_write_targets.extend(sorted(summary_update_targets))
 
         new_files_since_review = []
@@ -4999,7 +5043,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         """Audit trust decay across the memory repository.
 
                 Checks all files with trust frontmatter against the decay thresholds
-                from meta/quick-reference.md, and treats files without frontmatter as
+                from the live router file, and treats files without frontmatter as
                 implicit medium-trust when a git-backed effective date is available:
           - low-trust files:    overdue at 120 days, flagged at 90 days, approaching at 75%
           - medium-trust files: overdue at 180 days, flagged at 150 days, approaching at 75%
@@ -5235,7 +5279,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         """Compute all six maturity signals for the periodic review.
 
         These signals drive the maturity stage assessment in
-        meta/system-maturity.md and determine whether to retain the current
+        governance/system-maturity.md and determine whether to retain the current
         parameter set or transition to the next stage. All values are derived
         from hot ACCESS.jsonl files and content-file frontmatter; archive
         segments and ACCESS_SCANS sidecars are excluded, and no network calls
@@ -5256,14 +5300,15 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                                               least once (0–100)
               files_accessed          (int)   Count of distinct files in
                                               ACCESS.jsonl entries
-              total_content_files     (int)   Total .md files in knowledge/,
-                                              plans/, identity/, skills/
+              total_content_files     (int)   Total .md files in memory/knowledge,
+                                              memory/working/projects,
+                                              memory/users, memory/skills
               confirmation_ratio      (float) trust:high files / total content
                                               files (0.0–1.0)
               high_trust_files        (int)   Count of trust:high content files
               identity_stability      (int|null)
                                               Sessions since last change to
-                                              identity/profile.md; null if the
+                                              memory/users/profile.md; null if the
                                               file has no tracked commit history
               write_sessions         (int)   Distinct session_id values with at
                                               least one non-read ACCESS entry
