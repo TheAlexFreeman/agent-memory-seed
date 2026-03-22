@@ -4989,7 +4989,7 @@ next_action: Original next action
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
         self.assertEqual(
             sorted(payload["new_state"]["access_jsonls"]),
-            ["memory/knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS_SCANS.jsonl"],
         )
 
         knowledge_entry = json.loads(

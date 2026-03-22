@@ -244,7 +244,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if resolved_project_id is not None:
             _sync_project_navigation(root, repo, resolved_project_id, files_changed)
         else:
-            summary_path = "plans/SUMMARY.md"
+            summary_path = "memory/working/projects/SUMMARY.md"
             abs_summary = root / summary_path
             if abs_summary.exists():
                 summary_content = abs_summary.read_text(encoding="utf-8")
@@ -263,7 +263,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
                 updated_summary = replace_begin_end_block(summary_content, plan_id, new_block)
                 if updated_summary is None:
                     warnings.append(
-                        f"BEGIN/END anchor for '{plan_id}' not found in plans/SUMMARY.md. "
+                        f"BEGIN/END anchor for '{plan_id}' not found in {summary_path}. "
                         "Summary not updated — add anchors manually."
                     )
                 else:
@@ -509,7 +509,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         if resolved_project_id is not None:
             _sync_project_navigation(root, repo, resolved_project_id, files_changed)
         else:
-            summary_path = "plans/SUMMARY.md"
+            summary_path = "memory/working/projects/SUMMARY.md"
             abs_summary = root / summary_path
             if abs_summary.exists():
                 summary_content = abs_summary.read_text(encoding="utf-8")
