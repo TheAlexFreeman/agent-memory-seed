@@ -14,7 +14,6 @@ PROFILE=""
 USER_NAME=""
 USER_CONTEXT=""
 INITIAL_COMMIT_MANIFEST="setup/initial-commit-paths.txt"
-INITIAL_COMMIT_PATH_ARGS=""
 declare -a INITIAL_COMMIT_PATHS=()
 
 usage() {

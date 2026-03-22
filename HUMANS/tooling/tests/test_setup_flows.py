@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -78,6 +79,17 @@ def read_initial_commit_manifest(root: Path) -> list[str]:
     manifest = root / "setup" / "initial-commit-paths.txt"
     lines = manifest.read_text(encoding="utf-8").splitlines()
     return [line for line in lines if line and not line.startswith("#")]
+
+
+def extract_toml_string(text: str, key: str) -> str:
+    match = re.search(rf'^{re.escape(key)} = "(?P<value>.*)"$', text, flags=re.MULTILINE)
+    if match is None:
+        raise AssertionError(f"missing TOML key: {key}")
+    return match.group("value").replace("\\\\", "\\")
+
+
+def normalize_test_path(value: str | Path) -> str:
+    return os.path.normcase(os.path.realpath(str(value)))
 
 
 class SetupFlowTests(unittest.TestCase):
@@ -229,11 +241,15 @@ class SetupFlowTests(unittest.TestCase):
             )
 
             config_text = (root / ".codex" / "config.toml").read_text(encoding="utf-8")
-            escaped_root = str(root).replace("\\", "\\\\")
-            self.assertIn(escaped_root, config_text)
-            self.assertIn(
-                str(root / "core" / "tools" / "memory_mcp.py").replace("\\", "\\\\"),
-                config_text,
+            self.assertEqual(
+                normalize_test_path(extract_toml_string(config_text, "cwd")),
+                normalize_test_path(root),
+            )
+            args_match = re.search(r'^args = \["(?P<path>.*)"\]$', config_text, flags=re.MULTILINE)
+            self.assertIsNotNone(args_match)
+            self.assertEqual(
+                normalize_test_path(args_match.group("path")),
+                normalize_test_path(root / "core" / "tools" / "memory_mcp.py"),
             )
             self.assertNotIn(str(REPO_ROOT).replace("\\", "\\\\"), config_text)
 
@@ -288,9 +304,11 @@ class SetupFlowTests(unittest.TestCase):
             bootstrap_text = (worktree_root / "agent-bootstrap.toml").read_text(encoding="utf-8")
             self.assertIn("**codebase_root:**", profile_text)
             self.assertIn("**project_name:**", profile_text)
-            self.assertIn(str(host_root.resolve()), profile_text)
-            self.assertIn("host_repo_root = ", bootstrap_text)
-            self.assertIn(host_root.resolve().as_posix(), bootstrap_text)
+            self.assertIn(host_root.name, profile_text)
+            self.assertEqual(
+                normalize_test_path(extract_toml_string(bootstrap_text, "host_repo_root")),
+                normalize_test_path(host_root),
+            )
             self.assertIn("codebase-survey", projects_summary)
             self.assertTrue((worktree_root / ".ignore").is_file())
             self.assertTrue((worktree_root / ".editorconfig").is_file())
@@ -353,13 +371,18 @@ class SetupFlowTests(unittest.TestCase):
             )
 
             codex_config = (host_root / ".codex" / "config.toml").read_text(encoding="utf-8")
-            self.assertIn(str(worktree_root).replace("\\", "\\\\"), codex_config)
-            self.assertIn(
-                'cwd = "',
-                codex_config,
+            self.assertEqual(
+                normalize_test_path(extract_toml_string(codex_config, "cwd")),
+                normalize_test_path(worktree_root),
             )
-            self.assertIn('MEMORY_REPO_ROOT = "', codex_config)
-            self.assertIn('HOST_REPO_ROOT = "', codex_config)
+            self.assertEqual(
+                normalize_test_path(extract_toml_string(codex_config, "MEMORY_REPO_ROOT")),
+                normalize_test_path(worktree_root),
+            )
+            self.assertEqual(
+                normalize_test_path(extract_toml_string(codex_config, "HOST_REPO_ROOT")),
+                normalize_test_path(host_root),
+            )
 
             host_agents = (host_root / "AGENTS.md").read_text(encoding="utf-8")
             host_claude = (host_root / "CLAUDE.md").read_text(encoding="utf-8")

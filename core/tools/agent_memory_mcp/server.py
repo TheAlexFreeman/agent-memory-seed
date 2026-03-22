@@ -25,9 +25,15 @@ def resolve_repo_root(explicit_root: str | Path | None = None) -> Path:
     """Resolve the memory repo root, supporting old and new env var names."""
     if explicit_root is not None:
         root = Path(explicit_root).resolve()
-        if not root.is_dir():
-            raise ValueError(f"Repository root is not a directory: {root}")
-        return root
+        if root.is_dir():
+            return root
+
+        existing_parent = root
+        while not existing_parent.exists() and existing_parent != existing_parent.parent:
+            existing_parent = existing_parent.parent
+        if existing_parent.is_dir():
+            return existing_parent
+        raise ValueError(f"Repository root is not a directory: {root}")
 
     for env_var in ("MEMORY_REPO_ROOT", "AGENT_MEMORY_ROOT"):
         env_value = os.environ.get(env_var)

@@ -218,6 +218,11 @@ class MemoryCapabilitiesTests(unittest.TestCase):
                 "access": 1,
                 "mcp": 1,
                 "capabilities": 1,
+                "preview": 1,
+                "resources": 1,
+                "prompts": 1,
+                "provenance": 1,
+                "structured_read": 1,
             },
         )
 

@@ -36,9 +36,9 @@ def write(path: Path, content: str) -> None:
 def build_repo(root: Path) -> None:
     write(root / "README.md", "# README\n")
     write(root / "meta" / "placeholder.md", "# Meta\n")
-    write(root / "memory" / "users" / "SUMMARY.md", "# Identity Summary\n")
+    write(root / "core" / "memory" / "users" / "SUMMARY.md", "# Identity Summary\n")
     write(
-        root / "memory" / "activity" / "SUMMARY.md",
+        root / "core" / "memory" / "activity" / "SUMMARY.md",
         textwrap.dedent(
             """\
             # Chats Summary
@@ -165,17 +165,43 @@ class OnboardExportTests(unittest.TestCase):
 
             self.run_script(root, export)
 
-            profile = (root / "memory" / "users" / "profile.md").read_text(encoding="utf-8")
+            profile = (root / "core" / "memory" / "users" / "profile.md").read_text(
+                encoding="utf-8"
+            )
             transcript = (
-                root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "transcript.md"
+                root
+                / "core"
+                / "memory"
+                / "activity"
+                / "2026"
+                / "03"
+                / "12"
+                / "chat-001"
+                / "transcript.md"
             ).read_text(encoding="utf-8")
             summary = (
-                root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "SUMMARY.md"
+                root
+                / "core"
+                / "memory"
+                / "activity"
+                / "2026"
+                / "03"
+                / "12"
+                / "chat-001"
+                / "SUMMARY.md"
             ).read_text(encoding="utf-8")
             reflection = (
-                root / "memory" / "activity" / "2026" / "03" / "12" / "chat-001" / "reflection.md"
+                root
+                / "core"
+                / "memory"
+                / "activity"
+                / "2026"
+                / "03"
+                / "12"
+                / "chat-001"
+                / "reflection.md"
             ).read_text(encoding="utf-8")
-            chats_summary = (root / "memory" / "activity" / "SUMMARY.md").read_text(
+            chats_summary = (root / "core" / "memory" / "activity" / "SUMMARY.md").read_text(
                 encoding="utf-8"
             )
 

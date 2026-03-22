@@ -133,7 +133,9 @@ class AccessLoggingBatchTests(unittest.TestCase):
 
         payload = json.loads(raw)
         knowledge_entry = json.loads(
-            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "knowledge" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .strip()
         )
         plan_entry = json.loads(
             (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl")
@@ -184,7 +186,9 @@ class AccessLoggingBatchTests(unittest.TestCase):
 
         payload = json.loads(raw)
         knowledge_entry = json.loads(
-            (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "knowledge" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .strip()
         )
         plan_scan_entry = json.loads(
             (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl")
@@ -195,7 +199,7 @@ class AccessLoggingBatchTests(unittest.TestCase):
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
         self.assertEqual(
             sorted(payload["new_state"]["access_jsonls"]),
-            ["memory/knowledge/ACCESS.jsonl", "plans/ACCESS_SCANS.jsonl"],
+            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS_SCANS.jsonl"],
         )
         self.assertEqual(knowledge_entry["session_id"], "memory/activity/2026/03/20/chat-021")
         self.assertEqual(plan_scan_entry["session_id"], "memory/activity/2026/03/20/chat-021")

@@ -29,7 +29,7 @@ _ACCESS_ROOTS = (
     "memory/users",
     "memory/knowledge",
     "memory/skills",
-    "memory/working",
+    "memory/working/projects",
     "memory/activity",
 )
 _ACCESS_MODES = frozenset({"read", "write", "update", "create"})
@@ -101,6 +101,8 @@ def _resolve_live_router_rel(root: Path) -> str:
     """Prefer core/INIT.md, fall back to legacy core/HOME.md or root HOME.md."""
     if (root / "core" / "INIT.md").exists():
         return "core/INIT.md"
+    if (root / "INIT.md").exists():
+        return "INIT.md"
     if (root / "core" / "HOME.md").exists():
         return "core/HOME.md"
     if (root / "HOME.md").exists():
@@ -140,8 +142,12 @@ def _load_task_categories(root: Path) -> set[str]:
 
 
 def _load_access_task_ids(root: Path) -> set[str]:
-    manifest_path = root / _ACCESS_TASK_ID_MANIFEST
-    if not manifest_path.exists():
+    manifest_path = None
+    for candidate in (root / _ACCESS_TASK_ID_MANIFEST, root.parent / _ACCESS_TASK_ID_MANIFEST):
+        if candidate.exists():
+            manifest_path = candidate
+            break
+    if manifest_path is None:
         return set()
 
     try:
@@ -423,7 +429,7 @@ def _normalize_aggregation_folders(folders: list[str] | None) -> list[str] | Non
         "memory/knowledge",
         "memory/knowledge/_unverified",
         "memory/skills",
-        "memory/working",
+        "memory/working/projects",
         "memory/activity",
     }
     for raw_folder in folders:
@@ -513,7 +519,7 @@ def _build_phase1_clusters(
     seen: set[tuple[str, ...]] = set()
     for clique in maximal_cliques:
         clique_files = sorted(clique)
-        folders = sorted({file_path.split("/", 1)[0] for file_path in clique_files})
+        folders = sorted({PurePosixPath(file_path).parent.as_posix() for file_path in clique_files})
         if len(folders) < 2:
             continue
         key = tuple(clique_files)
@@ -1396,7 +1402,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "memory/knowledge",
             "memory/knowledge/_unverified",
             "memory/skills",
-            "memory/working",
+            "memory/working/projects",
             "memory/activity",
         ]
 
@@ -1434,7 +1440,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
 
         entries_by_folder: dict[str, list[dict[str, Any]]] = {}
         for entry in filtered_entries:
-            folder = str(entry["file"]).split("/", 1)[0]
+            folder = PurePosixPath(str(entry["file"])).parent.as_posix()
             entries_by_folder.setdefault(folder, []).append(entry)
 
         summary_targets = [
@@ -1483,7 +1489,7 @@ def register_tools(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
         aggregation_date = str(date.today())
 
         for summary_rel in summary_targets:
-            folder = summary_rel.split("/", 1)[0]
+            folder = PurePosixPath(summary_rel).parent.as_posix()
             abs_summary = root / summary_rel
             updated_content = _replace_usage_patterns_section(
                 abs_summary.read_text(encoding="utf-8"),

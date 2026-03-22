@@ -14,10 +14,16 @@ _GOVERNED_REFERENCE_ROOTS = (
     "memory/skills",
     "governance",
 )
+_SCOPE_ALIAS_MAP = {
+    "knowledge": ("memory/knowledge", "knowledge"),
+    "plans": ("memory/working/projects", "plans"),
+    "identity": ("memory/users", "identity"),
+    "skills": ("memory/skills", "skills"),
+}
 _URL_PREFIXES = ("http://", "https://", "mailto:", "memory://", "file://", "vscode://")
 _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)\n]+)\)")
 _BODY_PATH_RE = re.compile(
-    r"(?P<path>(?:\.\..?/|memory/users/|memory/knowledge/|memory/working/|memory/skills/|governance/)[^\s)\]>'\"+])"
+    r"(?P<path>(?:\.\..?/|memory/users/|memory/knowledge/|memory/working/|memory/skills/|governance/)[^\s)\]>'\"+]+)"
 )
 _HEADING_RE = re.compile(r"^#{1,6}\s+(?P<text>.+?)\s*$", re.MULTILINE)
 _STRUCTURE_HEURISTICS = frozenset(
@@ -62,6 +68,20 @@ def _split_target_and_anchor(target: str) -> tuple[str, str | None]:
     return path_part.replace("\\", "/").strip(), (anchor.strip() or None) if anchor else None
 
 
+def _resolve_legacy_relative_target(from_path: str, cleaned: str, root: Path) -> Path | None:
+    legacy_prefixes = {
+        "../knowledge/": "memory/knowledge/",
+        "../users/": "memory/users/",
+        "../skills/": "memory/skills/",
+    }
+    if not from_path.startswith("memory/working/projects/"):
+        return None
+    for legacy_prefix, current_prefix in legacy_prefixes.items():
+        if cleaned.startswith(legacy_prefix):
+            return (root / f"{current_prefix}{cleaned[len(legacy_prefix) :]}").resolve()
+    return None
+
+
 def _resolve_reference(from_path: str, target: str, root: Path) -> str | None:
     cleaned = _strip_markdown_target(target)
     if not cleaned or _is_external_target(cleaned):
@@ -71,7 +91,9 @@ def _resolve_reference(from_path: str, target: str, root: Path) -> str | None:
 
     base = root / from_path
     if cleaned.startswith(("./", "../")):
-        resolved = (base.parent / cleaned).resolve()
+        resolved = _resolve_legacy_relative_target(from_path, cleaned, root)
+        if resolved is None:
+            resolved = (base.parent / cleaned).resolve()
     elif any(cleaned.startswith(f"{prefix}/") for prefix in _GOVERNED_REFERENCE_ROOTS):
         resolved = (root / cleaned).resolve()
     else:
@@ -96,7 +118,9 @@ def _resolve_target_path(
     cleaned = raw_path.lstrip("/") if raw_path.startswith("/") else raw_path
     base = root / from_path
     if cleaned.startswith(("./", "../")):
-        resolved = (base.parent / cleaned).resolve()
+        resolved = _resolve_legacy_relative_target(from_path, cleaned, root)
+        if resolved is None:
+            resolved = (base.parent / cleaned).resolve()
     elif any(cleaned.startswith(f"{prefix}/") for prefix in _GOVERNED_REFERENCE_ROOTS):
         resolved = (root / cleaned).resolve()
     else:
@@ -155,6 +179,17 @@ def _iter_governed_markdown_files(root: Path) -> list[str]:
                 files.append(md_file.relative_to(root).as_posix())
             except ValueError:
                 continue
+
+    humans_root = root / "HUMANS"
+    if not humans_root.is_dir():
+        humans_root = root.parent / "HUMANS"
+    if humans_root.is_dir():
+        for md_file in sorted(humans_root.rglob("*.md")):
+            try:
+                rel_path = md_file.relative_to(humans_root).as_posix()
+            except ValueError:
+                continue
+            files.append(f"HUMANS/{rel_path}" if rel_path not in {"", "."} else "HUMANS")
     return files
 
 
@@ -163,7 +198,7 @@ def _iter_governed_markdown_files_in_scope(root: Path, scope: str = "") -> list[
     if not normalized_scope:
         return _iter_governed_markdown_files(root)
 
-    scope_path = root / normalized_scope
+    scope_path = _resolve_scope_path(root, normalized_scope)
     if not scope_path.exists():
         return []
     if scope_path.is_file():
@@ -410,6 +445,32 @@ def _normalize_repo_path(path: str) -> str:
     return path.strip().replace("\\", "/").strip("/")
 
 
+def _resolve_scope_path(root: Path, scope: str) -> Path:
+    normalized_scope = _normalize_repo_path(scope)
+    if not normalized_scope:
+        return root
+
+    scope_path = root / normalized_scope
+    if scope_path.exists():
+        return scope_path
+
+    parts = Path(normalized_scope).parts
+    if not parts:
+        return scope_path
+
+    alias_prefixes = _SCOPE_ALIAS_MAP.get(parts[0], (parts[0],))
+    if alias_prefixes != (parts[0],):
+        remainder = parts[1:]
+        for prefix in alias_prefixes:
+            candidate = root / Path(prefix).joinpath(*remainder)
+            if candidate.exists():
+                return candidate
+        primary = alias_prefixes[0]
+        return root / Path(primary).joinpath(*remainder)
+
+    return scope_path
+
+
 def _path_is_within(path: str, prefix: str) -> bool:
     return path == prefix or path.startswith(f"{prefix}/")
 
@@ -653,7 +714,7 @@ def _summary_mentions_path(summary_text: str, rel_path: str) -> bool:
 def _iter_governed_directories_in_scope(root: Path, scope: str = "") -> list[str]:
     normalized_scope = _normalize_repo_path(scope)
     if normalized_scope:
-        scope_path = root / normalized_scope
+        scope_path = _resolve_scope_path(root, normalized_scope)
         if not scope_path.exists() or not scope_path.is_dir():
             return []
         return [
