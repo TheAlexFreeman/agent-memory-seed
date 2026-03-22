@@ -1,3 +1,6 @@
+# Machine-readable bootstrap configuration for programmatic consumers (MCP server,
+# validators, setup tooling). core/INIT.md is the human-readable authority for the
+# same routing and loading rules — keep both in sync when the contract changes.
 version = 1
 router = "core/INIT.md"
 default_mode = "returning"
@@ -54,8 +57,8 @@ required = true
 cost = "light"
 
 [[modes.returning.steps]]
-path = "core/memory/working/projects/SUMMARY.md"
-role = "project-summary"
+path = "core/memory/HOME.md"
+role = "session-entry-point"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
@@ -109,8 +112,8 @@ required = true
 cost = "light"
 
 [[modes.full_bootstrap.steps]]
-path = "core/memory/working/projects/SUMMARY.md"
-role = "project-summary"
+path = "core/memory/HOME.md"
+role = "session-entry-point"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
@@ -182,8 +185,8 @@ required = true
 cost = "light"
 
 [[modes.periodic_review.steps]]
-path = "core/memory/working/projects/SUMMARY.md"
-role = "project-summary"
+path = "core/memory/HOME.md"
+role = "session-entry-point"
 required = false
 skip_if = "placeholder_or_empty"
 cost = "light"
@@ -270,6 +273,13 @@ on_demand = ["core/memory/working/projects/SUMMARY.md", "core/memory/knowledge/S
 path = "core/INIT.md"
 role = "router"
 required = true
+cost = "light"
+
+[[modes.automation.steps]]
+path = "core/memory/HOME.md"
+role = "session-entry-point"
+required = false
+skip_if = "placeholder_or_empty"
 cost = "light"
 
 [[modes.automation.steps]]

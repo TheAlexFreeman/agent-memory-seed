@@ -22,7 +22,7 @@ Use this file as the live operational router once you reach it:
 
 ## Context loading manifest
 
-Load files in the listed order. Skip files marked _(skip if empty)_ when they contain only placeholder text.
+Load files in the listed order. Skip files marked _(skip if empty)_ when they contain only placeholder text. `agent-bootstrap.toml` expresses the same loading rules in machine-readable form for programmatic consumers — keep both in sync when the contract changes.
 
 | Session type | Files to load |
 |---|---|
@@ -60,7 +60,7 @@ Compact startup files are live-state surfaces, not archives. They should answer 
 | File | Keep in compact path | Move to drill-down files | Target budget |
 |---|---|---|---|
 | `core/INIT.md` | Routing authority, active thresholds, compact contract, decision triggers | Long rationale, runbooks, full algorithms | ~2,600 tokens |
-| `core/memory/working/projects/SUMMARY.md` | Active-project routing, cognitive mode, open questions, current focus | Full project detail | ~1,700 tokens |
+| `core/memory/HOME.md` | Context loading order, top-of-mind items, maintenance probes | Detailed rationale, full namespace rules | ~500 tokens |
 | `core/memory/users/SUMMARY.md` | User portrait, working style, active durable goal | Detailed profile evidence | ~450 tokens |
 | `core/memory/activity/SUMMARY.md` | Live themes, recent continuity, retrieval guidance | Chat-by-chat narrative | ~750 tokens |
 | `core/memory/working/scratchpad/USER.md` | User-authored current constraints | Historical notes that no longer affect current work | ~400 tokens |
