@@ -1,6 +1,6 @@
-# Fiat Lux
+# Fiat Lux: Let There Be Light
 
-*Let there be light.*
+*When I find myself in times of trouble, Mother Mary comes to me, speaking words of wisdom: Let it be.*
 
 ---
 
