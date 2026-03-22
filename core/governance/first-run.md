@@ -21,7 +21,7 @@ If neither condition matches — a user portrait exists without the `template` m
 4. **Check write access.** Can you write to this repository? If not, note this — all behavioral rules still apply, but writes must be deferred per `core/governance/update-guidelines.md` § "Read-only operation". If this is your first read-only session, also load `core/governance/deferred-action-template.md` for the output format.
 5. Read `core/memory/skills/SUMMARY.md` and `core/memory/skills/onboarding.md`.
 
-At this point you have loaded: system architecture (README.md), evolution history, active thresholds, change-control rules, write-access status, and the onboarding skill. Do not summarize any of this to the user.
+At this point you have loaded: system architecture (README.md), evolution history, active thresholds, change-control rules, write-access status, and the onboarding skill. **Stop loading files and begin interactive work below.** Do not summarize any of this to the user.
 
 ## Interactive onboarding (this is the part the user sees)
 

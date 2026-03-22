@@ -12,7 +12,7 @@ Use this file as the live operational router once you reach it:
 
 1. If you started in `README.md`, continue here for live routing and active parameters.
 2. If this is a fresh instantiation on a blank or template-backed repo, continue to `core/governance/first-run.md`.
-3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack, follow the **Full bootstrap** manifest below.
+3. If this is a fresh instantiation on a returning system, or you intentionally need the full governance stack (after governance changes, system updates, or when the user asks for a thorough review), follow the **Full bootstrap** manifest below.
 4. If this is a scheduled or recurring automation run (no interactive user), use the **Automation** manifest below.
 5. Otherwise, use the **Compact returning** manifest below and keep additional loads task-driven.
 

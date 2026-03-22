@@ -1,6 +1,6 @@
 # User notes
 
-The agent reads this file at every session start. Write anything you want it to know — current priorities, temporary constraints, things to keep in mind for the next few sessions. No special format required.
+Notes **from the human to the agent** — current priorities, temporary constraints, things to keep in mind for the next few sessions. No special format required. (For the agent's evolving understanding of the user, see `core/memory/users/SUMMARY.md` instead.)
 
 **Keep it current.** Clear or update entries when they're no longer relevant. Stale context is noise, and the agent will occasionally remind you if something here looks outdated.
 
