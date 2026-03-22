@@ -77,11 +77,7 @@ Files that predate this schema should have frontmatter added during the next per
 
 ## Architectural standard for system changes
 
-When the agent is reviewing or modifying the memory system itself — governance docs, routing manifests, bootstrap/setup flows, validation rules, or other protected architecture — the proposal must address three fundamental considerations:
-
-- **Consistency.** `README.md`, `core/INIT.md`, `core/governance/update-guidelines.md`, related checklists/templates, validators, and generated prompts should agree on the active contract. Avoid split-brain rules and silent dependency drift.
-- **User-friendliness.** Preserve progressive disclosure, comprehensible approval steps, readable setup copy, and maintenance workflows that a normal user can actually follow.
-- **Context efficiency.** Preserve the compact returning manifest, prefer metadata-first checks and on-demand loads, and justify any added bootstrap or periodic-review overhead.
+When the agent is reviewing or modifying the memory system itself — governance docs, routing manifests, bootstrap/setup flows, validation rules, or other protected architecture — the proposal must address the three architectural guardrails defined in `README.md` § "Architectural guardrails for system changes": **consistency**, **user-friendliness**, and **context efficiency**.
 
 For system-level changes, the change summary is incomplete unless it explains the expected effect on all three dimensions, including any tradeoffs or follow-up alignment work.
 

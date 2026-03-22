@@ -41,4 +41,4 @@ At this point you have loaded: system architecture (README.md), evolution histor
 
 ## After first run
 
-From session two onward, return to `core/INIT.md` for live routing. Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless the router points somewhere more specific, keep project plans task-driven, and load `core/governance/session-checklists.md` only when you want detailed runbooks.
+From session two onward, return to `core/INIT.md` for live routing. Follow the Compact returning manifest in `core/INIT.md` → `core/memory/HOME.md` for the context loading order. Keep project plans task-driven, and load `core/governance/session-checklists.md` only when you want detailed runbooks.

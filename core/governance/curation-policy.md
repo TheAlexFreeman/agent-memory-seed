@@ -99,7 +99,7 @@ When reviewing reflection notes during periodic review, look for recurring theme
 
 ## Trust-weighted retrieval
 
-_Active thresholds and decision guides are in `core/INIT.md`. If you've already loaded that file this session, skip to "General retrieval rules" below._
+_Active thresholds are in `core/INIT.md` § "Decision guide: trust decay". The rules below govern retrieval behavior at each trust level._
 
 Every content file carries a `trust` level in its YAML frontmatter (see `core/governance/update-guidelines.md` for the full schema):
 
@@ -157,7 +157,7 @@ Users may legitimately expand contracts (e.g., authorizing `core/memory/users/` 
 
 ## Temporal decay
 
-_Active decay thresholds are in `core/INIT.md` § "Decision guide: trust decay". If you've already loaded that file, skip this section._
+_Active decay windows are in `core/INIT.md`. This section explains the rationale behind the freshness-vs-confidence model._
 
 ### Freshness vs. confidence
 
@@ -172,7 +172,7 @@ Trust and relevance decay over time. For decay calculations, use `last_verified`
 
 ## Access anomaly detection
 
-_Active anomaly thresholds are in `core/INIT.md` § "Decision guide: anomaly detection". If you've already loaded that file, skip to "Response to anomalies" below._
+_Active anomaly thresholds are in `core/INIT.md` § "Decision guide: anomaly detection". The signal taxonomy and response protocol are below._
 
 ### Anomaly signals
 
@@ -216,11 +216,7 @@ The governance rules in `core/governance/` are not exempt from evolutionary pres
 
 **Principle:** Top-down constraints must be shaped by bottom-up evidence. A rule that consistently causes friction — archiving files that get re-retrieved, flagging patterns that are always false positives — needs revision. The system generates the insight; the human approves the change.
 
-When the system reviews or modifies itself, three architectural considerations are fundamental:
-
-- **Consistency.** Routing, governance docs, validators, setup surfaces, and generated artifacts should express one coherent contract.
-- **User-friendliness.** Governance should stay understandable and usable for the human running the repo; friction is a real failure mode, not cosmetic debt.
-- **Context efficiency.** Governance should preserve compact returning sessions, metadata-first checks, and low-overhead review flows; unnecessary context growth is an architectural cost.
+When the system reviews or modifies itself, changes must address the three architectural guardrails defined in `README.md` § "Architectural guardrails for system changes": **consistency**, **user-friendliness**, and **context efficiency**.
 
 ### Governance evaluation protocol
 

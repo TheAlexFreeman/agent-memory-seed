@@ -12,4 +12,6 @@ Advisory checklist for humans or agents to run periodically (e.g. during or befo
 
 5. **HUMANS/docs alignment** — Verify that `HUMANS/docs/CORE.md`, `HUMANS/docs/DESIGN.md`, and other human-facing documentation still reflect the current governance rules, directory layout, and operational contracts. Flag any descriptions that have drifted from the live system.
 
+6. **HOME.md alignment** — Verify that `core/memory/HOME.md` context loading order matches `core/INIT.md` § Context loading manifest and `agent-bootstrap.toml` step lists. Flag any divergence.
+
 This checklist is advisory. The repository owner decides whether and how often to run it; the agent may run it as part of periodic review and report findings without automatically applying changes.
