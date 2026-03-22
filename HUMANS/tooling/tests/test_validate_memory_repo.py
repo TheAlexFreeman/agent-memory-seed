@@ -48,7 +48,7 @@ README_ARCHITECTURE_LINE = validator.README_ARCHITECTURE_PHRASE
 SETUP_GUIDANCE_LINE = "live routing in `core/HOME.md`"
 
 
-VALID_QUICK_REFERENCE = (REPO_ROOT / "HOME.md").read_text(encoding="utf-8")
+VALID_QUICK_REFERENCE = (REPO_ROOT / "core" / "HOME.md").read_text(encoding="utf-8")
 
 VALID_BOOTSTRAP_MANIFEST = (REPO_ROOT / "agent-bootstrap.toml").read_text(encoding="utf-8")
 
@@ -92,8 +92,8 @@ def build_minimal_repo(root: Path) -> None:
     write(
         root / "HUMANS" / "tooling" / "agent-memory-capabilities.toml", VALID_CAPABILITIES_MANIFEST
     )
-    write(root / "engram_mcp" / "__init__.py", "\n")
-    write(root / "engram_mcp" / "memory_mcp.py", "#!/usr/bin/env python3\n")
+    write(root / "core" / "tools" / "__init__.py", "\n")
+    write(root / "core" / "tools" / "memory_mcp.py", "#!/usr/bin/env python3\n")
     write(
         root / "README.md",
         textwrap.dedent(
@@ -481,7 +481,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tempdir:
             root = Path(tempdir)
             build_minimal_repo(root)
-            (root / "engram_mcp" / "memory_mcp.py").unlink()
+            (root / "core" / "tools" / "memory_mcp.py").unlink()
 
             result = validator.validate_repo(root)
             self.assertTrue(
@@ -509,7 +509,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             write(
                 root / "HUMANS" / "tooling" / "agent-memory-capabilities.toml",
                 VALID_CAPABILITIES_MANIFEST.replace(
-                    'mcp_entrypoint = "engram_mcp/memory_mcp.py"',
+                    'mcp_entrypoint = "core/tools/memory_mcp.py"',
                     'mcp_entrypoint = "HUMANS/tooling/scripts/memory_mcp.py"',
                     1,
                 ),
@@ -518,7 +518,7 @@ class ValidateMemoryRepoTests(unittest.TestCase):
             result = validator.validate_repo(root)
             self.assertTrue(
                 any(
-                    "mcp_entrypoint must be 'engram_mcp/memory_mcp.py'" in error
+                    "mcp_entrypoint must be 'core/tools/memory_mcp.py'" in error
                     for error in result.errors
                 )
             )

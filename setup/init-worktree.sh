@@ -735,6 +735,7 @@ detect_engram_mcp_for_worktree() {
     return 1
 }
 
+
 SERVER_COMMAND=""
 SERVER_ARG=""
 SERVER_MODE=""
@@ -750,14 +751,14 @@ resolve_server_launcher() {
     fi
 
     if SERVER_COMMAND="$(detect_python_for_worktree "$worktree_root")"; then
-        memory_script_native="$(native_path "$worktree_root/engram_mcp/memory_mcp.py")"
+        memory_script_native="$(native_path "$worktree_root/core/tools/memory_mcp.py")"
         SERVER_ARG="$memory_script_native"
         SERVER_MODE="python"
         return 0
     fi
 
     SERVER_COMMAND="python"
-    SERVER_ARG="$(native_path "$worktree_root/engram_mcp/memory_mcp.py")"
+    SERVER_ARG="$(native_path "$worktree_root/core/tools/memory_mcp.py")"
     SERVER_MODE="fallback"
     return 1
 }

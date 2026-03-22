@@ -1,6 +1,6 @@
 version = 1
 kind = "agent-memory-capabilities"
-mcp_entrypoint = "engram_mcp/memory_mcp.py"
+mcp_entrypoint = "core/tools/memory_mcp.py"
 manifest_role = "Repo-side prototype for governed memory writes and capability discovery."
 shared_result_type = "MemoryWriteResult"
 

@@ -13,7 +13,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, ClassVar, Coroutine, cast
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[3]
 ToolCallable = Callable[..., Coroutine[Any, Any, str]]
 
 
@@ -225,7 +225,9 @@ preview_argument = "preview"
 
         self.assertEqual(resolved_root, repo_root)
         self.assertEqual(repo.root, repo_root)
-        payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/knowledge/topic/note.md")))
+        payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="memory/knowledge/topic/note.md"))
+        )
         self.assertTrue(payload["inline"])
         self.assertIn("# Note", payload["content"])
 
@@ -267,7 +269,9 @@ This is the preview body for the markdown note.
         tools = self._create_tools(repo_root)
 
         payload = json.loads(
-            asyncio.run(tools["memory_list_folder"](path="memory/knowledge/topic", preview_chars=20))
+            asyncio.run(
+                tools["memory_list_folder"](path="memory/knowledge/topic", preview_chars=20)
+            )
         )
 
         note_entry = next(entry for entry in payload["entries"] if entry["name"] == "note.md")
@@ -538,7 +542,9 @@ next_action: Do first step
         project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
             repo_root / "memory" / "working" / "projects" / "example" / "SUMMARY.md"
         )
-        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertEqual(payload["new_state"]["next_action"], "Do second step")
         self.assertEqual(payload["new_state"]["phase_progress"], [1, 2])
@@ -599,7 +605,9 @@ origin_session: manual
         )
         verified_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
 
-        self.assertEqual(payload["new_state"]["new_path"], "memory/knowledge/literature/test-note.md")
+        self.assertEqual(
+            payload["new_state"]["new_path"], "memory/knowledge/literature/test-note.md"
+        )
         self.assertEqual(payload["new_state"]["trust"], "high")
         self.assertFalse(old_path.exists())
         self.assertTrue(target_path.exists())
@@ -867,7 +875,9 @@ origin_session: manual
         )
         tools = self._create_tools(repo_root)
 
-        oversized = json.dumps(["memory/knowledge/_unverified/literature/test-note.md" for _ in range(51)])
+        oversized = json.dumps(
+            ["memory/knowledge/_unverified/literature/test-note.md" for _ in range(51)]
+        )
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(
                 tools["memory_promote_knowledge_batch"](
@@ -1358,11 +1368,15 @@ next_action: Original next action
         )
         tools = self._create_tools(repo_root)
         read_payload = json.loads(
-            asyncio.run(tools["memory_read_file"](path="memory/working/projects/example/plans/test-plan.md"))
+            asyncio.run(
+                tools["memory_read_file"](path="memory/working/projects/example/plans/test-plan.md")
+            )
         )
         old_token = read_payload["version_token"]
 
-        plan_path = repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
+        plan_path = (
+            repo_root / "memory" / "working" / "projects" / "example" / "plans" / "test-plan.md"
+        )
         plan_path.write_text(
             plan_path.read_text(encoding="utf-8").replace(
                 "Original next action",
@@ -1413,7 +1427,9 @@ last_verified: 2026-03-17
         )
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/working/projects/test-plan.md")))
+        read_payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="memory/working/projects/test-plan.md"))
+        )
         payload = json.loads(
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
@@ -1471,8 +1487,14 @@ status: active
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
-                        {"path": "memory/working/projects/one.md", "fields": {"status": "complete"}},
-                        {"path": "memory/working/projects/two.md", "fields": {"status": "complete"}},
+                        {
+                            "path": "memory/working/projects/one.md",
+                            "fields": {"status": "complete"},
+                        },
+                        {
+                            "path": "memory/working/projects/two.md",
+                            "fields": {"status": "complete"},
+                        },
                     ]
                 )
             )
@@ -1482,7 +1504,10 @@ status: active
         )
 
         self.assertEqual(payload["new_state"]["updated_count"], 2)
-        self.assertEqual(sorted(commit_payload["files_changed"]), ["memory/working/projects/one.md", "memory/working/projects/two.md"])
+        self.assertEqual(
+            sorted(commit_payload["files_changed"]),
+            ["memory/working/projects/one.md", "memory/working/projects/two.md"],
+        )
         self.assertIsNotNone(commit_payload["commit_sha"])
 
     def test_memory_update_frontmatter_bulk_skips_missing_keys_when_disabled(self) -> None:
@@ -1537,7 +1562,10 @@ status: active
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
-                        {"path": "memory/working/projects/test-plan.md", "fields": {"status": "complete"}},
+                        {
+                            "path": "memory/working/projects/test-plan.md",
+                            "fields": {"status": "complete"},
+                        },
                         {"path": "README.md", "fields": {"title": "Blocked"}},
                     ]
                 )
@@ -1593,8 +1621,14 @@ status: active
             asyncio.run(
                 tools["memory_update_frontmatter_bulk"](
                     updates=[
-                        {"path": "memory/working/projects/one.md", "fields": {"status": "complete"}},
-                        {"path": "memory/working/projects/two.md", "fields": {"status": "complete"}},
+                        {
+                            "path": "memory/working/projects/one.md",
+                            "fields": {"status": "complete"},
+                        },
+                        {
+                            "path": "memory/working/projects/two.md",
+                            "fields": {"status": "complete"},
+                        },
                     ]
                 )
             )
@@ -1623,7 +1657,8 @@ status: active
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         oversized = [
-            {"path": "memory/working/projects/test-plan.md", "fields": {"status": "complete"}} for _ in range(101)
+            {"path": "memory/working/projects/test-plan.md", "fields": {"status": "complete"}}
+            for _ in range(101)
         ]
         with self.assertRaises(self.errors.ValidationError):
             asyncio.run(tools["memory_update_frontmatter_bulk"](updates=oversized))
@@ -1693,9 +1728,7 @@ declared_gaps = []
         repo_root = self._init_repo(seed)
         tools = self._create_tools(repo_root)
 
-        payload = json.loads(
-            asyncio.run(tools["memory_get_policy_state"](path="HOME.md"))
-        )
+        payload = json.loads(asyncio.run(tools["memory_get_policy_state"](path="HOME.md")))
 
         self.assertEqual(payload["change_class"], "protected")
         self.assertTrue(payload["path_policy"]["protected_surface"])
@@ -1788,7 +1821,10 @@ See [target](../knowledge/topic/target.md).
             ["frontmatter_path", "frontmatter_path", "markdown_link"],
         )
         self.assertTrue(
-            all(match["from_path"] == "memory/working/projects/reference-plan.md" for match in payload["matches"])
+            all(
+                match["from_path"] == "memory/working/projects/reference-plan.md"
+                for match in payload["matches"]
+            )
         )
         self.assertEqual(
             payload["matches"][-1]["resolved_path"],
@@ -1944,7 +1980,9 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
         self.assertEqual(payload["warnings"], [])
         self.assertEqual(len(payload["files_with_references"]), 1)
         refs = payload["files_with_references"][0]["refs"]
-        self.assertEqual(payload["files_with_references"][0]["path"], "memory/working/projects/reorg.md")
+        self.assertEqual(
+            payload["files_with_references"][0]["path"], "memory/working/projects/reorg.md"
+        )
         self.assertEqual(
             {(ref["old"], ref["new"]) for ref in refs},
             {
@@ -1972,8 +2010,12 @@ See [alpha](../knowledge/ai-frontier/alpha.md).
             )
         )
 
-        self.assertIn("Destination already exists: memory/knowledge/ai/frontier", payload["warnings"])
-        self.assertIn("Destination conflict: memory/knowledge/ai/frontier/alpha.md", payload["warnings"])
+        self.assertIn(
+            "Destination already exists: memory/knowledge/ai/frontier", payload["warnings"]
+        )
+        self.assertIn(
+            "Destination conflict: memory/knowledge/ai/frontier/alpha.md", payload["warnings"]
+        )
 
     def test_memory_reorganize_path_dry_run_returns_governed_preview(self) -> None:
         repo_root = self._init_repo(
@@ -2669,7 +2711,9 @@ See [missing](missing.md).
         self.assertEqual(len(payload["broken_links"]), 2)
 
     def test_memory_check_cross_references_rejects_oversized_scan(self) -> None:
-        files = {f"memory/knowledge/bulk/file-{idx:03d}.md": f"# File {idx}\n" for idx in range(501)}
+        files = {
+            f"memory/knowledge/bulk/file-{idx:03d}.md": f"# File {idx}\n" for idx in range(501)
+        }
         repo_root = self._init_repo(files)
         tools = self._create_tools(repo_root)
 
@@ -2763,7 +2807,9 @@ Detailed descriptions should preserve the first paragraph.
         tools = self._create_tools(repo_root)
 
         with self.assertRaises(self.errors.ValidationError):
-            asyncio.run(tools["memory_generate_summary"](path="memory/knowledge/topic", style="compact"))
+            asyncio.run(
+                tools["memory_generate_summary"](path="memory/knowledge/topic", style="compact")
+            )
 
     def test_memory_access_analytics_classifies_policy_buckets(self) -> None:
         repo_root = self._init_repo(
@@ -2835,7 +2881,9 @@ Detailed descriptions should preserve the first paragraph.
             },
             payload["suggested_actions"],
         )
-        self.assertEqual(payload["top_accessed"][0], {"file": "memory/knowledge/core.md", "count": 5})
+        self.assertEqual(
+            payload["top_accessed"][0], {"file": "memory/knowledge/core.md", "count": 5}
+        )
         self.assertEqual(payload["thresholds"]["policy_source"], "governance/curation-policy.md")
 
     def test_memory_access_analytics_handles_empty_logs(self) -> None:
@@ -3124,7 +3172,9 @@ Detailed descriptions should preserve the first paragraph.
         project_frontmatter, _ = self.frontmatter_utils.read_with_frontmatter(
             repo_root / "memory" / "working" / "projects" / "example" / "SUMMARY.md"
         )
-        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(
+            encoding="utf-8"
+        )
 
         self.assertEqual(plan_frontmatter["title"], "Test Plan")
         self.assertEqual(project_frontmatter["active_plans"], 1)
@@ -3155,7 +3205,15 @@ Detailed descriptions should preserve the first paragraph.
         )
 
         self.assertFalse(
-            (repo_root / "memory" / "working" / "projects" / "example" / "plans" / "preview-plan.md").exists()
+            (
+                repo_root
+                / "memory"
+                / "working"
+                / "projects"
+                / "example"
+                / "plans"
+                / "preview-plan.md"
+            ).exists()
         )
         self.assertEqual(preview["preview"]["mode"], "preview")
         self.assertEqual(
@@ -3177,7 +3235,17 @@ Detailed descriptions should preserve the first paragraph.
             )
         )
 
-        self.assertTrue((repo_root / "memory" / "working" / "projects" / "example" / "plans" / "preview-plan.md").exists())
+        self.assertTrue(
+            (
+                repo_root
+                / "memory"
+                / "working"
+                / "projects"
+                / "example"
+                / "plans"
+                / "preview-plan.md"
+            ).exists()
+        )
         self.assertEqual(applied["commit_message"], "[plan] Create preview-plan")
         self.assertEqual(applied["preview"]["mode"], "apply")
         self.assertEqual(preview["preview"]["target_files"], applied["preview"]["target_files"])
@@ -3409,7 +3477,9 @@ Direct and concise.
         reflection = (
             repo_root / "memory" / "activity" / "2026" / "03" / "20" / "chat-002" / "reflection.md"
         ).read_text(encoding="utf-8")
-        chats_summary = (repo_root / "memory" / "activity" / "SUMMARY.md").read_text(encoding="utf-8")
+        chats_summary = (repo_root / "memory" / "activity" / "SUMMARY.md").read_text(
+            encoding="utf-8"
+        )
         knowledge_access = [
             json.loads(line)
             for line in (repo_root / "knowledge" / "ACCESS.jsonl")
@@ -3457,9 +3527,9 @@ Direct and concise.
         )
         payload = json.loads(raw)
 
-        scratchpad = (repo_root / "memory" / "working" / "scratchpad" / "2026-03-20-worklog.md").read_text(
-            encoding="utf-8"
-        )
+        scratchpad = (
+            repo_root / "memory" / "working" / "scratchpad" / "2026-03-20-worklog.md"
+        ).read_text(encoding="utf-8")
         self.assertEqual(
             payload["new_state"]["target"],
             "memory/working/scratchpad/2026-03-20-worklog.md",
@@ -3903,16 +3973,28 @@ Load compact context.
         self.assertEqual(payload["new_state"]["session_groups_processed"], 3)
         self.assertEqual(
             payload["new_state"]["hot_access_targets"],
-            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS.jsonl", "memory/skills/ACCESS.jsonl"],
+            [
+                "memory/knowledge/ACCESS.jsonl",
+                "memory/working/projects/ACCESS.jsonl",
+                "memory/skills/ACCESS.jsonl",
+            ],
         )
         self.assertEqual(
             payload["new_state"]["summary_materialization_targets"],
-            ["memory/knowledge/SUMMARY.md", "memory/working/projects/SUMMARY.md", "memory/skills/SUMMARY.md"],
+            [
+                "memory/knowledge/SUMMARY.md",
+                "memory/working/projects/SUMMARY.md",
+                "memory/skills/SUMMARY.md",
+            ],
         )
         self.assertEqual(len(payload["new_state"]["clusters"]), 1)
         self.assertEqual(
             payload["new_state"]["clusters"][0]["files"],
-            ["memory/knowledge/topic.md", "memory/working/projects/demo.md", "memory/skills/session-start.md"],
+            [
+                "memory/knowledge/topic.md",
+                "memory/working/projects/demo.md",
+                "memory/skills/session-start.md",
+            ],
         )
         self.assertEqual(
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8"),
@@ -4024,7 +4106,9 @@ Load compact context.
         payload = json.loads(raw)
 
         knowledge_summary = (repo_root / "knowledge" / "SUMMARY.md").read_text(encoding="utf-8")
-        plans_summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        plans_summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(
+            encoding="utf-8"
+        )
         skills_summary = (repo_root / "skills" / "SUMMARY.md").read_text(encoding="utf-8")
         knowledge_archive = (repo_root / "knowledge" / "ACCESS.archive.2026-03.jsonl").read_text(
             encoding="utf-8"
@@ -4046,11 +4130,16 @@ Load compact context.
         self.assertEqual(payload["new_state"]["legacy_fallback_entries"], 3)
         self.assertEqual(
             payload["new_state"]["hot_access_reset_targets"],
-            ["memory/knowledge/ACCESS.jsonl", "memory/working/projects/ACCESS.jsonl", "memory/skills/ACCESS.jsonl"],
+            [
+                "memory/knowledge/ACCESS.jsonl",
+                "memory/working/projects/ACCESS.jsonl",
+                "memory/skills/ACCESS.jsonl",
+            ],
         )
         self.assertIn(f"- Last aggregation: {date.today()}", knowledge_summary)
         self.assertIn(
-            "memory/knowledge/topic.md + memory/working/projects/demo.md + memory/skills/session-start.md", knowledge_summary
+            "memory/knowledge/topic.md + memory/working/projects/demo.md + memory/skills/session-start.md",
+            knowledge_summary,
         )
         self.assertIn(f"- Last aggregation: {date.today()}", plans_summary)
         self.assertIn(f"- Last aggregation: {date.today()}", skills_summary)
@@ -4128,14 +4217,18 @@ Load compact context.
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_write"](path="memory/skills/session-start.md", content="injected\n"))
+            asyncio.run(
+                tools["memory_write"](path="memory/skills/session-start.md", content="injected\n")
+            )
 
     def test_memory_write_blocks_protected_meta_path(self) -> None:
         repo_root = self._init_repo({"governance/curation-policy.md": "# Policy\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         with self.assertRaises(self.errors.MemoryPermissionError):
-            asyncio.run(tools["memory_write"](path="governance/curation-policy.md", content="injected\n"))
+            asyncio.run(
+                tools["memory_write"](path="governance/curation-policy.md", content="injected\n")
+            )
 
     def test_memory_edit_blocks_protected_identity_path(self) -> None:
         repo_root = self._init_repo({"memory/users/profile.md": "# Profile\noriginal\n"})
@@ -4404,7 +4497,9 @@ next_action: Original next action
             )
         )
 
-        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(encoding="utf-8")
+        summary = (repo_root / "memory" / "working" / "projects" / "SUMMARY.md").read_text(
+            encoding="utf-8"
+        )
         self.assertIn("| example | active | exploration | 0 | Example project. |", summary)
 
     def test_memory_write_allows_knowledge_path(self) -> None:
@@ -4413,7 +4508,9 @@ next_action: Original next action
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         asyncio.run(
-            tools["memory_write"](path="memory/knowledge/_unverified/test/note.md", content="# Note\n")
+            tools["memory_write"](
+                path="memory/knowledge/_unverified/test/note.md", content="# Note\n"
+            )
         )
         self.assertTrue((repo_root / "knowledge" / "_unverified" / "test" / "note.md").exists())
 
@@ -4526,7 +4623,9 @@ next_action: Original next action
             )
         )
         payload = json.loads(raw)
-        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/_unverified/ACCESS.jsonl")
+        self.assertEqual(
+            payload["new_state"]["access_jsonl"], "memory/knowledge/_unverified/ACCESS.jsonl"
+        )
         self.assertTrue((repo_root / "knowledge" / "_unverified" / "ACCESS.jsonl").exists())
 
     def test_memory_log_access_rejects_invalid_helpfulness(self) -> None:
@@ -4674,7 +4773,9 @@ next_action: Original next action
         )
 
         payload = json.loads(raw)
-        self.assertEqual(payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS_SCANS.jsonl")
+        self.assertEqual(
+            payload["new_state"]["access_jsonl"], "memory/knowledge/ACCESS_SCANS.jsonl"
+        )
         self.assertEqual(payload["new_state"]["scan_entry_count"], 1)
         self.assertEqual((repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8"), "")
 
@@ -4833,7 +4934,9 @@ next_action: Original next action
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_entry = json.loads(
-            (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS.jsonl")
+            .read_text(encoding="utf-8")
+            .strip()
         )
 
         self.assertEqual(after_count - before_count, 1)
@@ -4893,7 +4996,9 @@ next_action: Original next action
             (repo_root / "knowledge" / "ACCESS.jsonl").read_text(encoding="utf-8").strip()
         )
         plan_scan_entry = json.loads(
-            (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl").read_text(encoding="utf-8").strip()
+            (repo_root / "memory" / "working" / "projects" / "ACCESS_SCANS.jsonl")
+            .read_text(encoding="utf-8")
+            .strip()
         )
 
         self.assertEqual(knowledge_entry["session_id"], "memory/activity/2026/03/20/chat-016")
@@ -5118,7 +5223,8 @@ next_action: Original next action
         self.assertIn("memory/working/projects/demo.md", new_state["files_changed"])
         self.assertEqual(payload["preview"]["mode"], "preview")
         self.assertEqual(
-            payload["preview"]["target_files"], [{"path": "memory/working/projects/demo.md", "change": "revert"}]
+            payload["preview"]["target_files"],
+            [{"path": "memory/working/projects/demo.md", "change": "revert"}],
         )
         self.assertEqual(payload["preview"]["commit_suggestion"]["message"], f"Revert {target_sha}")
         self.assertEqual(head_after, head_before)
@@ -5155,7 +5261,9 @@ next_action: Original next action
         )
         payload = json.loads(confirm_raw)
 
-        restored = (repo_root / "memory" / "working" / "projects" / "demo.md").read_text(encoding="utf-8")
+        restored = (repo_root / "memory" / "working" / "projects" / "demo.md").read_text(
+            encoding="utf-8"
+        )
         log_subject = subprocess.run(
             ["git", "log", "-1", "--pretty=%s"],
             cwd=repo_root,
@@ -5902,7 +6010,8 @@ next_action: Original next action
 
         self.assertEqual(payload["files_checked"], 1)
         self.assertEqual(
-            [item["access_file"] for item in payload["reports"]], ["memory/working/projects/ACCESS.jsonl"]
+            [item["access_file"] for item in payload["reports"]],
+            ["memory/working/projects/ACCESS.jsonl"],
         )
         self.assertEqual(payload["above_trigger"], [])
         self.assertEqual(payload["near_trigger"], [])
@@ -5938,7 +6047,14 @@ next_action: Original next action
         self.assertEqual(payload["aggregation_threshold"], 15)
         self.assertEqual(
             payload["aggregation_due"],
-            [{"folder": "memory/working/projects/", "entries": 15, "threshold": 15, "overdue": True}],
+            [
+                {
+                    "folder": "memory/working/projects/",
+                    "entries": 15,
+                    "threshold": 15,
+                    "overdue": True,
+                }
+            ],
         )
         self.assertEqual(payload["review_queue_pending"], 0)
         self.assertFalse(payload["periodic_review_due"])
@@ -6054,14 +6170,23 @@ next_action: Original next action
 
         self.assertEqual(payload["entries_considered"], 11)
         self.assertEqual(payload["files_considered"], 3)
-        self.assertEqual(payload["high_value_files"][0]["file"], "memory/working/projects/high-value.md")
-        self.assertEqual(payload["low_value_files"][0]["file"], "memory/working/projects/low-value.md")
+        self.assertEqual(
+            payload["high_value_files"][0]["file"], "memory/working/projects/high-value.md"
+        )
+        self.assertEqual(
+            payload["low_value_files"][0]["file"], "memory/working/projects/low-value.md"
+        )
         self.assertEqual(
             payload["co_retrieval_clusters"][0]["files"],
             ["memory/knowledge/topic-a.md", "memory/working/projects/high-value.md"],
         )
-        self.assertIn("memory/working/projects/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
-        self.assertIn("memory/knowledge/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"])
+        self.assertIn(
+            "memory/working/projects/SUMMARY.md",
+            payload["proposed_outputs"]["summary_update_targets"],
+        )
+        self.assertIn(
+            "memory/knowledge/SUMMARY.md", payload["proposed_outputs"]["summary_update_targets"]
+        )
         self.assertEqual(
             payload["proposed_outputs"]["review_queue_candidates"][0]["file"],
             "memory/working/projects/low-value.md",
@@ -6165,7 +6290,9 @@ next_action: Original next action
 
         self.assertEqual(payload["entries_considered"], 1)
         self.assertEqual(payload["files_considered"], 1)
-        self.assertEqual(payload["file_summaries"][0]["file"], "memory/working/projects/in-range.md")
+        self.assertEqual(
+            payload["file_summaries"][0]["file"], "memory/working/projects/in-range.md"
+        )
         self.assertEqual(payload["filters"]["folder"], "plans")
         self.assertEqual(payload["filters"]["start_date"], "2026-03-01")
 
@@ -6275,7 +6402,9 @@ Skill sync.
                 "memory/working/projects/ACCESS.jsonl": "".join(
                     json.dumps(
                         {
-                            "file": "memory/working/projects/alpha.md" if idx % 2 == 0 else "memory/knowledge/topic-a.md",
+                            "file": "memory/working/projects/alpha.md"
+                            if idx % 2 == 0
+                            else "memory/knowledge/topic-a.md",
                             "date": f"2026-03-{(idx % 20) + 1:02d}",
                             "task": "periodic review",
                             "helpfulness": 0.65,
@@ -6445,14 +6574,18 @@ Topic A.
             ordered["unverified_content"]["overdue_files"][0]["path"],
             "memory/knowledge/_unverified/old-note.md",
         )
-        self.assertEqual(ordered["conflict_resolution"]["files"], ["memory/knowledge/conflicted.md"])
+        self.assertEqual(
+            ordered["conflict_resolution"]["files"], ["memory/knowledge/conflicted.md"]
+        )
         self.assertEqual(ordered["unhelpful_memory"]["count"], 1)
         self.assertEqual(
             ordered["emergent_categorization"]["clusters"][0]["files"],
             ["memory/knowledge/topic-a.md", "memory/working/projects/low-value.md"],
         )
         self.assertEqual(ordered["session_reflection_themes"]["reflection_count"], 1)
-        self.assertIn("governance/review-queue.md", payload["proposed_outputs"]["deferred_write_targets"])
+        self.assertIn(
+            "governance/review-queue.md", payload["proposed_outputs"]["deferred_write_targets"]
+        )
 
     def test_memory_run_periodic_review_handles_missing_session_ids_on_same_date(self) -> None:
         repo_root = self._init_repo(
@@ -6613,7 +6746,9 @@ Structured provenance note.
             ["memory/activity/2026/03/20/chat-001/summary.md"],
         )
         self.assertEqual(payload["provenance_fields"]["related_sources"], ["docs/spec.md"])
-        self.assertIn("Origin commit recorded for memory/knowledge/topic.md.", payload["lineage_summary"])
+        self.assertIn(
+            "Origin commit recorded for memory/knowledge/topic.md.", payload["lineage_summary"]
+        )
 
     def test_memory_extract_file_returns_outline_sections_and_frontmatter(self) -> None:
         repo_root = self._init_repo(
@@ -6872,9 +7007,7 @@ _Last assessed: 2026-03-01 — Exploration retained_
             }
         )
         tools = self._create_tools(repo_root)
-        quick_reference_before = (repo_root / "HOME.md").read_text(
-            encoding="utf-8"
-        )
+        quick_reference_before = (repo_root / "HOME.md").read_text(encoding="utf-8")
 
         preview = json.loads(
             asyncio.run(
@@ -7036,7 +7169,9 @@ trust: high
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
         # Get the current token
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/knowledge/test.md")))
+        read_payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="memory/knowledge/test.md"))
+        )
         old_token = read_payload["version_token"]
 
         # Modify the file directly (bypassing the MCP layer)
@@ -7059,7 +7194,9 @@ trust: high
         repo_root = self._init_repo({"memory/knowledge/test.md": "# Hello\n\nSome text.\n"})
         tools = self._create_tools(repo_root, enable_raw_write_tools=True)
 
-        read_payload = json.loads(asyncio.run(tools["memory_read_file"](path="memory/knowledge/test.md")))
+        read_payload = json.loads(
+            asyncio.run(tools["memory_read_file"](path="memory/knowledge/test.md"))
+        )
         old_token = read_payload["version_token"]
 
         # Modify the file directly

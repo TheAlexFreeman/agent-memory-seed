@@ -86,6 +86,8 @@ For the complete mapping of which files to load per session type, see `core/HOME
 │   │   ├── (task-groups.md       ← Created at Calibration stage.)
 │   │   └── (task-categories.md   ← Created at Consolidation stage.)
 │   │
+│   ├── tools/             ← MCP server implementation (not loaded by agents).
+│   │
 │   └── memory/            ← All retrievable memory content.
 │       ├── users/         ← Who the user is. Personality, preferences, values.
 │       │   ├── SUMMARY.md ← Start here. High-level portrait of the user.
@@ -137,8 +139,6 @@ For the complete mapping of which files to load per session type, see `core/HOME
 │       ├── onboard-export-template.md ← Structured format for onboarding exports.
 │       ├── scripts/       ← Validator, export tooling.
 │       └── tests/         ← Test suite.
-│
-└── engram_mcp/            ← MCP server implementation (not loaded by agents).
 ```
 
 ## Memory curation

@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-memory-mcp"
@@ -9,12 +9,12 @@ description = "Git-versioned Markdown memory system with MCP server for LLM agen
 readme = "README.md"
 requires-python = ">=3.10"
 
-[project.scripts]
-engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
-
 # Base install stays empty so the format layer can be imported without pulling
 # in MCP runtime dependencies.
 dependencies = []
+
+[project.scripts]
+engram-mcp = "engram_mcp.agent_memory_mcp.server_main:main"
 
 [project.optional-dependencies]
 # Install with: pip install -e ".[core]"
@@ -26,9 +26,17 @@ server = ["mcp>=1.0", "python-frontmatter>=1.1"]
 # Install with: pip install -e ".[dev]"
 dev = ["pytest>=8.0", "ruff>=0.4", "mcp>=1.0", "python-frontmatter>=1.1"]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["engram_mcp*"]
+[tool.setuptools]
+packages = [
+    "engram_mcp",
+    "engram_mcp.agent_memory_mcp",
+    "engram_mcp.agent_memory_mcp.core",
+    "engram_mcp.agent_memory_mcp.tools",
+    "engram_mcp.agent_memory_mcp.tools.semantic",
+]
+
+[tool.setuptools.package-dir]
+engram_mcp = "core/tools"
 
 [tool.ruff]
 line-length = 100
@@ -39,4 +47,4 @@ select = ["E", "F", "W", "I"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-testpaths = ["HUMANS/tooling/tests", "engram_mcp/tests"]
+testpaths = ["HUMANS/tooling/tests", "core/tools/tests"]

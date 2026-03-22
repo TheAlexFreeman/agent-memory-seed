@@ -16,6 +16,23 @@ Each entry should explain not just what changed, but **why** — so that future 
 
 ---
 
+## [2026-07-24] MCP server relocated to core/tools/
+
+**Changed:**
+
+- **Server directory moved.** `engram_mcp/` at repo root → `core/tools/`. The Python importable package name remains `engram_mcp` via `pyproject.toml` `package-dir` mapping; all internal imports are unchanged.
+- **Build system.** Build backend changed from `setuptools.backends.legacy:build` to `setuptools.build_meta`. Explicit `[tool.setuptools]` section with `packages` and `package-dir` replaces `packages.find`.
+- **IDE configs updated.** `.vscode/mcp.json`, `.cursor/mcp.json`, `.codex/config.toml` all point at `core/tools/memory_mcp.py`.
+- **Validator updated.** `EXPECTED_MCP_RUNTIME_DIR` and `EXPECTED_MCP_ENTRYPOINT` now reference `core/tools/`. The old `engram_mcp/` paths are checked as legacy artefacts that should no longer exist.
+- **Setup scripts updated.** `setup.sh`, `setup.html`, `init-worktree.sh` construct paths using `core/tools/` instead of `engram_mcp/`. Path manifests (`initial-commit-paths.txt`, `init-worktree-paths.txt`) updated.
+- **Documentation updated.** README tree, MCP.md, DESIGN.md, INTEGRATIONS.md, capabilities manifest, and config example all reference the new location.
+
+**Reasoning:** Consolidating the MCP server under `core/` makes its relationship to the rest of the system explicit in the directory hierarchy, matching the earlier restructure that moved all other content under `core/`.
+
+**Approved by:** user
+
+---
+
 ## [2026-07-24] Core directory restructure — path migration across all layers
 
 **Changed:**

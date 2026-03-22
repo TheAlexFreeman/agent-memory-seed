@@ -63,7 +63,7 @@ def build_setup_repo(root: Path) -> None:
         ".codex",
         ".github",
         ".vscode",
-        "engram_mcp",
+        "core",
         "HUMANS",
         "setup",
         "meta",
@@ -236,7 +236,7 @@ class SetupFlowTests(unittest.TestCase):
             escaped_root = str(root).replace("\\", "\\\\")
             self.assertIn(escaped_root, config_text)
             self.assertIn(
-                str(root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\"),
+                str(root / "core" / "tools" / "memory_mcp.py").replace("\\", "\\\\"),
                 config_text,
             )
             self.assertNotIn(str(REPO_ROOT).replace("\\", "\\\\"), config_text)
@@ -318,7 +318,7 @@ class SetupFlowTests(unittest.TestCase):
             codex_config = (host_root / ".codex" / "config.toml").read_text(encoding="utf-8")
             self.assertIn(str(worktree_root).replace("\\", "\\\\"), codex_config)
             self.assertIn(
-                str(worktree_root / "engram_mcp" / "memory_mcp.py").replace("\\", "\\\\"),
+                str(worktree_root / "core" / "tools" / "memory_mcp.py").replace("\\", "\\\\"),
                 codex_config,
             )
 

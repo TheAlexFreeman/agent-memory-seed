@@ -13,8 +13,8 @@ import anyio
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT_PATH = REPO_ROOT / "engram_mcp" / "memory_mcp.py"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SCRIPT_PATH = REPO_ROOT / "core" / "tools" / "memory_mcp.py"
 VENV_PYTHON = REPO_ROOT / ".venv" / "Scripts" / "python.exe"
 
 
@@ -190,7 +190,11 @@ class MemoryMCPTests(unittest.TestCase):
             prompt_names = [str(prompt.name) for prompt in prompts]
             review_prompt = await self.module.mcp.get_prompt(
                 "memory_prepare_unverified_review_prompt",
-                {"folder_path": "memory/knowledge/_unverified", "max_files": 2, "max_extract_words": 20},
+                {
+                    "folder_path": "memory/knowledge/_unverified",
+                    "max_files": 2,
+                    "max_extract_words": 20,
+                },
             )
             wrap_up_prompt = await self.module.mcp.get_prompt(
                 "memory_session_wrap_up_prompt",

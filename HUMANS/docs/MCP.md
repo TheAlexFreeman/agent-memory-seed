@@ -29,20 +29,20 @@ These are the main files and entry points that define the MCP setup.
 
 | Resource | Role | Why it matters |
 | --- | --- | --- |
-| `engram_mcp/memory_mcp.py` | Compatibility entrypoint script | The simplest path-based way to launch the repo-local MCP server. |
-| `engram_mcp/agent_memory_mcp/server.py` | Runtime bootstrap | Builds the FastMCP server, resolves the repo root, and registers tools. |
+| `core/tools/memory_mcp.py` | Compatibility entrypoint script | The simplest path-based way to launch the repo-local MCP server. |
+| `core/tools/agent_memory_mcp/server.py` | Runtime bootstrap | Builds the FastMCP server, resolves the repo root, and registers tools. |
 | `HUMANS/tooling/agent-memory-capabilities.toml` | Capability manifest | Declares what the MCP surface supports, how clients should interpret it, and which approval rules apply. |
 | `HUMANS/tooling/mcp-config-example.json` | Example client config | Shows how a desktop MCP client can point at this repo. |
-| `engram_mcp/agent_memory_mcp/tools/read_tools.py` | Tier 0 read tools | Read, inspect, audit, and report on the memory repo without mutating it. |
-| `engram_mcp/agent_memory_mcp/tools/semantic/` | Tier 1 semantic tools | The semantic package is the stable Tier 1 surface, split by domain so governed write operations keep their own invariants and auto-commit behavior without a monolithic module. |
-| `engram_mcp/agent_memory_mcp/tools/write_tools.py` | Tier 2 raw fallback tools | Low-level staged mutation tools used only when the runtime explicitly enables raw fallback. |
+| `core/tools/agent_memory_mcp/tools/read_tools.py` | Tier 0 read tools | Read, inspect, audit, and report on the memory repo without mutating it. |
+| `core/tools/agent_memory_mcp/tools/semantic/` | Tier 1 semantic tools | The semantic package is the stable Tier 1 surface, split by domain so governed write operations keep their own invariants and auto-commit behavior without a monolithic module. |
+| `core/tools/agent_memory_mcp/tools/write_tools.py` | Tier 2 raw fallback tools | Low-level staged mutation tools used only when the runtime explicitly enables raw fallback. |
 
 ## How the server is launched
 
 The canonical path-based script is:
 
 ```bash
-python engram_mcp/memory_mcp.py
+python core/tools/memory_mcp.py
 ```
 
 That wrapper imports the repo-local server and runs it. When the package is
@@ -64,13 +64,13 @@ If none of those are set, the runtime falls back to file-relative detection from
 
 ```bash
 cd agent-memory-seed
-python engram_mcp/memory_mcp.py
+python core/tools/memory_mcp.py
 ```
 
 **Run it from somewhere else**
 
 ```bash
-MEMORY_REPO_ROOT=/path/to/agent-memory-seed python /path/to/agent-memory-seed/engram_mcp/memory_mcp.py
+MEMORY_REPO_ROOT=/path/to/agent-memory-seed python /path/to/agent-memory-seed/core/tools/memory_mcp.py
 ```
 
 **Embed it in Python**
@@ -90,7 +90,7 @@ The repo already includes an example client config in `HUMANS/tooling/mcp-config
 	"mcpServers": {
 		"agent-memory": {
 			"command": "python",
-				"args": ["C:/path/to/agent-memory-seed/engram_mcp/memory_mcp.py"],
+				"args": ["C:/path/to/agent-memory-seed/core/tools/memory_mcp.py"],
 			"env": {
 				"AGENT_MEMORY_ROOT": "C:/path/to/agent-memory-seed"
 			}

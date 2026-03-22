@@ -8,9 +8,9 @@ CLAUDE.md
 README.md
 agent-bootstrap.toml
 pyproject.toml
-engram_mcp/__init__.py
-engram_mcp/agent_memory_mcp
-engram_mcp/memory_mcp.py
+core/tools/__init__.py
+core/tools/agent_memory_mcp
+core/tools/memory_mcp.py
 core/governance
 core/HOME.md
 core/memory/skills

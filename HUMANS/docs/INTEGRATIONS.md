@@ -17,7 +17,7 @@ Use the repository as-is when the memory system is the primary project.
 
 - run `setup.sh` from the repo root
 - keep agent adapter files in the repo root
-- point your MCP client at `engram_mcp/memory_mcp.py` or `engram-mcp`
+- point your MCP client at `core/tools/memory_mcp.py` or `engram-mcp`
 
 ### Worktree mode
 
@@ -34,7 +34,7 @@ Use `setup/init-worktree.sh` when you want a host codebase to keep its own persi
 
 If you already have an agent runtime, prefer MCP over direct file access whenever possible.
 
-- server entrypoint: `engram_mcp/memory_mcp.py`
+- server entrypoint: `core/tools/memory_mcp.py`
 - installed CLI: `engram-mcp`
 - repo root env var: `MEMORY_REPO_ROOT`
 - optional host repo env var in worktree mode: `HOST_REPO_ROOT`

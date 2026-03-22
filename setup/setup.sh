@@ -135,7 +135,7 @@ write_codex_config() {
     if [[ "$repo_root_native" == *\\* ]] || [[ "$repo_root_native" =~ ^[A-Za-z]: ]]; then
         sep="\\"
     fi
-    local memory_script="${repo_root_native%[\\/]}${sep}engram_mcp${sep}memory_mcp.py"
+    local memory_script="${repo_root_native%[\\/]}${sep}core${sep}tools${sep}memory_mcp.py"
     local escaped_python
     local escaped_script
     local escaped_repo

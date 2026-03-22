@@ -3771,7 +3771,7 @@ def register(mcp: "FastMCP", get_repo, get_root) -> dict[str, object]:
             "plans",
             "identity",
             "meta",
-            "engram_mcp",
+            "tools",
             "skills",
             "chats",
             "scratchpad",

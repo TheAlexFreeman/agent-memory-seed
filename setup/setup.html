@@ -478,7 +478,7 @@ button {
     var normalizedPython = pythonPath.trim();
     var sep = (normalizedRepo.indexOf('\\') !== -1 || /^[A-Za-z]:/.test(normalizedRepo)) ? '\\' : '/';
     var trimmedRepo = normalizedRepo.replace(/[\\/]+$/, '');
-    var memoryScript = trimmedRepo + sep + 'engram_mcp' + sep + 'memory_mcp.py';
+    var memoryScript = trimmedRepo + sep + 'core' + sep + 'tools' + sep + 'memory_mcp.py';
     return [
       '[mcp_servers.agent_memory]',
       'command = "' + escapeTomlString(normalizedPython) + '"',

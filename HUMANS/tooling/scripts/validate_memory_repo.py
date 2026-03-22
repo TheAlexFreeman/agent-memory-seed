@@ -284,10 +284,12 @@ ROOT_SETUP_TARGETS = {
 }
 CANONICAL_SETUP_FILES = (Path("setup/setup.sh"), Path("setup/setup.html"))
 CAPABILITIES_MANIFEST_PATH = Path("HUMANS/tooling/agent-memory-capabilities.toml")
-EXPECTED_MCP_RUNTIME_DIR = Path("engram_mcp")
-EXPECTED_MCP_ENTRYPOINT = Path("engram_mcp/memory_mcp.py")
+EXPECTED_MCP_RUNTIME_DIR = Path("core/tools")
+EXPECTED_MCP_ENTRYPOINT = Path("core/tools/memory_mcp.py")
 LEGACY_MCP_RUNTIME_DIR = Path("tools")
 LEGACY_MCP_ENTRYPOINT = Path("HUMANS/tooling/scripts/memory_mcp.py")
+LEGACY_MCP_RUNTIME_DIR_V2 = Path("engram_mcp")
+LEGACY_MCP_ENTRYPOINT_V2 = Path("engram_mcp/memory_mcp.py")
 
 PROMPT_START_LINE = "Start with `README.md` for the architecture and startup contract, then use `core/HOME.md` for live routing and context-loading rules."
 PROMPT_ROUTE_LINE = "Use `core/memory/working/projects/SUMMARY.md` as the primary orientation surface for normal sessions unless `core/HOME.md` routes you to first-run, full bootstrap, or a more specific path."
@@ -1586,6 +1588,8 @@ def validate_mcp_runtime_layout(root: Path, result: ValidationResult) -> None:
     entrypoint_path = root / EXPECTED_MCP_ENTRYPOINT
     legacy_runtime_dir = root / LEGACY_MCP_RUNTIME_DIR
     legacy_entrypoint_path = root / LEGACY_MCP_ENTRYPOINT
+    legacy_runtime_dir_v2 = root / LEGACY_MCP_RUNTIME_DIR_V2
+    legacy_entrypoint_v2 = root / LEGACY_MCP_ENTRYPOINT_V2
 
     has_mcp_runtime = manifest_path.exists() or runtime_dir.exists() or entrypoint_path.exists()
     if not has_mcp_runtime:
@@ -1599,12 +1603,20 @@ def validate_mcp_runtime_layout(root: Path, result: ValidationResult) -> None:
 
     if legacy_runtime_dir.exists():
         result.error(
-            f"{legacy_runtime_dir}: legacy tools/ runtime directory must not exist after the engram_mcp migration"
+            f"{legacy_runtime_dir}: legacy tools/ runtime directory must not exist after migration"
         )
 
     if legacy_entrypoint_path.exists():
+        result.error(f"{legacy_entrypoint_path}: stale MCP shim must not exist after migration")
+
+    if legacy_runtime_dir_v2.is_dir():
         result.error(
-            f"{legacy_entrypoint_path}: stale MCP shim must not exist after the engram_mcp migration"
+            f"{legacy_runtime_dir_v2}: legacy engram_mcp/ runtime directory must not exist after core/tools migration"
+        )
+
+    if legacy_entrypoint_v2.exists():
+        result.error(
+            f"{legacy_entrypoint_v2}: stale engram_mcp entrypoint must not exist after core/tools migration"
         )
 
     if not manifest_path.exists():

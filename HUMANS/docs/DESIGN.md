@@ -44,9 +44,9 @@ This mirrors how human memory works: recent events are vivid and detailed; older
 
 The repository now treats the memory contract and the MCP server as two distinct layers.
 
-**Format layer.** The modules under `engram_mcp/agent_memory_mcp/core/` expose the file-format and validation contract without depending on `mcp`. They re-export the canonical implementations in `engram_mcp/agent_memory_mcp/{errors,frontmatter_utils,git_repo,models,path_policy}.py`, which cover exception types, frontmatter parsing, git subprocess operations, structured write results, and path-policy validation. Human-facing tooling such as validators and setup scripts can import this layer directly.
+**Format layer.** The modules under `core/tools/agent_memory_mcp/core/` expose the file-format and validation contract without depending on `mcp`. They re-export the canonical implementations in `core/tools/agent_memory_mcp/{errors,frontmatter_utils,git_repo,models,path_policy}.py`, which cover exception types, frontmatter parsing, git subprocess operations, structured write results, and path-policy validation. Human-facing tooling such as validators and setup scripts can import this layer directly.
 
-**Runtime layer.** The MCP server lives in `engram_mcp/agent_memory_mcp/server.py` and the tool registration modules under `engram_mcp/agent_memory_mcp/tools/`. This layer requires the `mcp` package and is responsible for exposing the governed read/write surface to agents.
+**Runtime layer.** The MCP server lives in `core/tools/agent_memory_mcp/server.py` and the tool registration modules under `core/tools/agent_memory_mcp/tools/`. This layer requires the `mcp` package and is responsible for exposing the governed read/write surface to agents.
 
 The package root is lazy by design: importing `engram_mcp.agent_memory_mcp` no longer imports the server until a caller asks for `mcp`, `create_mcp`, or another runtime export. That keeps the boundary structural rather than purely documentary.
 
