@@ -1,4 +1,4 @@
-# Identity Summary
+# Users Summary
 
 **Alex Freeman** — web developer and independent intellectual at UC Berkeley. Creator of the Engram agent-memory system.
 
