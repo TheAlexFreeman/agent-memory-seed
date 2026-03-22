@@ -9,11 +9,11 @@ trust: high
 
 ## Live themes
 
-No recurring live themes yet.
+- System-building and onboarding — establishing the memory repository structure and initial user profile.
 
 ## Recent continuity
 
-No session history yet.
+- **2026-03-18 chat-001**: Initial system-building and onboarding work. Captured early user profile and tool preferences.
 
 ## Retrieval guide
 

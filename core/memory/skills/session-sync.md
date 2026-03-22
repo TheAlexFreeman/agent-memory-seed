@@ -8,7 +8,7 @@ trust: high
 
 # Session Sync (Mid-Session Checkpoint)
 
-**Load this skill on-demand only** — when a checkpoint is needed and you're uncertain about the protocol. For quick reference, `meta/session-checklists.md` § "Mid-session sync" has the compact version.
+**Load this skill on-demand only** — when a checkpoint is needed and you're uncertain about the protocol. For quick reference, `core/governance/session-checklists.md` § "Mid-session sync" has the compact version.
 
 ## When to use this skill
 
@@ -32,7 +32,7 @@ Write a brief checkpoint note capturing:
 
 If write access is available:
 - Prefer local agent-memory MCP write tools when they can perform the checkpoint write cleanly; otherwise use direct file writes.
-- Create or update the current session's chat folder (`chats/YYYY/MM/DD/chat-NNN/`).
+- Create or update the current session's chat folder (`core/memory/activity/YYYY/MM/DD/chat-NNN/`).
 - Write a `checkpoint.md` file in the chat folder with the summary above. If multiple syncs happen in one session, append to the same file with timestamps.
 - Stage any pending knowledge or identity updates that were discussed and approved.
 - Commit with message: `[chat] Mid-session checkpoint — <brief description>`.

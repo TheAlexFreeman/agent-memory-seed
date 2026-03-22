@@ -2,7 +2,7 @@
 
 Provisional, agent-authored. Not formal memory. Each entry is dated and linked to its originating session.
 
-See `meta/scratchpad-guidelines.md` for the full write protocol, promotion criteria, and lifecycle rules.
+See `core/governance/scratchpad-guidelines.md` for the full write protocol, promotion criteria, and lifecycle rules.
 
 ---
 

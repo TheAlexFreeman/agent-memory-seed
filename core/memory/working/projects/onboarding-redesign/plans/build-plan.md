@@ -13,7 +13,7 @@ next_action: "Phase 0 — finalize design decisions with user before implementat
 
 ## Goals
 
-Replace the current interview-style onboarding (`skills/onboarding.md`) with a
+Replace the current interview-style onboarding (`core/memory/skills/onboarding.md`) with a
 collaborative first-session experience that teaches the system's capabilities
 through use rather than explanation. The new flow should feel like a first working
 session with a capable partner, not a registration form.
@@ -91,7 +91,7 @@ The knowledge base provides direct support for this design:
 
 ## Problem statement
 
-The current onboarding skill (`skills/onboarding.md`) is well-governed but
+The current onboarding skill (`core/memory/skills/onboarding.md`) is well-governed but
 one-dimensional. It follows a sequential interview pattern: introduce system →
 discover role → discover preferences → discover tools → open-ended capture →
 write profile. This has three weaknesses:
@@ -173,7 +173,7 @@ End with a preview of session two and a handoff:
 
 - Explain briefly what the next session will feel like ("I'll greet you with
   what I know and pick up any open threads").
-- Offer `scratchpad/USER.md` as a place to leave notes for next time.
+- Offer `core/memory/working/scratchpad/USER.md` as a place to leave notes for next time.
 - If the seed task has follow-up work, suggest creating a plan ("Want me to
   track this as a multi-session project?").
 - Greet the user as a now-known person, not a new stranger.
@@ -217,12 +217,12 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
 ## Scope decisions
 
 **In scope:**
-- Rewrite of `skills/onboarding.md` with the new phase structure
+- Rewrite of `core/memory/skills/onboarding.md` with the new phase structure
 - Updated quality criteria and anti-patterns
 - Compatibility with existing template-confirmation flow (Phase A absorbs step 0)
 - Compatibility with read-only platform export (Phase C/D produce the same
   export format)
-- Updated `meta/first-run.md` if the silent setup sequence needs adjustment
+- Updated `core/governance/first-run.md` if the silent setup sequence needs adjustment
 - CHANGELOG entry
 
 **Out of scope (future work):**
@@ -242,13 +242,13 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
 ### Phase 0: Design review
 - [ ] Review this plan with the user; confirm or adjust the phase structure
 - [ ] Decide whether to preserve the current onboarding as a fallback (e.g.,
-      `skills/_archive/onboarding-v1.md`) or replace it outright
+      `core/memory/skills/_archive/onboarding-v1.md`) or replace it outright
 - [ ] Confirm that the inline-demonstration approach doesn't conflict with any
       platform-specific constraints (e.g., read-only environments where the
       agent can't actually demonstrate writes)
 
 ### Phase 1: Core skill rewrite
-- [ ] Rewrite `skills/onboarding.md` with the four-phase structure
+- [ ] Rewrite `core/memory/skills/onboarding.md` with the four-phase structure
 - [ ] Preserve all governance invariants (proposal-before-write, frontmatter
       requirements, trust assignment rules, explicit confirmation)
 - [ ] Preserve read-only platform compatibility (export format)
@@ -264,10 +264,10 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
       entire session — leave time for reflection and profile confirmation"
 
 ### Phase 2: Supporting file updates
-- [ ] Update `meta/first-run.md` if the silent setup sequence needs changes
+- [ ] Update `core/governance/first-run.md` if the silent setup sequence needs changes
       (likely minimal — the bootstrap steps are the same; only the interactive
       phase changes)
-- [ ] Update `skills/SUMMARY.md` to reflect the new skill description
+- [ ] Update `core/memory/skills/SUMMARY.md` to reflect the new skill description
 - [ ] Verify that the existing session-recording infrastructure (chat archival,
       reflection notes, ACCESS logging) works with the new flow without changes
 - [ ] Write CHANGELOG entry
@@ -282,7 +282,7 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
   - The governance invariants are maintained
   - The read-only export path still works
 - [ ] Verify the skill file stays within the 300–1000 word guideline from
-      `meta/curation-policy.md` (the current skill is ~930 words; the new
+      `core/governance/curation-policy.md` (the current skill is ~930 words; the new
       one may need to be slightly longer given the added demonstration
       guidance — flag if it exceeds 1200 words)
 - [ ] Run the repo validator to confirm no structural regressions
@@ -291,9 +291,9 @@ are natural to the conversation. The goal is 3–5 such moments across the sessi
 
 ## Dependencies
 
-- Current `skills/onboarding.md` (will be replaced or archived)
-- `meta/first-run.md` (may need minor updates)
-- `meta/update-guidelines.md` § "Change categories" (skill modification is
+- Current `core/memory/skills/onboarding.md` (will be replaced or archived)
+- `core/governance/first-run.md` (may need minor updates)
+- `core/governance/update-guidelines.md` § "Change categories" (skill modification is
   protected-tier — requires explicit user approval)
 - `HUMANS/tooling/onboard-export-template.md` (export format preserved)
 

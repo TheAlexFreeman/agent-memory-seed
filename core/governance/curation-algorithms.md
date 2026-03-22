@@ -113,7 +113,7 @@ Concrete steps for running ACCESS.jsonl aggregation. This procedure applies at a
 
 ### Procedure
 
-1. **Collect entries.** Read all non-empty `ACCESS.jsonl` files from the access-tracked memory namespaces (`memory/users/`, `memory/knowledge/`, `memory/knowledge/_unverified/`, `memory/skills/`, `memory/working/projects/`, and `memory/activity/`).
+1. **Collect entries.** Read all non-empty `ACCESS.jsonl` files from the access-tracked memory namespaces (`core/memory/users/`, `core/memory/knowledge/`, `core/memory/knowledge/_unverified/`, `core/memory/skills/`, `core/memory/working/projects/`, and `core/memory/activity/`).
 2. **Merge into a working set.** Group entries by `session_id` when present; fall back to `date` for legacy entries without `session_id`.
 3. **Run task similarity analysis** using the phase appropriate to the current maturity stage (Phase 1 / 2 / 3 above). Record any new clusters or task groups.
 4. **Compute per-file statistics.** For each file appearing in the working set: total retrievals, mean helpfulness, sessions where retrieved, co-retrieved files.

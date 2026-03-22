@@ -40,7 +40,7 @@ Skills often emerge from corrections. When the user says "no, do it like this in
 
 ## Provenance requirements
 
-All skill files must include YAML frontmatter. See `meta/update-guidelines.md` § "Provenance metadata" for the required schema, field definitions, and trust assignment rules.
+All skill files must include YAML frontmatter. See `core/governance/update-guidelines.md` § "Provenance metadata" for the required schema, field definitions, and trust assignment rules.
 
 **Protected status:** Skill files are **protected-tier** changes — creating, modifying, or removing any skill requires explicit user approval and a CHANGELOG.md entry. This is because skill files contain procedures the agent will execute; they are the highest-value target for memory injection.
 

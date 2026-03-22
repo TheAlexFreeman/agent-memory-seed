@@ -106,7 +106,7 @@ _Not yet assessed._ The first assessment triggers at the earlier of: (a) the sys
 
 **Active parameter set:** Exploration (retained — no change)
 
-**Notes:** All six signals are consistent with Stage 1 Exploration. ACCESS entries are concentrated in `memory/working/projects/` (100 of 128), which reflects the heavily plan-driven session pattern. The large `_unverified` knowledge base (107 trust:low files across philosophy, devops, django, react, rationalist-community) represents significant content accumulation but zero confirmation — the confirmation ratio is too low for Calibration. The system needs at least 20 sessions and meaningful file coverage before reassessment is warranted. No stage transition.
+**Notes:** All six signals are consistent with Stage 1 Exploration. ACCESS entries are concentrated in `core/memory/working/projects/` (100 of 128), which reflects the heavily plan-driven session pattern. The large `_unverified` knowledge base (107 trust:low files across philosophy, devops, django, react, rationalist-community) represents significant content accumulation but zero confirmation — the confirmation ratio is too low for Calibration. The system needs at least 20 sessions and meaningful file coverage before reassessment is warranted. No stage transition.
 
 ## Stage transitions
 

@@ -61,21 +61,21 @@ Security flags should never be silently queued for later review. All other types
 
 ---
 
-### [2026-03-18] Promote ai-history knowledge files from `_unverified/` to `knowledge/`
+### [2026-03-18] Promote ai-history knowledge files from `_unverified/` to `core/memory/knowledge/`
 **Type:** proposed
-**Description:** 11 `external-research` files written 2026-03-18 document the full genealogy of the current AI paradigm across five phases (cybernetics/perceptrons, backprop/PDP, ConvNets/LSTM/statistical NLP, GPUs/ImageNet/transformers, scaling laws/RLHF/multimodality) plus a synthesis file. All reside in `knowledge/_unverified/ai-history/` at `trust: low`. Proposed action: Alex reviews or spot-checks representative files and explicitly affirms accuracy; on confirmation — (1) trust upgraded to `medium` (reviewed) or `high` (accuracy confirmed); (2) files moved from `knowledge/_unverified/ai-history/` to `knowledge/ai-history/`; (3) `knowledge/SUMMARY.md` updated to reflect the new folder. Files will auto-archive around 2026-07-16 (120-day threshold) if not reviewed.
+**Description:** 11 `external-research` files written 2026-03-18 document the full genealogy of the current AI paradigm across five phases (cybernetics/perceptrons, backprop/PDP, ConvNets/LSTM/statistical NLP, GPUs/ImageNet/transformers, scaling laws/RLHF/multimodality) plus a synthesis file. All reside in `core/memory/knowledge/_unverified/ai-history/` at `trust: low`. Proposed action: Alex reviews or spot-checks representative files and explicitly affirms accuracy; on confirmation — (1) trust upgraded to `medium` (reviewed) or `high` (accuracy confirmed); (2) files moved from `core/memory/knowledge/_unverified/ai-history/` to `core/memory/knowledge/ai-history/`; (3) `core/memory/knowledge/SUMMARY.md` updated to reflect the new folder. Files will auto-archive around 2026-07-16 (120-day threshold) if not reviewed.
 **Status:** pending
 
 ---
 
-### [2026-03-19] Aggregate `memory/working/projects/ACCESS.jsonl` (aggregation trigger exceeded)
+### [2026-03-19] Aggregate `core/memory/working/projects/ACCESS.jsonl` (aggregation trigger exceeded)
 **Type:** proposed
-**Description:** `memory/working/projects/ACCESS.jsonl` contains 100 entries as of the 2026-03-19 periodic review. The Exploration-stage aggregation trigger is 15 entries, meaning the file has crossed the threshold roughly 6× over without being aggregated. Proposed action: run the session co-occurrence aggregation algorithm (see `core/governance/curation-algorithms.md`) against `memory/working/projects/ACCESS.jsonl` to collapse individual access records into task-group patterns, then archive or truncate the raw entries, and update `memory/working/projects/SUMMARY.md` if any task-group insights emerge. This is a routine maintenance operation, not a governance change.
+**Description:** `core/memory/working/projects/ACCESS.jsonl` contains 100 entries as of the 2026-03-19 periodic review. The Exploration-stage aggregation trigger is 15 entries, meaning the file has crossed the threshold roughly 6× over without being aggregated. Proposed action: run the session co-occurrence aggregation algorithm (see `core/governance/curation-algorithms.md`) against `core/memory/working/projects/ACCESS.jsonl` to collapse individual access records into task-group patterns, then archive or truncate the raw entries, and update `core/memory/working/projects/SUMMARY.md` if any task-group insights emerge. This is a routine maintenance operation, not a governance change.
 **Status:** pending
 
 ---
 
 ### [2026-03-19] Schedule next periodic review trigger
 **Type:** proposed
-**Description:** This was the first-ever periodic review (2026-03-19). No cadence has been set for subsequent reviews. Proposed trigger: next periodic review after 20 additional sessions _or_ when any `_unverified/` file is first promoted to `knowledge/` (whichever comes first). Rationale: promotion events are a maturity milestone that may warrant a stage-transition check; 20 sessions is a lightweight recurrence given the current Exploration-stage access volume (~128 entries over ~8 sessions, ~16 per session).
+**Description:** This was the first-ever periodic review (2026-03-19). No cadence has been set for subsequent reviews. Proposed trigger: next periodic review after 20 additional sessions _or_ when any `_unverified/` file is first promoted to `core/memory/knowledge/` (whichever comes first). Rationale: promotion events are a maturity milestone that may warrant a stage-transition check; 20 sessions is a lightweight recurrence given the current Exploration-stage access volume (~128 entries over ~8 sessions, ~16 per session).
 **Status:** pending

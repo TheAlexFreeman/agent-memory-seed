@@ -40,16 +40,16 @@ Brief overall assessment: is the system's evolution consistent with legitimate u
 
 ### New files
 
-**identity/**
-- `identity/profile.md` — source: user-stated, trust: high. Full confirmed portrait of Alex Freeman.
+**core/memory/users/**
+- `core/memory/users/profile.md` — source: user-stated, trust: high. Full confirmed portrait of Alex Freeman.
 
-**knowledge/literature/**
-- `knowledge/literature/galatea-2-2-ai-discourse.md` — source: agent-research, trust: medium. Literary analysis of Galatea 2.2 as AI discourse.
-- `knowledge/literature/man-who-was-thursday.md` — source: agent-research, trust: medium. Literary analysis of Chesterton.
-- `knowledge/literature/tree-of-smoke-top-down-bottom-up.md` — source: agent-research, trust: medium. Literary analysis of Denis Johnson.
+**core/memory/knowledge/literature/**
+- `core/memory/knowledge/literature/galatea-2-2-ai-discourse.md` — source: agent-research, trust: medium. Literary analysis of Galatea 2.2 as AI discourse.
+- `core/memory/knowledge/literature/man-who-was-thursday.md` — source: agent-research, trust: medium. Literary analysis of Chesterton.
+- `core/memory/knowledge/literature/tree-of-smoke-top-down-bottom-up.md` — source: agent-research, trust: medium. Literary analysis of Denis Johnson.
 
-**knowledge/tooling/**
-- `knowledge/tooling/codex-mcp-timeouts-git-stdin.md` — source: agent-research, trust: medium.
+**core/memory/knowledge/tooling/**
+- `core/memory/knowledge/tooling/codex-mcp-timeouts-git-stdin.md` — source: agent-research, trust: medium.
 
 **knowledge/_unverified/** (107 trust:low files written across 5 domains)
 - `ai-history/`: AI paradigm genealogy research (multiple files)
@@ -59,16 +59,16 @@ Brief overall assessment: is the system's evolution consistent with legitimate u
 - `philosophy/history/`: 26 period/tradition files + 4 synthesis files (30 files)
 - `rationalist-community/`: 11 files across origins, community, figures, institutions, synthesis
 
-**skills/**
-- `skills/onboarding.md`, `skills/session-start.md`, `skills/session-sync.md`, `skills/session-wrapup.md` — source: agent-generated, trust: medium.
+**core/memory/skills/**
+- `core/memory/skills/onboarding.md`, `core/memory/skills/session-start.md`, `core/memory/skills/session-sync.md`, `core/memory/skills/session-wrapup.md` — source: agent-generated, trust: medium.
 
-**plans/** (all now complete)
+**core/memory/working/projects/** (all now complete)
 - 10 research and implementation plans written; all 10 completed as of 2026-03-19.
 
 ### Modified files
 
-- `plans/SUMMARY.md` — active section cleared; all plans moved to completed.
-- `knowledge/_unverified/rationalist-community/SUMMARY.md` — removed erroneous `last_verified` field (integrity checklist finding).
+- `core/memory/working/projects/SUMMARY.md` — active section cleared; all plans moved to completed.
+- `core/memory/knowledge/_unverified/rationalist-community/SUMMARY.md` — removed erroneous `last_verified` field (integrity checklist finding).
 
 ### Retired/archived files
 
@@ -81,13 +81,13 @@ None. No user review has occurred to promote any _unverified files.
 ### Security flags
 
 None. Integrity checklist run 2026-03-19:
-- One minor issue fixed: `knowledge/_unverified/rationalist-community/SUMMARY.md` had `last_verified` set in the frontmatter, which is prohibited for quarantine-zone files. Removed.
-- Instruction containment grep of knowledge/ and identity/: two files flagged by pattern match (`man-who-was-thursday.md`, `tree-of-smoke-top-down-bottom-up.md`) — confirmed false positives (ordinary prose containing "do not"). No actual boundary violations.
-- Provenance/frontmatter: all identity/, skills/, plans/ content files have required frontmatter fields. No violations.
+- One minor issue fixed: `core/memory/knowledge/_unverified/rationalist-community/SUMMARY.md` had `last_verified` set in the frontmatter, which is prohibited for quarantine-zone files. Removed.
+- Instruction containment grep of `core/memory/knowledge/` and `core/memory/users/`: two files flagged by pattern match (`man-who-was-thursday.md`, `tree-of-smoke-top-down-bottom-up.md`) — confirmed false positives (ordinary prose containing "do not"). No actual boundary violations.
+- Provenance/frontmatter: all `core/memory/users/`, `core/memory/skills/`, `core/memory/working/projects/` content files have required frontmatter fields. No violations.
 
 ### Identity drift
 
-- 0 identity traits changed this session. `identity/profile.md` reflects Alex Freeman's confirmed portrait. Stable.
+- 0 identity traits changed this session. `core/memory/users/profile.md` reflects Alex Freeman's confirmed portrait. Stable.
 
 ### Assessment
 
