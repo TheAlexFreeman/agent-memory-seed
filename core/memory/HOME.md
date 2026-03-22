@@ -10,7 +10,7 @@ Load these files in this order: `core/memory/users/SUMMARY.md` → `core/memory/
 
 ### Compact returning notes
 
-**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/working/projects/`, `core/memory/activity/`.
+**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/activity/`, `core/memory/working/projects/OUT/`.
 
 - Run metadata-first maintenance probes before loading extra governance files.
 - Load `core/governance/review-queue.md` only when it has real entries or the user asks.
