@@ -27,24 +27,27 @@ Load files in the listed order. Skip files marked _(skip if empty)_ when they co
 | Session type | Files to load |
 |---|---|
 | **First run** | this file → `core/governance/first-run.md` (which directs: `CHANGELOG.md`, `core/governance/update-guidelines.md` §§ Change categories + Read-only operation, `core/memory/skills/SUMMARY.md`, `core/memory/skills/onboarding.md`) |
-| **Compact returning** | this file → `core/memory/working/HOME.md` _(skip if empty or still placeholder)_ → `core/memory/users/SUMMARY.md` → `core/memory/activity/SUMMARY.md` _(skip if empty or still placeholder)_ → `core/memory/working/scratchpad/USER.md` _(skip if only placeholder)_ → `core/memory/working/scratchpad/CURRENT.md` _(skip if only placeholder)_ → task-relevant `core/memory/working/projects/SUMMARY.md` plus task-relevant `core/memory/knowledge/SUMMARY.md` and/or `core/memory/skills/SUMMARY.md` only when the active project, recent history, or current task makes them relevant |
+| **Compact returning** | this file → `core/memory/HOME.md` _(skip if empty or still placeholder)_ →  |
 | **Full bootstrap** | this file → Compact returning files + `CHANGELOG.md`, `core/governance/curation-policy.md`, `core/governance/update-guidelines.md` |
 | **Periodic review** | Full bootstrap files + `core/governance/system-maturity.md`, `core/governance/belief-diff-log.md`, `core/governance/review-queue.md`, `core/governance/integrity-checklist.md` |
-| **Automation** | this file → `core/memory/working/scratchpad/USER.md` _(skip if empty)_ → `core/memory/working/scratchpad/CURRENT.md` _(skip if empty)_ → `core/memory/working/projects/SUMMARY.md` _(skip if empty)_ → task-relevant `core/memory/working/projects/SUMMARY.md`, `core/memory/knowledge/SUMMARY.md`, `core/memory/skills/SUMMARY.md` on-demand only |
+| **Automation** | this file → `core/memory/working/HOME.md` |
 | **ACCESS aggregation** | This file + `core/governance/curation-algorithms.md` (load only when aggregation threshold is reached) |
 | **Stage transition** | Periodic review files + `core/governance/curation-algorithms.md` |
 
 **Do not load** `HUMANS/docs/*` (human reference only) or `core/governance/curation-algorithms.md` (on-demand only). `core/governance/session-checklists.md` and `core/governance/scratchpad-guidelines.md` are also on-demand — load only when you need detailed runbooks or scratchpad review criteria.
 
-### Compact returning notes
+### Worktree mode
 
-**Access-tracked namespaces:** `core/memory/users/`, `core/memory/knowledge/`, `core/memory/skills/`, `core/memory/working/projects/`, `core/memory/activity/`.
+- In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations; use the worktree path for memory files.
+
+### Governance notes
+
+**No access tracking:** `governance/` has no `ACCESS.json` files.
 
 - Run metadata-first maintenance probes before loading extra governance files.
 - Load `core/governance/review-queue.md` only when it has real entries or the user asks.
-- Count non-empty lines in `ACCESS.jsonl` files for access-tracked namespaces before loading governance docs.
+- Count non-empty lines in `ACCESS.jsonl` files in `memory/` before loading governance docs.
 - Treat `core/memory/working/projects/SUMMARY.md`, `core/memory/knowledge/SUMMARY.md`, and `core/memory/skills/SUMMARY.md` as task-driven drill-down context, not unconditional startup reads.
-- In worktree mode, use `host_repo_root` from `agent-bootstrap.toml` for host-code git operations; use the worktree path for memory files.
 
 ---
 
