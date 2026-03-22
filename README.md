@@ -1,6 +1,6 @@
 # Engram: The Expert System
 
-## A Semantics-First Ecology of Protocols for LLM Agent Memory Management
+## A Semantics-First Ecology of Protocols for LLM Agent Context Management
 
 An adaptive, self-organizing, version-controlled memory layer for AI agents. Any capable model can read this repo and immediately know who you are, how you work, and what you've been doing — across sessions, platforms, and model versions.
 
